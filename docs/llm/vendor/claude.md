@@ -1248,3 +1248,8 @@ That's it — two lines changed, one DB file deleted.
 
 
 
+The app builds, the tests pass, and now I can even run the game on my phone. 
+However, on android I don't see the progress bar. 
+The game progresses but I don't see any progress bar. 
+Can you please fix all the issues you can find and return me FULL FILES for any file that changed? 
+Please and thank you
