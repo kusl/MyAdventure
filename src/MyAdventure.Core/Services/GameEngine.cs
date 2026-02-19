@@ -37,7 +37,8 @@ public class GameEngine(
         var state = await repository.GetLatestAsync(ct);
         if (state is null)
         {
-            logger.LogInformation("No saved game found, starting fresh");
+            Cash = 5.0;
+            logger.LogInformation("No saved game found, starting fresh with ${Cash:F2}", Cash);
             return;
         }
 

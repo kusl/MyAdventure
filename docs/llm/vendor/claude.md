@@ -1184,3 +1184,67 @@ var state = new GameState { Cash = 5.0 };
 The lemonade stand costs $3.738 in the original Adventure Capitalist formula, so $5 gives you enough to buy your first one and get going.
 
 If you can paste `GameEngine.cs` (or update your dump.txt in the project files), I'll give you the exact line to change.
+
+Now I can see the full picture. Looking at `GameEngine.cs`, the `LoadAsync` method:
+
+```csharp
+if (state is null)
+{
+    logger.LogInformation("No saved game found, starting fresh");
+    return;  // <-- Cash stays at 0, no starting money!
+}
+```
+
+When there's no saved game, it just returns with `Cash = 0`. The lemonade stand costs $4 (`BaseCost = 4`), so you're stuck — can't buy anything.
+
+The fix is one line in `GameEngine.cs`. Change the "starting fresh" branch to give the player some seed money:
+
+In `src/MyAdventure.Core/Services/GameEngine.cs`, find:
+
+```csharp
+if (state is null)
+{
+    logger.LogInformation("No saved game found, starting fresh");
+    return;
+}
+```
+
+Change it to:
+
+```csharp
+if (state is null)
+{
+    Cash = 5.0;
+    logger.LogInformation("No saved game found, starting fresh with ${Cash:F2}", Cash);
+    return;
+}
+```
+
+$5 gives you enough to buy your first lemonade stand ($4) with a little left over, which is how Adventure Capitalist works — you start with just enough to get rolling.
+
+After making the change, delete your old save so you get a fresh start:
+
+```bash
+rm ~/.local/share/MyAdventure/myadventure.db
+dotnet run --project src/MyAdventure.Desktop
+```
+
+You should also update the test that expects zero cash on a fresh start. In `tests/MyAdventure.Core.Tests/GameEngineTests.cs`, change:
+
+```csharp
+_engine.Cash.ShouldBe(0);
+```
+
+to:
+
+```csharp
+_engine.Cash.ShouldBe(5.0);
+```
+
+That's it — two lines changed, one DB file deleted.
+
+
+
+
+
+
