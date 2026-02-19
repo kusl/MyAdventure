@@ -509,3 +509,34 @@ real	0m1.151s
 user	0m1.409s
 sys	0m0.380s
 Restore complete (0.5s)
+
+I can see two distinct issues in your build. Let me break them down.
+
+**Issue 1: All test projects can't find xUnit attributes (40 + 6 + 4 = 50 errors)**
+
+Your test files use `[Fact]`, `[Theory]`, `[InlineData]` but none of them have `using Xunit;`. The `ImplicitUsings` feature only covers standard .NET namespaces, not xUnit. The packages are correctly referenced in the csproj files and versioned in `Directory.Packages.props` — it's purely a missing using directive.
+
+The cleanest fix is to create a `Directory.Build.props` in the `tests/` folder that adds a global using for all test projects at once:Drop this file at `tests/Directory.Build.props`. The `<Using Include="Xunit" />` directive makes `using Xunit;` implicit for every project under the `tests/` folder — no need to edit individual `.cs` files.
+
+**Issue 2: Android project missing `Avalonia.Fonts.Inter` (1 error)**
+
+`MainActivity.cs` calls `.WithInterFont()`, but your `MyAdventure.Android.csproj` doesn't reference `Avalonia.Fonts.Inter`. The Desktop project has it, the Android one doesn't. Add this line to the Android csproj's package references:
+
+```xml
+<PackageReference Include="Avalonia.Fonts.Inter" />
+```
+
+So the ItemGroup in `src/MyAdventure.Android/MyAdventure.Android.csproj` should look like:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="Avalonia.Android" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+</ItemGroup>
+```
+
+The version is already defined in `Directory.Packages.props` as `11.3.12`, so central package management handles the rest.
+
+After both fixes, `dotnet build` should clear all 51 errors.
