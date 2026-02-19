@@ -1311,3 +1311,10 @@ Yes, you have both concepts already built into the engine — let me walk throug
 Want me to fix the Android view to include the manager button (and the ✅ AUTO indicator once purchased)? That would give you the full gameplay loop on mobile — buy businesses, hire managers, close the app, come back to accumulated earnings.
 
 yes, please give me the full file 
+
+Here's what changed from the previous Android view:
+
+The button row went from a 2-column grid (`*,4,*`) to a 3-column grid (`*,4,*,4,*`) matching the Desktop layout. I added the MGR button (orange `#FF6F00`, bound to `BuyManagerCommand`, enabled only when `CanAffordManager` is true) and the ✅ AUTO indicator that shows once a manager is purchased. Font sizes are slightly smaller (`11` instead of `12`) so all three buttons fit comfortably on mobile screens.
+
+Now on Android you'll have the full gameplay loop: buy businesses → click to run them → hire managers for auto-running → close the app → come back to offline earnings.
+
