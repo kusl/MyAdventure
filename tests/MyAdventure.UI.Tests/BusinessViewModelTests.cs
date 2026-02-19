@@ -15,9 +15,15 @@ public class BusinessViewModelTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test Biz", Icon = "🧪", Color = "#FF0000",
-            BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
-            CostMultiplier = 1.1, Owned = 3
+            Id = "test",
+            Name = "Test Biz",
+            Icon = "🧪",
+            Color = "#FF0000",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.1,
+            Owned = 3
         };
 
         var repo = Substitute.For<IGameStateRepository>();
@@ -37,8 +43,13 @@ public class BusinessViewModelTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 1000, BaseRevenue = 10, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1000,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.1
         };
 

@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 06:29:57 AM EST 2026
+Generated: Thu Feb 19 06:37:08 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -750,7 +750,7 @@ SIZE: .10 KB
 
 {
   "sdk": {
-    "version": "10.0.103",
+    "version": "10.0.100",
     "rollForward": "latestFeature",
     "allowPrerelease": false
   }
@@ -4969,7 +4969,7 @@ public abstract partial class ViewModelBase : ObservableObject;
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/BusinessTests.cs
-SIZE: 1.05 KB
+SIZE: 1.16 KB
 ================================================================================
 
 using MyAdventure.Core.Entities;
@@ -4984,8 +4984,13 @@ public class BusinessTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.1
         };
 
@@ -5000,8 +5005,13 @@ public class BusinessTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.1
         };
 
@@ -5284,7 +5294,7 @@ SIZE: 1.01 KB
 
 ================================================================================
 FILE: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
-SIZE: 1.50 KB
+SIZE: 1.63 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -5304,9 +5314,15 @@ public class BusinessViewModelTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test Biz", Icon = "🧪", Color = "#FF0000",
-            BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
-            CostMultiplier = 1.1, Owned = 3
+            Id = "test",
+            Name = "Test Biz",
+            Icon = "🧪",
+            Color = "#FF0000",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.1,
+            Owned = 3
         };
 
         var repo = Substitute.For<IGameStateRepository>();
@@ -5326,8 +5342,13 @@ public class BusinessViewModelTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 1000, BaseRevenue = 10, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1000,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.1
         };
 

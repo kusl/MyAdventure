@@ -10,8 +10,13 @@ public class BusinessTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.1
         };
 
@@ -26,8 +31,13 @@ public class BusinessTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.1
         };
 
