@@ -569,5 +569,1326 @@ Export Complete: docs/llm/dump.txt
 real	0m0.607s
 user	0m0.309s
 sys	0m0.397s
-kushal@fedora:~/src/dotnet/MyAdventure$ 
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop; dotnet run
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (8ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20004]
+      An error occurred using the connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (4ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (6ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (2ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20209]
+      Beginning transaction with isolation level 'Unspecified'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20200]
+      Began transaction with isolation level 'Serializable'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20210]
+      Committing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20202]
+      Committed transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20204]
+      Disposing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Loading latest game state
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .OrderByDescending(g => g.UpdatedAt)
+          .FirstOrDefault()'
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync<GameState>(
+          asyncEnumerable: SingleQueryingEnumerable.Create<GameState>(
+              relationalQueryContext: (RelationalQueryContext)queryContext, 
+              relationalCommandResolver: parameters => [LIFTABLE Constant: RelationalCommandCache.QueryExpression(
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g
+                  ORDER BY g.UpdatedAt DESC) | Resolver: c => new RelationalCommandCache(
+                  c.Dependencies.MemoryCache, 
+                  c.RelationalDependencies.QuerySqlGeneratorFactory, 
+                  c.RelationalDependencies.RelationalParameterBasedSqlProcessorFactory, 
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g
+                  ORDER BY g.UpdatedAt DESC, 
+                  False, 
+                  MultipleParameters
+              )].GetRelationalCommandTemplate(parameters), 
+              readerColumns: null, 
+              shaper: (queryContext, dataReader, resultContext, resultCoordinator) => 
+              {
+                  GameState entity;
+                  entity = 
+                  {
+                      MaterializationContext materializationContext1;
+                      IEntityType entityType1;
+                      GameState instance1;
+                      InternalEntityEntry entry1;
+                      bool hasNullKey1;
+                      materializationContext1 = new MaterializationContext(
+                          [LIFTABLE Constant: ValueBuffer | Resolver: _ => (object)ValueBuffer.Empty], 
+                          queryContext.Context
+                      );
+                      instance1 = default(GameState);
+                      entry1 = queryContext.TryGetEntry(
+                          key: [LIFTABLE Constant: Key: GameState.Id PK | Resolver: c => c.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState").FindPrimaryKey()], 
+                          keyValues: new object[]{ (object)dataReader.GetGuid(0) }, 
+                          throwOnNullKey: True, 
+                          hasNullKey: hasNullKey1);
+                      !(hasNullKey1) ? entry1 != default(InternalEntityEntry) ? 
+                      {
+                          entityType1 = entry1.EntityType;
+                          return instance1 = (GameState)entry1.Entity;
+                      } : 
+                      {
+                          ISnapshot shadowSnapshot1;
+                          shadowSnapshot1 = [LIFTABLE Constant: Snapshot | Resolver: _ => Snapshot.Empty];
+                          entityType1 = [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{0} => namelessParameter{0}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")];
+                          instance1 = switch (entityType1)
+                          {
+                              case [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{1} => namelessParameter{1}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]: 
+                                  {
+                                      return 
+                                      {
+                                          GameState instance;
+                                          instance = new GameState();
+                                          instance.<Id>k__BackingField = dataReader.GetGuid(0);
+                                          instance.<AngelInvestors>k__BackingField = dataReader.GetDouble(1);
+                                          instance.<BusinessDataJson>k__BackingField = dataReader.GetString(2);
+                                          instance.<Cash>k__BackingField = dataReader.GetDouble(3);
+                                          instance.<CreatedAt>k__BackingField = dataReader.GetDateTime(4);
+                                          instance.<LastPlayedAt>k__BackingField = dataReader.GetDateTime(5);
+                                          instance.<LifetimeEarnings>k__BackingField = dataReader.GetDouble(6);
+                                          instance.<ManagerDataJson>k__BackingField = dataReader.GetString(7);
+                                          instance.<PrestigeCount>k__BackingField = dataReader.GetInt32(8);
+                                          instance.<UpdatedAt>k__BackingField = dataReader.GetDateTime(9);
+                                          (instance is IInjectableService) ? ((IInjectableService)instance).Injected(
+                                              context: materializationContext1.Context, 
+                                              entity: instance, 
+                                              queryTrackingBehavior: TrackAll, 
+                                              structuralType: [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{2} => namelessParameter{2}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]) : default(void);
+                                          return instance;
+                                      }}
+                              default: 
+                                  default(GameState)
+                          }
+                          ;
+                          entry1 = entityType1 == default(IEntityType) ? default(InternalEntityEntry) : queryContext.StartTracking(
+                              entityType: entityType1, 
+                              entity: instance1, 
+                              snapshot: shadowSnapshot1);
+                          return instance1;
+                      } : default(void);
+                      return instance1;
+                  };
+                  return entity;
+              }, 
+              contextType: MyAdventure.Infrastructure.Data.AppDbContext, 
+              standAloneStateManager: False, 
+              detailedErrorsEnabled: False, 
+              threadSafetyChecksEnabled: True), 
+          cancellationToken: queryContext.CancellationToken)'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      ORDER BY "g"."UpdatedAt" DESC
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      ORDER BY "g"."UpdatedAt" DESC
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 2ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+info: MyAdventure.Core.Services.GameEngine[0]
+      No saved game found, starting fresh
+info: MyAdventure.Shared.ViewModels.GameViewModel[0]
+      Game initialized with 6 businesses
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .FirstOrDefault()'
+warn: Microsoft.EntityFrameworkCore.Query[10103]
+      The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync<GameState>(
+          asyncEnumerable: SingleQueryingEnumerable.Create<GameState>(
+              relationalQueryContext: (RelationalQueryContext)queryContext, 
+              relationalCommandResolver: parameters => [LIFTABLE Constant: RelationalCommandCache.QueryExpression(
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g) | Resolver: c => new RelationalCommandCache(
+                  c.Dependencies.MemoryCache, 
+                  c.RelationalDependencies.QuerySqlGeneratorFactory, 
+                  c.RelationalDependencies.RelationalParameterBasedSqlProcessorFactory, 
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g, 
+                  False, 
+                  MultipleParameters
+              )].GetRelationalCommandTemplate(parameters), 
+              readerColumns: null, 
+              shaper: (queryContext, dataReader, resultContext, resultCoordinator) => 
+              {
+                  GameState entity;
+                  entity = 
+                  {
+                      MaterializationContext materializationContext1;
+                      IEntityType entityType1;
+                      GameState instance1;
+                      InternalEntityEntry entry1;
+                      bool hasNullKey1;
+                      materializationContext1 = new MaterializationContext(
+                          [LIFTABLE Constant: ValueBuffer | Resolver: _ => (object)ValueBuffer.Empty], 
+                          queryContext.Context
+                      );
+                      instance1 = default(GameState);
+                      entry1 = queryContext.TryGetEntry(
+                          key: [LIFTABLE Constant: Key: GameState.Id PK | Resolver: c => c.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState").FindPrimaryKey()], 
+                          keyValues: new object[]{ (object)dataReader.GetGuid(0) }, 
+                          throwOnNullKey: True, 
+                          hasNullKey: hasNullKey1);
+                      !(hasNullKey1) ? entry1 != default(InternalEntityEntry) ? 
+                      {
+                          entityType1 = entry1.EntityType;
+                          return instance1 = (GameState)entry1.Entity;
+                      } : 
+                      {
+                          ISnapshot shadowSnapshot1;
+                          shadowSnapshot1 = [LIFTABLE Constant: Snapshot | Resolver: _ => Snapshot.Empty];
+                          entityType1 = [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{0} => namelessParameter{0}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")];
+                          instance1 = switch (entityType1)
+                          {
+                              case [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{1} => namelessParameter{1}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]: 
+                                  {
+                                      return 
+                                      {
+                                          GameState instance;
+                                          instance = new GameState();
+                                          instance.<Id>k__BackingField = dataReader.GetGuid(0);
+                                          instance.<AngelInvestors>k__BackingField = dataReader.GetDouble(1);
+                                          instance.<BusinessDataJson>k__BackingField = dataReader.GetString(2);
+                                          instance.<Cash>k__BackingField = dataReader.GetDouble(3);
+                                          instance.<CreatedAt>k__BackingField = dataReader.GetDateTime(4);
+                                          instance.<LastPlayedAt>k__BackingField = dataReader.GetDateTime(5);
+                                          instance.<LifetimeEarnings>k__BackingField = dataReader.GetDouble(6);
+                                          instance.<ManagerDataJson>k__BackingField = dataReader.GetString(7);
+                                          instance.<PrestigeCount>k__BackingField = dataReader.GetInt32(8);
+                                          instance.<UpdatedAt>k__BackingField = dataReader.GetDateTime(9);
+                                          (instance is IInjectableService) ? ((IInjectableService)instance).Injected(
+                                              context: materializationContext1.Context, 
+                                              entity: instance, 
+                                              queryTrackingBehavior: TrackAll, 
+                                              structuralType: [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{2} => namelessParameter{2}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]) : default(void);
+                                          return instance;
+                                      }}
+                              default: 
+                                  default(GameState)
+                          }
+                          ;
+                          entry1 = entityType1 == default(IEntityType) ? default(InternalEntityEntry) : queryContext.StartTracking(
+                              entityType: entityType1, 
+                              entity: instance1, 
+                              snapshot: shadowSnapshot1);
+                          return instance1;
+                      } : default(void);
+                      return instance1;
+                  };
+                  return entity;
+              }, 
+              contextType: MyAdventure.Infrastructure.Data.AppDbContext, 
+              standAloneStateManager: False, 
+              detailedErrorsEnabled: False, 
+              threadSafetyChecksEnabled: True), 
+          cancellationToken: queryContext.CancellationToken)'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10806]
+      Context 'AppDbContext' started tracking 'GameState' entity. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 71), @p2='?' (DbType = DateTime), @p3='?' (DbType = DateTime), @p4='?' (Size = 95), @p5='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "GameStates" ("Id", "BusinessDataJson", "CreatedAt", "LastPlayedAt", "ManagerDataJson", "UpdatedAt")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5)
+      RETURNING "AngelInvestors", "Cash", "LifetimeEarnings", "PrestigeCount";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 71), @p2='?' (DbType = DateTime), @p3='?' (DbType = DateTime), @p4='?' (Size = 95), @p5='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "GameStates" ("Id", "BusinessDataJson", "CreatedAt", "LastPlayedAt", "ManagerDataJson", "UpdatedAt")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5)
+      RETURNING "AngelInvestors", "Cash", "LifetimeEarnings", "PrestigeCount";
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 20ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Added' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 2ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 11ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 11ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "LastPlayedAt" = @p0, "UpdatedAt" = @p1
+      WHERE "Id" = @p2
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 14ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 0.00
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
 
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.151s
+user	0m0.121s
+sys	0m0.029s
+
+Build succeeded in 0.5s
+
+real	0m0.656s
+user	0m0.790s
+sys	0m0.195s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+real	0m0.829s
+user	0m0.944s
+sys	0m0.188s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (0.5s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded with 2 warning(s) (21.2s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-arm64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-x64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+
+Build succeeded with 2 warning(s) in 22.7s
+
+real	0m22.858s
+user	1m19.014s
+sys	0m3.493s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.22]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.20]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (0.8s)
+  MyAdventure.UI.Tests test net10.0 succeeded (0.7s)
+[xUnit.net 00:00:00.64]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.2s)
+
+Test summary: total: 24, failed: 0, succeeded: 24, skipped: 0, duration: 1.2s
+Build succeeded in 2.1s
+
+real	0m2.277s
+user	0m1.671s
+sys	0m0.376s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.919s
+user	0m1.998s
+sys	0m0.480s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m2.323s
+user	0m2.374s
+sys	0m0.514s
+
+real	0m8.344s
+user	0m13.311s
+sys	0m1.222s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.591s
+user	0m0.322s
+sys	0m0.372s
+kushal@fedora:~/src/dotnet/MyAdventure$ 

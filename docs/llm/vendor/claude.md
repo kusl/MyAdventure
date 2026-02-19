@@ -1148,3 +1148,7 @@ That's the two spots in this file. Both are just appending `.UtcDateTime` to the
 
 
 
+The game runs but I don't have any money. 
+I mean that's a different issue 
+but in the game also I don't have any money. 
+I ran the desktop application and it ran fine but I can't even buy a lemonade stand. 
