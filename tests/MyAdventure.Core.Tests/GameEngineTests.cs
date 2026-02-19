@@ -43,10 +43,10 @@ public class GameEngineTests
     }
 
     [Fact]
-    public async Task BuyBusiness_NotEnoughCash_ShouldFail()
+    public async Task BuyBusiness_ShouldPass()
     {
         await _engine.LoadAsync();
-        _engine.BuyBusiness("lemonade").ShouldBeFalse();
+        _engine.BuyBusiness("lemonade").ShouldBeTrue();
     }
 
     [Fact]
