@@ -8,6 +8,46 @@ For the first prompt, you will need to generate me a shell script that sets up t
 the dump.txt and output.txt  in your project files is supposed to be a guide but you don't need to follow it exactly. 
 that is from a different game and we want to follow industry and engineering best practices, 
 not the same potholes we fell into before 
+the github actions should create a new binary every time we push new code to the main branch 
+for the first prompt, I will need a shell script because there are entirely too many files to copy by hand 
+but subsequently unless there is a lot of files to copy paste, I would prefer to get full files to copy paste. 
+if there are too many files that change, please give me a bash script that truncates the existing files and adds the new files in its place 
+we have git for version control so we should be good there. 
+use central package management
+use the latest dotnet and c sharp features such as primary constructors, records, and so on 
+research and use intuitive UI elements with huge buttons 
+and responsive ui 
+we should never ever have a scroll bar anywhere. everything must fit in the view, whether it is a small display or a big display 
+use dependency injection and app settings json and so on to store variables such as application name 
+I would like to see localization and internationalization as well if possible 
+remember the instructions 
+```
+I want to learn Avalonia UI to write high performance cross platform free of cost. 
+I want to use the latest and greatest technology. 
+I want this to serve as a sample as well as a starting point for native applications. 
+It should be easy to use the latest dotnet technology 
+such as slnx files, props files, and so on. 
+Where possible, we should use long term sustainable technology such as sqlite and postgresql. 
+We should avoid any nuget package that requires payment of money, free of cost for non-commercial software is not enough. 
+We ourselves should not charge any money, ever. 
+We should have extensive logging, metrics, etc using open telemetry. 
+Application should be built from the ground up to be testable.
+All tests including Unit tests, integration tests should be automated and be performant so we can run them after every change. 
+The whole thing should fit in a single git repository. 
+
+Do not generate multiple `slnx` for desktop and android etc no matter how tempting it feels. 
+do not generate `build-desktop.sh` and `build-android.sh` scripts to silo the different teams. 
+do not attempt to silo different teams at all. 
+this is a cross functional team and everyone can work with all parts of the code. 
+especially with claude opus 4.5 (or later) 
+there is no excuse to silo people like this 
+we should fix things properly, not put bandaid on problems by separating desktop and android teams 
+if the build is slow, 
+everyone should suffer 
+not because we are masochists 
+but because we want everyone to know when stuff is broken 
+so it gets fixed as quickly as possible. 
+```
 here is what I have done so far 
 kushal@fedora:~/src/dotnet/MyDesktopApplication$ mkdir -p ~/src/dotnet/MyAdventure/docs/llm
 kushal@fedora:~/src/dotnet/MyDesktopApplication$ cd ~/src/dotnet/MyAdventure
