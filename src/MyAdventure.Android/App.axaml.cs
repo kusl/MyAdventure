@@ -11,7 +11,7 @@ namespace MyAdventure.Android;
 public partial class App : Avalonia.Application
 {
     private const string Tag = "MyAdventure";
-    
+
     public static IServiceProvider? Services { get; private set; }
 
     public override void Initialize()

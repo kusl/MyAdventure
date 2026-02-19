@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 07:16:23 AM EST 2026
+Generated: Thu Feb 19 07:30:23 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -3362,7 +3362,7 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/App.axaml.cs
-SIZE: 1.12 KB
+SIZE: 2.39 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
@@ -3377,27 +3377,57 @@ namespace MyAdventure.Android;
 
 public partial class App : Avalonia.Application
 {
+    private const string Tag = "MyAdventure";
+
     public static IServiceProvider? Services { get; private set; }
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        global::Android.Util.Log.Info(Tag, "App.Initialize() starting");
+        AvaloniaXamlLoader.Load(this);
+        global::Android.Util.Log.Info(Tag, "App.Initialize() done");
+    }
 
     public override async void OnFrameworkInitializationCompleted()
     {
-        var services = new ServiceCollection();
-        services.AddInfrastructure();
-        services.AddTransient<GameEngine>();
-        services.AddTransient<GameViewModel>();
-        Services = services.BuildServiceProvider();
-
-        await DependencyInjection.InitializeDatabaseAsync(Services);
-
-        if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+        try
         {
-            var vm = Services.GetRequiredService<GameViewModel>();
-            singleView.MainView = new MainView { DataContext = vm };
-        }
+            global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted starting");
 
-        base.OnFrameworkInitializationCompleted();
+            var services = new ServiceCollection();
+
+            global::Android.Util.Log.Info(Tag, "Adding infrastructure services...");
+            services.AddInfrastructure();
+
+            services.AddTransient<GameEngine>();
+            services.AddTransient<GameViewModel>();
+            Services = services.BuildServiceProvider();
+            global::Android.Util.Log.Info(Tag, "ServiceProvider built");
+
+            global::Android.Util.Log.Info(Tag, "Initializing database...");
+            await DependencyInjection.InitializeDatabaseAsync(Services);
+            global::Android.Util.Log.Info(Tag, "Database initialized");
+
+            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+            {
+                global::Android.Util.Log.Info(Tag, "Creating GameViewModel...");
+                var vm = Services.GetRequiredService<GameViewModel>();
+
+                global::Android.Util.Log.Info(Tag, "Creating MainView...");
+                singleView.MainView = new MainView { DataContext = vm };
+                global::Android.Util.Log.Info(Tag, "MainView assigned");
+            }
+
+            base.OnFrameworkInitializationCompleted();
+            global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted done");
+        }
+        catch (Exception ex)
+        {
+            global::Android.Util.Log.Error(Tag, $"FATAL during startup: {ex}");
+            global::Android.Util.Log.Error(Tag, $"Inner: {ex.InnerException}");
+            // Re-throw so the OS reports the crash properly
+            throw;
+        }
     }
 }
 
@@ -3430,7 +3460,7 @@ public class MainActivity : AvaloniaMainActivity<App>
 
 ================================================================================
 FILE: src/MyAdventure.Android/MyAdventure.Android.csproj
-SIZE: 1.32 KB
+SIZE: 1.70 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
@@ -3443,10 +3473,18 @@ SIZE: 1.32 KB
     <ApplicationDisplayVersion>1.0.$(BuildNumber)</ApplicationDisplayVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     
-    <!-- AOT causes issues in Debug; disable it -->
-    <RunAOTCompilation Condition="'$(Configuration)' == 'Debug'">false</RunAOTCompilation>
+    <!-- Disable AOT entirely until the app runs successfully.
+         AOT + EF Core reflection + OpenTelemetry = likely trimming crashes.
+         Re-enable once the app is stable and add trimmer roots. -->
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <PublishTrimmed>false</PublishTrimmed>
+    
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
     <AndroidEnableAppCompatTheme>true</AndroidEnableAppCompatTheme>
+    
+    <!-- Keep reflection metadata for DI, EF Core, and OpenTelemetry -->
+    <TrimmerDefaultAction>link</TrimmerDefaultAction>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
@@ -4501,7 +4539,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/DependencyInjection.cs
-SIZE: 1.85 KB
+SIZE: 2.94 KB
 ================================================================================
 
 using Microsoft.EntityFrameworkCore;
@@ -4528,20 +4566,38 @@ public static class DependencyInjection
         services.AddScoped<IGameStateRepository, GameStateRepository>();
         services.AddScoped<GameEngine>();
 
+        // Console logging only works on desktop; Android has no System.Console.
+        // On Android, logs go through Android.Util.Log instead.
+        var isAndroid = OperatingSystem.IsAndroid();
+
         services.AddLogging(builder =>
         {
             builder.SetMinimumLevel(LogLevel.Debug);
-            builder.AddConsole();
+            if (!isAndroid)
+            {
+                builder.AddConsole();
+            }
         });
 
         services.AddOpenTelemetry()
-            .WithTracing(tracing => tracing
-                .AddSource("MyAdventure.*")
-                .AddConsoleExporter())
-            .WithMetrics(metrics => metrics
-                .AddMeter("MyAdventure.*")
-                .AddRuntimeInstrumentation()
-                .AddConsoleExporter());
+            .WithTracing(tracing =>
+            {
+                tracing.AddSource("MyAdventure.*");
+                if (!isAndroid)
+                {
+                    tracing.AddConsoleExporter();
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics.AddMeter("MyAdventure.*");
+                // RuntimeInstrumentation may not be supported on all platforms
+                if (!isAndroid)
+                {
+                    metrics.AddRuntimeInstrumentation();
+                    metrics.AddConsoleExporter();
+                }
+            });
 
         return services;
     }
@@ -4555,9 +4611,26 @@ public static class DependencyInjection
 
     private static string GetDefaultDbPath()
     {
-        var appData = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MyAdventure");
+        string appData;
+
+        if (OperatingSystem.IsAndroid())
+        {
+            // On Android, use the app's internal files directory.
+            // Environment.GetFolderPath may return empty or unexpected paths.
+            appData = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            if (string.IsNullOrEmpty(appData))
+            {
+                // Fallback: use the app's base directory
+                appData = AppContext.BaseDirectory;
+            }
+        }
+        else
+        {
+            appData = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MyAdventure");
+        }
+
         Directory.CreateDirectory(appData);
         return Path.Combine(appData, "myadventure.db");
     }
