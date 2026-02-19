@@ -24,7 +24,7 @@ public class GameEngineTests
     public async Task LoadAsync_NoSave_ShouldStartFresh()
     {
         await _engine.LoadAsync();
-        _engine.Cash.ShouldBe(0);
+        _engine.Cash.ShouldBe(5.0);
         _engine.Businesses.Count.ShouldBe(6);
     }
 
