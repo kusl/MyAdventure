@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 12:13:04 PM EST 2026
+Generated: Thu Feb 19 12:21:27 PM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -5149,7 +5149,7 @@ public class GameEngineTests
     public async Task LoadAsync_NoSave_ShouldStartFresh()
     {
         await _engine.LoadAsync();
-        _engine.Cash.ShouldBe(0);
+        _engine.Cash.ShouldBe(5.0);
         _engine.Businesses.Count.ShouldBe(6);
     }
 

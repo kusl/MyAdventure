@@ -74,7 +74,7 @@ public class GameEngineTests
 
     [Fact]
     public void CalculateAngels_ShouldReturnZeroBelowThreshold() =>
-        GameEngine.CalculateAngels(1e11).ShouldBe(5.0);
+        GameEngine.CalculateAngels(1e11).ShouldBe(0);
 
     [Fact]
     public void CalculateAngels_ShouldReturnPositiveAboveThreshold() =>
