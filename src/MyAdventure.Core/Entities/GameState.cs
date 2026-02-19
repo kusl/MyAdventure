@@ -9,5 +9,5 @@ public record GameState : EntityBase
     public int PrestigeCount { get; set; }
     public string BusinessDataJson { get; set; } = "{}";
     public string ManagerDataJson { get; set; } = "{}";
-    public DateTimeOffset LastPlayedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime LastPlayedAt { get; set; } = DateTime.UtcNow;
 }

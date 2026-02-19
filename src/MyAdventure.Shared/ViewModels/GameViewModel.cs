@@ -13,7 +13,7 @@ public partial class GameViewModel : ViewModelBase
 {
     private readonly GameEngine _engine;
     private readonly ILogger<GameViewModel> _logger;
-    private DateTimeOffset _lastTick;
+    private DateTime _lastTick;
     private int _saveCounter;
 
     [ObservableProperty] private string _cashText = "$0.00";
@@ -29,7 +29,7 @@ public partial class GameViewModel : ViewModelBase
     {
         _engine = engine;
         _logger = logger;
-        _lastTick = DateTimeOffset.UtcNow;
+        _lastTick = DateTime.UtcNow;
     }
 
     public async Task InitializeAsync()
@@ -47,7 +47,7 @@ public partial class GameViewModel : ViewModelBase
     /// <summary>Called by the UI timer (~60fps).</summary>
     public void OnTick()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
         var delta = (now - _lastTick).TotalSeconds;
         _lastTick = now;
 

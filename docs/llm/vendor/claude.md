@@ -897,3 +897,144 @@ Unhandled exception. System.NotSupportedException: SQLite does not support expre
    at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
 kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ 
 
+The error is clear: **SQLite doesn't support `DateTimeOffset` in ORDER BY clauses** (this is a known EF Core + SQLite limitation).
+
+Let me check what we have in the project knowledge for context on the current code structure.I can see the problem clearly. The `EntityBase` class uses `DateTimeOffset` for `CreatedAt` and `UpdatedAt`, and the repository does `.OrderByDescending(g => g.UpdatedAt)` — but SQLite doesn't natively support `DateTimeOffset` in ORDER BY.
+
+There are two good fixes. The cleanest one for SQLite is to **change the entity types from `DateTimeOffset` to `DateTime` (UTC)**, or alternatively, keep `DateTimeOffset` but tell EF Core to store them as strings/ticks. Let me check if there's an `AppDbContext` with any configuration.Now I have the full picture. Here's the fix — you need to change **3 files**:
+
+## The Problem
+
+SQLite's EF Core provider (as of EF Core 10) doesn't support `DateTimeOffset` in ORDER BY. Your `EntityBase` uses `DateTimeOffset` for `CreatedAt`, `UpdatedAt`, and `GameState` uses it for `LastPlayedAt`.
+
+## The Fix
+
+**Option A (Recommended): Switch to `DateTime` (UTC)** — simplest, most SQLite-friendly approach.
+
+**Option B: Keep `DateTimeOffset` but store as string/ticks via EF Core value converters.**
+
+I'd recommend Option A. Here are the changes:
+
+### 1. `src/MyAdventure.Core/Entities/EntityBase.cs`
+
+```csharp
+namespace MyAdventure.Core.Entities;
+
+public abstract record EntityBase
+{
+    public Guid Id { get; init; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+```
+
+### 2. `src/MyAdventure.Core/Entities/GameState.cs`
+
+```csharp
+namespace MyAdventure.Core.Entities;
+
+/// <summary>Persistent game state stored in SQLite.</summary>
+public record GameState : EntityBase
+{
+    public double Cash { get; set; }
+    public double LifetimeEarnings { get; set; }
+    public double AngelInvestors { get; set; }
+    public int PrestigeCount { get; set; }
+    public string BusinessDataJson { get; set; } = "{}";
+    public string ManagerDataJson { get; set; } = "{}";
+    public DateTime LastPlayedAt { get; set; } = DateTime.UtcNow;
+}
+```
+
+### 3. `src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs`
+
+Change the `SaveAsync` line:
+
+```csharp
+state.UpdatedAt = DateTime.UtcNow;
+```
+
+And anywhere else in the codebase that sets `LastPlayedAt` or timestamps with `DateTimeOffset.UtcNow`, change to `DateTime.UtcNow`.
+
+### 4. Delete the old database and let EF recreate it
+
+```bash
+rm ~/.local/share/MyAdventure/myadventure.db
+```
+
+Then run again:
+
+```bash
+cd src/MyAdventure.Desktop && dotnet run
+```
+
+### Also update `GameViewModel.cs`
+
+The `_lastTick` field and usage in `GameViewModel` also uses `DateTimeOffset`:
+
+```csharp
+// Change this:
+private DateTimeOffset _lastTick;
+// To:
+private DateTime _lastTick;
+
+// And in constructor:
+_lastTick = DateTime.UtcNow;
+
+// And in OnTick():
+var now = DateTime.UtcNow;
+```
+
+This is the cleanest fix because SQLite natively handles `DateTime` just fine in queries, and since you're always using UTC anyway, there's no timezone information being lost.
+
+
+
+
+
+
+
+
+
+
+
+
+should I also change this? 
+```csharp
+
+    /// <summary>Called by the UI timer (~60fps).</summary>
+    public void OnTick()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var delta = (now - _lastTick).TotalSeconds;
+        _lastTick = now;
+
+        // Clamp delta to avoid huge jumps if app was suspended
+        delta = Math.Min(delta, 1.0);
+
+        _engine.Tick(delta);
+        RefreshAll();
+
+        // Auto-save every ~5 seconds (300 ticks at 60fps)
+        _saveCounter++;
+        if (_saveCounter >= 300)
+        {
+            _saveCounter = 0;
+            _ = SaveAsync();
+        }
+    }
+```
+
+Yes — change `DateTimeOffset.UtcNow` to `DateTime.UtcNow` there too, to match the `_lastTick` field type change. The delta calculation works identically with `DateTime`.
+
+```csharp
+var now = DateTime.UtcNow;
+```
+
+That's the only change needed in that method. Everything else (`TotalSeconds`, subtraction, `Math.Min`) works the same way.
+
+
+
+
+
+
+

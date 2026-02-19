@@ -20,7 +20,7 @@ public class GameStateRepository(
 
     public async Task SaveAsync(GameState state, CancellationToken ct = default)
     {
-        state.UpdatedAt = DateTimeOffset.UtcNow;
+        state.UpdatedAt = DateTime.UtcNow;
 
         var existing = await db.GameStates.FirstOrDefaultAsync(ct);
         if (existing is null)
