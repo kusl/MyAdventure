@@ -1253,3 +1253,48 @@ However, on android I don't see the progress bar.
 The game progresses but I don't see any progress bar. 
 Can you please fix all the issues you can find and return me FULL FILES for any file that changed? 
 Please and thank you
+
+Let me search the project knowledge to understand the current codebase and find the progress bar issue.I can see from our chat history that you've built the MyAdventure idle clicker game (Adventure Capitalist clone) with Avalonia UI, and we've been fixing issues like starting cash and DateTimeOffset. However, I can't find the current source code in project knowledge — it seems the dump.txt hasn't synced or isn't available to me right now.
+
+Could you paste the current source files (or your dump.txt) so I can see the actual progress bar implementation? Specifically, I'd need:
+
+1. **The GameView.axaml** — to see how the progress bar is defined
+2. **The BusinessViewModel (or equivalent)** — to see how progress is tracked/bound
+3. **The GameEngine.cs** — current version with the business tick/progress logic
+
+The most common reasons a progress bar works on desktop but not Android in Avalonia are:
+
+- **ProgressBar rendering differences** — Android may need explicit `Height`/`MinHeight` set on the `ProgressBar` control (it can collapse to 0 height)
+- **Animation/binding timing** — If progress is driven by a `DispatcherTimer` that isn't running on Android, or the progress value binding isn't notifying properly
+- **Theme/style differences** — The `FluentTheme` or `SimpleTheme` may render `ProgressBar` differently on Android; an explicit template may be needed
+
+Once I see the code, I can pinpoint the exact issue and give you full corrected files.
+
+Please help. here is the dump 
+
+Now I can see the full picture. Let me analyze the progress bar issues across both Desktop and Android views.
+
+**The core problems:**
+
+1. **Android `MainView.axaml`**: The progress bar inner `Border` has **no Width binding at all** — it's just an empty `<Border>` with `HorizontalAlignment="Left"` but no width, so it renders as 0 width (invisible).
+
+2. **Desktop `MainWindow.axaml`**: The progress bar uses `Width="{Binding ProgressPercent, StringFormat={}{0}}"` which tries to set `Width` to a pixel value like `45.5` — but this means at 100% progress the bar is only 100 pixels wide, not 100% of the container. It "works" on desktop only by accident because the cells are wide enough that the pixel values happen to look okayish, but it's fundamentally wrong.
+
+3. **Both views**: The approach of binding `Width` to a pixel value from a percentage doesn't scale properly. The correct approach is to use a `ScaleTransform` or bind the `Width` relative to the parent container's actual width.
+
+The cleanest cross-platform fix is to replace the hand-rolled progress bar with Avalonia's built-in `ProgressBar` control (which handles all the rendering correctly on every platform), or use a proper relative-width approach. I'll use `ProgressBar` since it's the right control for this job and works identically on Desktop and Android.
+
+Here are all the changed files:
+
+---Those are the only two files that need to change. Here's a summary of what was wrong and what changed:
+
+**Root cause — both views had broken progress bars:**
+
+In **Desktop `MainWindow.axaml`**, the progress bar was a `Border` with `Width="{Binding ProgressPercent, StringFormat={}{0}}"`. This set `Width` to an absolute pixel value (e.g., `Width=45.5` for 45.5% progress), not a percentage of the parent. It looked "ok-ish" on desktop by coincidence since the grid cells are wide, but it was still wrong — at 100% the bar would only be 100px wide, not filling the container.
+
+In **Android `MainView.axaml`**, the progress bar was a `Border` with `HorizontalAlignment="Left"` but **no Width binding at all**. It rendered as zero width — completely invisible.
+
+**The fix:** Both views now use Avalonia's built-in `<ProgressBar>` control with `Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"`. This works correctly on every platform because `ProgressBar` handles its own fill rendering relative to its container width. The `Foreground` is bound to the business color, `Background` matches the dark theme, and explicit `Height`/`MinHeight` ensures it doesn't collapse on Android.
+
+No other files changed — the `ProgressPercent` property in `BusinessViewModel` and the game engine tick logic were already correct.
+

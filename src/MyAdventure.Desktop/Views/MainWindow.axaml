@@ -60,7 +60,7 @@
                     <Border Margin="6" CornerRadius="12" Padding="12"
                             Background="#0F3460"
                             Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}">
-                        <Grid RowDefinitions="Auto,*,Auto,Auto">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                             <!-- Header: Icon + Name + Owned -->
                             <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,6">
                                 <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="28" VerticalAlignment="Center" />
@@ -74,16 +74,15 @@
                                 </Border>
                             </Grid>
                             
-                            <!-- Progress bar -->
-                            <Grid Grid.Row="1" MinHeight="20" Margin="0,4">
-                                <Border Background="#1A1A2E" CornerRadius="10" />
-                                <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}"
-                                        CornerRadius="10" HorizontalAlignment="Left"
-                                        Width="{Binding ProgressPercent, StringFormat={}{0}}"
-                                        Opacity="0.8">
-                                    <!-- Width binding via code-behind or converter -->
-                                </Border>
-                            </Grid>
+                            <!-- Progress bar using Avalonia ProgressBar control -->
+                            <ProgressBar Grid.Row="1" 
+                                         Minimum="0" Maximum="100" 
+                                         Value="{Binding ProgressPercent}"
+                                         Height="20" MinHeight="20"
+                                         Foreground="{Binding Color, Converter={StaticResource HexToBrush}}"
+                                         Background="#1A1A2E"
+                                         CornerRadius="10"
+                                         Margin="0,4" />
                             
                             <!-- Revenue info -->
                             <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,4,0,6">
