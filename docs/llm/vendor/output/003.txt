@@ -1891,4 +1891,2123 @@ Export Complete: docs/llm/dump.txt
 real	0m0.591s
 user	0m0.322s
 sys	0m0.372s
-kushal@fedora:~/src/dotnet/MyAdventure$ 
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.159s
+user	0m0.131s
+sys	0m0.027s
+
+Build succeeded in 0.5s
+
+real	0m0.689s
+user	0m0.816s
+sys	0m0.214s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+real	0m0.797s
+user	0m0.898s
+sys	0m0.206s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Entities/GameState.cs(6,5): error CS0825: The contextual keyword 'var' may only appear within a local variable declaration or in script code
+
+Build failed with 1 error(s) in 1.0s
+
+real	0m1.191s
+user	0m1.420s
+sys	0m0.237s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.0s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Entities/GameState.cs(6,5): error CS0825: The contextual keyword 'var' may only appear within a local variable declaration or in script code
+
+Build failed with 1 error(s) in 0.8s
+
+real	0m0.982s
+user	0m1.230s
+sys	0m0.250s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.866s
+user	0m1.988s
+sys	0m0.445s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m2.608s
+user	0m2.748s
+sys	0m0.536s
+
+real	0m8.820s
+user	0m14.078s
+sys	0m1.235s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.569s
+user	0m0.317s
+sys	0m0.369s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.149s
+user	0m0.120s
+sys	0m0.028s
+
+Build succeeded in 0.5s
+
+real	0m0.633s
+user	0m0.687s
+sys	0m0.168s
+Restore complete (0.5s)
+
+Build succeeded in 0.7s
+
+real	0m0.813s
+user	0m0.923s
+sys	0m0.187s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (0.7s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded with 2 warning(s) (21.8s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-arm64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-x64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+
+Build succeeded with 2 warning(s) in 23.2s
+
+real	0m23.389s
+user	1m19.150s
+sys	0m3.288s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.14]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.12]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.24]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.20]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (0.8s)
+  MyAdventure.UI.Tests test net10.0 succeeded (0.7s)
+[xUnit.net 00:00:00.67]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.2s)
+
+Test summary: total: 24, failed: 0, succeeded: 24, skipped: 0, duration: 1.3s
+Build succeeded in 2.1s
+
+real	0m2.299s
+user	0m1.681s
+sys	0m0.415s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.898s
+user	0m1.975s
+sys	0m0.453s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m2.328s
+user	0m2.404s
+sys	0m0.470s
+
+real	0m8.416s
+user	0m15.226s
+sys	0m1.153s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.580s
+user	0m0.321s
+sys	0m0.363s
+kushal@fedora:~/src/dotnet/MyAdventure$ rm ~/.local/share/MyAdventure/myadventure.db
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.157s
+user	0m0.127s
+sys	0m0.029s
+
+Build succeeded in 0.5s
+
+real	0m0.677s
+user	0m0.816s
+sys	0m0.196s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+real	0m0.799s
+user	0m0.920s
+sys	0m0.195s
+Restore complete (0.5s)
+  MyAdventure.Core net10.0 succeeded (2.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.2s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.7s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (0.6s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded with 2 warning(s) (21.5s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-arm64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-x64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+
+Build succeeded with 2 warning(s) in 25.4s
+
+real	0m25.553s
+user	1m24.822s
+sys	0m3.346s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.20]   Finished:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.26]     MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh [FAIL]
+[xUnit.net 00:00:00.26]       Shouldly.ShouldAssertException : _engine.Cash
+[xUnit.net 00:00:00.26]           should be
+[xUnit.net 00:00:00.26]       0d
+[xUnit.net 00:00:00.26]           but was
+[xUnit.net 00:00:00.26]       5d
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(27,0): at MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh()
+[xUnit.net 00:00:00.26]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.26]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.26]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.26]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.26]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.26]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.26]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.26]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.26]     MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold [FAIL]
+[xUnit.net 00:00:00.26]       Shouldly.ShouldAssertException : GameEngine.CalculateAngels(1e11)
+[xUnit.net 00:00:00.26]           should be
+[xUnit.net 00:00:00.26]       5d
+[xUnit.net 00:00:00.26]           but was
+[xUnit.net 00:00:00.26]       0d
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(77,0): at MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold()
+[xUnit.net 00:00:00.26]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.26]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.27]     MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail [FAIL]
+[xUnit.net 00:00:00.27]       Shouldly.ShouldAssertException : _engine.BuyBusiness("lemonade")
+[xUnit.net 00:00:00.27]           should be
+[xUnit.net 00:00:00.27]       False
+[xUnit.net 00:00:00.27]           but was
+[xUnit.net 00:00:00.27]       True
+[xUnit.net 00:00:00.27]       Stack Trace:
+[xUnit.net 00:00:00.27]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(49,0): at MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail()
+[xUnit.net 00:00:00.27]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.27]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.27]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.27]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.27]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.27]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.27]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.27]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.27]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.27]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.27]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.Core.Tests test net10.0 failed with 3 error(s) (0.8s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(27): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh (101ms): Error Message: Shouldly.ShouldAssertException : _engine.Cash
+          should be
+      0d
+          but was
+      5d
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 27
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(77): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold (1ms): Error Message: Shouldly.ShouldAssertException : GameEngine.CalculateAngels(1e11)
+          should be
+      5d
+          but was
+      0d
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 77
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(49): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail (6ms): Error Message: Shouldly.ShouldAssertException : _engine.BuyBusiness("lemonade")
+          should be
+      False
+          but was
+      True
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 49
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  MyAdventure.UI.Tests test net10.0 succeeded (0.7s)
+[xUnit.net 00:00:00.66]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.2s)
+
+Test summary: total: 24, failed: 3, succeeded: 21, skipped: 0, duration: 1.2s
+Build failed with 3 error(s) in 2.1s
+
+real	0m2.292s
+user	0m1.744s
+sys	0m0.350s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.938s
+user	0m2.064s
+sys	0m0.446s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m5.754s
+user	0m4.141s
+sys	0m0.610s
+
+real	0m7.977s
+user	0m13.015s
+sys	0m1.095s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.575s
+user	0m0.309s
+sys	0m0.373s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop; dotnet run
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (8ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20004]
+      An error occurred using the connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (3ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (5ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (19ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (2ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20209]
+      Beginning transaction with isolation level 'Unspecified'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20200]
+      Began transaction with isolation level 'Serializable'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20210]
+      Committing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20202]
+      Committed transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20204]
+      Disposing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Loading latest game state
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .OrderByDescending(g => g.UpdatedAt)
+          .FirstOrDefault()'
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync<GameState>(
+          asyncEnumerable: SingleQueryingEnumerable.Create<GameState>(
+              relationalQueryContext: (RelationalQueryContext)queryContext, 
+              relationalCommandResolver: parameters => [LIFTABLE Constant: RelationalCommandCache.QueryExpression(
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g
+                  ORDER BY g.UpdatedAt DESC) | Resolver: c => new RelationalCommandCache(
+                  c.Dependencies.MemoryCache, 
+                  c.RelationalDependencies.QuerySqlGeneratorFactory, 
+                  c.RelationalDependencies.RelationalParameterBasedSqlProcessorFactory, 
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g
+                  ORDER BY g.UpdatedAt DESC, 
+                  False, 
+                  MultipleParameters
+              )].GetRelationalCommandTemplate(parameters), 
+              readerColumns: null, 
+              shaper: (queryContext, dataReader, resultContext, resultCoordinator) => 
+              {
+                  GameState entity;
+                  entity = 
+                  {
+                      MaterializationContext materializationContext1;
+                      IEntityType entityType1;
+                      GameState instance1;
+                      InternalEntityEntry entry1;
+                      bool hasNullKey1;
+                      materializationContext1 = new MaterializationContext(
+                          [LIFTABLE Constant: ValueBuffer | Resolver: _ => (object)ValueBuffer.Empty], 
+                          queryContext.Context
+                      );
+                      instance1 = default(GameState);
+                      entry1 = queryContext.TryGetEntry(
+                          key: [LIFTABLE Constant: Key: GameState.Id PK | Resolver: c => c.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState").FindPrimaryKey()], 
+                          keyValues: new object[]{ (object)dataReader.GetGuid(0) }, 
+                          throwOnNullKey: True, 
+                          hasNullKey: hasNullKey1);
+                      !(hasNullKey1) ? entry1 != default(InternalEntityEntry) ? 
+                      {
+                          entityType1 = entry1.EntityType;
+                          return instance1 = (GameState)entry1.Entity;
+                      } : 
+                      {
+                          ISnapshot shadowSnapshot1;
+                          shadowSnapshot1 = [LIFTABLE Constant: Snapshot | Resolver: _ => Snapshot.Empty];
+                          entityType1 = [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{0} => namelessParameter{0}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")];
+                          instance1 = switch (entityType1)
+                          {
+                              case [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{1} => namelessParameter{1}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]: 
+                                  {
+                                      return 
+                                      {
+                                          GameState instance;
+                                          instance = new GameState();
+                                          instance.<Id>k__BackingField = dataReader.GetGuid(0);
+                                          instance.<AngelInvestors>k__BackingField = dataReader.GetDouble(1);
+                                          instance.<BusinessDataJson>k__BackingField = dataReader.GetString(2);
+                                          instance.<Cash>k__BackingField = dataReader.GetDouble(3);
+                                          instance.<CreatedAt>k__BackingField = dataReader.GetDateTime(4);
+                                          instance.<LastPlayedAt>k__BackingField = dataReader.GetDateTime(5);
+                                          instance.<LifetimeEarnings>k__BackingField = dataReader.GetDouble(6);
+                                          instance.<ManagerDataJson>k__BackingField = dataReader.GetString(7);
+                                          instance.<PrestigeCount>k__BackingField = dataReader.GetInt32(8);
+                                          instance.<UpdatedAt>k__BackingField = dataReader.GetDateTime(9);
+                                          (instance is IInjectableService) ? ((IInjectableService)instance).Injected(
+                                              context: materializationContext1.Context, 
+                                              entity: instance, 
+                                              queryTrackingBehavior: TrackAll, 
+                                              structuralType: [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{2} => namelessParameter{2}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]) : default(void);
+                                          return instance;
+                                      }}
+                              default: 
+                                  default(GameState)
+                          }
+                          ;
+                          entry1 = entityType1 == default(IEntityType) ? default(InternalEntityEntry) : queryContext.StartTracking(
+                              entityType: entityType1, 
+                              entity: instance1, 
+                              snapshot: shadowSnapshot1);
+                          return instance1;
+                      } : default(void);
+                      return instance1;
+                  };
+                  return entity;
+              }, 
+              contextType: MyAdventure.Infrastructure.Data.AppDbContext, 
+              standAloneStateManager: False, 
+              detailedErrorsEnabled: False, 
+              threadSafetyChecksEnabled: True), 
+          cancellationToken: queryContext.CancellationToken)'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      ORDER BY "g"."UpdatedAt" DESC
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      ORDER BY "g"."UpdatedAt" DESC
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 2ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+info: MyAdventure.Core.Services.GameEngine[0]
+      No saved game found, starting fresh with $5.00
+info: MyAdventure.Shared.ViewModels.GameViewModel[0]
+      Game initialized with 6 businesses
+info: MyAdventure.Core.Services.GameEngine[0]
+      Bought Lemonade Stand #1 for 4.00
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .FirstOrDefault()'
+warn: Microsoft.EntityFrameworkCore.Query[10103]
+      The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync<GameState>(
+          asyncEnumerable: SingleQueryingEnumerable.Create<GameState>(
+              relationalQueryContext: (RelationalQueryContext)queryContext, 
+              relationalCommandResolver: parameters => [LIFTABLE Constant: RelationalCommandCache.QueryExpression(
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g) | Resolver: c => new RelationalCommandCache(
+                  c.Dependencies.MemoryCache, 
+                  c.RelationalDependencies.QuerySqlGeneratorFactory, 
+                  c.RelationalDependencies.RelationalParameterBasedSqlProcessorFactory, 
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: GameState.Id (Guid) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: GameState.AngelInvestors (double) Required ValueGenerated.OnAdd, 1], [Property: GameState.BusinessDataJson (string) Required ValueGenerated.OnAdd, 2], [Property: GameState.Cash (double) Required ValueGenerated.OnAdd, 3], [Property: GameState.CreatedAt (DateTime) Required, 4], [Property: GameState.LastPlayedAt (DateTime) Required, 5], [Property: GameState.LifetimeEarnings (double) Required ValueGenerated.OnAdd, 6], [Property: GameState.ManagerDataJson (string) Required ValueGenerated.OnAdd, 7], [Property: GameState.PrestigeCount (int) Required ValueGenerated.OnAdd, 8], [Property: GameState.UpdatedAt (DateTime) Required, 9] }
+                  SELECT TOP(1) g.Id, g.AngelInvestors, g.BusinessDataJson, g.Cash, g.CreatedAt, g.LastPlayedAt, g.LifetimeEarnings, g.ManagerDataJson, g.PrestigeCount, g.UpdatedAt
+                  FROM GameStates AS g, 
+                  False, 
+                  MultipleParameters
+              )].GetRelationalCommandTemplate(parameters), 
+              readerColumns: null, 
+              shaper: (queryContext, dataReader, resultContext, resultCoordinator) => 
+              {
+                  GameState entity;
+                  entity = 
+                  {
+                      MaterializationContext materializationContext1;
+                      IEntityType entityType1;
+                      GameState instance1;
+                      InternalEntityEntry entry1;
+                      bool hasNullKey1;
+                      materializationContext1 = new MaterializationContext(
+                          [LIFTABLE Constant: ValueBuffer | Resolver: _ => (object)ValueBuffer.Empty], 
+                          queryContext.Context
+                      );
+                      instance1 = default(GameState);
+                      entry1 = queryContext.TryGetEntry(
+                          key: [LIFTABLE Constant: Key: GameState.Id PK | Resolver: c => c.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState").FindPrimaryKey()], 
+                          keyValues: new object[]{ (object)dataReader.GetGuid(0) }, 
+                          throwOnNullKey: True, 
+                          hasNullKey: hasNullKey1);
+                      !(hasNullKey1) ? entry1 != default(InternalEntityEntry) ? 
+                      {
+                          entityType1 = entry1.EntityType;
+                          return instance1 = (GameState)entry1.Entity;
+                      } : 
+                      {
+                          ISnapshot shadowSnapshot1;
+                          shadowSnapshot1 = [LIFTABLE Constant: Snapshot | Resolver: _ => Snapshot.Empty];
+                          entityType1 = [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{0} => namelessParameter{0}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")];
+                          instance1 = switch (entityType1)
+                          {
+                              case [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{1} => namelessParameter{1}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]: 
+                                  {
+                                      return 
+                                      {
+                                          GameState instance;
+                                          instance = new GameState();
+                                          instance.<Id>k__BackingField = dataReader.GetGuid(0);
+                                          instance.<AngelInvestors>k__BackingField = dataReader.GetDouble(1);
+                                          instance.<BusinessDataJson>k__BackingField = dataReader.GetString(2);
+                                          instance.<Cash>k__BackingField = dataReader.GetDouble(3);
+                                          instance.<CreatedAt>k__BackingField = dataReader.GetDateTime(4);
+                                          instance.<LastPlayedAt>k__BackingField = dataReader.GetDateTime(5);
+                                          instance.<LifetimeEarnings>k__BackingField = dataReader.GetDouble(6);
+                                          instance.<ManagerDataJson>k__BackingField = dataReader.GetString(7);
+                                          instance.<PrestigeCount>k__BackingField = dataReader.GetInt32(8);
+                                          instance.<UpdatedAt>k__BackingField = dataReader.GetDateTime(9);
+                                          (instance is IInjectableService) ? ((IInjectableService)instance).Injected(
+                                              context: materializationContext1.Context, 
+                                              entity: instance, 
+                                              queryTrackingBehavior: TrackAll, 
+                                              structuralType: [LIFTABLE Constant: EntityType: GameState | Resolver: namelessParameter{2} => namelessParameter{2}.Dependencies.Model.FindEntityType("MyAdventure.Core.Entities.GameState")]) : default(void);
+                                          return instance;
+                                      }}
+                              default: 
+                                  default(GameState)
+                          }
+                          ;
+                          entry1 = entityType1 == default(IEntityType) ? default(InternalEntityEntry) : queryContext.StartTracking(
+                              entityType: entityType1, 
+                              entity: instance1, 
+                              snapshot: shadowSnapshot1);
+                          return instance1;
+                      } : default(void);
+                      return instance1;
+                  };
+                  return entity;
+              }, 
+              contextType: MyAdventure.Infrastructure.Data.AppDbContext, 
+              standAloneStateManager: False, 
+              detailedErrorsEnabled: False, 
+              threadSafetyChecksEnabled: True), 
+          cancellationToken: queryContext.CancellationToken)'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10806]
+      Context 'AppDbContext' started tracking 'GameState' entity. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 71), @p2='?' (DbType = Double), @p3='?' (DbType = DateTime), @p4='?' (DbType = DateTime), @p5='?' (Size = 95), @p6='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "GameStates" ("Id", "BusinessDataJson", "Cash", "CreatedAt", "LastPlayedAt", "ManagerDataJson", "UpdatedAt")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)
+      RETURNING "AngelInvestors", "LifetimeEarnings", "PrestigeCount";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 71), @p2='?' (DbType = Double), @p3='?' (DbType = DateTime), @p4='?' (DbType = DateTime), @p5='?' (Size = 95), @p6='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "GameStates" ("Id", "BusinessDataJson", "Cash", "CreatedAt", "LastPlayedAt", "ManagerDataJson", "UpdatedAt")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)
+      RETURNING "AngelInvestors", "LifetimeEarnings", "PrestigeCount";
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 19ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Added' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 1.00
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 3ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.Cash' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LifetimeEarnings' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p4='?' (DbType = Guid), @p0='?' (DbType = Double), @p1='?' (DbType = DateTime), @p2='?' (DbType = Double), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "Cash" = @p0, "LastPlayedAt" = @p1, "LifetimeEarnings" = @p2, "UpdatedAt" = @p3
+      WHERE "Id" = @p4
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p4='?' (DbType = Guid), @p0='?' (DbType = Double), @p1='?' (DbType = DateTime), @p2='?' (DbType = Double), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "Cash" = @p0, "LastPlayedAt" = @p1, "LifetimeEarnings" = @p2, "UpdatedAt" = @p3
+      WHERE "Id" = @p4
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 11ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 3.00
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+info: MyAdventure.Core.Services.GameEngine[0]
+      Bought Lemonade Stand #2 for 4.28
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.BusinessDataJson' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.Cash' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LifetimeEarnings' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p5='?' (DbType = Guid), @p0='?' (Size = 71), @p1='?' (DbType = Double), @p2='?' (DbType = DateTime), @p3='?' (DbType = Double), @p4='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "BusinessDataJson" = @p0, "Cash" = @p1, "LastPlayedAt" = @p2, "LifetimeEarnings" = @p3, "UpdatedAt" = @p4
+      WHERE "Id" = @p5
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p5='?' (DbType = Guid), @p0='?' (Size = 71), @p1='?' (DbType = Double), @p2='?' (DbType = DateTime), @p3='?' (DbType = Double), @p4='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "BusinessDataJson" = @p0, "Cash" = @p1, "LastPlayedAt" = @p2, "LifetimeEarnings" = @p3, "UpdatedAt" = @p4
+      WHERE "Id" = @p5
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 3.72
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+info: MyAdventure.Core.Services.GameEngine[0]
+      Bought Lemonade Stand #3 for 4.58
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.BusinessDataJson' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.Cash' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LifetimeEarnings' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p5='?' (DbType = Guid), @p0='?' (Size = 71), @p1='?' (DbType = Double), @p2='?' (DbType = DateTime), @p3='?' (DbType = Double), @p4='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "BusinessDataJson" = @p0, "Cash" = @p1, "LastPlayedAt" = @p2, "LifetimeEarnings" = @p3, "UpdatedAt" = @p4
+      WHERE "Id" = @p5
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p5='?' (DbType = Guid), @p0='?' (Size = 71), @p1='?' (DbType = Double), @p2='?' (DbType = DateTime), @p3='?' (DbType = Double), @p4='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "BusinessDataJson" = @p0, "Cash" = @p1, "LastPlayedAt" = @p2, "LifetimeEarnings" = @p3, "UpdatedAt" = @p4
+      WHERE "Id" = @p5
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 5.14
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Started business: Lemonade Stand
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "g"."Id", "g"."AngelInvestors", "g"."BusinessDataJson", "g"."Cash", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarnings", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+      FROM "GameStates" AS "g"
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 0ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.Cash' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Unchanged' to 'Modified'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LastPlayedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.LifetimeEarnings' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10802]
+      The unchanged property 'GameState.UpdatedAt' was detected as changed and will be marked as modified. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p4='?' (DbType = Guid), @p0='?' (DbType = Double), @p1='?' (DbType = DateTime), @p2='?' (DbType = Double), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "Cash" = @p0, "LastPlayedAt" = @p1, "LifetimeEarnings" = @p2, "UpdatedAt" = @p3
+      WHERE "Id" = @p4
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p4='?' (DbType = Guid), @p0='?' (DbType = Double), @p1='?' (DbType = DateTime), @p2='?' (DbType = Double), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameStates" SET "Cash" = @p0, "LastPlayedAt" = @p1, "LifetimeEarnings" = @p2, "UpdatedAt" = @p3
+      WHERE "Id" = @p4
+      RETURNING 1;
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' is being disposed after spending 10ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'GameState' tracked by 'AppDbContext' changed state from 'Modified' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 1 entities written to the database.
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Game state saved
+dbug: MyAdventure.Core.Services.GameEngine[0]
+      Game saved. Cash: 14.14
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.166s
+user	0m0.132s
+sys	0m0.033s
+
+Build succeeded in 0.5s
+
+real	0m0.669s
+user	0m0.771s
+sys	0m0.227s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+real	0m0.783s
+user	0m0.898s
+sys	0m0.184s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (0.5s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded with 2 warning(s) (20.8s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-arm64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-x64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+
+Build succeeded with 2 warning(s) in 22.0s
+
+real	0m22.217s
+user	1m20.142s
+sys	0m3.216s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.12]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.24]     MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh [FAIL]
+[xUnit.net 00:00:00.24]       Shouldly.ShouldAssertException : _engine.Cash
+[xUnit.net 00:00:00.24]           should be
+[xUnit.net 00:00:00.24]       0d
+[xUnit.net 00:00:00.24]           but was
+[xUnit.net 00:00:00.24]       5d
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(27,0): at MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh()
+[xUnit.net 00:00:00.24]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.24]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.24]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.24]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.24]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.24]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.24]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.24]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.24]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.24]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.24]     MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold [FAIL]
+[xUnit.net 00:00:00.24]       Shouldly.ShouldAssertException : GameEngine.CalculateAngels(1e11)
+[xUnit.net 00:00:00.24]           should be
+[xUnit.net 00:00:00.24]       5d
+[xUnit.net 00:00:00.24]           but was
+[xUnit.net 00:00:00.24]       0d
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(77,0): at MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold()
+[xUnit.net 00:00:00.24]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.24]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.25]     MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail [FAIL]
+[xUnit.net 00:00:00.25]       Shouldly.ShouldAssertException : _engine.BuyBusiness("lemonade")
+[xUnit.net 00:00:00.25]           should be
+[xUnit.net 00:00:00.25]       False
+[xUnit.net 00:00:00.25]           but was
+[xUnit.net 00:00:00.25]       True
+[xUnit.net 00:00:00.25]       Stack Trace:
+[xUnit.net 00:00:00.25]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(49,0): at MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail()
+[xUnit.net 00:00:00.25]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.25]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.25]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.25]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.25]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.25]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.25]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.25]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.25]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.25]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.25]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.20]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.Core.Tests test net10.0 failed with 3 error(s) (0.8s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(27): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh (87ms): Error Message: Shouldly.ShouldAssertException : _engine.Cash
+          should be
+      0d
+          but was
+      5d
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.LoadAsync_NoSave_ShouldStartFresh() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 27
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(77): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold (< 1ms): Error Message: Shouldly.ShouldAssertException : GameEngine.CalculateAngels(1e11)
+          should be
+      5d
+          but was
+      0d
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.CalculateAngels_ShouldReturnZeroBelowThreshold() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 77
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(49): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail (4ms): Error Message: Shouldly.ShouldAssertException : _engine.BuyBusiness("lemonade")
+          should be
+      False
+          but was
+      True
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.BuyBusiness_NotEnoughCash_ShouldFail() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 49
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  MyAdventure.UI.Tests test net10.0 succeeded (0.7s)
+[xUnit.net 00:00:00.64]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.2s)
+
+Test summary: total: 24, failed: 3, succeeded: 21, skipped: 0, duration: 1.2s
+Build failed with 3 error(s) in 2.1s
+
+real	0m2.232s
+user	0m1.728s
+sys	0m0.353s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.880s
+user	0m1.963s
+sys	0m0.467s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m2.456s
+user	0m2.528s
+sys	0m0.528s
+
+real	0m8.165s
+user	0m12.907s
+sys	0m1.135s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.580s
+user	0m0.321s
+sys	0m0.368s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
