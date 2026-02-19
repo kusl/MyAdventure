@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 06:28:20 AM EST 2026
+Generated: Thu Feb 19 06:29:57 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -23,9 +23,11 @@ DIRECTORY STRUCTURE:
 │       ├── dump.txt
 │       └── vendor
 │           ├── claude.md
+│           ├── commands.txt
 │           ├── instructions.md
 │           └── output
-│               └── 001.txt
+│               ├── 001.txt
+│               └── 002.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
