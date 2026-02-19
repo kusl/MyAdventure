@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 11:51:32 AM EST 2026
+Generated: Thu Feb 19 11:55:04 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -3792,7 +3792,7 @@ public abstract record EntityBase
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/GameState.cs
-SIZE: .48 KB
+SIZE: .49 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -3800,7 +3800,7 @@ namespace MyAdventure.Core.Entities;
 /// <summary>Persistent game state stored in SQLite.</summary>
 public record GameState : EntityBase
 {
-    public double Cash { get; set; }
+    var state = new GameState { Cash = 5.0 };
     public double LifetimeEarnings { get; set; }
     public double AngelInvestors { get; set; }
     public int PrestigeCount { get; set; }

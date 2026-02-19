@@ -3,7 +3,7 @@ namespace MyAdventure.Core.Entities;
 /// <summary>Persistent game state stored in SQLite.</summary>
 public record GameState : EntityBase
 {
-    var state = new GameState { Cash = 5.0 };
+    public double Cash { get; set; }
     public double LifetimeEarnings { get; set; }
     public double AngelInvestors { get; set; }
     public int PrestigeCount { get; set; }
