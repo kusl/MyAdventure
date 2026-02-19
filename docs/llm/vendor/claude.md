@@ -608,3 +608,292 @@ Once you can see the app start (even if something else is wrong), you can re-ena
 
 
 
+I didn't find anything useful in the android logs but I ran the app on the desktop and got these errors 
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop; dotnet run
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (8ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20004]
+      An error occurred using the connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (3ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (6ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (2ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20209]
+      Beginning transaction with isolation level 'Unspecified'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20200]
+      Began transaction with isolation level 'Serializable'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20210]
+      Committing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20202]
+      Committed transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20204]
+      Disposing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Loading latest game state
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .OrderByDescending(g => g.UpdatedAt)
+          .FirstOrDefault()'
+Unhandled exception. System.NotSupportedException: SQLite does not support expressions of type 'DateTimeOffset' in ORDER BY clauses. Convert the values to a supported type, or use LINQ to Objects to order the results on the client side.
+   at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteQueryableMethodTranslatingExpressionVisitor.TranslateOrderBy(ShapedQueryExpression source, LambdaExpression keySelector, Boolean ascending)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.<>c__DisplayClass11_0`1.<ExecuteCore>b__0()
+   at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at MyAdventure.Infrastructure.Repositories.GameStateRepository.GetLatestAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs:line 16
+   at MyAdventure.Core.Services.GameEngine.LoadAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Services/GameEngine.cs:line 37
+   at MyAdventure.Shared.ViewModels.GameViewModel.InitializeAsync() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/ViewModels/GameViewModel.cs:line 37
+   at MyAdventure.Desktop.Views.MainWindow.OnOpened(EventArgs e) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Views/MainWindow.axaml.cs:line 22
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__124_0(Object state)
+   at Avalonia.Threading.SendOrPostCallbackDispatcherOperation.InvokeCore()
+   at Avalonia.Threading.DispatcherOperation.Execute()
+   at Avalonia.Threading.Dispatcher.ExecuteJob(DispatcherOperation job)
+   at Avalonia.Threading.Dispatcher.ExecuteJobsCore(Boolean fromExplicitBackgroundProcessingCallback)
+   at Avalonia.Threading.Dispatcher.Signaled()
+   at Avalonia.X11.X11PlatformThreading.CheckSignaled()
+   at Avalonia.X11.X11PlatformThreading.RunLoop(CancellationToken cancellationToken)
+   at Avalonia.Threading.DispatcherFrame.Run(IControlledDispatcherImpl impl)
+   at Avalonia.Threading.Dispatcher.PushFrame(DispatcherFrame frame)
+   at Avalonia.Threading.Dispatcher.MainLoop(CancellationToken cancellationToken)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.StartCore(String[] args)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.Start(String[] args)
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder)
+   at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -c
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -v time | grep -iE "MyAdventure|mono|dotnet|AndroidRuntime|FATAL|art.*error"
+^C
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ ^[[200~adb shell pidof com.kusl.myadventure
+bash: adb: command not found...
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb shell pidof com.kusl.myadventure
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb shell pidof com.kusl.myadventure
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb shell pidof com.kusl.myadventure
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ ^[[200~adb shell pidof com.kusl.myadventure\
+> 
+bash: adb: command not found...
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ ^[[200~adb shell pidof com.kusl.myadventure
+bash: adb: command not found...
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -v time | grep -iE "MyAdventure|mono|dotnet|AndroidRuntime|FATAL|art.*error"
+
+^C
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ 
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -v time *:W | head -200
+--------- beginning of main
+02-19 07:42:02.304 W/chbox:googleapp(19768): Reducing the number of considered missed Gc histogram windows from 332 to 100
+02-19 07:42:12.335 E/ejpt    (19768): (REDACTED) Trace %s timed out after %d ms. Complete trace: %s
+02-19 07:42:12.335 E/ejpt    (19768): ejrb: 
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateRequester#isEnabled(Started After:30)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateRequester#requestOrRemoveLocationUpdates(Started After:30)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateRequestScheduler#scheduleLocationUpdateRequest(Started After:30)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateApplicationStartupListener#onApplicationStartup(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateApplicationStartupListener(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Startup Listeners(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Application.onCreate(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Application creation(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): (REDACTED) Trace %s timed out after %d ms. Complete trace: %s
+02-19 07:42:12.335 E/ejpt    (19768): ejrb: 
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Write KansasDataProtoStoreKey(Started After:1)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Update KansasDataProtoStoreKey(Started After:1)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.ActionUpload#tryRequestUpload(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.ActionUpload#postAction(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.NotificationClickHandler#recordActions(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.ChimeNotificationEventHandler#onNotificationCreated(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.FirebaseMessagingServiceImpl(Started After:0)
+02-19 07:42:12.345 E/ejpt    (19768): (REDACTED) Trace %s timed out after %d ms. Complete trace: %s
+02-19 07:42:12.345 E/ejpt    (19768): ejrb: 
+02-19 07:42:12.345 E/ejpt    (19768): 	at tk_trace.handleBroadcast(Started After:0)
+02-19 07:42:12.345 E/ejpt    (19768): 	at tk_trace.Broadcast to com.google.android.libraries.search.gcm.googleapp.GoogleAppProcessGcmBroadcastReceiver_Receiver com.google.android.c2dm.intent.RECEIVE(Started After:0)
+02-19 07:42:57.385 E/android.hardware.power.stats@1.0-service-mock(  782): Failed to getEnergyData
+02-19 07:43:02.249 W/doh::connection(  699): Connection driver returns some Err: Closed
+^C
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ cd /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop; dotnet run
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (7ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteScalar'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteScalar' (3ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteScalar' (5ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (1ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Loading latest game state
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .OrderByDescending(g => g.UpdatedAt)
+          .FirstOrDefault()'
+Unhandled exception. System.NotSupportedException: SQLite does not support expressions of type 'DateTimeOffset' in ORDER BY clauses. Convert the values to a supported type, or use LINQ to Objects to order the results on the client side.
+   at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteQueryableMethodTranslatingExpressionVisitor.TranslateOrderBy(ShapedQueryExpression source, LambdaExpression keySelector, Boolean ascending)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.<>c__DisplayClass11_0`1.<ExecuteCore>b__0()
+   at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at MyAdventure.Infrastructure.Repositories.GameStateRepository.GetLatestAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs:line 16
+   at MyAdventure.Core.Services.GameEngine.LoadAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Services/GameEngine.cs:line 37
+   at MyAdventure.Shared.ViewModels.GameViewModel.InitializeAsync() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/ViewModels/GameViewModel.cs:line 37
+   at MyAdventure.Desktop.Views.MainWindow.OnOpened(EventArgs e) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Views/MainWindow.axaml.cs:line 22
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__124_0(Object state)
+   at Avalonia.Threading.SendOrPostCallbackDispatcherOperation.InvokeCore()
+   at Avalonia.Threading.DispatcherOperation.Execute()
+   at Avalonia.Threading.Dispatcher.ExecuteJob(DispatcherOperation job)
+   at Avalonia.Threading.Dispatcher.ExecuteJobsCore(Boolean fromExplicitBackgroundProcessingCallback)
+   at Avalonia.Threading.Dispatcher.Signaled()
+   at Avalonia.X11.X11PlatformThreading.CheckSignaled()
+   at Avalonia.X11.X11PlatformThreading.RunLoop(CancellationToken cancellationToken)
+   at Avalonia.Threading.DispatcherFrame.Run(IControlledDispatcherImpl impl)
+   at Avalonia.Threading.Dispatcher.PushFrame(DispatcherFrame frame)
+   at Avalonia.Threading.Dispatcher.MainLoop(CancellationToken cancellationToken)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.StartCore(String[] args)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.Start(String[] args)
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder)
+   at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ 
+
