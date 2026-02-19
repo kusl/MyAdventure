@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 01:35:50 PM EST 2026
+Generated: Thu Feb 19 01:39:10 PM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -3547,7 +3547,7 @@ SIZE: .32 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/Views/MainView.axaml
-SIZE: 5.08 KB
+SIZE: 6.57 KB
 ================================================================================
 
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -3618,18 +3618,39 @@ SIZE: 5.08 KB
                                 <Run Text=" | $" /><Run Text="{Binding RevenueText}" />
                             </TextBlock>
                             
-                            <Grid Grid.Row="3" ColumnDefinitions="*,4,*" Margin="0,4,0,0">
+                            <!-- Action buttons: BUY, RUN, MGR -->
+                            <Grid Grid.Row="3" ColumnDefinitions="*,4,*,4,*" Margin="0,4,0,0">
+                                <!-- Buy button -->
                                 <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
                                         IsEnabled="{Binding CanAfford}"
                                         Background="{Binding Color, Converter={StaticResource HexToBrush}}"
-                                        Foreground="White" FontWeight="Bold" FontSize="12"
+                                        Foreground="White" FontWeight="Bold" FontSize="11"
                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                         Padding="0,8" CornerRadius="6" Content="BUY" />
+                                
+                                <!-- Run button -->
                                 <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
                                         Background="#2196F3" Foreground="White"
-                                        FontWeight="Bold" FontSize="12"
+                                        FontWeight="Bold" FontSize="11"
                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                         Padding="0,8" CornerRadius="6" Content="▶ RUN" />
+                                
+                                <!-- Manager button (shown when no manager yet) -->
+                                <Button Grid.Column="4" Command="{Binding BuyManagerCommand}"
+                                        IsEnabled="{Binding CanAffordManager}"
+                                        IsVisible="{Binding !HasManager}"
+                                        Background="#FF6F00" Foreground="White"
+                                        FontWeight="Bold" FontSize="11"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Padding="0,8" CornerRadius="6"
+                                        Content="MGR" />
+                                <!-- Auto indicator (shown when manager purchased) -->
+                                <Border Grid.Column="4" IsVisible="{Binding HasManager}"
+                                        Background="#2E7D32" CornerRadius="6" Padding="0,8"
+                                        HorizontalAlignment="Stretch">
+                                    <TextBlock Text="✅ AUTO" HorizontalAlignment="Center"
+                                               Foreground="White" FontWeight="Bold" FontSize="11" />
+                                </Border>
                             </Grid>
                         </Grid>
                     </Border>
