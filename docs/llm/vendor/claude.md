@@ -193,3 +193,23 @@ user	0m0.012s
 sys	0m0.008s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
 
+the dump is blank as expected 
+===============================================================================
+PROJECT EXPORT (GIT TRACKED ONLY)
+Generated: Thu Feb 19 05:40:53 AM EST 2026
+Project Path: /home/kushal/src/dotnet/MyAdventure
+===============================================================================
+
+DIRECTORY STRUCTURE:
+===================
+├── docs
+│   └── llm
+│       ├── dump.txt
+│       └── vendor
+│           ├── claude.md
+│           └── instructions.md
+└── export.sh
+
+FILE CONTENTS:
+==============
+
