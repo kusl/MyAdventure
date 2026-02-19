@@ -1038,3 +1038,113 @@ That's the only change needed in that method. Everything else (`TotalSeconds`, s
 
 
 
+I got a new error now
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Services/GameEngine.cs(79,28): error CS0029: Cannot implicitly convert type 'System.DateTimeOffset' to 'System.DateTime'
+
+Build failed with 1 error(s) in 0.9s
+
+The fix is simple. On line 79, you're assigning a `DateTimeOffset` to a `DateTime` field. You have two clean options:
+
+**Option A** — If the field is `DateTime`, convert the value:
+```csharp
+// e.g. DateTimeOffset.UtcNow → DateTime
+someField = DateTimeOffset.UtcNow.UtcDateTime;
+```
+
+**Option B (preferred)** — Change the field/property type from `DateTime` to `DateTimeOffset`:
+```csharp
+// In your model/entity
+public DateTimeOffset StartedAt { get; set; }
+```
+
+`DateTimeOffset` is the better choice in general because it preserves timezone information and works more naturally with SQLite (via EF Core) and PostgreSQL. `DateTime` loses offset context and is a common source of subtle bugs with timestamps.
+
+Could you paste the relevant snippet around line 79 of `GameEngine.cs`? That way I can give you the exact one-line fix rather than a guess.
+
+remember I update the dump.txt 
+also the whole reason we changed offset was because 
+Unhandled exception. System.NotSupportedException: SQLite does not support expressions of type 'DateTimeOffset' in ORDER BY clauses. Convert the values to a supported type, or use LINQ to Objects to order the results on the client side.
+
+I don't see the dump.txt in the project knowledge yet — it may not have synced. Could you paste the relevant section (the model definition and the query with the ORDER BY), or share the dump.txt content here?
+
+That said, I can explain the right fix for this specific situation:
+
+**The real problem** is that EF Core's SQLite provider can't translate `DateTimeOffset` in `ORDER BY` to SQL. The cleanest solution that avoids *both* errors is to store timestamps as `long` (Unix milliseconds) in the entity, with a computed property for convenience:
+
+```csharp
+// In your entity
+public long StartedAtMs { get; set; }  // stored in DB as INTEGER
+
+[NotMapped]
+public DateTimeOffset StartedAt
+{
+    get => DateTimeOffset.FromUnixTimeMilliseconds(StartedAtMs);
+    set => StartedAtMs = value.ToUnixTimeMilliseconds();
+}
+```
+
+Then order by `StartedAtMs`:
+```csharp
+.OrderBy(s => s.StartedAtMs)
+```
+
+**Why this is better than the alternatives:**
+- `DateTime` loses timezone info and has its own SQLite quirks
+- `AsEnumerable()` / ordering on the client side pulls all rows into memory — wrong for any real dataset
+- `long` (Unix ms) is natively sortable in SQLite, fast, and unambiguous
+
+Paste the dump.txt or the relevant code and I'll give you the exact diff.
+
+
+Let me check the project knowledge for context on this codebase.I can see from our previous conversations that you changed `DateTimeOffset` → `DateTime` to fix the SQLite ORDER BY limitation. Now `GameEngine.cs` line 79 still has a `DateTimeOffset` value being assigned to a `DateTime` field.
+
+The fix is straightforward — on line 79 of `GameEngine.cs`, change:
+
+```csharp
+// Whatever looks like:
+someField = DateTimeOffset.UtcNow;
+// To:
+someField = DateTime.UtcNow;
+```
+
+Or if it's reading from a source that returns `DateTimeOffset`:
+
+```csharp
+someField = someOffset.UtcDateTime;
+```
+
+Can you paste the code around line 79 so I can give you the exact fix? There might be other `DateTimeOffset` references in `GameEngine.cs` that also need updating as part of the same sweep.
+
+yes, here is game engine 
+
+The problem is on line 79:
+
+```csharp
+LastPlayedAt = _time.GetUtcNow()
+```
+
+`TimeProvider.GetUtcNow()` returns `DateTimeOffset`, but `LastPlayedAt` is now `DateTime` (from our earlier fix). Change it to:
+
+```csharp
+LastPlayedAt = _time.GetUtcNow().UtcDateTime
+```
+
+Same issue on line 55 in `LoadAsync`:
+
+```csharp
+var elapsed = _time.GetUtcNow() - state.LastPlayedAt;
+```
+
+`state.LastPlayedAt` is `DateTime` now, but `_time.GetUtcNow()` is `DateTimeOffset` — the subtraction won't compile cleanly. Change it to:
+
+```csharp
+var elapsed = _time.GetUtcNow().UtcDateTime - state.LastPlayedAt;
+```
+
+That's the two spots in this file. Both are just appending `.UtcDateTime` to the `TimeProvider` call.
+
+
+
+

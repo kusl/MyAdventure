@@ -50,7 +50,7 @@ public class GameEngine(
         ApplyManagerData(state.ManagerDataJson);
 
         // Calculate offline earnings
-        var elapsed = _time.GetUtcNow() - state.LastPlayedAt;
+        var elapsed = _time.GetUtcNow().UtcDateTime - state.LastPlayedAt;
         if (elapsed.TotalSeconds > 1)
         {
             var offlineEarnings = CalculateOfflineEarnings(elapsed);
@@ -76,7 +76,7 @@ public class GameEngine(
             PrestigeCount = PrestigeCount,
             BusinessDataJson = SerializeBusinessData(),
             ManagerDataJson = SerializeManagerData(),
-            LastPlayedAt = _time.GetUtcNow()
+            LastPlayedAt = _time.GetUtcNow().UtcDateTime
         };
         await repository.SaveAsync(state, ct);
         logger.LogDebug("Game saved. Cash: {Cash:F2}", Cash);
