@@ -1,540 +1,3 @@
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-  MyAdventure.Desktop net10.0 succeeded (0.9s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
-  MyAdventure.Android net10.0-android failed with 1 error(s) (2.2s)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/MainActivity.cs(18,14): error CS1061: 'AppBuilder' does not contain a definition for 'WithInterFont' and no accessible extension method 'WithInterFont' accepting a first argument of type 'AppBuilder' could be found (are you missing a using directive or an assembly reference?)
-
-Build failed with 51 error(s) in 5.9s
-
-real	0m6.101s
-user	0m3.915s
-sys	0m0.744s
-Restore complete (0.6s)
-  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
-  MyAdventure.Core.Tests net10.0 failed with 40 error(s) (0.1s)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(8,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(8,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(29,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(29,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(23,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(23,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(49,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(49,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(31,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(31,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(45,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(45,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(52,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(52,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(67,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(67,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(8,6): error CS0246: The type or namespace name 'TheoryAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(8,6): error CS0246: The type or namespace name 'Theory' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(9,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(9,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(10,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(10,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(11,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(11,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(12,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(12,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(13,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(13,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(14,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(14,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(15,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(15,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(16,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(16,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(75,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(75,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(20,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(20,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(79,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(79,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.Integration.Tests net10.0 failed with 6 error(s) (0.1s)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(25,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(25,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(45,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(45,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(56,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(56,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-  MyAdventure.UI.Tests net10.0 failed with 4 error(s) (0.1s)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(13,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(13,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
-
-Build failed with 50 error(s) in 1.0s
-
-real	0m1.151s
-user	0m1.409s
-sys	0m0.380s
-Restore complete (0.5s)
-
-Build succeeded in 0.6s
-Project 'MyAdventure.Android' has the following package references
-   [net10.0-android36.0]: 
-   Top-level Package                                  Requested    Resolved
-   > Avalonia.Android                                 11.3.12      11.3.12 
-   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
-   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
-   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
-
-Project 'MyAdventure.Core' has the following package references
-   [net10.0]: 
-   Top-level Package                   Requested   Resolved
-   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
-   > OpenTelemetry.Api                 1.15.0      1.15.0  
-
-Project 'MyAdventure.Desktop' has the following package references
-   [net10.0]: 
-   Top-level Package                               Requested   Resolved
-   > Avalonia.Desktop                              11.3.12     11.3.12 
-   > Avalonia.Diagnostics                          11.3.12     11.3.12 
-   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
-   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
-   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
-
-Project 'MyAdventure.Infrastructure' has the following package references
-   [net10.0]: 
-   Top-level Package                                              Requested   Resolved
-   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
-   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
-   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
-   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
-   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
-   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
-   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
-   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
-   > OpenTelemetry                                                1.15.0      1.15.0  
-   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
-   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
-   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
-
-Project 'MyAdventure.Shared' has the following package references
-   [net10.0]: 
-   Top-level Package                               Requested   Resolved
-   > Avalonia                                      11.3.12     11.3.12 
-   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
-   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
-   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
-   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
-
-Project 'MyAdventure.Core.Tests' has the following package references
-   [net10.0]: 
-   Top-level Package                Requested   Resolved
-   > Bogus                          35.6.5      35.6.5  
-   > coverlet.collector             8.0.0       8.0.0   
-   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
-   > NSubstitute                    5.3.0       5.3.0   
-   > Shouldly                       4.3.0       4.3.0   
-   > xunit                          2.9.3       2.9.3   
-   > xunit.runner.visualstudio      3.1.5       3.1.5   
-
-Project 'MyAdventure.Integration.Tests' has the following package references
-   [net10.0]: 
-   Top-level Package                             Requested   Resolved
-   > coverlet.collector                          8.0.0       8.0.0   
-   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
-   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
-   > Shouldly                                    4.3.0       4.3.0   
-   > xunit                                       2.9.3       2.9.3   
-   > xunit.runner.visualstudio                   3.1.5       3.1.5   
-
-Project 'MyAdventure.UI.Tests' has the following package references
-   [net10.0]: 
-   Top-level Package                Requested   Resolved
-   > coverlet.collector             8.0.0       8.0.0   
-   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
-   > NSubstitute                    5.3.0       5.3.0   
-   > Shouldly                       4.3.0       4.3.0   
-   > xunit                          2.9.3       2.9.3   
-   > xunit.runner.visualstudio      3.1.5       3.1.5   
-
-(A) : Auto-referenced package.
-
-real	0m1.811s
-user	0m1.890s
-sys	0m0.456s
-Restore complete (0.5s)
-
-Build succeeded in 0.6s
-
-The following sources were used:
-   https://api.nuget.org/v3/index.json
-
-The given project `MyAdventure.Android` has no updates given the current sources.
-The given project `MyAdventure.Core` has no updates given the current sources.
-The given project `MyAdventure.Desktop` has no updates given the current sources.
-The given project `MyAdventure.Infrastructure` has no updates given the current sources.
-The given project `MyAdventure.Shared` has no updates given the current sources.
-The given project `MyAdventure.Core.Tests` has no updates given the current sources.
-The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
-The given project `MyAdventure.UI.Tests` has no updates given the current sources.
-
-real	0m2.189s
-user	0m2.256s
-sys	0m0.498s
-
-real	0m8.378s
-user	0m13.037s
-sys	0m1.290s
-==============================================
-  Generating Clean Project Export
-==============================================
-Generating directory structure...
-Collecting and cleaning file contents...
-Processed: .gitattributes
-Processed: .github/dependabot.yml
-Processed: .github/workflows/build-and-release.yml
-Processed: .gitignore
-Processed: Directory.Build.props
-Processed: Directory.Packages.props
-Processed: LICENSE
-Processed: MyAdventure.slnx
-Processed: README.md
-Processed: docs/KEYSTORE.md
-Processed: global.json
-Processed: setup.sh
-Processed: src/MyAdventure.Android/AndroidManifest.xml
-Processed: src/MyAdventure.Android/App.axaml
-Processed: src/MyAdventure.Android/App.axaml.cs
-Processed: src/MyAdventure.Android/MainActivity.cs
-Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
-Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
-Processed: src/MyAdventure.Android/Resources/values/strings.xml
-Processed: src/MyAdventure.Android/Resources/values/styles.xml
-Processed: src/MyAdventure.Android/Views/MainView.axaml
-Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
-Processed: src/MyAdventure.Core/Entities/Business.cs
-Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
-Processed: src/MyAdventure.Core/Entities/EntityBase.cs
-Processed: src/MyAdventure.Core/Entities/GameState.cs
-Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
-Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
-Processed: src/MyAdventure.Core/Services/GameEngine.cs
-Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
-Processed: src/MyAdventure.Desktop/App.axaml
-Processed: src/MyAdventure.Desktop/App.axaml.cs
-Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
-Processed: src/MyAdventure.Desktop/Program.cs
-Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
-Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
-Processed: src/MyAdventure.Desktop/app.manifest
-Processed: src/MyAdventure.Desktop/appsettings.json
-Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
-Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
-Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
-Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
-Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
-Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
-Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
-Processed: src/MyAdventure.Shared/Resources/i18n/en.json
-Processed: src/MyAdventure.Shared/Resources/i18n/es.json
-Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
-Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
-Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
-Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
-Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
-Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
-Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
-Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
-Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
-
-Export Complete: docs/llm/dump.txt
-
-real	0m0.613s
-user	0m0.294s
-sys	0m0.414s
-kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
-.NET SDK:
- Version:           10.0.102
- Commit:            1def04f336
- Workload version:  10.0.101.1
- MSBuild version:   18.0.7+1def04f33
-
-Runtime Environment:
- OS Name:     fedora
- OS Version:  43
- OS Platform: Linux
- RID:         fedora.43-x64
- Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
-
-.NET workloads installed:
- [android]
-   Installation Source: SDK 10.0.100
-   Manifest Version:    36.1.2/10.0.100
-   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
-   Install Type:        FileBased
-
-Configured to use workload sets when installing new manifests.
-
-Host:
-  Version:      10.0.2
-  Architecture: x64
-  Commit:       1def04f336
-
-.NET SDKs installed:
-  10.0.102 [/usr/lib64/dotnet/sdk]
-
-.NET runtimes installed:
-  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
-  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
-
-Other architectures found:
-  None
-
-Environment variables:
-  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
-  DOTNET_ROOT                              [/usr/lib64/dotnet]
-
-global.json file:
-  /home/kushal/src/dotnet/MyAdventure/global.json
-
-Learn more:
-  https://aka.ms/dotnet/info
-
-Download .NET:
-  https://aka.ms/dotnet/download
-
-real	0m0.143s
-user	0m0.115s
-sys	0m0.027s
-
-Build succeeded in 0.4s
-
-real	0m0.589s
-user	0m0.671s
-sys	0m0.135s
-Restore complete (0.8s)
-
-Build succeeded in 0.9s
-
-real	0m1.020s
-user	0m1.167s
-sys	0m0.223s
-Restore complete (0.5s)
-  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.2s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
-  MyAdventure.Core.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-  MyAdventure.Integration.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
-  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
-  MyAdventure.Desktop net10.0 succeeded (0.5s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
-  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
-  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.Android net10.0-android succeeded with 2 warning(s) (21.5s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
-    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-arm64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
-    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-x64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
-
-Build succeeded with 2 warning(s) in 23.1s
-
-real	0m23.230s
-user	1m20.759s
-sys	0m3.756s
-Restore complete (0.6s)
-  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
-  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
-  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
-[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.Core.Tests
-[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.12]   Starting:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
-[xUnit.net 00:00:00.10]   Starting:    MyAdventure.UI.Tests
-[xUnit.net 00:00:00.23]   Finished:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.19]   Finished:    MyAdventure.UI.Tests
-  MyAdventure.Core.Tests test net10.0 succeeded (0.8s)
-  MyAdventure.UI.Tests test net10.0 succeeded (0.7s)
-[xUnit.net 00:00:00.65]   Finished:    MyAdventure.Integration.Tests
-  MyAdventure.Integration.Tests test net10.0 succeeded (1.2s)
-
-Test summary: total: 24, failed: 0, succeeded: 24, skipped: 0, duration: 1.2s
-Build succeeded in 2.0s
-
-real	0m2.200s
-user	0m1.631s
-sys	0m0.380s
-Restore complete (0.6s)
-
-Build succeeded in 0.7s
-Project 'MyAdventure.Android' has the following package references
-   [net10.0-android36.0]: 
-   Top-level Package                                  Requested    Resolved
-   > Avalonia.Android                                 11.3.12      11.3.12 
-   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
-   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
-   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
-   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
-
-Project 'MyAdventure.Core' has the following package references
-   [net10.0]: 
-   Top-level Package                   Requested   Resolved
-   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
-   > OpenTelemetry.Api                 1.15.0      1.15.0  
-
-Project 'MyAdventure.Desktop' has the following package references
-   [net10.0]: 
-   Top-level Package                               Requested   Resolved
-   > Avalonia.Desktop                              11.3.12     11.3.12 
-   > Avalonia.Diagnostics                          11.3.12     11.3.12 
-   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
-   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
-   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
-
-Project 'MyAdventure.Infrastructure' has the following package references
-   [net10.0]: 
-   Top-level Package                                              Requested   Resolved
-   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
-   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
-   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
-   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
-   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
-   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
-   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
-   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
-   > OpenTelemetry                                                1.15.0      1.15.0  
-   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
-   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
-   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
-
-Project 'MyAdventure.Shared' has the following package references
-   [net10.0]: 
-   Top-level Package                               Requested   Resolved
-   > Avalonia                                      11.3.12     11.3.12 
-   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
-   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
-   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
-   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
-
-Project 'MyAdventure.Core.Tests' has the following package references
-   [net10.0]: 
-   Top-level Package                Requested   Resolved
-   > Bogus                          35.6.5      35.6.5  
-   > coverlet.collector             8.0.0       8.0.0   
-   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
-   > NSubstitute                    5.3.0       5.3.0   
-   > Shouldly                       4.3.0       4.3.0   
-   > xunit                          2.9.3       2.9.3   
-   > xunit.runner.visualstudio      3.1.5       3.1.5   
-
-Project 'MyAdventure.Integration.Tests' has the following package references
-   [net10.0]: 
-   Top-level Package                             Requested   Resolved
-   > coverlet.collector                          8.0.0       8.0.0   
-   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
-   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
-   > Shouldly                                    4.3.0       4.3.0   
-   > xunit                                       2.9.3       2.9.3   
-   > xunit.runner.visualstudio                   3.1.5       3.1.5   
-
-Project 'MyAdventure.UI.Tests' has the following package references
-   [net10.0]: 
-   Top-level Package                Requested   Resolved
-   > coverlet.collector             8.0.0       8.0.0   
-   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
-   > NSubstitute                    5.3.0       5.3.0   
-   > Shouldly                       4.3.0       4.3.0   
-   > xunit                          2.9.3       2.9.3   
-   > xunit.runner.visualstudio      3.1.5       3.1.5   
-
-(A) : Auto-referenced package.
-
-real	0m2.041s
-user	0m2.062s
-sys	0m0.515s
-Restore complete (0.5s)
-
-Build succeeded in 0.6s
-
-The following sources were used:
-   https://api.nuget.org/v3/index.json
-
-The given project `MyAdventure.Android` has no updates given the current sources.
-The given project `MyAdventure.Core` has no updates given the current sources.
-The given project `MyAdventure.Desktop` has no updates given the current sources.
-The given project `MyAdventure.Infrastructure` has no updates given the current sources.
-The given project `MyAdventure.Shared` has no updates given the current sources.
-The given project `MyAdventure.Core.Tests` has no updates given the current sources.
-The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
-The given project `MyAdventure.UI.Tests` has no updates given the current sources.
-
-real	0m2.292s
-user	0m2.373s
-sys	0m0.505s
-
-real	0m8.791s
-user	0m13.731s
-sys	0m1.258s
-==============================================
-  Generating Clean Project Export
-==============================================
-Generating directory structure...
-Collecting and cleaning file contents...
-Processed: .gitattributes
-Processed: .github/dependabot.yml
-Processed: .github/workflows/build-and-release.yml
-Processed: .gitignore
-Processed: Directory.Build.props
-Processed: Directory.Packages.props
-Processed: LICENSE
-Processed: MyAdventure.slnx
-Processed: README.md
-Processed: docs/KEYSTORE.md
-Processed: global.json
-Processed: setup.sh
-Processed: src/MyAdventure.Android/AndroidManifest.xml
-Processed: src/MyAdventure.Android/App.axaml
-Processed: src/MyAdventure.Android/App.axaml.cs
-Processed: src/MyAdventure.Android/MainActivity.cs
-Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
-Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
-Processed: src/MyAdventure.Android/Resources/values/strings.xml
-Processed: src/MyAdventure.Android/Resources/values/styles.xml
-Processed: src/MyAdventure.Android/Views/MainView.axaml
-Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
-Processed: src/MyAdventure.Core/Entities/Business.cs
-Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
-Processed: src/MyAdventure.Core/Entities/EntityBase.cs
-Processed: src/MyAdventure.Core/Entities/GameState.cs
-Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
-Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
-Processed: src/MyAdventure.Core/Services/GameEngine.cs
-Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
-Processed: src/MyAdventure.Desktop/App.axaml
-Processed: src/MyAdventure.Desktop/App.axaml.cs
-Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
-Processed: src/MyAdventure.Desktop/Program.cs
-Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
-Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
-Processed: src/MyAdventure.Desktop/app.manifest
-Processed: src/MyAdventure.Desktop/appsettings.json
-Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
-Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
-Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
-Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
-Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
-Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
-Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
-Processed: src/MyAdventure.Shared/Resources/i18n/en.json
-Processed: src/MyAdventure.Shared/Resources/i18n/es.json
-Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
 Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
 Processed: tests/Directory.Build.props
 Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
@@ -9382,3 +8845,590 @@ real	0m0.579s
 user	0m0.307s
 sys	0m0.385s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.154s
+user	0m0.115s
+sys	0m0.029s
+
+Build succeeded in 0.5s
+
+real	0m0.622s
+user	0m0.735s
+sys	0m0.182s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+real	0m0.786s
+user	0m0.905s
+sys	0m0.188s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (0.7s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded with 1 warning(s) (16.1s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(2502,3): warning XA0141: Android 16 will require 16 KB page sizes, shared library 'libSkiaSharp.so' does not have a 16 KB page size. Please inform the authors of the NuGet package 'SkiaSharp.NativeAssets.Android' version '2.88.9' which contains 'runtimes/android-arm64/native/libSkiaSharp.so'. See https://developer.android.com/guide/practices/page-sizes for more details.
+
+Build succeeded with 1 warning(s) in 17.2s
+
+real	0m17.371s
+user	1m21.317s
+sys	0m2.830s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.2)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.22]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.20]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (0.7s)
+  MyAdventure.UI.Tests test net10.0 succeeded (0.7s)
+[xUnit.net 00:00:00.65]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.2s)
+
+Test summary: total: 24, failed: 0, succeeded: 24, skipped: 0, duration: 1.2s
+Build succeeded in 2.0s
+
+real	0m2.199s
+user	0m1.627s
+sys	0m0.375s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.940s
+user	0m2.058s
+sys	0m0.465s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m2.424s
+user	0m2.622s
+sys	0m0.494s
+
+real	0m8.215s
+user	0m13.361s
+sys	0m1.264s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.591s
+user	0m0.314s
+sys	0m0.393s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop; dotnet run
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (8ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20004]
+      An error occurred using the connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (3ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (6ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      PRAGMA journal_mode = 'wal';
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (2ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20209]
+      Beginning transaction with isolation level 'Unspecified'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20200]
+      Began transaction with isolation level 'Serializable'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "GameStates" (
+          "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+          "Cash" REAL NOT NULL DEFAULT 0.0,
+          "LifetimeEarnings" REAL NOT NULL DEFAULT 0.0,
+          "AngelInvestors" REAL NOT NULL DEFAULT 0.0,
+          "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+          "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+          "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+          "LastPlayedAt" TEXT NOT NULL,
+          "CreatedAt" TEXT NOT NULL,
+          "UpdatedAt" TEXT NOT NULL
+      );
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20210]
+      Committing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20202]
+      Committed transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20204]
+      Disposing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Loading latest game state
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .OrderByDescending(g => g.UpdatedAt)
+          .FirstOrDefault()'
+Unhandled exception. System.NotSupportedException: SQLite does not support expressions of type 'DateTimeOffset' in ORDER BY clauses. Convert the values to a supported type, or use LINQ to Objects to order the results on the client side.
+   at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteQueryableMethodTranslatingExpressionVisitor.TranslateOrderBy(ShapedQueryExpression source, LambdaExpression keySelector, Boolean ascending)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.<>c__DisplayClass11_0`1.<ExecuteCore>b__0()
+   at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at MyAdventure.Infrastructure.Repositories.GameStateRepository.GetLatestAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs:line 16
+   at MyAdventure.Core.Services.GameEngine.LoadAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Services/GameEngine.cs:line 37
+   at MyAdventure.Shared.ViewModels.GameViewModel.InitializeAsync() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/ViewModels/GameViewModel.cs:line 37
+   at MyAdventure.Desktop.Views.MainWindow.OnOpened(EventArgs e) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Views/MainWindow.axaml.cs:line 22
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__124_0(Object state)
+   at Avalonia.Threading.SendOrPostCallbackDispatcherOperation.InvokeCore()
+   at Avalonia.Threading.DispatcherOperation.Execute()
+   at Avalonia.Threading.Dispatcher.ExecuteJob(DispatcherOperation job)
+   at Avalonia.Threading.Dispatcher.ExecuteJobsCore(Boolean fromExplicitBackgroundProcessingCallback)
+   at Avalonia.Threading.Dispatcher.Signaled()
+   at Avalonia.X11.X11PlatformThreading.CheckSignaled()
+   at Avalonia.X11.X11PlatformThreading.RunLoop(CancellationToken cancellationToken)
+   at Avalonia.Threading.DispatcherFrame.Run(IControlledDispatcherImpl impl)
+   at Avalonia.Threading.Dispatcher.PushFrame(DispatcherFrame frame)
+   at Avalonia.Threading.Dispatcher.MainLoop(CancellationToken cancellationToken)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.StartCore(String[] args)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.Start(String[] args)
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder)
+   at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -c
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -v time | grep -iE "MyAdventure|mono|dotnet|AndroidRuntime|FATAL|art.*error"
+^C
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ ^[[200~adb shell pidof com.kusl.myadventure
+bash: adb: command not found...
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb shell pidof com.kusl.myadventure
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb shell pidof com.kusl.myadventure
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb shell pidof com.kusl.myadventure
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ ^[[200~adb shell pidof com.kusl.myadventure\
+> 
+bash: adb: command not found...
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ ^[[200~adb shell pidof com.kusl.myadventure
+bash: adb: command not found...
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -v time | grep -iE "MyAdventure|mono|dotnet|AndroidRuntime|FATAL|art.*error"
+
+^C
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ 
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ adb logcat -v time *:W | head -200
+--------- beginning of main
+02-19 07:42:02.304 W/chbox:googleapp(19768): Reducing the number of considered missed Gc histogram windows from 332 to 100
+02-19 07:42:12.335 E/ejpt    (19768): (REDACTED) Trace %s timed out after %d ms. Complete trace: %s
+02-19 07:42:12.335 E/ejpt    (19768): ejrb: 
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateRequester#isEnabled(Started After:30)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateRequester#requestOrRemoveLocationUpdates(Started After:30)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateRequestScheduler#scheduleLocationUpdateRequest(Started After:30)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateApplicationStartupListener#onApplicationStartup(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.LocationUpdateApplicationStartupListener(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Startup Listeners(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Application.onCreate(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Application creation(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): (REDACTED) Trace %s timed out after %d ms. Complete trace: %s
+02-19 07:42:12.335 E/ejpt    (19768): ejrb: 
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Write KansasDataProtoStoreKey(Started After:1)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.Update KansasDataProtoStoreKey(Started After:1)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.ActionUpload#tryRequestUpload(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.ActionUpload#postAction(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.NotificationClickHandler#recordActions(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.ChimeNotificationEventHandler#onNotificationCreated(Started After:0)
+02-19 07:42:12.335 E/ejpt    (19768): 	at tk_trace.FirebaseMessagingServiceImpl(Started After:0)
+02-19 07:42:12.345 E/ejpt    (19768): (REDACTED) Trace %s timed out after %d ms. Complete trace: %s
+02-19 07:42:12.345 E/ejpt    (19768): ejrb: 
+02-19 07:42:12.345 E/ejpt    (19768): 	at tk_trace.handleBroadcast(Started After:0)
+02-19 07:42:12.345 E/ejpt    (19768): 	at tk_trace.Broadcast to com.google.android.libraries.search.gcm.googleapp.GoogleAppProcessGcmBroadcastReceiver_Receiver com.google.android.c2dm.intent.RECEIVE(Started After:0)
+02-19 07:42:57.385 E/android.hardware.power.stats@1.0-service-mock(  782): Failed to getEnergyData
+02-19 07:43:02.249 W/doh::connection(  699): Connection driver returns some Err: Closed
+^C
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ cd /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop; dotnet run
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (7ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteScalar'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteScalar' (3ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteScalar' (5ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (1ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server '/home/kushal/.local/share/MyAdventure/myadventure.db' (0ms).
+dbug: MyAdventure.Infrastructure.Repositories.GameStateRepository[0]
+      Loading latest game state
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.3 initialized 'AppDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.3' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<GameState>()
+          .OrderByDescending(g => g.UpdatedAt)
+          .FirstOrDefault()'
+Unhandled exception. System.NotSupportedException: SQLite does not support expressions of type 'DateTimeOffset' in ORDER BY clauses. Convert the values to a supported type, or use LINQ to Objects to order the results on the client side.
+   at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteQueryableMethodTranslatingExpressionVisitor.TranslateOrderBy(ShapedQueryExpression source, LambdaExpression keySelector, Boolean ascending)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)
+   at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.<>c__DisplayClass11_0`1.<ExecuteCore>b__0()
+   at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at MyAdventure.Infrastructure.Repositories.GameStateRepository.GetLatestAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs:line 16
+   at MyAdventure.Core.Services.GameEngine.LoadAsync(CancellationToken ct) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Services/GameEngine.cs:line 37
+   at MyAdventure.Shared.ViewModels.GameViewModel.InitializeAsync() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/ViewModels/GameViewModel.cs:line 37
+   at MyAdventure.Desktop.Views.MainWindow.OnOpened(EventArgs e) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Views/MainWindow.axaml.cs:line 22
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__124_0(Object state)
+   at Avalonia.Threading.SendOrPostCallbackDispatcherOperation.InvokeCore()
+   at Avalonia.Threading.DispatcherOperation.Execute()
+   at Avalonia.Threading.Dispatcher.ExecuteJob(DispatcherOperation job)
+   at Avalonia.Threading.Dispatcher.ExecuteJobsCore(Boolean fromExplicitBackgroundProcessingCallback)
+   at Avalonia.Threading.Dispatcher.Signaled()
+   at Avalonia.X11.X11PlatformThreading.CheckSignaled()
+   at Avalonia.X11.X11PlatformThreading.RunLoop(CancellationToken cancellationToken)
+   at Avalonia.Threading.DispatcherFrame.Run(IControlledDispatcherImpl impl)
+   at Avalonia.Threading.Dispatcher.PushFrame(DispatcherFrame frame)
+   at Avalonia.Threading.Dispatcher.MainLoop(CancellationToken cancellationToken)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.StartCore(String[] args)
+   at Avalonia.Controls.ApplicationLifetimes.ClassicDesktopStyleApplicationLifetime.Start(String[] args)
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder)
+   at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ 
+kushal@fedora:~/src/dotnet/MyAdventure/src/MyAdventure.Desktop$ 
