@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 07:38:03 AM EST 2026
+Generated: Thu Feb 19 11:38:25 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -3776,7 +3776,7 @@ public static class BusinessDefinitions
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/EntityBase.cs
-SIZE: .27 KB
+SIZE: .24 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -3784,14 +3784,14 @@ namespace MyAdventure.Core.Entities;
 public abstract record EntityBase
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/GameState.cs
-SIZE: .49 KB
+SIZE: .48 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -3805,7 +3805,7 @@ public record GameState : EntityBase
     public int PrestigeCount { get; set; }
     public string BusinessDataJson { get; set; } = "{}";
     public string ManagerDataJson { get; set; } = "{}";
-    public DateTimeOffset LastPlayedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime LastPlayedAt { get; set; } = DateTime.UtcNow;
 }
 
 
@@ -4669,7 +4669,7 @@ SIZE: 1.15 KB
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
-SIZE: 1.68 KB
+SIZE: 1.67 KB
 ================================================================================
 
 using Microsoft.EntityFrameworkCore;
@@ -4694,7 +4694,7 @@ public class GameStateRepository(
 
     public async Task SaveAsync(GameState state, CancellationToken ct = default)
     {
-        state.UpdatedAt = DateTimeOffset.UtcNow;
+        state.UpdatedAt = DateTime.UtcNow;
 
         var existing = await db.GameStates.FirstOrDefaultAsync(ct);
         if (existing is null)
@@ -4913,7 +4913,7 @@ public partial class BusinessViewModel(Business model, GameEngine engine) : View
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
-SIZE: 3.28 KB
+SIZE: 3.26 KB
 ================================================================================
 
 using System.Collections.ObjectModel;
@@ -4931,7 +4931,7 @@ public partial class GameViewModel : ViewModelBase
 {
     private readonly GameEngine _engine;
     private readonly ILogger<GameViewModel> _logger;
-    private DateTimeOffset _lastTick;
+    private DateTime _lastTick;
     private int _saveCounter;
 
     [ObservableProperty] private string _cashText = "$0.00";
@@ -4947,7 +4947,7 @@ public partial class GameViewModel : ViewModelBase
     {
         _engine = engine;
         _logger = logger;
-        _lastTick = DateTimeOffset.UtcNow;
+        _lastTick = DateTime.UtcNow;
     }
 
     public async Task InitializeAsync()
@@ -4965,7 +4965,7 @@ public partial class GameViewModel : ViewModelBase
     /// <summary>Called by the UI timer (~60fps).</summary>
     public void OnTick()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
         var delta = (now - _lastTick).TotalSeconds;
         _lastTick = now;
 
