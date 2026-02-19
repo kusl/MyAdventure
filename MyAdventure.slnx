@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MyAdventure.Core/MyAdventure.Core.csproj" />
+    <Project Path="src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj" />
+    <Project Path="src/MyAdventure.Shared/MyAdventure.Shared.csproj" />
+    <Project Path="src/MyAdventure.Desktop/MyAdventure.Desktop.csproj" />
+    <Project Path="src/MyAdventure.Android/MyAdventure.Android.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj" />
+    <Project Path="tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj" />
+    <Project Path="tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj" />
+  </Folder>
+</Solution>

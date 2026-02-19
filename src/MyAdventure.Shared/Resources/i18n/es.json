@@ -1,0 +1,14 @@
+{
+  "AppName": "MiAventura",
+  "Cash": "Efectivo",
+  "Buy": "COMPRAR",
+  "Run": "INICIAR",
+  "Manager": "GER",
+  "Prestige": "PRESTIGIO",
+  "Angels": "Ángeles",
+  "Bonus": "Bono",
+  "Owned": "Propio",
+  "Revenue": "Ingreso",
+  "Cost": "Costo",
+  "OfflineEarnings": "Mientras no estabas, ganaste {0}!"
+}

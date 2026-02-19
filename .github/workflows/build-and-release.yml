@@ -1,0 +1,290 @@
+# =============================================================================
+# Build and Release — Every push to main creates a release
+# Single workflow. Single team. No silos.
+# =============================================================================
+name: Build and Release
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  # ===========================================================================
+  # Build and Test (runs on every push/PR)
+  # ===========================================================================
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Setup Keystore
+        id: keystore
+        shell: bash
+        run: |
+          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/android.keystore"
+            echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            keytool -genkey -v -keystore "$GITHUB_WORKSPACE/android.keystore" \
+              -alias myalias -keyalg RSA -keysize 2048 -validity 1 \
+              -storepass dummypassword -keypass dummypassword \
+              -dname "CN=Dummy, OU=Dummy, O=Dummy, L=Dummy, ST=Dummy, C=US" \
+              2>/dev/null || true
+            echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: |
+          SIGN_PASS="${{ secrets.ANDROID_SIGNING_PASSWORD }}"
+          if [[ "${{ steps.keystore.outputs.available }}" != "true" ]]; then
+            SIGN_PASS="dummypassword"
+          fi
+          dotnet build --configuration Release --no-restore \
+            -p:BuildNumber=${{ github.run_number }} \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="${{ steps.keystore.outputs.path }}" \
+            -p:AndroidSigningStorePass="$SIGN_PASS" \
+            -p:AndroidSigningKeyPass="$SIGN_PASS" \
+            -p:AndroidSigningKeyAlias=myalias
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+  # ===========================================================================
+  # Build Desktop Releases
+  # ===========================================================================
+  build-desktop:
+    needs: build-and-test
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+            artifact: linux-arm64
+          - os: windows-latest
+            rid: win-x64
+            artifact: win-x64
+          - os: windows-latest
+            rid: win-arm64
+            artifact: win-arm64
+          - os: macos-latest
+            rid: osx-x64
+            artifact: osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+            artifact: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish
+        shell: bash
+        run: |
+          dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
+            --configuration Release \
+            -r ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:Version=1.0.${{ github.run_number }} \
+            --output ./publish
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cd ./publish
+          tar -czvf ../MyAdventure-${{ matrix.artifact }}.tar.gz .
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-${{ matrix.artifact }}.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            ./MyAdventure-${{ matrix.artifact }}.tar.gz
+            ./MyAdventure-${{ matrix.artifact }}.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  # ===========================================================================
+  # Build Android APK
+  # ===========================================================================
+  build-android:
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Setup Keystore
+        id: keystore
+        shell: bash
+        run: |
+          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/android.keystore"
+            echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Android APK (Signed)
+        if: steps.keystore.outputs.available == 'true'
+        shell: bash
+        run: |
+          dotnet publish src/MyAdventure.Android/MyAdventure.Android.csproj \
+            --configuration Release \
+            -p:ApplicationVersion=${{ github.run_number }} \
+            -p:ApplicationDisplayVersion=1.0.${{ github.run_number }} \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="${{ steps.keystore.outputs.path }}" \
+            -p:AndroidSigningStorePass="${{ secrets.ANDROID_SIGNING_PASSWORD }}" \
+            -p:AndroidSigningKeyPass="${{ secrets.ANDROID_SIGNING_PASSWORD }}" \
+            -p:AndroidSigningKeyAlias=myalias \
+            -p:AndroidUseAapt2Daemon=false \
+            --output ./publish/android
+
+      - name: Build Android APK (Unsigned)
+        if: steps.keystore.outputs.available != 'true'
+        shell: bash
+        run: |
+          dotnet publish src/MyAdventure.Android/MyAdventure.Android.csproj \
+            --configuration Release \
+            -p:ApplicationVersion=${{ github.run_number }} \
+            -p:ApplicationDisplayVersion=1.0.${{ github.run_number }} \
+            -p:AndroidUseAapt2Daemon=false \
+            --output ./publish/android
+
+      - name: Rename APK
+        shell: bash
+        run: |
+          APK_PATH=$(find ./publish/android -name "*-Signed.apk" -o -name "*.apk" | grep -v "\.aab$" | head -1)
+          if [[ -n "$APK_PATH" ]]; then
+            cp "$APK_PATH" "./MyAdventure-android-${{ github.run_number }}.apk"
+          else
+            echo "ERROR: No APK found!"
+            find ./publish -type f -name "*.apk" || echo "No APK files"
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: ./MyAdventure-android-${{ github.run_number }}.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  # ===========================================================================
+  # Create GitHub Release
+  # ===========================================================================
+  create-release:
+    needs: [build-desktop, build-android]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare release files
+        shell: bash
+        run: |
+          mkdir -p ./release
+          find ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.apk" \) -exec cp {} ./release/ \;
+          echo "=== Release files ==="
+          ls -la ./release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: ./release/*
+          body: |
+            ## MyAdventure v1.0.${{ github.run_number }}
+            
+            ### Downloads
+            
+            | Platform | File |
+            |----------|------|
+            | Windows x64 | `MyAdventure-win-x64.zip` |
+            | Windows ARM64 | `MyAdventure-win-arm64.zip` |
+            | Linux x64 | `MyAdventure-linux-x64.tar.gz` |
+            | Linux ARM64 | `MyAdventure-linux-arm64.tar.gz` |
+            | macOS x64 (Intel) | `MyAdventure-osx-x64.tar.gz` |
+            | macOS ARM64 (Apple Silicon) | `MyAdventure-osx-arm64.tar.gz` |
+            | Android | `MyAdventure-android-${{ github.run_number }}.apk` |
+            
+            ### Android Users (Obtainium)
+            
+            Point Obtainium to this repository's releases for automatic updates.
+            The APK version code increments with each release.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

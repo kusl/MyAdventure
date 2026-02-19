@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MyAdventure.Shared.ViewModels"
+             xmlns:conv="using:MyAdventure.Shared.Converters"
+             x:Class="MyAdventure.Android.Views.MainView"
+             x:DataType="vm:GameViewModel"
+             Background="#1A1A2E">
+
+    <UserControl.Resources>
+        <conv:HexToBrushConverter x:Key="HexToBrush" />
+        <conv:BoolToOpacityConverter x:Key="BoolToOpacity" />
+    </UserControl.Resources>
+
+    <DockPanel Margin="8">
+        <!-- Top bar -->
+        <Border DockPanel.Dock="Top" Background="#16213E" CornerRadius="10" Padding="14,8" Margin="0,0,0,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="💰" FontSize="24" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding CashText}" FontSize="28" FontWeight="Bold" 
+                               Foreground="#00E676" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding PrestigeCommand}"
+                        IsEnabled="{Binding CanPrestige}"
+                        Background="#AA00FF" Foreground="White"
+                        FontSize="14" FontWeight="Bold"
+                        Padding="14,8" CornerRadius="6">
+                    <TextBlock Text="🔄 PRESTIGE" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Business list: 3 rows x 2 cols for mobile -->
+        <ItemsControl ItemsSource="{Binding Businesses}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="2" Rows="3" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:BusinessViewModel">
+                    <Border Margin="4" CornerRadius="10" Padding="8"
+                            Background="#0F3460"
+                            Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+                                <TextBlock Text="{Binding Icon}" FontSize="22" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" 
+                                           Foreground="White" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            
+                            <Grid Grid.Row="1" MinHeight="14" Margin="0,2">
+                                <Border Background="#1A1A2E" CornerRadius="7" />
+                                <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}"
+                                        CornerRadius="7" HorizontalAlignment="Left" Opacity="0.8" />
+                            </Grid>
+                            
+                            <TextBlock Grid.Row="2" Foreground="#B0BEC5" FontSize="11" Margin="0,2">
+                                <Run Text="x" /><Run Text="{Binding Owned}" />
+                                <Run Text=" | $" /><Run Text="{Binding RevenueText}" />
+                            </TextBlock>
+                            
+                            <Grid Grid.Row="3" ColumnDefinitions="*,4,*" Margin="0,4,0,0">
+                                <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
+                                        IsEnabled="{Binding CanAfford}"
+                                        Background="{Binding Color, Converter={StaticResource HexToBrush}}"
+                                        Foreground="White" FontWeight="Bold" FontSize="12"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Padding="0,8" CornerRadius="6" Content="BUY" />
+                                <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
+                                        Background="#2196F3" Foreground="White"
+                                        FontWeight="Bold" FontSize="12"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Padding="0,8" CornerRadius="6" Content="▶ RUN" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

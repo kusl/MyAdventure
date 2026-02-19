@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>com.kusl.myadventure</ApplicationId>
+    <ApplicationVersion>$(BuildNumber)</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0.$(BuildNumber)</ApplicationDisplayVersion>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    
+    <!-- AOT causes issues in Debug; disable it -->
+    <RunAOTCompilation Condition="'$(Configuration)' == 'Debug'">false</RunAOTCompilation>
+    <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
+    <AndroidEnableAppCompatTheme>true</AndroidEnableAppCompatTheme>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdventure.Shared\MyAdventure.Shared.csproj" />
+    <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
+    <ProjectReference Include="..\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+</Project>

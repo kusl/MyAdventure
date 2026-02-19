@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
+    <ProjectReference Include="..\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <AvaloniaResource Include="Resources\i18n\*.json" />
+  </ItemGroup>
+</Project>

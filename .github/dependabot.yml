@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      avalonia:
+        patterns: ["Avalonia*"]
+      microsoft:
+        patterns: ["Microsoft.*"]
+      opentelemetry:
+        patterns: ["OpenTelemetry*"]
+      testing:
+        patterns: ["xunit*", "Shouldly*", "NSubstitute*", "Bogus", "coverlet*"]
+    ignore:
+      - dependency-name: "FluentAssertions"
+      - dependency-name: "Moq"
+      
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

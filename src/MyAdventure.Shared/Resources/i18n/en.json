@@ -1,0 +1,14 @@
+{
+  "AppName": "MyAdventure",
+  "Cash": "Cash",
+  "Buy": "BUY",
+  "Run": "RUN",
+  "Manager": "MGR",
+  "Prestige": "PRESTIGE",
+  "Angels": "Angels",
+  "Bonus": "Bonus",
+  "Owned": "Owned",
+  "Revenue": "Revenue",
+  "Cost": "Cost",
+  "OfflineEarnings": "While you were away, you earned {0}!"
+}
