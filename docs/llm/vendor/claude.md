@@ -372,3 +372,140 @@ Here are the three files to update:
 
 After pasting these three files, you can close all five dependabot PRs (the three nuget group PRs and the five github-actions PRs) since they're all addressed in this single commit. Run `dotnet build && dotnet test` and it should be green.
 
+
+
+
+
+
+
+build is failing. 
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (2.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 failed with 40 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(23,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(23,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(8,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(8,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(29,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(29,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(31,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(31,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(49,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(49,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(45,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(45,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(52,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(52,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(67,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(67,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(75,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(75,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(79,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(79,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(8,6): error CS0246: The type or namespace name 'TheoryAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(8,6): error CS0246: The type or namespace name 'Theory' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(9,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(9,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(10,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(10,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(11,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(11,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(12,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(12,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(13,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(13,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(14,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(14,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(15,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(15,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(16,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(16,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(20,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(20,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+  MyAdventure.Infrastructure net10.0 succeeded (0.3s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Integration.Tests net10.0 failed with 6 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(25,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(25,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(45,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(45,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(56,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(56,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+  MyAdventure.Shared net10.0 succeeded (0.9s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 failed with 4 error(s) (0.2s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(13,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(13,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+  MyAdventure.Desktop net10.0 succeeded (0.9s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Android net10.0-android failed with 1 error(s) (2.2s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/MainActivity.cs(18,14): error CS1061: 'AppBuilder' does not contain a definition for 'WithInterFont' and no accessible extension method 'WithInterFont' accepting a first argument of type 'AppBuilder' could be found (are you missing a using directive or an assembly reference?)
+
+Build failed with 51 error(s) in 5.9s
+
+real	0m6.101s
+user	0m3.915s
+sys	0m0.744s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 failed with 40 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(8,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(8,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(29,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(29,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(23,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(23,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(49,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/BusinessTests.cs(49,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(31,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(31,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(45,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(45,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(52,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(52,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(67,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(67,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(8,6): error CS0246: The type or namespace name 'TheoryAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(8,6): error CS0246: The type or namespace name 'Theory' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(9,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(9,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(10,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(10,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(11,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(11,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(12,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(12,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(13,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(13,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(14,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(14,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(15,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(15,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(16,6): error CS0246: The type or namespace name 'InlineDataAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(16,6): error CS0246: The type or namespace name 'InlineData' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(75,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(75,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(20,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/NumberFormatterTests.cs(20,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(79,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(79,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 failed with 6 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(25,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(25,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(45,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(45,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(56,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs(56,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+  MyAdventure.UI.Tests net10.0 failed with 4 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(13,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(13,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs(41,6): error CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?)
+
+Build failed with 50 error(s) in 1.0s
+
+real	0m1.151s
+user	0m1.409s
+sys	0m0.380s
+Restore complete (0.5s)
