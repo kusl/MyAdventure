@@ -258,3 +258,78 @@ The `docs/KEYSTORE.md` file has the keystore generation and GitHub Secrets setup
 
 
 
+This is good progress. I have added the keystore and Github secrets. 
+kushal@fedora:~/src/dotnet/MyAdventure$ git remote show origin 
+* remote origin
+  Fetch URL: git@github.com:kusl/MyAdventure.git
+  Push  URL: git@github.com:kusl/MyAdventure.git
+  HEAD branch: main
+  Remote branches:
+    dependabot/github_actions/actions/checkout-6          new (next fetch will store in remotes/origin)
+    dependabot/github_actions/actions/download-artifact-7 new (next fetch will store in remotes/origin)
+    dependabot/github_actions/actions/setup-dotnet-5      new (next fetch will store in remotes/origin)
+    dependabot/github_actions/actions/setup-java-5        new (next fetch will store in remotes/origin)
+    dependabot/github_actions/actions/upload-artifact-6   new (next fetch will store in remotes/origin)
+    dependabot/nuget/microsoft-f078703165                 new (next fetch will store in remotes/origin)
+    dependabot/nuget/opentelemetry-66d705222e             new (next fetch will store in remotes/origin)
+    dependabot/nuget/testing-4256675e77                   new (next fetch will store in remotes/origin)
+    main                                                  tracked
+  Local branch configured for 'git pull':
+    main merges with remote main
+  Local ref configured for 'git push':
+    main pushes to main (fast-forwardable)
+kushal@fedora:~/src/dotnet/MyAdventure$ 
+Lets address all our issues 
+1. Please update our nuget dependencies. Give me the full props file and I will paste it
+The given project `MyAdventure.Android` has no updates given the current sources.
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package        Requested   Resolved   Latest
+   > OpenTelemetry.Api      1.11.2      1.11.2     1.15.0
+
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                            Requested   Resolved   Latest
+   > OpenTelemetry                              1.11.2      1.11.2     1.15.0
+   > OpenTelemetry.Exporter.Console             1.11.2      1.11.2     1.15.0
+   > OpenTelemetry.Extensions.Hosting           1.11.2      1.11.2     1.15.0
+   > OpenTelemetry.Instrumentation.Runtime      1.11.0      1.11.0     1.15.0
+
+The given project `MyAdventure.Shared` has no updates given the current sources.
+Project `MyAdventure.Core.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                Requested   Resolved   Latest
+   > Bogus                          35.6.1      35.6.1     35.6.5
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0    18.0.1
+   > xunit.runner.visualstudio      3.0.2       3.0.2      3.1.5 
+
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                Requested   Resolved   Latest
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0    18.0.1
+   > xunit.runner.visualstudio      3.0.2       3.0.2      3.1.5 
+
+Project `MyAdventure.UI.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                Requested   Resolved   Latest
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0    18.0.1
+   > xunit.runner.visualstudio      3.0.2       3.0.2      3.1.5 
+
+2. Fix the build 
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Entities/GameState.cs(4,26): error CS8865: Only records may inherit from records.
+
+Build failed with 1 error(s) in 1.0s
+
+real	0m1.142s
+user	0m1.350s
+sys	0m0.261s
+Restore complete (0.5s)
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Entities/GameState.cs(4,26): error CS8865: Only records may inherit from records.
+
+Build failed with 1 error(s) in 0.8s
+
+3. Make any other changes that you see necessary to avoid another round trip. 
+The latest code is in dump.txt now 
