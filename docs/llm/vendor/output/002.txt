@@ -1033,4 +1033,295 @@ Export Complete: docs/llm/dump.txt
 real	0m0.560s
 user	0m0.296s
 sys	0m0.376s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet --info; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+.NET SDK:
+ Version:           10.0.102
+ Commit:            1def04f336
+ Workload version:  10.0.101.1
+ MSBuild version:   18.0.7+1def04f33
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  43
+ OS Platform: Linux
+ RID:         fedora.43-x64
+ Base Path:   /usr/lib64/dotnet/sdk/10.0.102/
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 10.0.100
+   Manifest Version:    36.1.2/10.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/10.0.100/microsoft.net.sdk.android/36.1.2/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      10.0.2
+  Architecture: x64
+  Commit:       1def04f336
+
+.NET SDKs installed:
+  10.0.102 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.2 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_BUNDLE_EXTRACT_BASE_DIR           [/home/kushal/.cache/dotnet_bundle_extract]
+  DOTNET_ROOT                              [/usr/lib64/dotnet]
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.146s
+user	0m0.119s
+sys	0m0.026s
+
+Build succeeded in 0.5s
+
+real	0m0.604s
+user	0m0.694s
+sys	0m0.134s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+real	0m0.820s
+user	0m0.948s
+sys	0m0.182s
+Restore complete (0.5s)
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Entities/GameState.cs(4,26): error CS8865: Only records may inherit from records.
+
+Build failed with 1 error(s) in 1.0s
+
+real	0m1.142s
+user	0m1.350s
+sys	0m0.261s
+Restore complete (0.5s)
+  MyAdventure.Core net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/Entities/GameState.cs(4,26): error CS8865: Only records may inherit from records.
+
+Build failed with 1 error(s) in 0.8s
+
+real	0m0.932s
+user	0m1.138s
+sys	0m0.271s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.11.2      1.11.2  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.11.2      1.11.2  
+   > OpenTelemetry.Exporter.Console                               1.11.2      1.11.2  
+   > OpenTelemetry.Extensions.Hosting                             1.11.2      1.11.2  
+   > OpenTelemetry.Instrumentation.Runtime                        1.11.0      1.11.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.1      35.6.1  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0 
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.0.2       3.0.2   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      17.13.0     17.13.0 
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.0.2       3.0.2   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0 
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.0.2       3.0.2   
+
+(A) : Auto-referenced package.
+
+real	0m1.852s
+user	0m1.916s
+sys	0m0.500s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package        Requested   Resolved   Latest
+   > OpenTelemetry.Api      1.11.2      1.11.2     1.15.0
+
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                            Requested   Resolved   Latest
+   > OpenTelemetry                              1.11.2      1.11.2     1.15.0
+   > OpenTelemetry.Exporter.Console             1.11.2      1.11.2     1.15.0
+   > OpenTelemetry.Extensions.Hosting           1.11.2      1.11.2     1.15.0
+   > OpenTelemetry.Instrumentation.Runtime      1.11.0      1.11.0     1.15.0
+
+The given project `MyAdventure.Shared` has no updates given the current sources.
+Project `MyAdventure.Core.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                Requested   Resolved   Latest
+   > Bogus                          35.6.1      35.6.1     35.6.5
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0    18.0.1
+   > xunit.runner.visualstudio      3.0.2       3.0.2      3.1.5 
+
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                Requested   Resolved   Latest
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0    18.0.1
+   > xunit.runner.visualstudio      3.0.2       3.0.2      3.1.5 
+
+Project `MyAdventure.UI.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                Requested   Resolved   Latest
+   > Microsoft.NET.Test.Sdk         17.13.0     17.13.0    18.0.1
+   > xunit.runner.visualstudio      3.0.2       3.0.2      3.1.5 
+
+
+real	0m2.266s
+user	0m2.424s
+sys	0m0.463s
+
+real	0m8.067s
+user	0m12.715s
+sys	0m1.171s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.557s
+user	0m0.290s
+sys	0m0.379s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
