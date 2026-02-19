@@ -8,10 +8,18 @@
     <ApplicationDisplayVersion>1.0.$(BuildNumber)</ApplicationDisplayVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     
-    <!-- AOT causes issues in Debug; disable it -->
-    <RunAOTCompilation Condition="'$(Configuration)' == 'Debug'">false</RunAOTCompilation>
+    <!-- Disable AOT entirely until the app runs successfully.
+         AOT + EF Core reflection + OpenTelemetry = likely trimming crashes.
+         Re-enable once the app is stable and add trimmer roots. -->
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <PublishTrimmed>false</PublishTrimmed>
+    
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
     <AndroidEnableAppCompatTheme>true</AndroidEnableAppCompatTheme>
+    
+    <!-- Keep reflection metadata for DI, EF Core, and OpenTelemetry -->
+    <TrimmerDefaultAction>link</TrimmerDefaultAction>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>

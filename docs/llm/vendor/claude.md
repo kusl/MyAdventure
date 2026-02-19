@@ -540,3 +540,71 @@ So the ItemGroup in `src/MyAdventure.Android/MyAdventure.Android.csproj` should 
 The version is already defined in `Directory.Packages.props` as `11.3.12`, so central package management handles the rest.
 
 After both fixes, `dotnet build` should clear all 51 errors.
+
+
+
+
+
+
+
+
+I made the changes. I pushed the update to Github. Github built the apk successfully. I installed it on my phone. But I can't run it. When I run it it just closes. I have added some logs to the best of my ability in the project files. Please review that and the latest dump. 
+
+Let me search through the project knowledge to review your project files and the latest logs.OK, I've thoroughly reviewed your project files and the logcat dump. Here's what's happening:
+
+**The logcat tells the story by what's *missing*, not what's present.** Your grep for `com.kusl.myadventure` returned absolutely zero lines. Every single `FATAL EXCEPTION` in the dump is from `com.google.android.GoogleCamera` (OOM errors) — completely unrelated to your app. Your app is crashing so fast and so silently that no managed code ever executes.
+
+There are multiple compounding issues causing this:
+
+**1. `async void OnFrameworkInitializationCompleted()` is a silent killer.** This is the biggest problem. Any exception inside an `async void` method terminates the process with no catch, no logging, nothing. And several things inside it are likely to throw on Android.
+
+**2. `AddConsoleExporter()` and `AddConsole()` logging don't work on Android.** There's no `System.Console` in the traditional sense on Android. The OpenTelemetry console exporter and `Microsoft.Extensions.Logging.Console` can throw during initialization.
+
+**3. `AddRuntimeInstrumentation()` may not be supported on Android's runtime.**
+
+**4. AOT is enabled in Release builds** (only disabled for Debug per your csproj). EF Core, OpenTelemetry, and DI all use heavy reflection, and AOT + linker trimming can strip types needed at runtime.
+
+**5. `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)`** may return an unexpected or empty path on Android, causing `Directory.CreateDirectory` or SQLite to fail.
+
+All of these blow up inside the `async void`, which means the process just dies — no logcat output, nothing.
+
+Here are the fixes:
+
+**`App.axaml.cs`** — Wrap everything in try-catch and use `Android.Util.Log` so you actually see what's happening:**`DependencyInjection.cs`** — Make it Android-safe by conditionally disabling console-based exporters:**`MyAdventure.Android.csproj`** — Disable AOT in Release too (at least until you get it running), and add linker-safe settings:Now here's what to do:
+
+**Step 1: Apply these three file changes, push, and reinstall the APK.**
+
+**Step 2: Use a better logcat command to capture the crash.** Your current grep was too narrow. Use this instead:
+
+```bash
+# Clear old logs first
+adb logcat -c
+
+# Launch the app, then immediately capture
+adb logcat -v time | grep -iE "MyAdventure|mono|dotnet|AndroidRuntime|FATAL|art.*error"
+```
+
+Or even better, just dump everything from your app's process:
+
+```bash
+# Get the PID right after launch
+adb shell pidof com.kusl.myadventure
+
+# If that returns nothing (app crashed already), capture everything:
+adb logcat -v time *:W | head -200
+```
+
+**Summary of what was wrong:**
+
+The crash was silent because `async void` swallows exceptions fatally. Inside that method, three things were likely blowing up on Android: the Console logging provider, the OpenTelemetry Console exporter, and possibly `AddRuntimeInstrumentation()`. Any one of these would kill the process instantly with zero output.
+
+The changes I made: wrap everything in try-catch with `Android.Util.Log` so crashes become visible, skip all console-based logging/telemetry on Android (they have no console), fix the SQLite path resolution to use `SpecialFolder.Personal` which is reliable on Android, and disable AOT compilation which can cause reflection-based code (EF Core, DI, OpenTelemetry) to fail silently at runtime.
+
+Once you can see the app start (even if something else is wrong), you can re-enable AOT later with proper trimmer root configurations. But first, let's get it running.
+
+
+
+
+
+
+

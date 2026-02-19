@@ -22,20 +22,38 @@ public static class DependencyInjection
         services.AddScoped<IGameStateRepository, GameStateRepository>();
         services.AddScoped<GameEngine>();
 
+        // Console logging only works on desktop; Android has no System.Console.
+        // On Android, logs go through Android.Util.Log instead.
+        var isAndroid = OperatingSystem.IsAndroid();
+
         services.AddLogging(builder =>
         {
             builder.SetMinimumLevel(LogLevel.Debug);
-            builder.AddConsole();
+            if (!isAndroid)
+            {
+                builder.AddConsole();
+            }
         });
 
         services.AddOpenTelemetry()
-            .WithTracing(tracing => tracing
-                .AddSource("MyAdventure.*")
-                .AddConsoleExporter())
-            .WithMetrics(metrics => metrics
-                .AddMeter("MyAdventure.*")
-                .AddRuntimeInstrumentation()
-                .AddConsoleExporter());
+            .WithTracing(tracing =>
+            {
+                tracing.AddSource("MyAdventure.*");
+                if (!isAndroid)
+                {
+                    tracing.AddConsoleExporter();
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics.AddMeter("MyAdventure.*");
+                // RuntimeInstrumentation may not be supported on all platforms
+                if (!isAndroid)
+                {
+                    metrics.AddRuntimeInstrumentation();
+                    metrics.AddConsoleExporter();
+                }
+            });
 
         return services;
     }
@@ -49,9 +67,26 @@ public static class DependencyInjection
 
     private static string GetDefaultDbPath()
     {
-        var appData = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MyAdventure");
+        string appData;
+
+        if (OperatingSystem.IsAndroid())
+        {
+            // On Android, use the app's internal files directory.
+            // Environment.GetFolderPath may return empty or unexpected paths.
+            appData = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            if (string.IsNullOrEmpty(appData))
+            {
+                // Fallback: use the app's base directory
+                appData = AppContext.BaseDirectory;
+            }
+        }
+        else
+        {
+            appData = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MyAdventure");
+        }
+
         Directory.CreateDirectory(appData);
         return Path.Combine(appData, "myadventure.db");
     }
