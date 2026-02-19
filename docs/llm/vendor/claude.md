@@ -1298,3 +1298,16 @@ In **Android `MainView.axaml`**, the progress bar was a `Border` with `Horizonta
 
 No other files changed — the `ProgressPercent` property in `BusinessViewModel` and the game engine tick logic were already correct.
 
+do we have the concept of a manager / auto clicker in this app? how do I keep making money when the app is not running? 
+
+Yes, you have both concepts already built into the engine — let me walk through how they work and what's missing on the Android UI.
+
+**Managers (auto-clicker):** The `GameEngine` fully supports managers. When you buy a manager for a business (`BuyManager`), it sets `HasManager = true`. After that, when a business cycle completes, instead of stopping (`IsRunning = false`), it auto-restarts. Managers cost 1000× the business's base cost (so the lemonade stand manager costs $4,000, newspaper manager costs $60,000, etc.).
+
+**Offline earnings:** When you load the game (`LoadAsync`), it calculates how long you've been away and grants offline earnings for all businesses that have managers. The formula is: `(time away / cycle time) × revenue × angel bonus` for each managed business. So if you close the app for an hour and your lemonade stand with a manager earns $1/cycle every 0.6s, you'd get credit for ~6,000 cycles worth of income.
+
+**The problem on Android:** The Android `MainView.axaml` is missing the manager button entirely. Look at the Desktop version — it has a 3-column button row with BUY, RUN, and MGR. The Android view only has a 2-column row with BUY and RUN. So on Android you can never actually purchase a manager, which means you'll never earn offline income.
+
+Want me to fix the Android view to include the manager button (and the ✅ AUTO indicator once purchased)? That would give you the full gameplay loop on mobile — buy businesses, hire managers, close the app, come back to accumulated earnings.
+
+yes, please give me the full file 
