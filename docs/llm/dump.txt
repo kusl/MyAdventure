@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Feb 19 06:52:41 AM EST 2026
+Generated: Thu Feb 19 07:01:12 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -92,6 +92,7 @@ DIRECTORY STRUCTURE:
 │           ├── GameViewModel.cs
 │           └── ViewModelBase.cs
 └── tests
+    ├── Directory.Build.props
     ├── MyAdventure.Core.Tests
     │   ├── BusinessTests.cs
     │   ├── GameEngineTests.cs
@@ -3429,7 +3430,7 @@ public class MainActivity : AvaloniaMainActivity<App>
 
 ================================================================================
 FILE: src/MyAdventure.Android/MyAdventure.Android.csproj
-SIZE: 1.26 KB
+SIZE: 1.32 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
@@ -3457,6 +3458,7 @@ SIZE: 1.26 KB
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 </Project>
@@ -4965,6 +4967,21 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace MyAdventure.Shared.ViewModels;
 
 public abstract partial class ViewModelBase : ObservableObject;
+
+
+================================================================================
+FILE: tests/Directory.Build.props
+SIZE: .24 KB
+================================================================================
+
+<Project>
+  <!-- Import the root Directory.Build.props first -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
 
 
 ================================================================================
