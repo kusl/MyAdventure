@@ -1798,7 +1798,9 @@ Run the script then `dotnet build && dotnet test`.
 
 
 
-
+46
+13
+the dump.txt and 005.txt are up to date
 Restore complete (0.5s)
   MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
   MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
@@ -1874,3 +1876,25 @@ sys	0m0.356s
 Restore complete (0.5s)
 
 Build succeeded in 0.6s
+
+Same IEEE 754 issue. `AffordableCount(210)` expects 2, but `100 * Math.Pow(1.1, 1)` = `110.00000000000001`, so `100 + 110.00000000000001 = 210.00000000000001 > 210`, meaning only 1 can be bought.
+
+Fix: use `211` which is unambiguously enough for 2.The pattern is consistent: `Math.Pow(1.1, n)` produces values with tiny floating point overflows, so exact boundary values like 210 and 331 fall just short. The fix bumps 210→211 to clear the IEEE 754 edge. Run the script then `dotnet test` — you should get 48 passed, 0 failed.
+
+60
+15
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
