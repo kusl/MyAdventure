@@ -3248,5 +3248,4 @@ Fixed. Run: dotnet test
 real	0m0.006s
 user	0m0.000s
 sys	0m0.007s
-kushal@fedora:~/src/dotnet/MyAdventure$ 
-
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
