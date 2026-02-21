@@ -1318,3 +1318,108 @@ The button row went from a 2-column grid (`*,4,*`) to a 3-column grid (`*,4,*,4,
 
 Now on Android you'll have the full gameplay loop: buy businesses → click to run them → hire managers for auto-running → close the app → come back to offline earnings.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if the display space on the device permits and only if the display space on the device permits, 
+I would like to see more information about each of the different shops 
+lemonade stand 
+newspaper route 
+car wash 
+pizza delivery
+donut shop
+shrimp boat 
+information such as how long does it take for one run? 
+how much money will I spend when I press buy next time? 
+with how much money I have now, how many more of that shop can I buy? 
+is there any multiplier if I hit a certain number of these shops I own? 
+if so, how many more do I need to buy until I hit that goal? 
+and other such useful information 
+assuming the display space on the device permits 
+if not, we can hide this extra information 
+in the interest of space 
+remember, we should never, ever have a scroll bar, vertical or horizontal 
+also what does the prestige button do?
+for any button that is inactive such as the prestige button, 
+we should show a toast or something 
+that explains not just that the button is inactive or disabled 
+but also why it is disabled and what conditions are there until the button becomes active 
+this toast should auto dismiss in about three seconds 
+all this information should auto update on the display 
