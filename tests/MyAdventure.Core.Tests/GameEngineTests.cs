@@ -44,7 +44,8 @@ public class GameEngineTests
     public async Task BuyBusiness_NotEnoughCash_ShouldFail()
     {
         await _engine.LoadAsync();
-        _engine.BuyBusiness("lemonade").ShouldBeFalse();
+        // Starting cash is 5.0 — newspaper costs 60, so this should fail
+        _engine.BuyBusiness("newspaper").ShouldBeFalse();
     }
 
     [Fact]

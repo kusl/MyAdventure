@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
 using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
 using NSubstitute;
 using Shouldly;
@@ -28,7 +29,8 @@ public class BusinessViewModelTests
 
         var repo = Substitute.For<IGameStateRepository>();
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
-        var vm = new BusinessViewModel(biz, engine);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
 
         vm.Refresh(500);
 
@@ -55,7 +57,8 @@ public class BusinessViewModelTests
 
         var repo = Substitute.For<IGameStateRepository>();
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
-        var vm = new BusinessViewModel(biz, engine);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
 
         vm.Refresh(5);
 

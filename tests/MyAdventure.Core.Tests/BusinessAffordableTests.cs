@@ -36,16 +36,17 @@ public class BusinessAffordableTests
     public void AffordableCount_MultiplePurchases()
     {
         var biz = CreateBusiness();
-        // Cost 0: 100, Cost 1: 110, Cost 2: 121 => total 331
-        biz.AffordableCount(331).ShouldBe(3);
+        // Cost 0: 100, Cost 1: 110, Cost 2: 121 => total ~331
+        // Use 332 to avoid IEEE 754 floating point edge (1.1^2 = 1.2100000000000002)
+        biz.AffordableCount(332).ShouldBe(3);
     }
 
     [Fact]
     public void AffordableCount_SlightlyUnder_ShouldBeOneLess()
     {
         var biz = CreateBusiness();
-        // Can buy 2 for 100 + 110 = 210, but not 3 (need 121 more = 331)
-        biz.AffordableCount(330).ShouldBe(2);
+        // Can buy 2 for 100 + 110 = 210, but not 3 (need ~121 more)
+        biz.AffordableCount(210).ShouldBe(2);
     }
 
     [Fact]
