@@ -7,9 +7,15 @@ public class BusinessAffordableTests
 {
     private Business CreateBusiness(int owned = 0) => new()
     {
-        Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-        BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
-        CostMultiplier = 1.1, Owned = owned
+        Id = "test",
+        Name = "Test",
+        Icon = "T",
+        Color = "#FFF",
+        BaseCost = 100,
+        BaseRevenue = 10,
+        BaseTimeSeconds = 1,
+        CostMultiplier = 1.1,
+        Owned = owned
     };
 
     [Fact]
