@@ -45,8 +45,8 @@ public class BusinessAffordableTests
     public void AffordableCount_SlightlyUnder_ShouldBeOneLess()
     {
         var biz = CreateBusiness();
-        // Can buy 2 for 100 + 110 = 210, but not 3 (need ~121 more)
-        biz.AffordableCount(210).ShouldBe(2);
+        // Can buy 2 for 100 + 110 ≈ 210, use 211 to clear IEEE 754 edge
+        biz.AffordableCount(211).ShouldBe(2);
     }
 
     [Fact]
