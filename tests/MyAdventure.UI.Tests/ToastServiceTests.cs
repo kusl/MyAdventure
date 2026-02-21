@@ -1,7 +1,7 @@
 using MyAdventure.Shared.Services;
 using Shouldly;
 
-namespace MyAdventure.Core.Tests;
+namespace MyAdventure.UI.Tests;
 
 public class ToastServiceTests
 {
@@ -30,7 +30,6 @@ public class ToastServiceTests
         var service = new ToastService();
         service.Show("Will expire", TimeSpan.Zero);
 
-        // Wait a tiny bit for DateTime.UtcNow to pass
         Thread.Sleep(10);
 
         service.CleanupExpired();

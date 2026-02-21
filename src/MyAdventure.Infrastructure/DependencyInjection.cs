@@ -22,9 +22,6 @@ public static class DependencyInjection
 
         services.AddScoped<IGameStateRepository, GameStateRepository>();
 
-        // Toast service is a singleton shared across all VMs
-        services.AddSingleton<MyAdventure.Shared.Services.ToastService>();
-
         // OpenTelemetry
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService("MyAdventure", "1.0.0");

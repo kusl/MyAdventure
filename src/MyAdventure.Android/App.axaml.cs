@@ -30,6 +30,7 @@ public partial class App : Avalonia.Application
 
             var services = new ServiceCollection();
             services.AddInfrastructure();
+            services.AddSingleton<ToastService>();
             services.AddTransient<GameEngine>();
             services.AddTransient<GameViewModel>();
             Services = services.BuildServiceProvider();

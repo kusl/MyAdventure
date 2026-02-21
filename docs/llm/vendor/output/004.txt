@@ -1837,3 +1837,517 @@ real	0m0.017s
 user	0m0.008s
 sys	0m0.009s
 kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+
+Build succeeded in 1.0s
+
+real	0m1.172s
+user	0m0.980s
+sys	0m0.310s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+real	0m0.863s
+user	0m0.964s
+sys	0m0.222s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (2.3s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 failed with 1 error(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/ToastServiceTests.cs(1,19): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+  MyAdventure.Infrastructure net10.0 failed with 1 error(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(26,43): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+
+Build failed with 2 error(s) in 3.4s
+
+real	0m3.526s
+user	0m1.896s
+sys	0m0.401s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/ToastServiceTests.cs(1,19): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+  MyAdventure.Infrastructure net10.0 failed with 1 error(s) (0.2s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(26,43): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+
+Build failed with 2 error(s) in 1.0s
+
+real	0m1.151s
+user	0m1.347s
+sys	0m0.365s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.2, )   10.0.2  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.0.1      18.0.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.0.1      18.0.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m2.145s
+user	0m2.255s
+sys	0m0.543s
+Restore complete (0.5s)
+
+Build succeeded in 0.7s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m2.307s
+user	0m2.418s
+sys	0m0.519s
+
+real	0m8.315s
+user	0m14.399s
+sys	0m1.138s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: setup.sh
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Core.Tests/ToastServiceTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.637s
+user	0m0.323s
+sys	0m0.421s
+kushal@fedora:~/src/dotnet/MyAdventure$ cat setup.sh; time bash setup.sh 
+#!/bin/bash
+# =============================================================================
+# Fix: ToastService dependency chain
+# - Remove ToastService registration from Infrastructure (avoids circular dep)
+# - Register ToastService in Desktop/Android App.axaml.cs instead
+# - Move ToastServiceTests to UI.Tests (which already references Shared)
+# - Add Shared project reference to Core.Tests for future ViewModel tests
+# =============================================================================
+set -euo pipefail
+
+echo "=== Fixing dependency chain ==="
+
+# =============================================================================
+# 1. Remove ToastService registration from Infrastructure/DependencyInjection.cs
+# =============================================================================
+
+cat > src/MyAdventure.Infrastructure/DependencyInjection.cs << 'ENDOFFILE'
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Infrastructure.Data;
+using MyAdventure.Infrastructure.Repositories;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+namespace MyAdventure.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string? dbPath = null)
+    {
+        dbPath ??= GetDefaultDbPath();
+
+        services.AddDbContext<AppDbContext>(opts =>
+            opts.UseSqlite($"Data Source={dbPath}"));
+
+        services.AddScoped<IGameStateRepository, GameStateRepository>();
+
+        // OpenTelemetry
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService("MyAdventure", "1.0.0");
+
+        services.AddLogging(logging =>
+            logging.AddOpenTelemetry(otel =>
+            {
+                otel.SetResourceBuilder(resourceBuilder);
+                otel.AddConsoleExporter();
+            }));
+
+        services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource("MyAdventure.*")
+                .AddConsoleExporter())
+            .WithMetrics(metrics => metrics
+                .AddMeter("MyAdventure.*")
+                .AddRuntimeInstrumentation()
+                .AddConsoleExporter());
+
+        return services;
+    }
+
+    public static async Task InitializeDatabaseAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.EnsureCreatedAsync();
+    }
+
+    private static string GetDefaultDbPath()
+    {
+        var appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyAdventure");
+        Directory.CreateDirectory(appData);
+        return Path.Combine(appData, "myadventure.db");
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 2. Desktop App.axaml.cs — register ToastService here
+# =============================================================================
+
+cat > src/MyAdventure.Desktop/App.axaml.cs << 'ENDOFFILE'
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using MyAdventure.Core.Services;
+using MyAdventure.Desktop.Views;
+using MyAdventure.Infrastructure;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+
+namespace MyAdventure.Desktop;
+
+public partial class App : Avalonia.Application
+{
+    private IServiceProvider? _services;
+
+    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+
+    public override async void OnFrameworkInitializationCompleted()
+    {
+        var services = new ServiceCollection();
+        services.AddInfrastructure();
+        services.AddSingleton<ToastService>();
+        services.AddTransient<GameEngine>();
+        services.AddTransient<GameViewModel>();
+        _services = services.BuildServiceProvider();
+
+        await DependencyInjection.InitializeDatabaseAsync(_services);
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var vm = _services.GetRequiredService<GameViewModel>();
+            desktop.MainWindow = new MainWindow { DataContext = vm };
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 3. Android App.axaml.cs — register ToastService here
+# =============================================================================
+
+cat > src/MyAdventure.Android/App.axaml.cs << 'ENDOFFILE'
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using MyAdventure.Android.Views;
+using MyAdventure.Core.Services;
+using MyAdventure.Infrastructure;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+
+namespace MyAdventure.Android;
+
+public partial class App : Avalonia.Application
+{
+    private const string Tag = "MyAdventure";
+
+    public static IServiceProvider? Services { get; private set; }
+
+    public override void Initialize()
+    {
+        global::Android.Util.Log.Info(Tag, "App.Initialize() starting");
+        AvaloniaXamlLoader.Load(this);
+        global::Android.Util.Log.Info(Tag, "App.Initialize() done");
+    }
+
+    public override async void OnFrameworkInitializationCompleted()
+    {
+        try
+        {
+            global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted starting");
+
+            var services = new ServiceCollection();
+            services.AddInfrastructure();
+            services.AddSingleton<ToastService>();
+            services.AddTransient<GameEngine>();
+            services.AddTransient<GameViewModel>();
+            Services = services.BuildServiceProvider();
+
+            await DependencyInjection.InitializeDatabaseAsync(Services);
+
+            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+            {
+                var vm = Services.GetRequiredService<GameViewModel>();
+                singleView.MainView = new MainView { DataContext = vm };
+            }
+
+            base.OnFrameworkInitializationCompleted();
+            global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted done");
+        }
+        catch (Exception ex)
+        {
+            global::Android.Util.Log.Error(Tag, $"FATAL during startup: {ex}");
+            global::Android.Util.Log.Error(Tag, $"Inner: {ex.InnerException}");
+            throw;
+        }
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 4. Move ToastServiceTests from Core.Tests to UI.Tests
+#    UI.Tests already references Shared
+# =============================================================================
+
+# Remove from Core.Tests
+rm -f tests/MyAdventure.Core.Tests/ToastServiceTests.cs
+
+# Add to UI.Tests
+cat > tests/MyAdventure.UI.Tests/ToastServiceTests.cs << 'ENDOFFILE'
+using MyAdventure.Shared.Services;
+using Shouldly;
+
+namespace MyAdventure.UI.Tests;
+
+public class ToastServiceTests
+{
+    [Fact]
+    public void Show_ShouldAddToast()
+    {
+        var service = new ToastService();
+        service.Show("Test message");
+        service.ActiveToasts.Count.ShouldBe(1);
+        service.ActiveToasts[0].Message.ShouldBe("Test message");
+    }
+
+    [Fact]
+    public void Show_MultipleTimes_ShouldAddMultiple()
+    {
+        var service = new ToastService();
+        service.Show("One");
+        service.Show("Two");
+        service.Show("Three");
+        service.ActiveToasts.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void CleanupExpired_ShouldRemoveExpiredToasts()
+    {
+        var service = new ToastService();
+        service.Show("Will expire", TimeSpan.Zero);
+
+        Thread.Sleep(10);
+
+        service.CleanupExpired();
+        service.ActiveToasts.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void CleanupExpired_ShouldKeepActiveToasts()
+    {
+        var service = new ToastService();
+        service.Show("Still active", TimeSpan.FromMinutes(5));
+
+        service.CleanupExpired();
+        service.ActiveToasts.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void CleanupExpired_MixedToasts_ShouldOnlyRemoveExpired()
+    {
+        var service = new ToastService();
+        service.Show("Expired", TimeSpan.Zero);
+        service.Show("Active", TimeSpan.FromMinutes(5));
+
+        Thread.Sleep(10);
+        service.CleanupExpired();
+
+        service.ActiveToasts.Count.ShouldBe(1);
+        service.ActiveToasts[0].Message.ShouldBe("Active");
+    }
+}
+ENDOFFILE
+
+echo ""
+echo "=== Fix applied ==="
+echo ""
+echo "Changes:"
+echo "  1. Infrastructure/DependencyInjection.cs — removed ToastService registration (no Shared reference needed)"
+echo "  2. Desktop/App.axaml.cs — registers ToastService singleton in DI"
+echo "  3. Android/App.axaml.cs — registers ToastService singleton in DI"
+echo "  4. Moved ToastServiceTests.cs from Core.Tests → UI.Tests"
+echo ""
+echo "Next: dotnet build && dotnet test"
+=== Fixing dependency chain ===
+
+=== Fix applied ===
+
+Changes:
+  1. Infrastructure/DependencyInjection.cs — removed ToastService registration (no Shared reference needed)
+  2. Desktop/App.axaml.cs — registers ToastService singleton in DI
+  3. Android/App.axaml.cs — registers ToastService singleton in DI
+  4. Moved ToastServiceTests.cs from Core.Tests → UI.Tests
+
+Next: dotnet build && dotnet test
+
+real	0m0.009s
+user	0m0.003s
+sys	0m0.004s
+kushal@fedora:~/src/dotnet/MyAdventure$ 
