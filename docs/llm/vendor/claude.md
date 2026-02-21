@@ -1398,6 +1398,8 @@ Now on Android you'll have the full gameplay loop: buy businesses → click to r
 
 
 
+00
+06
 if the display space on the device permits and only if the display space on the device permits, 
 I would like to see more information about each of the different shops 
 lemonade stand 
@@ -1423,3 +1425,53 @@ that explains not just that the button is inactive or disabled
 but also why it is disabled and what conditions are there until the button becomes active 
 this toast should auto dismiss in about three seconds 
 all this information should auto update on the display 
+
+
+
+Let me search through our project knowledge and past conversations to understand the current state of MyAdventure before making recommendations.Now I have a comprehensive understanding of the current codebase. Let me analyze what needs to change to implement all the features you've requested. This is a significant set of enhancements. Let me break down the work into the key areas:
+
+**What currently exists:**
+- 6 businesses in a 2×3 grid (Android) and 3×2 grid (Desktop)
+- Basic BUY/RUN/MGR buttons per business
+- Prestige button with angel investors
+- Progress bar, owned count, cost, revenue display
+
+**What you're asking for (new features):**
+1. **Expanded business info panel** (adaptive to display space): cycle time, next buy cost, how many more you can afford, milestone multipliers, progress to next milestone
+2. **Prestige explanation**: what does the button do?
+3. **Disabled button toasts**: auto-dismissing 3-second toast explaining WHY a button is disabled and what conditions unlock it
+4. **All info auto-updates** on display
+5. **No scrollbars ever** — adaptive layout that hides extra info on small screens
+6. **Milestone/multiplier system** — this doesn't exist yet in the game engine
+
+This is a substantial amount of work touching Core (milestones), Shared (ViewModels), and both Desktop/Android views. Let me generate the full set of changes as a setup script.
+
+Before I generate code, let me clarify a couple of design decisions:
+
+For the milestone system, Adventure Capitalist traditionally gives multipliers at ownership milestones like 25, 50, 100, 200, 300, 400 of each business. Each milestone doubles (×2) the revenue for that business. Should I follow that pattern, or do you have different milestone thresholds in mind?
+
+Also, for the adaptive layout — the current desktop window is 1000×700 with MinWidth=800. On desktop, there's enough room for an expanded info panel alongside or below each business card. On Android (phone portrait), the 2-column grid with 6 businesses is already tight. My plan is to use Avalonia's `AdaptiveTrigger` or a width-based binding to show/hide the extra info panel. On desktop, each business card would show the detail info inline. On Android portrait, tapping a business could show a brief overlay or the details collapse by default but appear when space permits (e.g., tablet landscape).
+
+Let me generate the implementation:Now I need to fix the progress bar binding issue — the ScaleTransform needs values 0-1 but ProgressPercent is 0-100. Let me update the AXAML files to use the converter:Now update the Android view similarly:Here's a summary of everything this update does:
+
+**New: Milestone Multiplier System** — `Milestone.cs` defines revenue multipliers at ownership thresholds (25, 50, 100, 200, 300, 400 give ×2 each; 500-900 give ×4; 1000 gives ×5). These compound multiplicatively, so reaching 100 of a business gives ×8 revenue. The `Business.Revenue` property now incorporates the milestone multiplier automatically.
+
+**New: Extended Business Info (adaptive to display space)** — Each business card now shows cycle time (⏱️), revenue per second (📈), how many more you can buy with current cash (🛒), current milestone multiplier (⭐), and progress to next milestone with its reward (🎯). On desktop, these are shown in a dedicated detail panel within each card. On Android, they're compressed into a single compact line showing multiplier and affordable count.
+
+**New: Toast Notifications for Disabled Buttons** — When you tap any button that can't perform its action, a toast appears explaining *why* and *what you need*:
+- Tapping BUY without enough cash: "Need $X more for next Lemonade Stand"
+- Tapping RUN while already running: "Lemonade Stand is running — 2.3s left"
+- Tapping MGR without enough cash: "Need $X more for Lemonade Stand manager"
+- Tapping PRESTIGE when locked: Full explanation of what prestige does and what's needed
+
+Toasts auto-dismiss after 3 seconds. The `ToastService` is cleaned up every game tick.
+
+**Prestige Explanation** — Always-visible text under the prestige button that updates dynamically. When you can prestige, it shows how many angels you'll gain. When you can't, it tells you to keep earning.
+
+**No Scrollbars** — The layout uses `UniformGrid` to fix exactly 6 businesses on screen (3×2 desktop, 2×3 Android) with no overflow.
+
+**All Info Auto-Updates** — The `Refresh()` method on every `BusinessViewModel` is called every tick (~60fps), so all detail info, affordable counts, milestone progress, and prestige text update in real time.
+
+**New Tests** — `MilestoneTests.cs` (12 tests), `BusinessAffordableTests.cs` (6 tests), `ToastServiceTests.cs` (5 tests), plus updated `GameEngineTests.cs` with milestone-aware revenue tests.
+
+To apply: save the script, `chmod +x`, run it from your project root, then `dotnet build && dotnet test`.
