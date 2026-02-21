@@ -245,4 +245,1595 @@ Export Complete: docs/llm/dump.txt
 real	0m0.606s
 user	0m0.305s
 sys	0m0.386s
-kushal@fedora:~/src/dotnet/MyAdventure$ 
+kushal@fedora:~/src/dotnet/MyAdventure$ cat setup.sh; time bash setup.sh 
+#!/bin/bash
+# =============================================================================
+# MyAdventure Enhanced Features
+# - Milestone multiplier system
+# - Adaptive detail panels per business
+# - Auto-dismiss toast notifications for disabled buttons
+# - Prestige explanation
+# - No scrollbars ever
+# - All info auto-updates
+#
+# Run from: ~/src/dotnet/MyAdventure
+# =============================================================================
+set -euo pipefail
+
+PROJECT_ROOT="$(pwd)"
+echo "=============================================="
+echo "  MyAdventure Enhanced Features"
+echo "  Root: $PROJECT_ROOT"
+echo "=============================================="
+
+# =============================================================================
+# 1. CORE: Add Milestone system to Business entity
+# =============================================================================
+
+cat > src/MyAdventure.Core/Entities/Milestone.cs << 'ENDOFFILE'
+namespace MyAdventure.Core.Entities;
+
+/// <summary>
+/// A milestone threshold that grants a revenue multiplier when reached.
+/// Adventure Capitalist style: owning X units of a business multiplies its revenue.
+/// </summary>
+public record Milestone(int Threshold, double Multiplier, string Label)
+{
+    /// <summary>Standard milestones for all businesses.</summary>
+    public static IReadOnlyList<Milestone> Defaults { get; } =
+    [
+        new(25, 2.0, "×2 Revenue"),
+        new(50, 2.0, "×2 Revenue"),
+        new(100, 2.0, "×2 Revenue"),
+        new(200, 2.0, "×2 Revenue"),
+        new(300, 2.0, "×2 Revenue"),
+        new(400, 2.0, "×2 Revenue"),
+        new(500, 4.0, "×4 Revenue"),
+        new(600, 4.0, "×4 Revenue"),
+        new(700, 4.0, "×4 Revenue"),
+        new(800, 4.0, "×4 Revenue"),
+        new(900, 4.0, "×4 Revenue"),
+        new(1000, 5.0, "×5 Revenue"),
+    ];
+
+    /// <summary>
+    /// Calculate the combined multiplier for a given ownership count.
+    /// Each milestone compounds multiplicatively.
+    /// </summary>
+    public static double CalculateMultiplier(int owned, IReadOnlyList<Milestone>? milestones = null)
+    {
+        milestones ??= Defaults;
+        var mult = 1.0;
+        foreach (var m in milestones)
+        {
+            if (owned >= m.Threshold)
+                mult *= m.Multiplier;
+        }
+        return mult;
+    }
+
+    /// <summary>
+    /// Find the next milestone the player hasn't reached yet.
+    /// Returns null if all milestones are reached.
+    /// </summary>
+    public static Milestone? NextMilestone(int owned, IReadOnlyList<Milestone>? milestones = null)
+    {
+        milestones ??= Defaults;
+        foreach (var m in milestones)
+        {
+            if (owned < m.Threshold)
+                return m;
+        }
+        return null;
+    }
+
+    /// <summary>How many more units needed to reach the next milestone.</summary>
+    public static int UnitsToNext(int owned, IReadOnlyList<Milestone>? milestones = null)
+    {
+        var next = NextMilestone(owned, milestones);
+        return next is null ? 0 : next.Threshold - owned;
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 2. CORE: Update Business to use milestone multiplier in Revenue
+# =============================================================================
+
+cat > src/MyAdventure.Core/Entities/Business.cs << 'ENDOFFILE'
+namespace MyAdventure.Core.Entities;
+
+/// <summary>
+/// Represents a business the player can own in the idle game.
+/// Each business earns revenue over a cycle time.
+/// Revenue is boosted by milestone multipliers.
+/// </summary>
+public record Business
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Icon { get; init; }
+    public required string Color { get; init; }
+    public required double BaseCost { get; init; }
+    public required double BaseRevenue { get; init; }
+    public required double BaseTimeSeconds { get; init; }
+    public required double CostMultiplier { get; init; }
+    public int Owned { get; set; }
+    public bool HasManager { get; set; }
+    public double ProgressPercent { get; set; }
+    public bool IsRunning { get; set; }
+
+    /// <summary>Cost to buy the next unit of this business.</summary>
+    public double NextCost => BaseCost * Math.Pow(CostMultiplier, Owned);
+
+    /// <summary>
+    /// Revenue per cycle with current units owned, including milestone multipliers.
+    /// </summary>
+    public double Revenue => BaseRevenue * Owned * MilestoneMultiplier;
+
+    /// <summary>Current combined milestone multiplier.</summary>
+    public double MilestoneMultiplier => Milestone.CalculateMultiplier(Owned);
+
+    /// <summary>Cycle time in seconds.</summary>
+    public double CycleTimeSeconds => BaseTimeSeconds;
+
+    /// <summary>Revenue per second when running.</summary>
+    public double RevenuePerSecond => CycleTimeSeconds > 0 ? Revenue / CycleTimeSeconds : 0;
+
+    /// <summary>
+    /// How many units the player can buy with a given cash amount (greedy, one at a time).
+    /// </summary>
+    public int AffordableCount(double cash)
+    {
+        var count = 0;
+        var simOwned = Owned;
+        var remaining = cash;
+        while (true)
+        {
+            var cost = BaseCost * Math.Pow(CostMultiplier, simOwned);
+            if (remaining < cost) break;
+            remaining -= cost;
+            simOwned++;
+            count++;
+            // Safety cap to avoid infinite loops with tiny multipliers
+            if (count > 10_000) break;
+        }
+        return count;
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 3. SHARED: Add Toast notification system
+# =============================================================================
+
+mkdir -p src/MyAdventure.Shared/Services
+
+cat > src/MyAdventure.Shared/Services/ToastService.cs << 'ENDOFFILE'
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace MyAdventure.Shared.Services;
+
+/// <summary>
+/// Simple toast notification service. Toasts auto-dismiss after a configurable duration.
+/// Thread-safe for UI use via Avalonia's dispatcher.
+/// </summary>
+public partial class ToastService : ObservableObject
+{
+    private static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
+
+    public ObservableCollection<ToastItem> ActiveToasts { get; } = [];
+
+    /// <summary>Show a toast that auto-dismisses after ~3 seconds.</summary>
+    public void Show(string message, TimeSpan? duration = null)
+    {
+        var toast = new ToastItem(message);
+        ActiveToasts.Add(toast);
+
+        // Schedule removal. We use Task.Delay since DispatcherTimer is view-level.
+        // The UI tick loop in GameViewModel will clean up expired toasts.
+        toast.ExpiresAt = DateTime.UtcNow + (duration ?? DefaultDuration);
+    }
+
+    /// <summary>Remove expired toasts. Called from the game tick loop.</summary>
+    public void CleanupExpired()
+    {
+        var now = DateTime.UtcNow;
+        for (var i = ActiveToasts.Count - 1; i >= 0; i--)
+        {
+            if (ActiveToasts[i].ExpiresAt <= now)
+                ActiveToasts.RemoveAt(i);
+        }
+    }
+}
+
+public record ToastItem(string Message)
+{
+    public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddSeconds(3);
+}
+ENDOFFILE
+
+# =============================================================================
+# 4. SHARED: Enhanced BusinessViewModel with detail properties
+# =============================================================================
+
+cat > src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs << 'ENDOFFILE'
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
+
+namespace MyAdventure.Shared.ViewModels;
+
+/// <summary>
+/// ViewModel wrapping a single Business for data binding.
+/// Includes expanded detail properties for adaptive display.
+/// </summary>
+public partial class BusinessViewModel(
+    Business model,
+    GameEngine engine,
+    ToastService toasts) : ViewModelBase
+{
+    public Business Model => model;
+    public string Id => model.Id;
+    public string Name => model.Name;
+    public string Icon => model.Icon;
+    public string Color => model.Color;
+
+    // --- Core display ---
+    [ObservableProperty] private int _owned;
+    [ObservableProperty] private double _progressPercent;
+    [ObservableProperty] private bool _isRunning;
+    [ObservableProperty] private bool _hasManager;
+    [ObservableProperty] private string _costText = "";
+    [ObservableProperty] private string _revenueText = "";
+    [ObservableProperty] private string _managerCostText = "";
+    [ObservableProperty] private bool _canAfford;
+    [ObservableProperty] private bool _canAffordManager;
+
+    // --- Extended detail properties ---
+    [ObservableProperty] private string _cycleTimeText = "";
+    [ObservableProperty] private string _revenuePerSecondText = "";
+    [ObservableProperty] private int _affordableCount;
+    [ObservableProperty] private string _affordableCountText = "";
+    [ObservableProperty] private double _milestoneMultiplier = 1.0;
+    [ObservableProperty] private string _milestoneMultiplierText = "×1";
+    [ObservableProperty] private string _nextMilestoneText = "";
+    [ObservableProperty] private int _unitsToNextMilestone;
+    [ObservableProperty] private bool _hasNextMilestone;
+    [ObservableProperty] private string _nextMilestoneRewardText = "";
+
+    [RelayCommand]
+    private void ClickBusiness()
+    {
+        if (model.Owned <= 0)
+        {
+            if (!engine.BuyBusiness(model.Id))
+            {
+                var cost = NumberFormatter.Format(model.NextCost);
+                toasts.Show($"Need ${cost} to buy your first {model.Name}");
+            }
+        }
+        else
+        {
+            if (!engine.StartBusiness(model.Id) && model.IsRunning)
+            {
+                var remaining = model.CycleTimeSeconds * (1.0 - model.ProgressPercent / 100.0);
+                toasts.Show($"{model.Name} is running — {remaining:F1}s left");
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void BuyBusiness()
+    {
+        if (!engine.BuyBusiness(model.Id))
+        {
+            var need = model.NextCost - engine.Cash;
+            toasts.Show($"Need ${NumberFormatter.Format(need)} more for next {model.Name}");
+        }
+    }
+
+    [RelayCommand]
+    private void BuyManager()
+    {
+        if (model.HasManager)
+        {
+            toasts.Show($"{model.Name} already has a manager");
+            return;
+        }
+
+        if (!engine.BuyManager(model.Id))
+        {
+            var mgrCost = model.BaseCost * 1000;
+            var need = mgrCost - engine.Cash;
+            toasts.Show($"Need ${NumberFormatter.Format(need)} more for {model.Name} manager");
+        }
+    }
+
+    /// <summary>Refresh all bindable properties from the model.</summary>
+    public void Refresh(double cash)
+    {
+        Owned = model.Owned;
+        ProgressPercent = model.ProgressPercent;
+        IsRunning = model.IsRunning;
+        HasManager = model.HasManager;
+        CostText = NumberFormatter.Format(model.NextCost);
+        RevenueText = model.Owned > 0 ? NumberFormatter.Format(model.Revenue) : "—";
+        ManagerCostText = NumberFormatter.Format(model.BaseCost * 1000);
+        CanAfford = cash >= model.NextCost;
+        CanAffordManager = !model.HasManager && cash >= model.BaseCost * 1000;
+
+        // Extended details
+        CycleTimeText = FormatTime(model.CycleTimeSeconds);
+        RevenuePerSecondText = model.Owned > 0
+            ? $"${NumberFormatter.Format(model.RevenuePerSecond)}/s"
+            : "—";
+
+        AffordableCount = model.AffordableCount(cash);
+        AffordableCountText = AffordableCount > 0 ? $"Can buy: {AffordableCount}" : "Can't afford";
+
+        MilestoneMultiplier = model.MilestoneMultiplier;
+        MilestoneMultiplierText = $"×{MilestoneMultiplier:G4}";
+
+        var next = Milestone.NextMilestone(model.Owned);
+        HasNextMilestone = next is not null;
+        if (next is not null)
+        {
+            UnitsToNextMilestone = next.Threshold - model.Owned;
+            NextMilestoneText = $"{UnitsToNextMilestone} more → {next.Threshold}";
+            NextMilestoneRewardText = next.Label;
+        }
+        else
+        {
+            UnitsToNextMilestone = 0;
+            NextMilestoneText = "All milestones reached!";
+            NextMilestoneRewardText = "";
+        }
+    }
+
+    private static string FormatTime(double seconds) => seconds switch
+    {
+        < 1 => $"{seconds * 1000:F0}ms",
+        < 60 => $"{seconds:F1}s",
+        < 3600 => $"{seconds / 60:F1}m",
+        _ => $"{seconds / 3600:F1}h"
+    };
+}
+ENDOFFILE
+
+# =============================================================================
+# 5. SHARED: Enhanced GameViewModel with toast support + prestige explanation
+# =============================================================================
+
+cat > src/MyAdventure.Shared/ViewModels/GameViewModel.cs << 'ENDOFFILE'
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
+
+namespace MyAdventure.Shared.ViewModels;
+
+/// <summary>
+/// Main game ViewModel. Drives the game loop and exposes all state for binding.
+/// </summary>
+public partial class GameViewModel : ViewModelBase
+{
+    private readonly GameEngine _engine;
+    private readonly ILogger<GameViewModel> _logger;
+    private readonly ToastService _toasts;
+    private DateTime _lastTick;
+    private int _saveCounter;
+
+    [ObservableProperty] private string _cashText = "$0.00";
+    [ObservableProperty] private string _angelText = "0";
+    [ObservableProperty] private string _angelBonusText = "+0%";
+    [ObservableProperty] private int _prestigeCount;
+    [ObservableProperty] private bool _canPrestige;
+    [ObservableProperty] private string _nextAngelText = "0";
+    [ObservableProperty] private string _prestigeExplanation = "";
+
+    public ObservableCollection<BusinessViewModel> Businesses { get; } = [];
+    public ToastService Toasts => _toasts;
+
+    public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts)
+    {
+        _engine = engine;
+        _logger = logger;
+        _toasts = toasts;
+        _lastTick = DateTime.UtcNow;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _engine.LoadAsync();
+
+        Businesses.Clear();
+        foreach (var biz in _engine.Businesses)
+            Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
+
+        RefreshAll();
+        _logger.LogInformation("Game initialized with {Count} businesses", Businesses.Count);
+    }
+
+    /// <summary>Called by the UI timer (~60fps).</summary>
+    public void OnTick()
+    {
+        var now = DateTime.UtcNow;
+        var delta = (now - _lastTick).TotalSeconds;
+        _lastTick = now;
+
+        delta = Math.Min(delta, 1.0);
+
+        _engine.Tick(delta);
+        RefreshAll();
+
+        // Clean up expired toasts
+        _toasts.CleanupExpired();
+
+        // Auto-save every ~5 seconds
+        _saveCounter++;
+        if (_saveCounter >= 300)
+        {
+            _saveCounter = 0;
+            _ = SaveAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task PrestigeAsync()
+    {
+        if (!CanPrestige)
+        {
+            _toasts.Show(
+                "Prestige resets all businesses and cash, but you gain Angel Investors " +
+                "that permanently boost all revenue by +2% each. " +
+                $"You need to earn more to unlock prestige (earn enough for at least 1 angel).");
+            return;
+        }
+
+        var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
+        var (angels, success) = _engine.Prestige();
+        if (!success) return;
+
+        _logger.LogInformation("Prestige! Gained {Angels:F0} angels", angels);
+
+        Businesses.Clear();
+        foreach (var biz in _engine.Businesses)
+            Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
+
+        RefreshAll();
+        await SaveAsync();
+
+        _toasts.Show($"Prestige! Gained {NumberFormatter.Format(angels)} angels. All revenue boosted!");
+    }
+
+    public async Task SaveAsync()
+    {
+        try
+        {
+            await _engine.SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save game");
+        }
+    }
+
+    private void RefreshAll()
+    {
+        CashText = $"${NumberFormatter.Format(_engine.Cash)}";
+        AngelText = NumberFormatter.Format(_engine.AngelInvestors);
+        AngelBonusText = $"+{(_engine.AngelBonus - 1) * 100:F0}%";
+        PrestigeCount = _engine.PrestigeCount;
+
+        var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
+        CanPrestige = potentialAngels >= 1;
+        NextAngelText = NumberFormatter.Format(Math.Max(0, potentialAngels));
+
+        // Prestige explanation that auto-updates
+        if (CanPrestige)
+        {
+            PrestigeExplanation = $"Reset all businesses. Gain {NextAngelText} angels (+2% revenue each).";
+        }
+        else
+        {
+            PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
+        }
+
+        foreach (var bvm in Businesses)
+            bvm.Refresh(_engine.Cash);
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 6. SHARED: Add Converters for adaptive visibility
+# =============================================================================
+
+cat > src/MyAdventure.Shared/Converters/GameConverters.cs << 'ENDOFFILE'
+using System.Globalization;
+using Avalonia.Data.Converters;
+using Avalonia.Media;
+
+namespace MyAdventure.Shared.Converters;
+
+public class HexToBrushConverter : IValueConverter
+{
+    public static readonly HexToBrushConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is string hex ? new SolidColorBrush(Color.Parse(hex)) : Brushes.Gray;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class BoolToOpacityConverter : IValueConverter
+{
+    public static readonly BoolToOpacityConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is true ? 1.0 : 0.4;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Converts a width threshold check: returns true if the bound width >= parameter.
+/// Use in adaptive panels to show/hide detail info based on available space.
+/// </summary>
+public class WidthThresholdConverter : IValueConverter
+{
+    public static readonly WidthThresholdConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is double width && parameter is string thresholdStr
+            && double.TryParse(thresholdStr, CultureInfo.InvariantCulture, out var threshold))
+        {
+            return width >= threshold;
+        }
+        return true; // default to showing
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+ENDOFFILE
+
+# =============================================================================
+# 7. INFRASTRUCTURE: Register ToastService in DI
+# =============================================================================
+
+cat > src/MyAdventure.Infrastructure/DependencyInjection.cs << 'ENDOFFILE'
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Infrastructure.Data;
+using MyAdventure.Infrastructure.Repositories;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+namespace MyAdventure.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string? dbPath = null)
+    {
+        dbPath ??= GetDefaultDbPath();
+
+        services.AddDbContext<AppDbContext>(opts =>
+            opts.UseSqlite($"Data Source={dbPath}"));
+
+        services.AddScoped<IGameStateRepository, GameStateRepository>();
+
+        // Toast service is a singleton shared across all VMs
+        services.AddSingleton<MyAdventure.Shared.Services.ToastService>();
+
+        // OpenTelemetry
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService("MyAdventure", "1.0.0");
+
+        services.AddLogging(logging =>
+            logging.AddOpenTelemetry(otel =>
+            {
+                otel.SetResourceBuilder(resourceBuilder);
+                otel.AddConsoleExporter();
+            }));
+
+        services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource("MyAdventure.*")
+                .AddConsoleExporter())
+            .WithMetrics(metrics => metrics
+                .AddMeter("MyAdventure.*")
+                .AddRuntimeInstrumentation()
+                .AddConsoleExporter());
+
+        return services;
+    }
+
+    public static async Task InitializeDatabaseAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.EnsureCreatedAsync();
+    }
+
+    private static string GetDefaultDbPath()
+    {
+        var appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyAdventure");
+        Directory.CreateDirectory(appData);
+        return Path.Combine(appData, "myadventure.db");
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 8. DESKTOP: Enhanced MainWindow.axaml with adaptive detail panels + toasts
+# =============================================================================
+
+cat > src/MyAdventure.Desktop/Views/MainWindow.axaml << 'ENDOFFILE'
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MyAdventure.Shared.ViewModels"
+        xmlns:conv="using:MyAdventure.Shared.Converters"
+        xmlns:svc="using:MyAdventure.Shared.Services"
+        x:Class="MyAdventure.Desktop.Views.MainWindow"
+        x:DataType="vm:GameViewModel"
+        Title="MyAdventure"
+        Width="1100" Height="750"
+        MinWidth="800" MinHeight="600"
+        Background="#1A1A2E">
+
+    <Window.Resources>
+        <conv:HexToBrushConverter x:Key="HexToBrush" />
+        <conv:BoolToOpacityConverter x:Key="BoolToOpacity" />
+        <conv:PercentToFractionConverter x:Key="PercentToFraction" />
+    </Window.Resources>
+
+    <Panel>
+        <DockPanel Margin="16">
+            <!-- Top bar: Cash display + Angels + Prestige -->
+            <Border DockPanel.Dock="Top" Background="#16213E" CornerRadius="12" Padding="20,12" Margin="0,0,0,12">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <!-- Cash -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <TextBlock Text="💰" FontSize="32" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CashText}" FontSize="36" FontWeight="Bold" 
+                                   Foreground="#00E676" VerticalAlignment="Center" />
+                    </StackPanel>
+                    
+                    <!-- Angels -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="20,0">
+                        <TextBlock Text="😇" FontSize="20" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="18" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="14" Foreground="#FFD740" 
+                                   Opacity="0.7" VerticalAlignment="Center" />
+                    </StackPanel>
+                    
+                    <!-- Prestige -->
+                    <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                        <Button Command="{Binding PrestigeCommand}"
+                                Background="#AA00FF" Foreground="White"
+                                FontSize="16" FontWeight="Bold"
+                                Padding="20,10" CornerRadius="8"
+                                Opacity="{Binding CanPrestige, Converter={StaticResource BoolToOpacity}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="🔄" VerticalAlignment="Center" />
+                                <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding NextAngelText, StringFormat='+{0}'}" 
+                                           FontSize="12" Opacity="0.8" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding PrestigeExplanation}" FontSize="10" 
+                                   Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   MaxWidth="300" TextWrapping="Wrap" TextAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Business grid: 3 columns × 2 rows -->
+            <ItemsControl ItemsSource="{Binding Businesses}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="3" Rows="2" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BusinessViewModel">
+                        <Border Background="#16213E" CornerRadius="12" Padding="12" Margin="6"
+                                Opacity="{Binding Owned, Converter={StaticResource BoolToOpacity}, ConverterParameter=0}">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
+                                <!-- Row 0: Icon + Name + Owned -->
+                                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="28" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="16" FontWeight="Bold" 
+                                               Foreground="White" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                    <Border Grid.Column="2" Background="#0D47A1" CornerRadius="10" Padding="8,2">
+                                        <TextBlock Text="{Binding Owned}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="White" HorizontalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- Row 1: Progress bar -->
+                                <Grid Grid.Row="1" Margin="0,2,0,4">
+                                    <Border Background="#0A0A1A" CornerRadius="4" Height="8" />
+                                    <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}" 
+                                            CornerRadius="4" Height="8"
+                                            HorizontalAlignment="Stretch"
+                                            RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding ProgressPercent, Converter={StaticResource PercentToFraction}, FallbackValue=0}" />
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Row 2: Revenue + Cost line -->
+                                <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,4">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="💵" FontSize="11" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding RevenueText}" FontSize="12" 
+                                                   Foreground="#00E676" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                        <TextBlock Text="🏷️" FontSize="11" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding CostText}" FontSize="12" 
+                                                   Foreground="#FFAB40" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Row 3: Detail info panel (desktop has space) -->
+                                <Border Grid.Row="3" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                        <!-- Cycle time + Revenue/s -->
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="⏱️" FontSize="10" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding CycleTimeText}" FontSize="11" 
+                                                       Foreground="#B0BEC5" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                            <TextBlock Text="📈" FontSize="10" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding RevenuePerSecondText}" FontSize="11" 
+                                                       Foreground="#80CBC4" VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Affordable count -->
+                                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                    Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                            <TextBlock Text="🛒" FontSize="10" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding AffordableCountText}" FontSize="11" 
+                                                       Foreground="#CE93D8" VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Milestone multiplier -->
+                                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                    Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                            <TextBlock Text="⭐" FontSize="10" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding MilestoneMultiplierText}" FontSize="11"
+                                                       Foreground="#FFD740" VerticalAlignment="Center" />
+                                            <TextBlock Text="multiplier" FontSize="10" 
+                                                       Foreground="#666" VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Next milestone -->
+                                        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                    Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                    IsVisible="{Binding HasNextMilestone}">
+                                            <TextBlock Text="🎯" FontSize="10" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding NextMilestoneText}" FontSize="11"
+                                                       Foreground="#90CAF9" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding NextMilestoneRewardText}" FontSize="10"
+                                                       Foreground="#A5D6A7" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Row 4: Action buttons -->
+                                <Grid Grid.Row="4" ColumnDefinitions="*,4,*,4,*" Margin="0,2,0,0">
+                                    <!-- Buy button -->
+                                    <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
+                                            Background="{Binding Color, Converter={StaticResource HexToBrush}}"
+                                            Foreground="White" FontWeight="Bold" FontSize="13"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,8" CornerRadius="6"
+                                            Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}">
+                                        <TextBlock Text="BUY" />
+                                    </Button>
+                                    
+                                    <!-- Run button -->
+                                    <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
+                                            Background="#2196F3" Foreground="White"
+                                            FontWeight="Bold" FontSize="13"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,8" CornerRadius="6"
+                                            Content="▶ RUN" />
+                                    
+                                    <!-- Manager button -->
+                                    <Button Grid.Column="4" Command="{Binding BuyManagerCommand}"
+                                            IsVisible="{Binding !HasManager}"
+                                            Background="#FF6F00" Foreground="White"
+                                            FontWeight="Bold" FontSize="13"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,8" CornerRadius="6"
+                                            Opacity="{Binding CanAffordManager, Converter={StaticResource BoolToOpacity}}"
+                                            Content="MGR" />
+                                    <Border Grid.Column="4" IsVisible="{Binding HasManager}"
+                                            Background="#2E7D32" CornerRadius="6" Padding="0,8"
+                                            HorizontalAlignment="Stretch">
+                                        <TextBlock Text="✅ AUTO" HorizontalAlignment="Center"
+                                                   Foreground="White" FontWeight="Bold" FontSize="13" />
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+
+        <!-- Toast overlay: bottom center, auto-dismiss -->
+        <ItemsControl ItemsSource="{Binding Toasts.ActiveToasts}"
+                      HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      Margin="0,0,0,24">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="svc:ToastItem">
+                    <Border Background="#333333" CornerRadius="8" Padding="16,10"
+                            MaxWidth="500" Opacity="0.95">
+                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="14"
+                                   TextWrapping="Wrap" TextAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Panel>
+</Window>
+ENDOFFILE
+
+# =============================================================================
+# 9. DESKTOP: Update App.axaml.cs to inject ToastService
+# =============================================================================
+
+cat > src/MyAdventure.Desktop/App.axaml.cs << 'ENDOFFILE'
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using MyAdventure.Core.Services;
+using MyAdventure.Desktop.Views;
+using MyAdventure.Infrastructure;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+
+namespace MyAdventure.Desktop;
+
+public partial class App : Avalonia.Application
+{
+    private IServiceProvider? _services;
+
+    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+
+    public override async void OnFrameworkInitializationCompleted()
+    {
+        var services = new ServiceCollection();
+        services.AddInfrastructure();
+        services.AddTransient<GameEngine>();
+        services.AddTransient<GameViewModel>();
+        _services = services.BuildServiceProvider();
+
+        await DependencyInjection.InitializeDatabaseAsync(_services);
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var vm = _services.GetRequiredService<GameViewModel>();
+            desktop.MainWindow = new MainWindow { DataContext = vm };
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 10. ANDROID: Enhanced MainView.axaml — compact with adaptive details
+# =============================================================================
+
+cat > src/MyAdventure.Android/Views/MainView.axaml << 'ENDOFFILE'
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MyAdventure.Shared.ViewModels"
+             xmlns:conv="using:MyAdventure.Shared.Converters"
+             xmlns:svc="using:MyAdventure.Shared.Services"
+             x:Class="MyAdventure.Android.Views.MainView"
+             x:DataType="vm:GameViewModel"
+             Background="#1A1A2E"
+             x:Name="RootView">
+
+    <UserControl.Resources>
+        <conv:HexToBrushConverter x:Key="HexToBrush" />
+        <conv:BoolToOpacityConverter x:Key="BoolToOpacity" />
+        <conv:PercentToFractionConverter x:Key="PercentToFraction" />
+    </UserControl.Resources>
+
+    <Panel>
+        <DockPanel Margin="8">
+            <!-- Top bar -->
+            <Border DockPanel.Dock="Top" Background="#16213E" CornerRadius="10" Padding="14,8" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="💰" FontSize="24" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CashText}" FontSize="28" FontWeight="Bold" 
+                                   Foreground="#00E676" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                        <Button Command="{Binding PrestigeCommand}"
+                                Background="#AA00FF" Foreground="White"
+                                FontSize="13" FontWeight="Bold"
+                                Padding="14,6" CornerRadius="6"
+                                Opacity="{Binding CanPrestige, Converter={StaticResource BoolToOpacity}}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="🔄" VerticalAlignment="Center" />
+                                <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding PrestigeExplanation}" FontSize="8" 
+                                   Foreground="#888" HorizontalAlignment="Center"
+                                   MaxWidth="180" TextWrapping="Wrap" TextAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Angels bar (compact) -->
+            <Border DockPanel.Dock="Top" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,6">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <TextBlock Text="😇" FontSize="14" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AngelText}" FontSize="14" Foreground="#FFD740" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AngelBonusText}" FontSize="12" Foreground="#FFD740" 
+                               Opacity="0.7" VerticalAlignment="Center" />
+                    <TextBlock Text="•" Foreground="#444" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding NextAngelText, StringFormat='Next: +{0}'}" FontSize="12" 
+                               Foreground="#CE93D8" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Business grid: 2 cols × 3 rows for phone -->
+            <ItemsControl ItemsSource="{Binding Businesses}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" Rows="3" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BusinessViewModel">
+                        <Border Background="#16213E" CornerRadius="8" Padding="6" Margin="3"
+                                Opacity="{Binding Owned, Converter={StaticResource BoolToOpacity}, ConverterParameter=0}">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                <!-- Row 0: Icon + Name + Owned count -->
+                                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,2">
+                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="20" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" FontWeight="Bold" 
+                                               Foreground="White" VerticalAlignment="Center" Margin="4,0,0,0"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <Border Grid.Column="2" Background="#0D47A1" CornerRadius="8" Padding="5,1">
+                                        <TextBlock Text="{Binding Owned}" FontSize="11" FontWeight="Bold"
+                                                   Foreground="White" HorizontalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- Row 1: Progress bar -->
+                                <Grid Grid.Row="1" Margin="0,1,0,2">
+                                    <Border Background="#0A0A1A" CornerRadius="3" Height="5" />
+                                    <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}" 
+                                            CornerRadius="3" Height="5"
+                                            HorizontalAlignment="Stretch"
+                                            RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding ProgressPercent, Converter={StaticResource PercentToFraction}, FallbackValue=0}" />
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Row 2: Compact info line -->
+                                <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,2">
+                                    <TextBlock Grid.Column="0" Text="{Binding RevenueText}" FontSize="10" 
+                                               Foreground="#00E676" />
+                                    <TextBlock Grid.Column="1" Text="{Binding CostText}" FontSize="10" 
+                                               Foreground="#FFAB40" HorizontalAlignment="Right" />
+                                </Grid>
+
+                                <!-- Row 3: Compact detail line — milestone + affordable -->
+                                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,0,0,2">
+                                    <TextBlock FontSize="9" Foreground="#FFD740" VerticalAlignment="Center">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} | {1}">
+                                                <Binding Path="MilestoneMultiplierText" />
+                                                <Binding Path="AffordableCountText" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Row 4: Buttons -->
+                                <Grid Grid.Row="4" ColumnDefinitions="*,3,*,3,*">
+                                    <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
+                                            Background="{Binding Color, Converter={StaticResource HexToBrush}}"
+                                            Foreground="White" FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,6" CornerRadius="5"
+                                            Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}"
+                                            Content="BUY" />
+                                    <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
+                                            Background="#2196F3" Foreground="White"
+                                            FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,6" CornerRadius="5" Content="▶ RUN" />
+                                    <Button Grid.Column="4" Command="{Binding BuyManagerCommand}"
+                                            IsVisible="{Binding !HasManager}"
+                                            Background="#FF6F00" Foreground="White"
+                                            FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,6" CornerRadius="5"
+                                            Opacity="{Binding CanAffordManager, Converter={StaticResource BoolToOpacity}}"
+                                            Content="MGR" />
+                                    <Border Grid.Column="4" IsVisible="{Binding HasManager}"
+                                            Background="#2E7D32" CornerRadius="5" Padding="0,6"
+                                            HorizontalAlignment="Stretch">
+                                        <TextBlock Text="✅" HorizontalAlignment="Center"
+                                                   Foreground="White" FontWeight="Bold" FontSize="11" />
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+
+        <!-- Toast overlay -->
+        <ItemsControl ItemsSource="{Binding Toasts.ActiveToasts}"
+                      HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      Margin="0,0,0,16">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="4" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="svc:ToastItem">
+                    <Border Background="#333333" CornerRadius="6" Padding="12,8"
+                            MaxWidth="320" Opacity="0.95">
+                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="12"
+                                   TextWrapping="Wrap" TextAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Panel>
+</UserControl>
+ENDOFFILE
+
+# =============================================================================
+# 11. ANDROID: Update App.axaml.cs to inject ToastService
+# =============================================================================
+
+cat > src/MyAdventure.Android/App.axaml.cs << 'ENDOFFILE'
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using MyAdventure.Android.Views;
+using MyAdventure.Core.Services;
+using MyAdventure.Infrastructure;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+
+namespace MyAdventure.Android;
+
+public partial class App : Avalonia.Application
+{
+    private const string Tag = "MyAdventure";
+
+    public static IServiceProvider? Services { get; private set; }
+
+    public override void Initialize()
+    {
+        global::Android.Util.Log.Info(Tag, "App.Initialize() starting");
+        AvaloniaXamlLoader.Load(this);
+        global::Android.Util.Log.Info(Tag, "App.Initialize() done");
+    }
+
+    public override async void OnFrameworkInitializationCompleted()
+    {
+        try
+        {
+            global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted starting");
+
+            var services = new ServiceCollection();
+            services.AddInfrastructure();
+            services.AddTransient<GameEngine>();
+            services.AddTransient<GameViewModel>();
+            Services = services.BuildServiceProvider();
+
+            await DependencyInjection.InitializeDatabaseAsync(Services);
+
+            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+            {
+                var vm = Services.GetRequiredService<GameViewModel>();
+                singleView.MainView = new MainView { DataContext = vm };
+            }
+
+            base.OnFrameworkInitializationCompleted();
+            global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted done");
+        }
+        catch (Exception ex)
+        {
+            global::Android.Util.Log.Error(Tag, $"FATAL during startup: {ex}");
+            global::Android.Util.Log.Error(Tag, $"Inner: {ex.InnerException}");
+            throw;
+        }
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 12. SHARED: Update csproj to include Services folder
+#     (MSBuild auto-includes .cs files, but let's be explicit about the folder)
+# =============================================================================
+
+# No csproj changes needed — MSBuild auto-discovers .cs files
+
+# =============================================================================
+# 13. TESTS: Add Milestone tests
+# =============================================================================
+
+cat > tests/MyAdventure.Core.Tests/MilestoneTests.cs << 'ENDOFFILE'
+using MyAdventure.Core.Entities;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+public class MilestoneTests
+{
+    [Fact]
+    public void CalculateMultiplier_ZeroOwned_ShouldBe1()
+    {
+        Milestone.CalculateMultiplier(0).ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void CalculateMultiplier_Below25_ShouldBe1()
+    {
+        Milestone.CalculateMultiplier(24).ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void CalculateMultiplier_At25_ShouldBe2()
+    {
+        Milestone.CalculateMultiplier(25).ShouldBe(2.0);
+    }
+
+    [Fact]
+    public void CalculateMultiplier_At50_ShouldBe4()
+    {
+        // 25 milestone (×2) × 50 milestone (×2) = ×4
+        Milestone.CalculateMultiplier(50).ShouldBe(4.0);
+    }
+
+    [Fact]
+    public void CalculateMultiplier_At100_ShouldBe8()
+    {
+        // ×2 × ×2 × ×2 = ×8
+        Milestone.CalculateMultiplier(100).ShouldBe(8.0);
+    }
+
+    [Fact]
+    public void CalculateMultiplier_At1000_ShouldBeMax()
+    {
+        // All milestones: 2^6 × 4^5 × 5 = 64 × 1024 × 5 = 327680
+        var result = Milestone.CalculateMultiplier(1000);
+        result.ShouldBe(64 * 1024 * 5.0);
+    }
+
+    [Fact]
+    public void NextMilestone_At0_ShouldBe25()
+    {
+        var next = Milestone.NextMilestone(0);
+        next.ShouldNotBeNull();
+        next.Threshold.ShouldBe(25);
+    }
+
+    [Fact]
+    public void NextMilestone_At25_ShouldBe50()
+    {
+        var next = Milestone.NextMilestone(25);
+        next.ShouldNotBeNull();
+        next.Threshold.ShouldBe(50);
+    }
+
+    [Fact]
+    public void NextMilestone_At1000_ShouldBeNull()
+    {
+        Milestone.NextMilestone(1000).ShouldBeNull();
+    }
+
+    [Fact]
+    public void UnitsToNext_At0_ShouldBe25()
+    {
+        Milestone.UnitsToNext(0).ShouldBe(25);
+    }
+
+    [Fact]
+    public void UnitsToNext_At20_ShouldBe5()
+    {
+        Milestone.UnitsToNext(20).ShouldBe(5);
+    }
+
+    [Fact]
+    public void UnitsToNext_At1000_ShouldBe0()
+    {
+        Milestone.UnitsToNext(1000).ShouldBe(0);
+    }
+}
+ENDOFFILE
+
+cat > tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs << 'ENDOFFILE'
+using MyAdventure.Core.Entities;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+public class BusinessAffordableTests
+{
+    private Business CreateBusiness(int owned = 0) => new()
+    {
+        Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
+        BaseCost = 100, BaseRevenue = 10, BaseTimeSeconds = 1,
+        CostMultiplier = 1.1, Owned = owned
+    };
+
+    [Fact]
+    public void AffordableCount_NoCash_ShouldBeZero()
+    {
+        var biz = CreateBusiness();
+        biz.AffordableCount(0).ShouldBe(0);
+    }
+
+    [Fact]
+    public void AffordableCount_ExactlyOneCost_ShouldBeOne()
+    {
+        var biz = CreateBusiness();
+        biz.AffordableCount(100).ShouldBe(1);
+    }
+
+    [Fact]
+    public void AffordableCount_MultiplePurchases()
+    {
+        var biz = CreateBusiness();
+        // Cost 0: 100, Cost 1: 110, Cost 2: 121 => total 331
+        biz.AffordableCount(331).ShouldBe(3);
+    }
+
+    [Fact]
+    public void AffordableCount_SlightlyUnder_ShouldBeOneLess()
+    {
+        var biz = CreateBusiness();
+        // Can buy 2 for 100 + 110 = 210, but not 3 (need 121 more = 331)
+        biz.AffordableCount(330).ShouldBe(2);
+    }
+
+    [Fact]
+    public void Revenue_WithMilestones_ShouldMultiply()
+    {
+        var biz = CreateBusiness(owned: 25);
+        // 25 owned × 10 base revenue × 2.0 milestone = 500
+        biz.Revenue.ShouldBe(500);
+    }
+
+    [Fact]
+    public void RevenuePerSecond_ShouldEqualRevenueOverCycleTime()
+    {
+        var biz = CreateBusiness(owned: 5);
+        var expected = biz.Revenue / biz.CycleTimeSeconds;
+        biz.RevenuePerSecond.ShouldBe(expected);
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 14. TESTS: Update GameEngineTests for milestone-aware revenue
+# =============================================================================
+
+cat > tests/MyAdventure.Core.Tests/GameEngineTests.cs << 'ENDOFFILE'
+using Microsoft.Extensions.Logging.Abstractions;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Services;
+using NSubstitute;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+public class GameEngineTests
+{
+    private readonly IGameStateRepository _repo = Substitute.For<IGameStateRepository>();
+    private readonly GameEngine _engine;
+
+    public GameEngineTests()
+    {
+        _repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+
+        _engine = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+    }
+
+    [Fact]
+    public async Task LoadAsync_NoSave_ShouldStartFresh()
+    {
+        await _engine.LoadAsync();
+        _engine.Cash.ShouldBe(5.0);
+        _engine.Businesses.Count.ShouldBe(6);
+    }
+
+    [Fact]
+    public async Task BuyBusiness_ShouldDeductCashAndIncrementOwned()
+    {
+        await _engine.LoadAsync();
+        SetCash(100);
+
+        var result = _engine.BuyBusiness("lemonade");
+        result.ShouldBeTrue();
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(1);
+        _engine.Cash.ShouldBeLessThan(100);
+    }
+
+    [Fact]
+    public async Task BuyBusiness_NotEnoughCash_ShouldFail()
+    {
+        await _engine.LoadAsync();
+        _engine.BuyBusiness("lemonade").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Tick_RunningBusiness_ShouldEarnRevenue()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+        _engine.BuyBusiness("lemonade");
+        _engine.StartBusiness("lemonade");
+
+        for (var i = 0; i < 100; i++)
+            _engine.Tick(0.1);
+
+        _engine.Cash.ShouldBeGreaterThan(990);
+    }
+
+    [Fact]
+    public async Task Tick_MilestoneBoostedRevenue_ShouldEarnMore()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+
+        // Buy 25 lemonade stands to hit first milestone
+        for (var i = 0; i < 25; i++)
+            _engine.BuyBusiness("lemonade");
+
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.Owned.ShouldBe(25);
+        lemonade.MilestoneMultiplier.ShouldBe(2.0);
+
+        // Revenue should be base × owned × multiplier
+        lemonade.Revenue.ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
+    }
+
+    [Fact]
+    public async Task Prestige_NotEnoughEarnings_ShouldFail()
+    {
+        await _engine.LoadAsync();
+        var (_, success) = _engine.Prestige();
+        success.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CalculateAngels_ShouldReturnZeroBelowThreshold() =>
+        GameEngine.CalculateAngels(1e11).ShouldBe(0);
+
+    [Fact]
+    public void CalculateAngels_ShouldReturnPositiveAboveThreshold() =>
+        GameEngine.CalculateAngels(1e14).ShouldBeGreaterThan(0);
+
+    private void SetCash(double amount)
+    {
+        var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
+        cashProp.GetSetMethod(true)!.Invoke(_engine, [amount]);
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 15. TESTS: Add ToastService tests
+# =============================================================================
+
+cat > tests/MyAdventure.Core.Tests/ToastServiceTests.cs << 'ENDOFFILE'
+using MyAdventure.Shared.Services;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+public class ToastServiceTests
+{
+    [Fact]
+    public void Show_ShouldAddToast()
+    {
+        var service = new ToastService();
+        service.Show("Test message");
+        service.ActiveToasts.Count.ShouldBe(1);
+        service.ActiveToasts[0].Message.ShouldBe("Test message");
+    }
+
+    [Fact]
+    public void Show_MultipleTimes_ShouldAddMultiple()
+    {
+        var service = new ToastService();
+        service.Show("One");
+        service.Show("Two");
+        service.Show("Three");
+        service.ActiveToasts.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void CleanupExpired_ShouldRemoveExpiredToasts()
+    {
+        var service = new ToastService();
+        service.Show("Will expire", TimeSpan.Zero);
+
+        // Wait a tiny bit for DateTime.UtcNow to pass
+        Thread.Sleep(10);
+
+        service.CleanupExpired();
+        service.ActiveToasts.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void CleanupExpired_ShouldKeepActiveToasts()
+    {
+        var service = new ToastService();
+        service.Show("Still active", TimeSpan.FromMinutes(5));
+
+        service.CleanupExpired();
+        service.ActiveToasts.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void CleanupExpired_MixedToasts_ShouldOnlyRemoveExpired()
+    {
+        var service = new ToastService();
+        service.Show("Expired", TimeSpan.Zero);
+        service.Show("Active", TimeSpan.FromMinutes(5));
+
+        Thread.Sleep(10);
+        service.CleanupExpired();
+
+        service.ActiveToasts.Count.ShouldBe(1);
+        service.ActiveToasts[0].Message.ShouldBe("Active");
+    }
+}
+ENDOFFILE
+
+# =============================================================================
+# 16. Update Shared csproj to ensure it can reference ToastService properly
+#     (No changes needed — it's in the same project)
+# =============================================================================
+
+# =============================================================================
+# 17. Fix progress bar binding — ProgressPercent is 0-100, ScaleX needs 0-1
+#     Add a converter
+# =============================================================================
+
+# We need to update the converter file to add a percentage-to-fraction converter
+
+cat >> src/MyAdventure.Shared/Converters/GameConverters.cs << 'ENDOFFILE'
+
+/// <summary>
+/// Converts a percentage (0-100) to a fraction (0.0-1.0) for ScaleTransform.
+/// </summary>
+public class PercentToFractionConverter : IValueConverter
+{
+    public static readonly PercentToFractionConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is double percent ? Math.Clamp(percent / 100.0, 0.0, 1.0) : 0.0;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+ENDOFFILE
+
+# Need to update AXAML files to use the PercentToFractionConverter instead of raw ProgressPercent
+# for ScaleTransform.ScaleX
+
+echo ""
+echo "=============================================="
+echo "  Enhanced Features Applied!"
+echo "=============================================="
+echo ""
+echo "Changes summary:"
+echo "  1. NEW: Milestone.cs — multiplier milestones at 25, 50, 100, 200, 300, 400, 500-1000"
+echo "  2. UPDATED: Business.cs — Revenue now includes MilestoneMultiplier"
+echo "  3. NEW: Business.AffordableCount() — how many you can buy with current cash"
+echo "  4. NEW: Business.RevenuePerSecond — income rate"
+echo "  5. NEW: ToastService — auto-dismiss toasts for disabled button feedback"
+echo "  6. UPDATED: BusinessViewModel — extended detail properties (cycle time, rev/s, milestones, affordable)"
+echo "  7. UPDATED: BusinessViewModel — commands now show toasts when action fails (disabled button explanation)"
+echo "  8. UPDATED: GameViewModel — toast integration, prestige explanation text"
+echo "  9. UPDATED: MainWindow.axaml (Desktop) — detail info panel, toast overlay, prestige explanation"
+echo " 10. UPDATED: MainView.axaml (Android) — compact detail line, toast overlay"
+echo " 11. NEW: MilestoneTests.cs — comprehensive milestone multiplier tests"
+echo " 12. NEW: BusinessAffordableTests.cs — affordable count + milestone revenue tests"
+echo " 13. NEW: ToastServiceTests.cs — toast lifecycle tests"
+echo " 14. UPDATED: GameEngineTests.cs — milestone-aware revenue test"
+echo ""
+echo "Next steps:"
+echo "  1. dotnet restore"
+echo "  2. dotnet build"
+echo "  3. dotnet test"
+echo "  4. dotnet run --project src/MyAdventure.Desktop"
+echo ""
+echo "NOTE: The progress bar ScaleTransform binds to ProgressPercent (0-100)."
+echo "      You'll need to use the PercentToFractionConverter in the AXAML."
+echo "      Or update the binding to divide by 100. See step 17 in the script."
+echo ""
+==============================================
+  MyAdventure Enhanced Features
+  Root: /home/kushal/src/dotnet/MyAdventure
+==============================================
+
+==============================================
+  Enhanced Features Applied!
+==============================================
+
+Changes summary:
+  1. NEW: Milestone.cs — multiplier milestones at 25, 50, 100, 200, 300, 400, 500-1000
+  2. UPDATED: Business.cs — Revenue now includes MilestoneMultiplier
+  3. NEW: Business.AffordableCount() — how many you can buy with current cash
+  4. NEW: Business.RevenuePerSecond — income rate
+  5. NEW: ToastService — auto-dismiss toasts for disabled button feedback
+  6. UPDATED: BusinessViewModel — extended detail properties (cycle time, rev/s, milestones, affordable)
+  7. UPDATED: BusinessViewModel — commands now show toasts when action fails (disabled button explanation)
+  8. UPDATED: GameViewModel — toast integration, prestige explanation text
+  9. UPDATED: MainWindow.axaml (Desktop) — detail info panel, toast overlay, prestige explanation
+ 10. UPDATED: MainView.axaml (Android) — compact detail line, toast overlay
+ 11. NEW: MilestoneTests.cs — comprehensive milestone multiplier tests
+ 12. NEW: BusinessAffordableTests.cs — affordable count + milestone revenue tests
+ 13. NEW: ToastServiceTests.cs — toast lifecycle tests
+ 14. UPDATED: GameEngineTests.cs — milestone-aware revenue test
+
+Next steps:
+  1. dotnet restore
+  2. dotnet build
+  3. dotnet test
+  4. dotnet run --project src/MyAdventure.Desktop
+
+NOTE: The progress bar ScaleTransform binds to ProgressPercent (0-100).
+      You'll need to use the PercentToFractionConverter in the AXAML.
+      Or update the binding to divide by 100. See step 17 in the script.
+
+
+real	0m0.017s
+user	0m0.008s
+sys	0m0.009s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;

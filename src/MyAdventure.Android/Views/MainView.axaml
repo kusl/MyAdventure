@@ -2,108 +2,170 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MyAdventure.Shared.ViewModels"
              xmlns:conv="using:MyAdventure.Shared.Converters"
+             xmlns:svc="using:MyAdventure.Shared.Services"
              x:Class="MyAdventure.Android.Views.MainView"
              x:DataType="vm:GameViewModel"
-             Background="#1A1A2E">
+             Background="#1A1A2E"
+             x:Name="RootView">
 
     <UserControl.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrush" />
         <conv:BoolToOpacityConverter x:Key="BoolToOpacity" />
+        <conv:PercentToFractionConverter x:Key="PercentToFraction" />
     </UserControl.Resources>
 
-    <DockPanel Margin="8">
-        <!-- Top bar -->
-        <Border DockPanel.Dock="Top" Background="#16213E" CornerRadius="10" Padding="14,8" Margin="0,0,0,8">
-            <Grid ColumnDefinitions="*,Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <TextBlock Text="💰" FontSize="24" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding CashText}" FontSize="28" FontWeight="Bold" 
-                               Foreground="#00E676" VerticalAlignment="Center" />
-                </StackPanel>
-                <Button Grid.Column="1" Command="{Binding PrestigeCommand}"
-                        IsEnabled="{Binding CanPrestige}"
-                        Background="#AA00FF" Foreground="White"
-                        FontSize="14" FontWeight="Bold"
-                        Padding="14,8" CornerRadius="6">
-                    <TextBlock Text="🔄 PRESTIGE" />
-                </Button>
-            </Grid>
-        </Border>
+    <Panel>
+        <DockPanel Margin="8">
+            <!-- Top bar -->
+            <Border DockPanel.Dock="Top" Background="#16213E" CornerRadius="10" Padding="14,8" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="💰" FontSize="24" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CashText}" FontSize="28" FontWeight="Bold" 
+                                   Foreground="#00E676" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                        <Button Command="{Binding PrestigeCommand}"
+                                Background="#AA00FF" Foreground="White"
+                                FontSize="13" FontWeight="Bold"
+                                Padding="14,6" CornerRadius="6"
+                                Opacity="{Binding CanPrestige, Converter={StaticResource BoolToOpacity}}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="🔄" VerticalAlignment="Center" />
+                                <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding PrestigeExplanation}" FontSize="8" 
+                                   Foreground="#888" HorizontalAlignment="Center"
+                                   MaxWidth="180" TextWrapping="Wrap" TextAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-        <!-- Business list: 3 rows x 2 cols for mobile -->
-        <ItemsControl ItemsSource="{Binding Businesses}">
+            <!-- Angels bar (compact) -->
+            <Border DockPanel.Dock="Top" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,6">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <TextBlock Text="😇" FontSize="14" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AngelText}" FontSize="14" Foreground="#FFD740" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AngelBonusText}" FontSize="12" Foreground="#FFD740" 
+                               Opacity="0.7" VerticalAlignment="Center" />
+                    <TextBlock Text="•" Foreground="#444" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding NextAngelText, StringFormat='Next: +{0}'}" FontSize="12" 
+                               Foreground="#CE93D8" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Business grid: 2 cols × 3 rows for phone -->
+            <ItemsControl ItemsSource="{Binding Businesses}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" Rows="3" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BusinessViewModel">
+                        <Border Background="#16213E" CornerRadius="8" Padding="6" Margin="3"
+                                Opacity="{Binding Owned, Converter={StaticResource BoolToOpacity}, ConverterParameter=0}">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                <!-- Row 0: Icon + Name + Owned count -->
+                                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,2">
+                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="20" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" FontWeight="Bold" 
+                                               Foreground="White" VerticalAlignment="Center" Margin="4,0,0,0"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <Border Grid.Column="2" Background="#0D47A1" CornerRadius="8" Padding="5,1">
+                                        <TextBlock Text="{Binding Owned}" FontSize="11" FontWeight="Bold"
+                                                   Foreground="White" HorizontalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- Row 1: Progress bar -->
+                                <Grid Grid.Row="1" Margin="0,1,0,2">
+                                    <Border Background="#0A0A1A" CornerRadius="3" Height="5" />
+                                    <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}" 
+                                            CornerRadius="3" Height="5"
+                                            HorizontalAlignment="Stretch"
+                                            RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding ProgressPercent, Converter={StaticResource PercentToFraction}, FallbackValue=0}" />
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Row 2: Compact info line -->
+                                <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,2">
+                                    <TextBlock Grid.Column="0" Text="{Binding RevenueText}" FontSize="10" 
+                                               Foreground="#00E676" />
+                                    <TextBlock Grid.Column="1" Text="{Binding CostText}" FontSize="10" 
+                                               Foreground="#FFAB40" HorizontalAlignment="Right" />
+                                </Grid>
+
+                                <!-- Row 3: Compact detail line — milestone + affordable -->
+                                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,0,0,2">
+                                    <TextBlock FontSize="9" Foreground="#FFD740" VerticalAlignment="Center">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} | {1}">
+                                                <Binding Path="MilestoneMultiplierText" />
+                                                <Binding Path="AffordableCountText" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Row 4: Buttons -->
+                                <Grid Grid.Row="4" ColumnDefinitions="*,3,*,3,*">
+                                    <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
+                                            Background="{Binding Color, Converter={StaticResource HexToBrush}}"
+                                            Foreground="White" FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,6" CornerRadius="5"
+                                            Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}"
+                                            Content="BUY" />
+                                    <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
+                                            Background="#2196F3" Foreground="White"
+                                            FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,6" CornerRadius="5" Content="▶ RUN" />
+                                    <Button Grid.Column="4" Command="{Binding BuyManagerCommand}"
+                                            IsVisible="{Binding !HasManager}"
+                                            Background="#FF6F00" Foreground="White"
+                                            FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,6" CornerRadius="5"
+                                            Opacity="{Binding CanAffordManager, Converter={StaticResource BoolToOpacity}}"
+                                            Content="MGR" />
+                                    <Border Grid.Column="4" IsVisible="{Binding HasManager}"
+                                            Background="#2E7D32" CornerRadius="5" Padding="0,6"
+                                            HorizontalAlignment="Stretch">
+                                        <TextBlock Text="✅" HorizontalAlignment="Center"
+                                                   Foreground="White" FontWeight="Bold" FontSize="11" />
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+
+        <!-- Toast overlay -->
+        <ItemsControl ItemsSource="{Binding Toasts.ActiveToasts}"
+                      HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      Margin="0,0,0,16">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid Columns="2" Rows="3" />
+                    <StackPanel Spacing="4" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
-            
             <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:BusinessViewModel">
-                    <Border Margin="4" CornerRadius="10" Padding="8"
-                            Background="#0F3460"
-                            Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}">
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto">
-                            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
-                                <TextBlock Text="{Binding Icon}" FontSize="22" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" 
-                                           Foreground="White" VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                            
-                            <!-- Progress bar using Avalonia ProgressBar control -->
-                            <ProgressBar Grid.Row="1" 
-                                         Minimum="0" Maximum="100" 
-                                         Value="{Binding ProgressPercent}"
-                                         Height="14" MinHeight="14"
-                                         Foreground="{Binding Color, Converter={StaticResource HexToBrush}}"
-                                         Background="#1A1A2E"
-                                         CornerRadius="7"
-                                         Margin="0,2" />
-                            
-                            <TextBlock Grid.Row="2" Foreground="#B0BEC5" FontSize="11" Margin="0,2">
-                                <Run Text="x" /><Run Text="{Binding Owned}" />
-                                <Run Text=" | $" /><Run Text="{Binding RevenueText}" />
-                            </TextBlock>
-                            
-                            <!-- Action buttons: BUY, RUN, MGR -->
-                            <Grid Grid.Row="3" ColumnDefinitions="*,4,*,4,*" Margin="0,4,0,0">
-                                <!-- Buy button -->
-                                <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
-                                        IsEnabled="{Binding CanAfford}"
-                                        Background="{Binding Color, Converter={StaticResource HexToBrush}}"
-                                        Foreground="White" FontWeight="Bold" FontSize="11"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                        Padding="0,8" CornerRadius="6" Content="BUY" />
-                                
-                                <!-- Run button -->
-                                <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
-                                        Background="#2196F3" Foreground="White"
-                                        FontWeight="Bold" FontSize="11"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                        Padding="0,8" CornerRadius="6" Content="▶ RUN" />
-                                
-                                <!-- Manager button (shown when no manager yet) -->
-                                <Button Grid.Column="4" Command="{Binding BuyManagerCommand}"
-                                        IsEnabled="{Binding CanAffordManager}"
-                                        IsVisible="{Binding !HasManager}"
-                                        Background="#FF6F00" Foreground="White"
-                                        FontWeight="Bold" FontSize="11"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                        Padding="0,8" CornerRadius="6"
-                                        Content="MGR" />
-                                <!-- Auto indicator (shown when manager purchased) -->
-                                <Border Grid.Column="4" IsVisible="{Binding HasManager}"
-                                        Background="#2E7D32" CornerRadius="6" Padding="0,8"
-                                        HorizontalAlignment="Stretch">
-                                    <TextBlock Text="✅ AUTO" HorizontalAlignment="Center"
-                                               Foreground="White" FontWeight="Bold" FontSize="11" />
-                                </Border>
-                            </Grid>
-                        </Grid>
+                <DataTemplate x:DataType="svc:ToastItem">
+                    <Border Background="#333333" CornerRadius="6" Padding="12,8"
+                            MaxWidth="320" Opacity="0.95">
+                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="12"
+                                   TextWrapping="Wrap" TextAlignment="Center" />
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-    </DockPanel>
+    </Panel>
 </UserControl>

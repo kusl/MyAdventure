@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MyAdventure.Core.Interfaces;
-using MyAdventure.Core.Services;
 using MyAdventure.Infrastructure.Data;
 using MyAdventure.Infrastructure.Repositories;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace MyAdventure.Infrastructure;
@@ -14,46 +15,36 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string? dbPath = null)
     {
-        var path = dbPath ?? GetDefaultDbPath();
+        dbPath ??= GetDefaultDbPath();
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite($"Data Source={path}"));
+        services.AddDbContext<AppDbContext>(opts =>
+            opts.UseSqlite($"Data Source={dbPath}"));
 
         services.AddScoped<IGameStateRepository, GameStateRepository>();
-        services.AddScoped<GameEngine>();
 
-        // Console logging only works on desktop; Android has no System.Console.
-        // On Android, logs go through Android.Util.Log instead.
-        var isAndroid = OperatingSystem.IsAndroid();
+        // Toast service is a singleton shared across all VMs
+        services.AddSingleton<MyAdventure.Shared.Services.ToastService>();
 
-        services.AddLogging(builder =>
-        {
-            builder.SetMinimumLevel(LogLevel.Debug);
-            if (!isAndroid)
+        // OpenTelemetry
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService("MyAdventure", "1.0.0");
+
+        services.AddLogging(logging =>
+            logging.AddOpenTelemetry(otel =>
             {
-                builder.AddConsole();
-            }
-        });
+                otel.SetResourceBuilder(resourceBuilder);
+                otel.AddConsoleExporter();
+            }));
 
         services.AddOpenTelemetry()
-            .WithTracing(tracing =>
-            {
-                tracing.AddSource("MyAdventure.*");
-                if (!isAndroid)
-                {
-                    tracing.AddConsoleExporter();
-                }
-            })
-            .WithMetrics(metrics =>
-            {
-                metrics.AddMeter("MyAdventure.*");
-                // RuntimeInstrumentation may not be supported on all platforms
-                if (!isAndroid)
-                {
-                    metrics.AddRuntimeInstrumentation();
-                    metrics.AddConsoleExporter();
-                }
-            });
+            .WithTracing(tracing => tracing
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource("MyAdventure.*")
+                .AddConsoleExporter())
+            .WithMetrics(metrics => metrics
+                .AddMeter("MyAdventure.*")
+                .AddRuntimeInstrumentation()
+                .AddConsoleExporter());
 
         return services;
     }
@@ -67,26 +58,9 @@ public static class DependencyInjection
 
     private static string GetDefaultDbPath()
     {
-        string appData;
-
-        if (OperatingSystem.IsAndroid())
-        {
-            // On Android, use the app's internal files directory.
-            // Environment.GetFolderPath may return empty or unexpected paths.
-            appData = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-            if (string.IsNullOrEmpty(appData))
-            {
-                // Fallback: use the app's base directory
-                appData = AppContext.BaseDirectory;
-            }
-        }
-        else
-        {
-            appData = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "MyAdventure");
-        }
-
+        var appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyAdventure");
         Directory.CreateDirectory(appData);
         return Path.Combine(appData, "myadventure.db");
     }

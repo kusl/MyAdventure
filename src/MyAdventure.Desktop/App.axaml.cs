@@ -1,10 +1,10 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using MyAdventure.Core.Services;
 using MyAdventure.Desktop.Views;
 using MyAdventure.Infrastructure;
+using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
 
 namespace MyAdventure.Desktop;
