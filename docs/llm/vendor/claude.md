@@ -1475,3 +1475,69 @@ Toasts auto-dismiss after 3 seconds. The `ToastService` is cleaned up every game
 **New Tests** — `MilestoneTests.cs` (12 tests), `BusinessAffordableTests.cs` (6 tests), `ToastServiceTests.cs` (5 tests), plus updated `GameEngineTests.cs` with milestone-aware revenue tests.
 
 To apply: save the script, `chmod +x`, run it from your project root, then `dotnet build && dotnet test`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+24
+10
+  MyAdventure.Core net10.0 succeeded (2.3s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 failed with 1 error(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/ToastServiceTests.cs(1,19): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+  MyAdventure.Infrastructure net10.0 failed with 1 error(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(26,43): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+
+Build failed with 2 error(s) in 3.4s
+
+real	0m3.526s
+user	0m1.896s
+sys	0m0.401s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 failed with 1 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/ToastServiceTests.cs(1,19): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+  MyAdventure.Infrastructure net10.0 failed with 1 error(s) (0.2s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(26,43): error CS0234: The type or namespace name 'Shared' does not exist in the namespace 'MyAdventure' (are you missing an assembly reference?)
+
+Build failed with 2 error(s) in 1.0s
+
+Two issues — both are missing project references.
+
+**Problem 1:** `MyAdventure.Infrastructure` references `MyAdventure.Shared.Services.ToastService` but doesn't have a project reference to Shared. Worse, this would create a circular dependency since Shared already references Infrastructure.
+
+**Problem 2:** `MyAdventure.Core.Tests` references `MyAdventure.Shared.Services.ToastService` but only has a reference to Core.
+
+The fix: ToastService belongs in **Core** (it has no infrastructure dependencies — it's just an ObservableObject with a list). Then Infrastructure doesn't need to reference Shared, and Core.Tests can reach it naturally. We register it in DI from Infrastructure without needing the `using` for the Shared namespace.
+
+Actually, the cleanest fix is:
+
+1. Move `ToastService` to Core (it only depends on CommunityToolkit.Mvvm which Core doesn't have... so let's make it plain C# with no MVVM dependency)
+2. Or better: keep ToastService in Shared, register it in DI from the **app startup** (Desktop/Android `App.axaml.cs`) instead of Infrastructure, and move the test to a separate test project or add the Shared reference to Core.Tests.
+
+Let me go with the pragmatic approach — keep ToastService in Shared, remove the DI registration from Infrastructure, register in app startup, and move the toast tests to a new file in a test project that references Shared.The root cause was a dependency cycle: Infrastructure → Shared → Infrastructure. The fix:
+
+1. **Removed** the `ToastService` registration from `Infrastructure/DependencyInjection.cs` — Infrastructure has no business knowing about Shared (Shared depends on Infrastructure, not the other way around)
+2. **Added** `services.AddSingleton<ToastService>()` in both `Desktop/App.axaml.cs` and `Android/App.axaml.cs` — this is where DI composition happens anyway
+3. **Moved** `ToastServiceTests.cs` from `Core.Tests` → `UI.Tests` since UI.Tests already references the Shared project
+
+Run the script then `dotnet build && dotnet test` and both errors should be resolved.
+
