@@ -1920,7 +1920,428 @@ yes, tests pass now
 no, I don't mind if players cheat. 
 it is perfectly fine if players edit this and inflate or edit their progress in a text editor
 in fact, I encourage it
+remember, I still don't want scroll bars so everything should still fit 
+all the conditions and constraints still apply 
+please do not hallucinate.
 
 00
 20
 
+
+Looking at the codebase, I'll add import/export with a clean Base64-encoded JSON format. The transfer panel will overlay the business grid (no scrollbars), with two compact buttons always visible at the bottom.
+
+Here's my plan:
+1. **GameEngine** — `ExportToString()` and `ImportFromString()` methods
+2. **GameViewModel** — transfer panel state + commands
+3. **Both views** — bottom bar + overlay panel
+4. **Tests** — export/import round-trip and edge casesNow the Desktop AXAML — the key changes are a bottom bar with Export/Import buttons and an overlay panel that replaces the business grid when active:Now the Android view:Let me fix that stray redundant TextBlock in the desktop AXAML:Now let me update the first artifact to be clearer about the required `using` statement and provide a cleaner reference:Here's a summary of all changes needed:
+
+**Files to modify (4) + tests to update (1):**
+
+**1. `src/MyAdventure.Core/Services/GameEngine.cs`**
+- Add `using System.Text;` at the top
+- Add `ExportToString()` and `ImportFromString()` methods (from artifact 1) after the existing `SerializeManagerData()` method
+
+**2. `src/MyAdventure.Shared/ViewModels/GameViewModel.cs`**
+- Replace entire file with artifact 1's version (adds transfer panel properties + Export/StartImport/ConfirmImport/CloseTransfer commands, all existing code preserved)
+
+**3. `src/MyAdventure.Desktop/Views/MainWindow.axaml`**
+- Replace entire file with the Desktop AXAML artifact
+
+**4. `src/MyAdventure.Android/Views/MainView.axaml`**
+- Replace entire file with the Android AXAML artifact
+
+**5. `tests/MyAdventure.Core.Tests/GameEngineTests.cs`**
+- Add the 6 new test methods from artifact 1 inside the existing `GameEngineTests` class
+
+**How it works:**
+
+The export format is JSON → Base64. A decoded export looks like:
+```json
+{"v":1,"cash":5975.0,"lifetime":0,"angels":0,"prestige":0,
+ "businesses":{"lemonade":5,"newspaper":0,...},
+ "managers":{"lemonade":true,"newspaper":false,...}}
+```
+
+Players can decode the Base64, edit the JSON (give themselves a billion cash, 1000 lemonade stands, whatever they want), re-encode, and import. By design.
+
+The UI adds a thin bottom bar (always visible, no scrollbars) with two buttons. Clicking either opens a transfer panel that **replaces** the business grid temporarily (via `IsVisible` toggling on a `Panel`), so no scrollbar is ever needed.
+
+
+// =============================================================================
+// FILE 1: src/MyAdventure.Core/Services/GameEngine.cs
+// ADD these two methods inside the GameEngine class, after the existing
+// SerializeManagerData() method (before the closing brace of the class):
+// =============================================================================
+
+    /// <summary>
+    /// Export full game state as a Base64-encoded JSON string.
+    /// Players can freely edit the decoded JSON — we encourage tinkering.
+    /// </summary>
+    public string ExportToString()
+    {
+        var data = new Dictionary<string, object>
+        {
+            ["v"] = 1,
+            ["cash"] = Cash,
+            ["lifetime"] = LifetimeEarnings,
+            ["angels"] = AngelInvestors,
+            ["prestige"] = PrestigeCount,
+            ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
+            ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
+        };
+        var json = JsonSerializer.Serialize(data);
+        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+    }
+
+    /// <summary>
+    /// Import game state from a Base64-encoded JSON string.
+    /// Returns true on success, false if the string is invalid.
+    /// </summary>
+    public bool ImportFromString(string encoded)
+    {
+        try
+        {
+            var json = System.Text.Encoding.UTF8.GetString(
+                Convert.FromBase64String(encoded.Trim()));
+            var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+            if (data is null) return false;
+
+            Cash = data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0;
+            LifetimeEarnings = data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0;
+            AngelInvestors = data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0;
+            PrestigeCount = data.TryGetValue("prestige", out var prEl) ? prEl.GetInt32() : 0;
+
+            Businesses = BusinessDefinitions.CreateDefaults();
+
+            if (data.TryGetValue("businesses", out var bizEl))
+            {
+                var bizData = JsonSerializer.Deserialize<Dictionary<string, int>>(bizEl.GetRawText()) ?? [];
+                foreach (var biz in Businesses)
+                    if (bizData.TryGetValue(biz.Id, out var owned))
+                        biz.Owned = owned;
+            }
+
+            if (data.TryGetValue("managers", out var mgrEl))
+            {
+                var mgrData = JsonSerializer.Deserialize<Dictionary<string, bool>>(mgrEl.GetRawText()) ?? [];
+                foreach (var biz in Businesses)
+                    if (mgrData.TryGetValue(biz.Id, out var has))
+                    {
+                        biz.HasManager = has;
+                        if (has && biz.Owned > 0) biz.IsRunning = true;
+                    }
+            }
+
+            logger.LogInformation("Imported game state. Cash: {Cash:F2}, Angels: {Angels:F0}", Cash, AngelInvestors);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to import game state");
+            return false;
+        }
+    }
+
+
+// =============================================================================
+// FILE 2: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+// REPLACE the entire file with this:
+// =============================================================================
+
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
+
+namespace MyAdventure.Shared.ViewModels;
+
+/// <summary>
+/// Main game ViewModel. Drives the game loop and exposes all state for binding.
+/// </summary>
+public partial class GameViewModel : ViewModelBase
+{
+    private readonly GameEngine _engine;
+    private readonly ILogger<GameViewModel> _logger;
+    private readonly ToastService _toasts;
+    private DateTime _lastTick;
+    private int _saveCounter;
+
+    [ObservableProperty] private string _cashText = "$0.00";
+    [ObservableProperty] private string _angelText = "0";
+    [ObservableProperty] private string _angelBonusText = "+0%";
+    [ObservableProperty] private int _prestigeCount;
+    [ObservableProperty] private bool _canPrestige;
+    [ObservableProperty] private string _nextAngelText = "0";
+    [ObservableProperty] private string _prestigeExplanation = "";
+
+    // --- Transfer panel (import/export) ---
+    [ObservableProperty] private bool _isTransferOpen;
+    [ObservableProperty] private bool _isExportMode;
+    [ObservableProperty] private string _transferText = "";
+
+    public ObservableCollection<BusinessViewModel> Businesses { get; } = [];
+    public ToastService Toasts => _toasts;
+
+    public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts)
+    {
+        _engine = engine;
+        _logger = logger;
+        _toasts = toasts;
+        _lastTick = DateTime.UtcNow;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _engine.LoadAsync();
+
+        Businesses.Clear();
+        foreach (var biz in _engine.Businesses)
+            Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
+
+        RefreshAll();
+        _logger.LogInformation("Game initialized with {Count} businesses", Businesses.Count);
+    }
+
+    /// <summary>Called by the UI timer (~60fps).</summary>
+    public void OnTick()
+    {
+        var now = DateTime.UtcNow;
+        var delta = (now - _lastTick).TotalSeconds;
+        _lastTick = now;
+
+        delta = Math.Min(delta, 1.0);
+
+        _engine.Tick(delta);
+        RefreshAll();
+
+        // Clean up expired toasts
+        _toasts.CleanupExpired();
+
+        // Auto-save every ~5 seconds
+        _saveCounter++;
+        if (_saveCounter >= 300)
+        {
+            _saveCounter = 0;
+            _ = SaveAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void Export()
+    {
+        TransferText = _engine.ExportToString();
+        IsExportMode = true;
+        IsTransferOpen = true;
+        _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+    }
+
+    [RelayCommand]
+    private void StartImport()
+    {
+        TransferText = "";
+        IsExportMode = false;
+        IsTransferOpen = true;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmImportAsync()
+    {
+        if (string.IsNullOrWhiteSpace(TransferText))
+        {
+            _toasts.Show("Paste an export string first!");
+            return;
+        }
+
+        if (_engine.ImportFromString(TransferText))
+        {
+            // Rebuild business view models from the newly imported state
+            Businesses.Clear();
+            foreach (var biz in _engine.Businesses)
+                Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
+
+            RefreshAll();
+            await SaveAsync();
+
+            IsTransferOpen = false;
+            TransferText = "";
+            _toasts.Show("Progress imported successfully!");
+            _logger.LogInformation("Game state imported and saved");
+        }
+        else
+        {
+            _toasts.Show("Invalid import string. Check and try again.");
+        }
+    }
+
+    [RelayCommand]
+    private void CloseTransfer()
+    {
+        IsTransferOpen = false;
+        TransferText = "";
+    }
+
+    [RelayCommand]
+    private async Task PrestigeAsync()
+    {
+        if (!CanPrestige)
+        {
+            _toasts.Show(
+                "Prestige resets all businesses and cash, but you gain Angel Investors " +
+                "that permanently boost all revenue by +2% each. " +
+                $"You need to earn more to unlock prestige (earn enough for at least 1 angel).");
+            return;
+        }
+
+        var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
+        var (angels, success) = _engine.Prestige();
+        if (!success) return;
+
+        _logger.LogInformation("Prestige! Gained {Angels:F0} angels", angels);
+
+        Businesses.Clear();
+        foreach (var biz in _engine.Businesses)
+            Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
+
+        RefreshAll();
+        await SaveAsync();
+
+        _toasts.Show($"Prestige! Gained {NumberFormatter.Format(angels)} angels. All revenue boosted!");
+    }
+
+    public async Task SaveAsync()
+    {
+        try
+        {
+            await _engine.SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save game");
+        }
+    }
+
+    private void RefreshAll()
+    {
+        CashText = $"${NumberFormatter.Format(_engine.Cash)}";
+        AngelText = NumberFormatter.Format(_engine.AngelInvestors);
+        AngelBonusText = $"+{(_engine.AngelBonus - 1) * 100:F0}%";
+        PrestigeCount = _engine.PrestigeCount;
+
+        var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
+        CanPrestige = potentialAngels >= 1;
+        NextAngelText = NumberFormatter.Format(Math.Max(0, potentialAngels));
+
+        // Prestige explanation that auto-updates
+        if (CanPrestige)
+        {
+            PrestigeExplanation = $"Reset all businesses. Gain {NextAngelText} angels (+2% revenue each).";
+        }
+        else
+        {
+            PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
+        }
+
+        foreach (var bvm in Businesses)
+            bvm.Refresh(_engine.Cash);
+    }
+}
+
+
+// =============================================================================
+// FILE 3: src/MyAdventure.Desktop/Views/MainWindow.axaml
+// REPLACE the entire file with this:
+// =============================================================================
+
+// (See the AXAML content below — pasted as-is for the Desktop window)
+
+
+// =============================================================================
+// FILE 4: src/MyAdventure.Android/Views/MainView.axaml
+// REPLACE the entire file with this:
+// =============================================================================
+
+// (See the AXAML content below — pasted as-is for the Android view)
+
+
+// =============================================================================
+// FILE 5: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+// ADD these test methods inside the GameEngineTests class:
+// =============================================================================
+
+    [Fact]
+    public async Task ExportToString_ShouldReturnBase64()
+    {
+        await _engine.LoadAsync();
+        SetCash(42.5);
+
+        var exported = _engine.ExportToString();
+
+        exported.ShouldNotBeNullOrWhiteSpace();
+        // Should be valid Base64
+        var bytes = Convert.FromBase64String(exported);
+        var json = System.Text.Encoding.UTF8.GetString(bytes);
+        json.ShouldContain("\"cash\"");
+        json.ShouldContain("42.5");
+    }
+
+    [Fact]
+    public async Task ImportFromString_ShouldRestoreState()
+    {
+        await _engine.LoadAsync();
+        SetCash(9999);
+
+        // Buy some businesses
+        for (var i = 0; i < 5; i++)
+            _engine.BuyBusiness("lemonade");
+
+        _engine.BuyManager("lemonade");
+
+        var exported = _engine.ExportToString();
+
+        // Reset engine by loading fresh
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.Cash.ShouldBe(5.0); // fresh start
+
+        // Import the saved state
+        var result = engine2.ImportFromString(exported);
+        result.ShouldBeTrue();
+        engine2.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(5);
+        engine2.Businesses.First(b => b.Id == "lemonade").HasManager.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExportImport_ShouldRoundTrip()
+    {
+        await _engine.LoadAsync();
+        SetCash(12345.67);
+
+        var exported = _engine.ExportToString();
+        var result = _engine.ImportFromString(exported);
+
+        result.ShouldBeTrue();
+        _engine.Cash.ShouldBe(12345.67);
+    }
+
+    [Fact]
+    public void ImportFromString_InvalidBase64_ShouldReturnFalse()
+    {
+        _engine.ImportFromString("not-valid-base64!!!").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ImportFromString_InvalidJson_ShouldReturnFalse()
+    {
+        var bad = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("not json"));
+        _engine.ImportFromString(bad).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ImportFromString_EmptyString_ShouldReturnFalse()
+    {
+        _engine.ImportFromString("").ShouldBeFalse();
+    }
+    
