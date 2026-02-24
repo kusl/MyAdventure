@@ -2448,3 +2448,253 @@ Everything in the README is sourced directly from the codebase in `dump.txt` —
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+100
+44
+
+there are multiple issues: 
+1. the game starts with $0.00 after prestige/reset. 
+you should never, ever start with $0.00 because the game is now instantly stuck 
+previously, we fixed a similar issue when the game first starts 
+by making sure the user starts with $5.00 
+the first lemonade stand costs $4.00 which this $5.00 covers 
+please make sure that by reset or otherwise, 
+any time the game starts, the player has at least $5.00 
+either the player should have at least one thing that makes money 
+or the player has at least enough money to buy one thing that makes money 
+this is non-negotiable as the game becomes stuck without it 
+and we look like we have never heard the words Q and A together. 
+2. another issue I found is with large numbers. 
+while the game handles this in many places. 
+I found some places where large numbers are not handled very well 
+a large number like 
+3409258023457023457230495723957904395823045 makes no sense to the user
+it is very difficult to read. 
+Please use either things like 57.96 B (preferable)
+or if that is not possible use scientific notation 
+like 57.96 x 10^9 or something like that 
+(this is just an example. use super script and nice font and ligature if available)
+3. please remember that all tests must pass and we must make sure there are no regressions
+please do NOT hallucinate 
+
+Looking at the code, I can identify both issues clearly:
+
+**Issue 1: Prestige resets cash to $0.** In `GameEngine.Prestige()`, line `Cash = 0;` leaves the player stuck with no money and no businesses.
+
+**Issue 2: Large numbers not formatted.** The `AngelBonus` percentage display in `GameViewModel.RefreshAll()` uses `{(_engine.AngelBonus - 1) * 100:F0}%` which produces raw numbers like `3409258023457...%` instead of formatted ones. The `PrestigeExplanation` also interpolates `NextAngelText` which is already formatted, but the angel bonus text itself isn't.
+
+Let me trace through all the display paths to find every unformatted large number, then fix everything with tests.
+
+**Unformatted large number locations:**
+1. `AngelBonusText` in `GameViewModel.RefreshAll()` — uses `:F0` format instead of `NumberFormatter`
+2. `PrestigeAsync()` toast — uses `NumberFormatter.Format(angels)` ✅ already good
+3. `Prestige()` in engine sets `Cash = 0` — the $5 starting cash issue
+
+Let me generate the fixes:Here's a summary of the three changes to make:
+
+**Fix 1 — `src/MyAdventure.Core/Services/GameEngine.cs`, line in `Prestige()` method:**
+Change `Cash = 0;` → `Cash = 5.0;`
+
+This ensures after prestige, the player always has $5 to buy the first lemonade stand ($4). Same logic we already apply on a fresh game in `LoadAsync`.
+
+**Fix 2 — `src/MyAdventure.Shared/ViewModels/GameViewModel.cs`, in `RefreshAll()`:**
+Change:
+```csharp
+AngelBonusText = $"+{(_engine.AngelBonus - 1) * 100:F0}%";
+```
+To:
+```csharp
+AngelBonusText = $"+{NumberFormatter.Format((_engine.AngelBonus - 1) * 100)}%";
+```
+
+With thousands of angels, the bonus percentage becomes enormous (e.g., 200,000%). Using `NumberFormatter.Format` turns that into `+200.00 K%` which is consistent with how every other large number in the game displays.
+
+**Fix 3 — New tests in `GameEngineTests.cs`:**
+Two new tests verify that after prestige the player has exactly $5 and can afford the first lemonade stand. Plus a formatter test confirming large percentage values get abbreviated properly.
+
+All existing tests remain unaffected — `LoadAsync` still sets `Cash = 5.0` for fresh games, and the `NumberFormatter` behavior for values under 1000 is unchanged.
+
+// =============================================================================
+// FIX 1: GameEngine.cs — Prestige should give player starting cash of $5
+// =============================================================================
+// In src/MyAdventure.Core/Services/GameEngine.cs
+// Find the Prestige() method and change Cash = 0 to Cash = 5:
+
+// BEFORE:
+//     AngelInvestors += newAngels;
+//     PrestigeCount++;
+//     Cash = 0;
+//     LifetimeEarnings = 0;
+
+// AFTER:
+//     AngelInvestors += newAngels;
+//     PrestigeCount++;
+//     Cash = 5.0;  // Always start with $5 so player can buy first lemonade ($4)
+//     LifetimeEarnings = 0;
+
+
+// =============================================================================
+// FIX 2: GameViewModel.cs — Format angel bonus percentage with NumberFormatter
+// =============================================================================
+// In src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+// In the RefreshAll() method, change the AngelBonusText line:
+
+// BEFORE:
+//     AngelBonusText = $"+{(_engine.AngelBonus - 1) * 100:F0}%";
+
+// AFTER:
+//     AngelBonusText = $"+{NumberFormatter.Format((_engine.AngelBonus - 1) * 100)}%";
+
+
+// =============================================================================
+// FIX 3: New test — Prestige should give starting cash
+// =============================================================================
+// Add to tests/MyAdventure.Core.Tests/GameEngineTests.cs:
+
+[Fact]
+public async Task Prestige_ShouldGiveStartingCash()
+{
+    await _engine.LoadAsync();
+
+    // Give enough lifetime earnings to prestige
+    // We need LifetimeEarnings >= 1e12 for angels
+    // Use reflection to set LifetimeEarnings directly
+    var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+    ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+
+    var (angels, success) = _engine.Prestige();
+    success.ShouldBeTrue();
+    angels.ShouldBeGreaterThan(0);
+
+    // After prestige, player must have $5 to buy first lemonade stand
+    _engine.Cash.ShouldBe(5.0);
+
+    // All businesses should be reset
+    _engine.Businesses.All(b => b.Owned == 0).ShouldBeTrue();
+}
+
+[Fact]
+public async Task Prestige_CashShouldCoverFirstLemonade()
+{
+    await _engine.LoadAsync();
+
+    var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+    ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+
+    var (_, success) = _engine.Prestige();
+    success.ShouldBeTrue();
+
+    // The first lemonade stand costs $4, and we should have $5
+    var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+    lemonade.NextCost.ShouldBe(4.0);
+    _engine.Cash.ShouldBeGreaterThanOrEqualTo(lemonade.NextCost);
+
+    // Player should be able to buy it
+    _engine.BuyBusiness("lemonade").ShouldBeTrue();
+}
+
+
+// =============================================================================
+// FIX 4: New test — Angel bonus text should be formatted for large values
+// =============================================================================
+// Add to tests/MyAdventure.Core.Tests/NumberFormatterTests.cs:
+
+[Theory]
+[InlineData(999.99, "999.99")]
+[InlineData(50000, "50.00 K")]
+[InlineData(2_000_000, "2.00 M")]
+public void Format_LargePercentageValues_ShouldUseAbbreviations(double input, string expected) =>
+    NumberFormatter.Format(input).ShouldBe(expected);
+
+11
+46
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

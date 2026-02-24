@@ -184,7 +184,7 @@ public class GameEngine(
 
         AngelInvestors += newAngels;
         PrestigeCount++;
-        Cash = 0;
+        Cash = 5.0;
         LifetimeEarnings = 0;
 
         // Reset businesses

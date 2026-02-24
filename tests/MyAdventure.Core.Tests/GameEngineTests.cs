@@ -170,6 +170,48 @@ public class GameEngineTests
         _engine.ImportFromString("").ShouldBeFalse();
     }
 
+    [Fact]
+public async Task Prestige_ShouldGiveStartingCash()
+{
+    await _engine.LoadAsync();
+
+    // Give enough lifetime earnings to prestige
+    // We need LifetimeEarnings >= 1e12 for angels
+    // Use reflection to set LifetimeEarnings directly
+    var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+    ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+
+    var (angels, success) = _engine.Prestige();
+    success.ShouldBeTrue();
+    angels.ShouldBeGreaterThan(0);
+
+    // After prestige, player must have $5 to buy first lemonade stand
+    _engine.Cash.ShouldBe(5.0);
+
+    // All businesses should be reset
+    _engine.Businesses.All(b => b.Owned == 0).ShouldBeTrue();
+}
+
+[Fact]
+public async Task Prestige_CashShouldCoverFirstLemonade()
+{
+    await _engine.LoadAsync();
+
+    var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+    ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+
+    var (_, success) = _engine.Prestige();
+    success.ShouldBeTrue();
+
+    // The first lemonade stand costs $4, and we should have $5
+    var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+    lemonade.NextCost.ShouldBe(4.0);
+    _engine.Cash.ShouldBeGreaterThanOrEqualTo(lemonade.NextCost);
+
+    // Player should be able to buy it
+    _engine.BuyBusiness("lemonade").ShouldBeTrue();
+}
+
     private void SetCash(double amount)
     {
         var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;

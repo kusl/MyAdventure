@@ -177,7 +177,7 @@ public partial class GameViewModel : ViewModelBase
     {
         CashText = $"${NumberFormatter.Format(_engine.Cash)}";
         AngelText = NumberFormatter.Format(_engine.AngelInvestors);
-        AngelBonusText = $"+{(_engine.AngelBonus - 1) * 100:F0}%";
+        AngelBonusText = $"+{NumberFormatter.Format((_engine.AngelBonus - 1) * 100)}%";
         PrestigeCount = _engine.PrestigeCount;
 
         var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;

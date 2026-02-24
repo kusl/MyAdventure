@@ -20,4 +20,12 @@ public class NumberFormatterTests
     [Fact]
     public void Format_NegativeNumbers_ShouldIncludeMinus() =>
         NumberFormatter.Format(-5000).ShouldStartWith("-");
+
+    [Theory]
+[InlineData(999.99, "999.99")]
+[InlineData(50000, "50.00 K")]
+[InlineData(2_000_000, "2.00 M")]
+public void Format_LargePercentageValues_ShouldUseAbbreviations(double input, string expected) =>
+    NumberFormatter.Format(input).ShouldBe(expected);
+    
 }
