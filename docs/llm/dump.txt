@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue Feb 24 06:06:55 PM EST 2026
+Generated: Tue Feb 24 06:26:21 PM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -1738,7 +1738,7 @@ SIZE: .18 KB
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 11.60 KB
+SIZE: 11.61 KB
 ================================================================================
 
 using System.Text;
@@ -1928,7 +1928,7 @@ public class GameEngine(
         AngelInvestors += newAngels;
         PrestigeCount++;
         Cash = 5.0;
-        LifetimeEarnings = 0;
+        // LifetimeEarnings = 0;
 
         // Reset businesses
         var defaults = BusinessDefinitions.CreateDefaults();

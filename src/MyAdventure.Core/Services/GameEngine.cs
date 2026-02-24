@@ -185,7 +185,7 @@ public class GameEngine(
         AngelInvestors += newAngels;
         PrestigeCount++;
         Cash = 5.0;
-        // LifetimeEarnings = 0;
+        // LifetimeEarnings = 0; // do not reset lifetime earnings during prestige, there needs to be an incentive to prestige
 
         // Reset businesses
         var defaults = BusinessDefinitions.CreateDefaults();
