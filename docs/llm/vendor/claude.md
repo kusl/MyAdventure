@@ -1970,8 +1970,12 @@ The UI adds a thin bottom bar (always visible, no scrollbars) with two buttons. 
 
 // =============================================================================
 // FILE 1: src/MyAdventure.Core/Services/GameEngine.cs
-// ADD these two methods inside the GameEngine class, after the existing
-// SerializeManagerData() method (before the closing brace of the class):
+//
+// STEP A: Add this using at the top of the file (with the other usings):
+//     using System.Text;
+//
+// STEP B: Add these two methods inside the GameEngine class, after the
+//         existing SerializeManagerData() method:
 // =============================================================================
 
     /// <summary>
@@ -1991,7 +1995,7 @@ The UI adds a thin bottom bar (always visible, no scrollbars) with two buttons. 
             ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
         };
         var json = JsonSerializer.Serialize(data);
-        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
     }
 
     /// <summary>
@@ -2002,7 +2006,7 @@ The UI adds a thin bottom bar (always visible, no scrollbars) with two buttons. 
     {
         try
         {
-            var json = System.Text.Encoding.UTF8.GetString(
+            var json = Encoding.UTF8.GetString(
                 Convert.FromBase64String(encoded.Trim()));
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
             if (data is null) return false;
@@ -2344,4 +2348,5 @@ public partial class GameViewModel : ViewModelBase
     {
         _engine.ImportFromString("").ShouldBeFalse();
     }
-    
+
+

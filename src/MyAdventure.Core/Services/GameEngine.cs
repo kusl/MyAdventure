@@ -1,3 +1,4 @@
+using System.Text;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Text.Json;
@@ -254,4 +255,74 @@ public class GameEngine(
 
     private string SerializeManagerData() =>
         JsonSerializer.Serialize(Businesses.ToDictionary(b => b.Id, b => b.HasManager));
+
+    
+    /// <summary>
+    /// Export full game state as a Base64-encoded JSON string.
+    /// Players can freely edit the decoded JSON — we encourage tinkering.
+    /// </summary>
+    public string ExportToString()
+    {
+        var data = new Dictionary<string, object>
+        {
+            ["v"] = 1,
+            ["cash"] = Cash,
+            ["lifetime"] = LifetimeEarnings,
+            ["angels"] = AngelInvestors,
+            ["prestige"] = PrestigeCount,
+            ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
+            ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
+        };
+        var json = JsonSerializer.Serialize(data);
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+    }
+
+    /// <summary>
+    /// Import game state from a Base64-encoded JSON string.
+    /// Returns true on success, false if the string is invalid.
+    /// </summary>
+    public bool ImportFromString(string encoded)
+    {
+        try
+        {
+            var json = Encoding.UTF8.GetString(
+                Convert.FromBase64String(encoded.Trim()));
+            var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+            if (data is null) return false;
+
+            Cash = data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0;
+            LifetimeEarnings = data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0;
+            AngelInvestors = data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0;
+            PrestigeCount = data.TryGetValue("prestige", out var prEl) ? prEl.GetInt32() : 0;
+
+            Businesses = BusinessDefinitions.CreateDefaults();
+
+            if (data.TryGetValue("businesses", out var bizEl))
+            {
+                var bizData = JsonSerializer.Deserialize<Dictionary<string, int>>(bizEl.GetRawText()) ?? [];
+                foreach (var biz in Businesses)
+                    if (bizData.TryGetValue(biz.Id, out var owned))
+                        biz.Owned = owned;
+            }
+
+            if (data.TryGetValue("managers", out var mgrEl))
+            {
+                var mgrData = JsonSerializer.Deserialize<Dictionary<string, bool>>(mgrEl.GetRawText()) ?? [];
+                foreach (var biz in Businesses)
+                    if (mgrData.TryGetValue(biz.Id, out var has))
+                    {
+                        biz.HasManager = has;
+                        if (has && biz.Owned > 0) biz.IsRunning = true;
+                    }
+            }
+
+            logger.LogInformation("Imported game state. Cash: {Cash:F2}, Angels: {Angels:F0}", Cash, AngelInvestors);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to import game state");
+            return false;
+        }
+    }
 }

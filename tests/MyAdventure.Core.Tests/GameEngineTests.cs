@@ -96,6 +96,80 @@ public class GameEngineTests
     public void CalculateAngels_ShouldReturnPositiveAboveThreshold() =>
         GameEngine.CalculateAngels(1e14).ShouldBeGreaterThan(0);
 
+     [Fact]
+    public async Task ExportToString_ShouldReturnBase64()
+    {
+        await _engine.LoadAsync();
+        SetCash(42.5);
+
+        var exported = _engine.ExportToString();
+
+        exported.ShouldNotBeNullOrWhiteSpace();
+        // Should be valid Base64
+        var bytes = Convert.FromBase64String(exported);
+        var json = System.Text.Encoding.UTF8.GetString(bytes);
+        json.ShouldContain("\"cash\"");
+        json.ShouldContain("42.5");
+    }
+
+    [Fact]
+    public async Task ImportFromString_ShouldRestoreState()
+    {
+        await _engine.LoadAsync();
+        SetCash(9999);
+
+        // Buy some businesses
+        for (var i = 0; i < 5; i++)
+            _engine.BuyBusiness("lemonade");
+
+        _engine.BuyManager("lemonade");
+
+        var exported = _engine.ExportToString();
+
+        // Reset engine by loading fresh
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.Cash.ShouldBe(5.0); // fresh start
+
+        // Import the saved state
+        var result = engine2.ImportFromString(exported);
+        result.ShouldBeTrue();
+        engine2.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(5);
+        engine2.Businesses.First(b => b.Id == "lemonade").HasManager.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExportImport_ShouldRoundTrip()
+    {
+        await _engine.LoadAsync();
+        SetCash(12345.67);
+
+        var exported = _engine.ExportToString();
+        var result = _engine.ImportFromString(exported);
+
+        result.ShouldBeTrue();
+        _engine.Cash.ShouldBe(12345.67);
+    }
+
+    [Fact]
+    public void ImportFromString_InvalidBase64_ShouldReturnFalse()
+    {
+        _engine.ImportFromString("not-valid-base64!!!").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ImportFromString_InvalidJson_ShouldReturnFalse()
+    {
+        var bad = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("not json"));
+        _engine.ImportFromString(bad).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ImportFromString_EmptyString_ShouldReturnFalse()
+    {
+        _engine.ImportFromString("").ShouldBeFalse();
+    }
+
     private void SetCash(double amount)
     {
         var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;

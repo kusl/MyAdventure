@@ -1,3 +1,4 @@
+
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,6 +26,11 @@ public partial class GameViewModel : ViewModelBase
     [ObservableProperty] private bool _canPrestige;
     [ObservableProperty] private string _nextAngelText = "0";
     [ObservableProperty] private string _prestigeExplanation = "";
+
+    // --- Transfer panel (import/export) ---
+    [ObservableProperty] private bool _isTransferOpen;
+    [ObservableProperty] private bool _isExportMode;
+    [ObservableProperty] private string _transferText = "";
 
     public ObservableCollection<BusinessViewModel> Businesses { get; } = [];
     public ToastService Toasts => _toasts;
@@ -71,6 +77,60 @@ public partial class GameViewModel : ViewModelBase
             _saveCounter = 0;
             _ = SaveAsync();
         }
+    }
+
+    [RelayCommand]
+    private void Export()
+    {
+        TransferText = _engine.ExportToString();
+        IsExportMode = true;
+        IsTransferOpen = true;
+        _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+    }
+
+    [RelayCommand]
+    private void StartImport()
+    {
+        TransferText = "";
+        IsExportMode = false;
+        IsTransferOpen = true;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmImportAsync()
+    {
+        if (string.IsNullOrWhiteSpace(TransferText))
+        {
+            _toasts.Show("Paste an export string first!");
+            return;
+        }
+
+        if (_engine.ImportFromString(TransferText))
+        {
+            // Rebuild business view models from the newly imported state
+            Businesses.Clear();
+            foreach (var biz in _engine.Businesses)
+                Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
+
+            RefreshAll();
+            await SaveAsync();
+
+            IsTransferOpen = false;
+            TransferText = "";
+            _toasts.Show("Progress imported successfully!");
+            _logger.LogInformation("Game state imported and saved");
+        }
+        else
+        {
+            _toasts.Show("Invalid import string. Check and try again.");
+        }
+    }
+
+    [RelayCommand]
+    private void CloseTransfer()
+    {
+        IsTransferOpen = false;
+        TransferText = "";
     }
 
     [RelayCommand]
