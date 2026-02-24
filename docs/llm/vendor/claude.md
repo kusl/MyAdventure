@@ -1898,3 +1898,29 @@ Fix: use `211` which is unambiguously enough for 2.The pattern is consistent: `M
 
 
 
+I need a perfect way to import and export progress. 
+two new buttons at the bottom of the display -- import and export. 
+import opens a textbox that then accepts a long string that we can generate with the export 
+export takes the complete state of the application and returns a string that is ready to copy or share with share sheet 
+remember to read the complete contents of the `dump.txt` before you begin
+and remember to not cause regressions 
+do not hallucinate 
+all build must succeed 
+all tests must pass 
+think carefully and plan things completely before executing 
+thank you
+yes, the dump.txt is there 
+no, I didn't forget. 
+if you can't find it, look again 
+don't come back and tell me you can't find the dump.txt
+it is there 
+it has the whole application in there.
+yes, it builds now
+yes, tests pass now 
+no, I don't mind if players cheat. 
+it is perfectly fine if players edit this and inflate or edit their progress in a text editor
+in fact, I encourage it
+
+00
+20
+
