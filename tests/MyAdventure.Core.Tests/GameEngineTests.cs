@@ -96,7 +96,7 @@ public class GameEngineTests
     public void CalculateAngels_ShouldReturnPositiveAboveThreshold() =>
         GameEngine.CalculateAngels(1e14).ShouldBeGreaterThan(0);
 
-     [Fact]
+    [Fact]
     public async Task ExportToString_ShouldReturnBase64()
     {
         await _engine.LoadAsync();

@@ -256,7 +256,7 @@ public class GameEngine(
     private string SerializeManagerData() =>
         JsonSerializer.Serialize(Businesses.ToDictionary(b => b.Id, b => b.HasManager));
 
-    
+
     /// <summary>
     /// Export full game state as a Base64-encoded JSON string.
     /// Players can freely edit the decoded JSON — we encourage tinkering.
