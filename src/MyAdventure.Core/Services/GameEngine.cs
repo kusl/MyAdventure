@@ -185,7 +185,7 @@ public class GameEngine(
         AngelInvestors += newAngels;
         PrestigeCount++;
         Cash = 5.0;
-        LifetimeEarnings = 0;
+        // LifetimeEarnings = 0;
 
         // Reset businesses
         var defaults = BusinessDefinitions.CreateDefaults();
