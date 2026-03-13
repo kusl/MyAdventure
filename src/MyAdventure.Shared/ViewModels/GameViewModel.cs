@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -94,8 +96,7 @@ public partial class GameViewModel : ViewModelBase
     {
         try
         {
-            var clipboard = Application.Current?.GetTopLevel()?.Clipboard
-                            ?? GetClipboardFromActiveWindow();
+            var clipboard = GetClipboard();
             if (clipboard is not null)
             {
                 await clipboard.SetTextAsync(TransferText);
@@ -223,14 +224,26 @@ public partial class GameViewModel : ViewModelBase
             bvm.Refresh(_engine.Cash);
     }
 
-    private static IClipboard? GetClipboardFromActiveWindow()
+    /// <summary>
+    /// Get the clipboard from the active top-level window.
+    /// Works on both desktop (MainWindow) and Android (SingleView via TopLevel).
+    /// </summary>
+    private static IClipboard? GetClipboard()
     {
         try
         {
-            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            var app = Application.Current;
+            if (app?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 return desktop.MainWindow?.Clipboard;
             }
+
+            if (app?.ApplicationLifetime is ISingleViewApplicationLifetime singleView
+                && singleView.MainView is not null)
+            {
+                return TopLevel.GetTopLevel(singleView.MainView)?.Clipboard;
+            }
+
             return null;
         }
         catch

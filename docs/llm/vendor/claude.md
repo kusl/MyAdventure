@@ -3003,3 +3003,13 @@ Build failed
 remember build should succeed, all tests should pass, and application should work properly 
 please do not introduce regressions 
 please generate full files for any file that needs to change 
+
+The issue is that `Application.Current?.GetTopLevel()` doesn't exist in Avalonia. The clipboard needs to be accessed through a `TopLevel` (window/view), not through `Application`. Let me fix the `GameViewModel.cs` to use the correct Avalonia clipboard API.The fix: `Application.Current?.GetTopLevel()` doesn't exist in Avalonia. The correct approaches are:
+
+- **Desktop:** Access clipboard via `IClassicDesktopStyleApplicationLifetime.MainWindow.Clipboard`
+- **Android:** Access clipboard via `TopLevel.GetTopLevel(singleView.MainView)?.Clipboard` — the static `TopLevel.GetTopLevel()` method takes a visual and walks up to find the top-level window
+
+Both paths are covered in the `GetClipboard()` helper at the bottom. No other files need changes — this is the only file with a build error.
+
+100
+91
