@@ -176,8 +176,6 @@ public class GameEngineTests
         await _engine.LoadAsync();
 
         // Give enough lifetime earnings to prestige
-        // We need LifetimeEarnings >= 1e12 for angels
-        // Use reflection to set LifetimeEarnings directly
         var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
         ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
 
@@ -210,6 +208,67 @@ public class GameEngineTests
 
         // Player should be able to buy it
         _engine.BuyBusiness("lemonade").ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task BuyMultiple_ShouldBuyRequestedCount()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+
+        var bought = _engine.BuyMultiple("lemonade", 10);
+        bought.ShouldBe(10);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(10);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_NotEnoughCash_ShouldBuyPartial()
+    {
+        await _engine.LoadAsync();
+        // Lemonade costs 4 base, 1.07 multiplier
+        // With $10 we can buy 2 (cost 0: $4, cost 1: $4.28 = $8.28 total)
+        SetCash(10);
+
+        var bought = _engine.BuyMultiple("lemonade", 100);
+        bought.ShouldBe(2);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_ZeroCount_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+
+        var bought = _engine.BuyMultiple("lemonade", 0);
+        bought.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_InvalidBusiness_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+
+        var bought = _engine.BuyMultiple("nonexistent", 5);
+        bought.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_WithManager_ShouldAutoStart()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        // Stop the business manually for test setup
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = false;
+
+        _engine.BuyMultiple("lemonade", 5);
+        lemonade.IsRunning.ShouldBeTrue();
     }
 
     private void SetCash(double amount)

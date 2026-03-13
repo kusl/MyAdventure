@@ -49,7 +49,8 @@ Each additional unit you buy costs more (base cost × multiplier^owned). Revenue
 ### Core Mechanics
 
 - **Click to Run:** Click the ▶ RUN button on a business to start its production cycle. When the progress bar fills, you collect revenue.
-- **Buy Units:** Purchase additional units of any business to increase its revenue per cycle.
+- **Buy Units:** Purchase additional units of any business to increase its revenue per cycle. Use the BUY button for one at a time.
+- **Buy to Milestone:** Each business card shows a "BUY N→M" button that purchases units in bulk up to the next milestone threshold. One click instead of dozens.
 - **Hire Managers:** Each business can have a manager (costs 1000× the business's base cost). Managers automatically restart production cycles so you don't have to click.
 - **Offline Earnings:** When you close the game and come back, all businesses with managers earn revenue for the time you were away, boosted by your angel investor bonus.
 
@@ -82,7 +83,7 @@ Prestige is optional. You can keep playing without it, but the angel bonus compo
 
 Two buttons at the bottom of the screen let you transfer your progress:
 
-- **📤 Export** generates a Base64-encoded JSON string of your complete game state. Copy it, save it, share it with friends.
+- **📤 Export** generates a Base64-encoded JSON string of your complete game state. A **📋 COPY** button copies it to your clipboard instantly — no manual text selection needed.
 - **📥 Import** accepts an export string and restores the game state from it.
 
 The export format is intentionally human-editable. Decode the Base64, edit the JSON to give yourself a billion dollars or 1000 shrimp boats, re-encode, and import. We encourage tinkering. This is your game.
@@ -156,6 +157,7 @@ MyAdventure.slnx
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android.
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause trimming crashes. Re-enable once trimmer roots are properly configured.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
+- **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 
 ---
 
@@ -168,7 +170,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Runtime | .NET 10 / C# 14 | MIT |
 | UI Framework | Avalonia UI 11.3.12 | MIT |
 | MVVM | CommunityToolkit.Mvvm 8.4.0 | MIT |
-| Database | SQLite via EF Core 10.0.3 | MIT |
+| Database | SQLite via EF Core 10.0.5 | MIT |
 | Observability | OpenTelemetry 1.15.0 | Apache-2.0 |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
@@ -178,7 +180,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 
 ### Modern .NET Practices
 
-- **Central package management** via `Directory.Packages.props` — all NuGet versions defined in one place
+- **Central package management** via `Directory.Packages.props` — all NuGet versions defined in one place using MSBuild variables for grouped version updates
 - **Shared build configuration** via `Directory.Build.props` — target framework, versioning, and compiler settings
 - **Solution file** uses the new `.slnx` XML format
 - **C# 14 features** including primary constructors, records, collection expressions, and `required` properties
@@ -204,6 +206,7 @@ Dependabot is configured to check NuGet packages and GitHub Actions weekly, with
 ### Gameplay
 
 - **Start with Lemonade.** You begin with $5 and the first lemonade stand costs $4. Buy it, click Run, and you're in business.
+- **Use Buy-to-Milestone.** Instead of clicking BUY dozens of times, use the blue "BUY N→M" button to jump straight to the next milestone in one click. This buys as many units as you can afford toward the target.
 - **Managers are the real game.** Manually clicking Run gets tedious. Save up for a manager (1000× base cost) and the business runs itself forever.
 - **Watch for milestones.** The UI shows your next milestone target and how many units away you are. Hitting 25, then 50, then 100 units of a business doubles its revenue each time.
 - **Prestige early, prestige often.** Even a handful of angels can meaningfully accelerate your next run. The bonus compounds across all businesses.

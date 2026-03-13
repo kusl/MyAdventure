@@ -84,7 +84,7 @@
                         <DataTemplate x:DataType="vm:BusinessViewModel">
                             <Border Background="#16213E" CornerRadius="8" Padding="6" Margin="3"
                                     Opacity="{Binding Owned, Converter={StaticResource BoolToOpacity}, ConverterParameter=0}">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                                     <!-- Row 0: Icon + Name + Owned count -->
                                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,2">
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="20" VerticalAlignment="Center" />
@@ -130,8 +130,18 @@
                                         </TextBlock>
                                     </StackPanel>
 
-                                    <!-- Row 4: Buttons -->
-                                    <Grid Grid.Row="4" ColumnDefinitions="*,3,*,3,*">
+                                    <!-- Row 4: Buy-to-milestone button (compact) -->
+                                    <Button Grid.Row="4" Command="{Binding BuyToNextMilestoneCommand}"
+                                            IsVisible="{Binding HasNextMilestone}"
+                                            Background="#1565C0" Foreground="White"
+                                            FontWeight="Bold" FontSize="9"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,4" CornerRadius="4" Margin="0,0,0,2"
+                                            Opacity="{Binding CanBuyToNextMilestone, Converter={StaticResource BoolToOpacity}}"
+                                            Content="{Binding BuyToNextMilestoneText}" />
+
+                                    <!-- Row 5: Buttons -->
+                                    <Grid Grid.Row="5" ColumnDefinitions="*,3,*,3,*">
                                         <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
                                                 Background="{Binding Color, Converter={StaticResource HexToBrush}}"
                                                 Foreground="White" FontWeight="Bold" FontSize="11"
@@ -182,7 +192,7 @@
                         <TextBlock DockPanel.Dock="Top" FontSize="11" Foreground="#AAAAAA"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"
                                    IsVisible="{Binding IsExportMode}"
-                                   Text="Copy this string and save it." />
+                                   Text="Tap COPY to copy to clipboard." />
                         <TextBlock DockPanel.Dock="Top" FontSize="11" Foreground="#AAAAAA"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"
                                    IsVisible="{Binding !IsExportMode}"
@@ -191,6 +201,12 @@
                         <!-- Buttons at bottom -->
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8"
                                     HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Command="{Binding CopyExportCommand}"
+                                    IsVisible="{Binding IsExportMode}"
+                                    Background="#00897B" Foreground="White"
+                                    FontWeight="Bold" FontSize="12"
+                                    Padding="16,6" CornerRadius="5"
+                                    Content="📋 COPY" />
                             <Button Command="{Binding ConfirmImportCommand}"
                                     IsVisible="{Binding !IsExportMode}"
                                     Background="#4CAF50" Foreground="White"

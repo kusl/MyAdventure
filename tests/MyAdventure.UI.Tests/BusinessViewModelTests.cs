@@ -64,4 +64,60 @@ public class BusinessViewModelTests
 
         vm.CanAfford.ShouldBeFalse();
     }
+
+    [Fact]
+    public void Refresh_ShouldShowBuyToNextMilestoneText()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.05,
+            Owned = 20
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
+
+        vm.Refresh(10_000);
+
+        // 20 owned, next milestone is 25, so 5 more needed
+        vm.HasNextMilestone.ShouldBeTrue();
+        vm.BuyToNextMilestoneText.ShouldBe("BUY 5→25");
+        vm.CanBuyToNextMilestone.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Refresh_AllMilestonesReached_ShouldHideBuyToMilestone()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.01,
+            Owned = 1000
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
+
+        vm.Refresh(10_000);
+
+        vm.HasNextMilestone.ShouldBeFalse();
+        vm.CanBuyToNextMilestone.ShouldBeFalse();
+    }
 }

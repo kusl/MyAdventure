@@ -44,6 +44,10 @@ public partial class BusinessViewModel(
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
 
+    // --- Buy-to-milestone ---
+    [ObservableProperty] private bool _canBuyToNextMilestone;
+    [ObservableProperty] private string _buyToNextMilestoneText = "";
+
     [RelayCommand]
     private void ClickBusiness()
     {
@@ -92,6 +96,34 @@ public partial class BusinessViewModel(
         }
     }
 
+    [RelayCommand]
+    private void BuyToNextMilestone()
+    {
+        var next = Milestone.NextMilestone(model.Owned);
+        if (next is null)
+        {
+            toasts.Show($"{model.Name} has reached all milestones!");
+            return;
+        }
+
+        var needed = next.Threshold - model.Owned;
+        if (needed <= 0) return;
+
+        var bought = engine.BuyMultiple(model.Id, needed);
+        if (bought == 0)
+        {
+            toasts.Show($"Can't afford any more {model.Name} right now");
+        }
+        else if (bought < needed)
+        {
+            toasts.Show($"Bought {bought} {model.Name} — need {needed - bought} more for milestone");
+        }
+        else
+        {
+            toasts.Show($"Milestone reached! {model.Name} now at {model.Owned} ({next.Label})");
+        }
+    }
+
     /// <summary>Refresh all bindable properties from the model.</summary>
     public void Refresh(double cash)
     {
@@ -124,12 +156,18 @@ public partial class BusinessViewModel(
             UnitsToNextMilestone = next.Threshold - model.Owned;
             NextMilestoneText = $"{UnitsToNextMilestone} more → {next.Threshold}";
             NextMilestoneRewardText = next.Label;
+
+            // Can we afford at least 1 unit toward the milestone?
+            CanBuyToNextMilestone = cash >= model.NextCost && UnitsToNextMilestone > 0;
+            BuyToNextMilestoneText = $"BUY {UnitsToNextMilestone}→{next.Threshold}";
         }
         else
         {
             UnitsToNextMilestone = 0;
             NextMilestoneText = "All milestones reached!";
             NextMilestoneRewardText = "";
+            CanBuyToNextMilestone = false;
+            BuyToNextMilestoneText = "";
         }
     }
 

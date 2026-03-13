@@ -150,6 +150,40 @@ public class GameEngine(
         return true;
     }
 
+    /// <summary>
+    /// Buy multiple units of a business at once.
+    /// Returns the number of units actually purchased.
+    /// </summary>
+    public int BuyMultiple(string businessId, int count)
+    {
+        var biz = Businesses.FirstOrDefault(b => b.Id == businessId);
+        if (biz is null || count <= 0) return 0;
+
+        var bought = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var cost = biz.NextCost;
+            if (Cash < cost) break;
+            Cash -= cost;
+            biz.Owned++;
+            bought++;
+        }
+
+        if (bought > 0)
+        {
+            logger.LogInformation("Bulk bought {Count} of {Business} (now {Total})", bought, biz.Name, biz.Owned);
+
+            // Auto-start if has manager
+            if (biz.HasManager && !biz.IsRunning)
+            {
+                biz.IsRunning = true;
+                biz.ProgressPercent = 0;
+            }
+        }
+
+        return bought;
+    }
+
     /// <summary>Buy a manager for a business. Cost = 1000x base cost.</summary>
     public bool BuyManager(string businessId)
     {

@@ -1,5 +1,6 @@
-
 using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -86,6 +87,30 @@ public partial class GameViewModel : ViewModelBase
         IsExportMode = true;
         IsTransferOpen = true;
         _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+    }
+
+    [RelayCommand]
+    private async Task CopyExportAsync()
+    {
+        try
+        {
+            var clipboard = Application.Current?.GetTopLevel()?.Clipboard
+                            ?? GetClipboardFromActiveWindow();
+            if (clipboard is not null)
+            {
+                await clipboard.SetTextAsync(TransferText);
+                _toasts.Show("Copied to clipboard!");
+            }
+            else
+            {
+                _toasts.Show("Clipboard not available on this platform. Select all and copy manually.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to copy to clipboard");
+            _toasts.Show("Could not copy — select the text and copy manually.");
+        }
     }
 
     [RelayCommand]
@@ -196,5 +221,21 @@ public partial class GameViewModel : ViewModelBase
 
         foreach (var bvm in Businesses)
             bvm.Refresh(_engine.Cash);
+    }
+
+    private static IClipboard? GetClipboardFromActiveWindow()
+    {
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return desktop.MainWindow?.Clipboard;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

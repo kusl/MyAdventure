@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue Feb 24 06:28:18 PM EST 2026
+Generated: Fri Mar 13 09:35:31 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -549,24 +549,31 @@ SIZE: 1.02 KB
 
 ================================================================================
 FILE: Directory.Packages.props
-SIZE: 3.18 KB
+SIZE: 3.91 KB
 ================================================================================
 
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    
+    <!-- Version variables for consolidated management -->
+    <AvaloniaVersion>11.3.12</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.5</EfCoreVersion>
+    <OpenTelemetryVersion>1.15.0</OpenTelemetryVersion>
+    <XunitVersion>2.9.3</XunitVersion>
   </PropertyGroup>
   
   <ItemGroup Label="Avalonia - MIT License">
-    <PackageVersion Include="Avalonia" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Desktop" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Android" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Headless" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Headless.XUnit" Version="11.3.12" />
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
   </ItemGroup>
   
   <ItemGroup Label="MVVM - MIT License">
@@ -574,34 +581,34 @@ SIZE: 3.18 KB
   </ItemGroup>
   
   <ItemGroup Label="EntityFramework - MIT License">
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
   </ItemGroup>
   
-  <ItemGroup Label="Configuration - MIT License">
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.3" />
+  <ItemGroup Label="Configuration and DI - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
   </ItemGroup>
   
   <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.3" />
-    <PackageVersion Include="OpenTelemetry" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
   </ItemGroup>
   
   <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
-    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
@@ -656,7 +663,7 @@ SIZE: .71 KB
 
 ================================================================================
 FILE: README.md
-SIZE: 14.47 KB
+SIZE: 15.17 KB
 ================================================================================
 
 # MyAdventure
@@ -710,7 +717,8 @@ Each additional unit you buy costs more (base cost × multiplier^owned). Revenue
 ### Core Mechanics
 
 - **Click to Run:** Click the ▶ RUN button on a business to start its production cycle. When the progress bar fills, you collect revenue.
-- **Buy Units:** Purchase additional units of any business to increase its revenue per cycle.
+- **Buy Units:** Purchase additional units of any business to increase its revenue per cycle. Use the BUY button for one at a time.
+- **Buy to Milestone:** Each business card shows a "BUY N→M" button that purchases units in bulk up to the next milestone threshold. One click instead of dozens.
 - **Hire Managers:** Each business can have a manager (costs 1000× the business's base cost). Managers automatically restart production cycles so you don't have to click.
 - **Offline Earnings:** When you close the game and come back, all businesses with managers earn revenue for the time you were away, boosted by your angel investor bonus.
 
@@ -743,7 +751,7 @@ Prestige is optional. You can keep playing without it, but the angel bonus compo
 
 Two buttons at the bottom of the screen let you transfer your progress:
 
-- **📤 Export** generates a Base64-encoded JSON string of your complete game state. Copy it, save it, share it with friends.
+- **📤 Export** generates a Base64-encoded JSON string of your complete game state. A **📋 COPY** button copies it to your clipboard instantly — no manual text selection needed.
 - **📥 Import** accepts an export string and restores the game state from it.
 
 The export format is intentionally human-editable. Decode the Base64, edit the JSON to give yourself a billion dollars or 1000 shrimp boats, re-encode, and import. We encourage tinkering. This is your game.
@@ -817,6 +825,7 @@ MyAdventure.slnx
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android.
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause trimming crashes. Re-enable once trimmer roots are properly configured.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
+- **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 
 ---
 
@@ -829,7 +838,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Runtime | .NET 10 / C# 14 | MIT |
 | UI Framework | Avalonia UI 11.3.12 | MIT |
 | MVVM | CommunityToolkit.Mvvm 8.4.0 | MIT |
-| Database | SQLite via EF Core 10.0.3 | MIT |
+| Database | SQLite via EF Core 10.0.5 | MIT |
 | Observability | OpenTelemetry 1.15.0 | Apache-2.0 |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
@@ -839,7 +848,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 
 ### Modern .NET Practices
 
-- **Central package management** via `Directory.Packages.props` — all NuGet versions defined in one place
+- **Central package management** via `Directory.Packages.props` — all NuGet versions defined in one place using MSBuild variables for grouped version updates
 - **Shared build configuration** via `Directory.Build.props` — target framework, versioning, and compiler settings
 - **Solution file** uses the new `.slnx` XML format
 - **C# 14 features** including primary constructors, records, collection expressions, and `required` properties
@@ -865,6 +874,7 @@ Dependabot is configured to check NuGet packages and GitHub Actions weekly, with
 ### Gameplay
 
 - **Start with Lemonade.** You begin with $5 and the first lemonade stand costs $4. Buy it, click Run, and you're in business.
+- **Use Buy-to-Milestone.** Instead of clicking BUY dozens of times, use the blue "BUY N→M" button to jump straight to the next milestone in one click. This buys as many units as you can afford toward the target.
 - **Managers are the real game.** Manually clicking Run gets tedious. Save up for a manager (1000× base cost) and the business runs itself forever.
 - **Watch for milestones.** The UI shows your next milestone target and how many units away you are. Hitting 25, then 50, then 100 units of a business doubles its revenue each time.
 - **Prestige early, prestige often.** Even a handful of angels can meaningfully accelerate your next run. The bonus compounds across all businesses.
@@ -1184,7 +1194,7 @@ SIZE: .32 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/Views/MainView.axaml
-SIZE: 15.72 KB
+SIZE: 16.97 KB
 ================================================================================
 
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -1273,7 +1283,7 @@ SIZE: 15.72 KB
                         <DataTemplate x:DataType="vm:BusinessViewModel">
                             <Border Background="#16213E" CornerRadius="8" Padding="6" Margin="3"
                                     Opacity="{Binding Owned, Converter={StaticResource BoolToOpacity}, ConverterParameter=0}">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                                     <!-- Row 0: Icon + Name + Owned count -->
                                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,2">
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="20" VerticalAlignment="Center" />
@@ -1319,8 +1329,18 @@ SIZE: 15.72 KB
                                         </TextBlock>
                                     </StackPanel>
 
-                                    <!-- Row 4: Buttons -->
-                                    <Grid Grid.Row="4" ColumnDefinitions="*,3,*,3,*">
+                                    <!-- Row 4: Buy-to-milestone button (compact) -->
+                                    <Button Grid.Row="4" Command="{Binding BuyToNextMilestoneCommand}"
+                                            IsVisible="{Binding HasNextMilestone}"
+                                            Background="#1565C0" Foreground="White"
+                                            FontWeight="Bold" FontSize="9"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,4" CornerRadius="4" Margin="0,0,0,2"
+                                            Opacity="{Binding CanBuyToNextMilestone, Converter={StaticResource BoolToOpacity}}"
+                                            Content="{Binding BuyToNextMilestoneText}" />
+
+                                    <!-- Row 5: Buttons -->
+                                    <Grid Grid.Row="5" ColumnDefinitions="*,3,*,3,*">
                                         <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
                                                 Background="{Binding Color, Converter={StaticResource HexToBrush}}"
                                                 Foreground="White" FontWeight="Bold" FontSize="11"
@@ -1371,7 +1391,7 @@ SIZE: 15.72 KB
                         <TextBlock DockPanel.Dock="Top" FontSize="11" Foreground="#AAAAAA"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"
                                    IsVisible="{Binding IsExportMode}"
-                                   Text="Copy this string and save it." />
+                                   Text="Tap COPY to copy to clipboard." />
                         <TextBlock DockPanel.Dock="Top" FontSize="11" Foreground="#AAAAAA"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"
                                    IsVisible="{Binding !IsExportMode}"
@@ -1380,6 +1400,12 @@ SIZE: 15.72 KB
                         <!-- Buttons at bottom -->
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8"
                                     HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Command="{Binding CopyExportCommand}"
+                                    IsVisible="{Binding IsExportMode}"
+                                    Background="#00897B" Foreground="White"
+                                    FontWeight="Bold" FontSize="12"
+                                    Padding="16,6" CornerRadius="5"
+                                    Content="📋 COPY" />
                             <Button Command="{Binding ConfirmImportCommand}"
                                     IsVisible="{Binding !IsExportMode}"
                                     Background="#4CAF50" Foreground="White"
@@ -1738,7 +1764,7 @@ SIZE: .18 KB
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 11.70 KB
+SIZE: 12.62 KB
 ================================================================================
 
 using System.Text;
@@ -1891,6 +1917,40 @@ public class GameEngine(
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Buy multiple units of a business at once.
+    /// Returns the number of units actually purchased.
+    /// </summary>
+    public int BuyMultiple(string businessId, int count)
+    {
+        var biz = Businesses.FirstOrDefault(b => b.Id == businessId);
+        if (biz is null || count <= 0) return 0;
+
+        var bought = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var cost = biz.NextCost;
+            if (Cash < cost) break;
+            Cash -= cost;
+            biz.Owned++;
+            bought++;
+        }
+
+        if (bought > 0)
+        {
+            logger.LogInformation("Bulk bought {Count} of {Business} (now {Total})", bought, biz.Name, biz.Owned);
+
+            // Auto-start if has manager
+            if (biz.HasManager && !biz.IsRunning)
+            {
+                biz.IsRunning = true;
+                biz.ProgressPercent = 0;
+            }
+        }
+
+        return bought;
     }
 
     /// <summary>Buy a manager for a business. Cost = 1000x base cost.</summary>
@@ -2222,7 +2282,7 @@ sealed class Program
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/Views/MainWindow.axaml
-SIZE: 19.94 KB
+SIZE: 20.65 KB
 ================================================================================
 
 <Window xmlns="https://github.com/avaloniaui"
@@ -2313,7 +2373,7 @@ SIZE: 19.94 KB
                         <DataTemplate x:DataType="vm:BusinessViewModel">
                             <Border Background="#16213E" CornerRadius="12" Padding="12" Margin="6"
                                     Opacity="{Binding Owned, Converter={StaticResource BoolToOpacity}, ConverterParameter=0}">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                                     <!-- Row 0: Icon + Name + Owned -->
                                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="28" VerticalAlignment="Center" />
@@ -2394,8 +2454,18 @@ SIZE: 19.94 KB
                                         </Grid>
                                     </Border>
 
-                                    <!-- Row 4: Action buttons -->
-                                    <Grid Grid.Row="4" ColumnDefinitions="*,4,*,4,*" Margin="0,2,0,0">
+                                    <!-- Row 4: Buy-to-milestone button -->
+                                    <Button Grid.Row="4" Command="{Binding BuyToNextMilestoneCommand}"
+                                            IsVisible="{Binding HasNextMilestone}"
+                                            Background="#1565C0" Foreground="White"
+                                            FontWeight="Bold" FontSize="11"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Padding="0,5" CornerRadius="5" Margin="0,0,0,4"
+                                            Opacity="{Binding CanBuyToNextMilestone, Converter={StaticResource BoolToOpacity}}"
+                                            Content="{Binding BuyToNextMilestoneText}" />
+
+                                    <!-- Row 5: Action buttons -->
+                                    <Grid Grid.Row="5" ColumnDefinitions="*,4,*,4,*" Margin="0,2,0,0">
                                         <Button Grid.Column="0" Command="{Binding BuyBusinessCommand}"
                                                 Background="{Binding Color, Converter={StaticResource HexToBrush}}"
                                                 Foreground="White" FontWeight="Bold" FontSize="13"
@@ -2437,15 +2507,6 @@ SIZE: 19.94 KB
                 <Border IsVisible="{Binding IsTransferOpen}"
                         Background="#16213E" CornerRadius="12" Padding="24" Margin="6">
                     <DockPanel>
-                        <!-- Title -->
-                        <TextBlock DockPanel.Dock="Top" FontSize="20" FontWeight="Bold" Foreground="White"
-                                   HorizontalAlignment="Center" Margin="0,0,0,12">
-                            <TextBlock.Text>
-                                <MultiBinding StringFormat="{}{0}">
-                                    <Binding Path="IsExportMode" />
-                                </MultiBinding>
-                            </TextBlock.Text>
-                        </TextBlock>
                         <TextBlock DockPanel.Dock="Top" FontSize="20" FontWeight="Bold" Foreground="White"
                                    HorizontalAlignment="Center" Margin="0,0,0,4"
                                    IsVisible="{Binding IsExportMode}"
@@ -2458,7 +2519,7 @@ SIZE: 19.94 KB
                         <TextBlock DockPanel.Dock="Top" FontSize="13" Foreground="#AAAAAA"
                                    HorizontalAlignment="Center" Margin="0,0,0,12"
                                    IsVisible="{Binding IsExportMode}"
-                                   Text="Copy this string and save it, or share it with a friend." />
+                                   Text="Click COPY to copy to clipboard, or select and copy manually." />
                         <TextBlock DockPanel.Dock="Top" FontSize="13" Foreground="#AAAAAA"
                                    HorizontalAlignment="Center" Margin="0,0,0,12"
                                    IsVisible="{Binding !IsExportMode}"
@@ -2467,6 +2528,12 @@ SIZE: 19.94 KB
                         <!-- Buttons at bottom -->
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12"
                                     HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <Button Command="{Binding CopyExportCommand}"
+                                    IsVisible="{Binding IsExportMode}"
+                                    Background="#00897B" Foreground="White"
+                                    FontWeight="Bold" FontSize="14"
+                                    Padding="24,8" CornerRadius="6"
+                                    Content="📋 COPY" />
                             <Button Command="{Binding ConfirmImportCommand}"
                                     IsVisible="{Binding !IsExportMode}"
                                     Background="#4CAF50" Foreground="White"
@@ -3008,7 +3075,7 @@ public record ToastItem(string Message)
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-SIZE: 5.02 KB
+SIZE: 6.30 KB
 ================================================================================
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -3056,6 +3123,10 @@ public partial class BusinessViewModel(
     [ObservableProperty] private int _unitsToNextMilestone;
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
+
+    // --- Buy-to-milestone ---
+    [ObservableProperty] private bool _canBuyToNextMilestone;
+    [ObservableProperty] private string _buyToNextMilestoneText = "";
 
     [RelayCommand]
     private void ClickBusiness()
@@ -3105,6 +3176,34 @@ public partial class BusinessViewModel(
         }
     }
 
+    [RelayCommand]
+    private void BuyToNextMilestone()
+    {
+        var next = Milestone.NextMilestone(model.Owned);
+        if (next is null)
+        {
+            toasts.Show($"{model.Name} has reached all milestones!");
+            return;
+        }
+
+        var needed = next.Threshold - model.Owned;
+        if (needed <= 0) return;
+
+        var bought = engine.BuyMultiple(model.Id, needed);
+        if (bought == 0)
+        {
+            toasts.Show($"Can't afford any more {model.Name} right now");
+        }
+        else if (bought < needed)
+        {
+            toasts.Show($"Bought {bought} {model.Name} — need {needed - bought} more for milestone");
+        }
+        else
+        {
+            toasts.Show($"Milestone reached! {model.Name} now at {model.Owned} ({next.Label})");
+        }
+    }
+
     /// <summary>Refresh all bindable properties from the model.</summary>
     public void Refresh(double cash)
     {
@@ -3137,12 +3236,18 @@ public partial class BusinessViewModel(
             UnitsToNextMilestone = next.Threshold - model.Owned;
             NextMilestoneText = $"{UnitsToNextMilestone} more → {next.Threshold}";
             NextMilestoneRewardText = next.Label;
+
+            // Can we afford at least 1 unit toward the milestone?
+            CanBuyToNextMilestone = cash >= model.NextCost && UnitsToNextMilestone > 0;
+            BuyToNextMilestoneText = $"BUY {UnitsToNextMilestone}→{next.Threshold}";
         }
         else
         {
             UnitsToNextMilestone = 0;
             NextMilestoneText = "All milestones reached!";
             NextMilestoneRewardText = "";
+            CanBuyToNextMilestone = false;
+            BuyToNextMilestoneText = "";
         }
     }
 
@@ -3158,11 +3263,12 @@ public partial class BusinessViewModel(
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
-SIZE: 5.98 KB
+SIZE: 7.19 KB
 ================================================================================
 
-
 using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -3249,6 +3355,30 @@ public partial class GameViewModel : ViewModelBase
         IsExportMode = true;
         IsTransferOpen = true;
         _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+    }
+
+    [RelayCommand]
+    private async Task CopyExportAsync()
+    {
+        try
+        {
+            var clipboard = Application.Current?.GetTopLevel()?.Clipboard
+                            ?? GetClipboardFromActiveWindow();
+            if (clipboard is not null)
+            {
+                await clipboard.SetTextAsync(TransferText);
+                _toasts.Show("Copied to clipboard!");
+            }
+            else
+            {
+                _toasts.Show("Clipboard not available on this platform. Select all and copy manually.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to copy to clipboard");
+            _toasts.Show("Could not copy — select the text and copy manually.");
+        }
     }
 
     [RelayCommand]
@@ -3359,6 +3489,22 @@ public partial class GameViewModel : ViewModelBase
 
         foreach (var bvm in Businesses)
             bvm.Refresh(_engine.Cash);
+    }
+
+    private static IClipboard? GetClipboardFromActiveWindow()
+    {
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return desktop.MainWindow?.Clipboard;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
 
@@ -3525,7 +3671,7 @@ public class BusinessTests
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-SIZE: 6.53 KB
+SIZE: 8.09 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -3706,8 +3852,6 @@ public class GameEngineTests
         await _engine.LoadAsync();
 
         // Give enough lifetime earnings to prestige
-        // We need LifetimeEarnings >= 1e12 for angels
-        // Use reflection to set LifetimeEarnings directly
         var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
         ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
 
@@ -3740,6 +3884,67 @@ public class GameEngineTests
 
         // Player should be able to buy it
         _engine.BuyBusiness("lemonade").ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task BuyMultiple_ShouldBuyRequestedCount()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+
+        var bought = _engine.BuyMultiple("lemonade", 10);
+        bought.ShouldBe(10);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(10);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_NotEnoughCash_ShouldBuyPartial()
+    {
+        await _engine.LoadAsync();
+        // Lemonade costs 4 base, 1.07 multiplier
+        // With $10 we can buy 2 (cost 0: $4, cost 1: $4.28 = $8.28 total)
+        SetCash(10);
+
+        var bought = _engine.BuyMultiple("lemonade", 100);
+        bought.ShouldBe(2);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_ZeroCount_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+
+        var bought = _engine.BuyMultiple("lemonade", 0);
+        bought.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_InvalidBusiness_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+
+        var bought = _engine.BuyMultiple("nonexistent", 5);
+        bought.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task BuyMultiple_WithManager_ShouldAutoStart()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        // Stop the business manually for test setup
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = false;
+
+        _engine.BuyMultiple("lemonade", 5);
+        lemonade.IsRunning.ShouldBeTrue();
     }
 
     private void SetCash(double amount)
@@ -4024,7 +4229,7 @@ SIZE: 1.01 KB
 
 ================================================================================
 FILE: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
-SIZE: 1.76 KB
+SIZE: 3.36 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -4092,6 +4297,62 @@ public class BusinessViewModelTests
         vm.Refresh(5);
 
         vm.CanAfford.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Refresh_ShouldShowBuyToNextMilestoneText()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.05,
+            Owned = 20
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
+
+        vm.Refresh(10_000);
+
+        // 20 owned, next milestone is 25, so 5 more needed
+        vm.HasNextMilestone.ShouldBeTrue();
+        vm.BuyToNextMilestoneText.ShouldBe("BUY 5→25");
+        vm.CanBuyToNextMilestone.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Refresh_AllMilestonesReached_ShouldHideBuyToMilestone()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.01,
+            Owned = 1000
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
+
+        vm.Refresh(10_000);
+
+        vm.HasNextMilestone.ShouldBeFalse();
+        vm.CanBuyToNextMilestone.ShouldBeFalse();
     }
 }
 

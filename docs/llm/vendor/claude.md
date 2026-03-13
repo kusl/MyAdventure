@@ -2698,3 +2698,253 @@ public void Format_LargePercentageValues_ShouldUseAbbreviations(double input, st
 
 
 
+Please consolidate the packages in the directory.packages.props using variables and update them all
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  
+  <ItemGroup Label="Avalonia - MIT License">
+    <PackageVersion Include="Avalonia" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Android" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Headless" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="11.3.12" />
+  </ItemGroup>
+  
+  <ItemGroup Label="MVVM - MIT License">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  
+  <ItemGroup Label="EntityFramework - MIT License">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Configuration - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.3" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.3" />
+    <PackageVersion Include="OpenTelemetry" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.0" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="coverlet.collector" Version="8.0.0" />
+  </ItemGroup>
+</Project>
+```
+context 
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                                  Requested    Resolved
+   > Avalonia.Android                                 11.3.12      11.3.12 
+   > Avalonia.Fonts.Inter                             11.3.12      11.3.12 
+   > Avalonia.Themes.Fluent                           11.3.12      11.3.12 
+   > Microsoft.Extensions.DependencyInjection         10.0.3       10.0.3  
+   > Microsoft.NET.ILLink.Tasks                 (A)   [10.0.3, )   10.0.3  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3  
+   > OpenTelemetry.Api                 1.15.0      1.15.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia.Desktop                              11.3.12     11.3.12 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12 
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3  
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3  
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3  
+   > OpenTelemetry                                                1.15.0      1.15.0  
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0  
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      11.3.12     11.3.12 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12 
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0   
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3  
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.3.0      18.3.0  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          8.0.0       8.0.0   
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3  
+   > Microsoft.NET.Test.Sdk                      18.3.0      18.3.0  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             8.0.0       8.0.0   
+   > Microsoft.NET.Test.Sdk         18.3.0      18.3.0  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m2.029s
+user	0m2.076s
+sys	0m0.507s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+Project `MyAdventure.Android` has the following updates to its packages
+   [net10.0-android36.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3     10.0.5
+
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved   Latest
+   > Microsoft.Extensions.Logging      10.0.3      10.0.3     10.0.5
+
+Project `MyAdventure.Desktop` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3     10.0.5
+
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved   Latest
+   > Microsoft.EntityFrameworkCore.Design                         10.0.3      10.0.3     10.0.5
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.Configuration                           10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.Configuration.Json                      10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.DependencyInjection                     10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.Logging                                 10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.Logging.Console                         10.0.3      10.0.3     10.0.5
+
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Microsoft.Extensions.DependencyInjection      10.0.3      10.0.3     10.0.5
+   > Microsoft.Extensions.Logging                  10.0.3      10.0.3     10.0.5
+
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved   Latest
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.3      10.0.3     10.0.5
+
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+also, the export and import is not intuitive. 
+there should be a simple copy button that copies the whole string or a share sheet so we can share the contents easily using native Android if it allows or if platform doesn't have share sheet at least a copy button and I guess same as now if even that is not supported 
+definitely do not ask elevated permissions just to copy this string 
+also please fully update the readme.md 
+also we want to somehow make it easier to jump so instead of clicking a hundred times to get to the next level, if available, they should be able to click once and get to the next level 
+please review the entire `dump.txt` and remember to always return full files 
+make sure no tests fail and there are no regressions
+please and thank you. 
+
+59
+83
+
+Kushal, I've reviewed the entire codebase. Here's the summary of all changes:
+
+1. **Directory.Packages.props** — Consolidated with version variables, updated Microsoft packages to 10.0.5
+2. **GameEngine.cs** — Added `BuyMultiple` method for "buy to next milestone" feature, added `CopyExportToClipboard` helper
+3. **BusinessViewModel.cs** — Added `BuyToNextMilestone` command and `BuyToNextMilestoneText` property
+4. **GameViewModel.cs** — Added `CopyExportCommand` for clipboard copy, wired up platform-appropriate clipboard access
+5. **Desktop MainWindow.axaml** — Added COPY button in export panel, added "BUY→" milestone jump button
+6. **Android MainView.axaml** — Added COPY button in export panel, added "BUY→" milestone jump button
+7. **GameEngineTests.cs** — Added tests for `BuyMultiple`
+8. **BusinessViewModelTests.cs** — Added test for `BuyToNextMilestoneText`
+9. **README.md** — Fully updated with new features, updated package versions
+
+Let me output all the changed files:Here's a summary of every change and why:
+
+**1. Directory.Packages.props** — Added MSBuild variables (`AvaloniaVersion`, `MicrosoftExtensionsVersion`, `EfCoreVersion`, `OpenTelemetryVersion`, `XunitVersion`) so each package group references a single variable. Updated Microsoft.Extensions.* and EF Core from 10.0.3 → 10.0.5 per your `dotnet list package --outdated` output. OpenTelemetry and Avalonia stay at current (no updates were listed).
+
+**2. GameEngine.cs** — Added `BuyMultiple(string businessId, int count)` method that buys up to `count` units in a loop, stopping when cash runs out. Returns actual count purchased. Supports the "buy to next milestone" feature. No existing methods changed.
+
+**3. BusinessViewModel.cs** — Added `BuyToNextMilestoneCommand`, `CanBuyToNextMilestone`, and `BuyToNextMilestoneText` properties. The command calculates how many units to next milestone and calls `engine.BuyMultiple`. `Refresh()` now computes the button text (e.g. "BUY 5→25") and availability.
+
+**4. GameViewModel.cs** — Added `CopyExportCommand` that uses Avalonia's clipboard API (`TopLevel.Clipboard` or `MainWindow.Clipboard` fallback). No elevated permissions needed — Avalonia provides clipboard through its windowing system. Shows toast confirmation or graceful fallback message.
+
+**5. Desktop MainWindow.axaml** — Removed the stray `MultiBinding` TextBlock that showed `True`/`False`. Added COPY button in export mode. Added "BUY→" milestone jump button (row 4) above the action buttons. Grid changed from 7 rows to 6 rows (removed the unused `*` row).
+
+**6. Android MainView.axaml** — Same changes as desktop: COPY button in export panel, "BUY→" milestone button. Grid changed from 5 rows to 6. Export instructions updated from "Copy this string" to "Tap COPY to copy to clipboard."
+
+**7. GameEngineTests.cs** — Added 5 new tests for `BuyMultiple`: full purchase, partial when cash runs out, zero count, invalid business ID, and auto-start with manager.
+
+**8. BusinessViewModelTests.cs** — Added 2 new tests: `BuyToNextMilestoneText` shows correct text (e.g. "BUY 5→25"), and `AllMilestonesReached` hides the button.
+
+**9. README.md** — Updated EF Core version to 10.0.5. Added "Buy to Milestone" to Core Mechanics. Added COPY button description to Import/Export section. Added "Use Buy-to-Milestone" gameplay tip. Added note about central package management using MSBuild variables in Key Technical Decisions.
+
+90
+89
+
+
+
+
+
+
+
+
+
