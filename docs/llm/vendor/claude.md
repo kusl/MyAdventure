@@ -2948,3 +2948,58 @@ Let me output all the changed files:Here's a summary of every change and why:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Build failed 
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/ViewModels/GameViewModel.cs(97,49): error CS1061: 'Application' does not contain a definition for 'GetTopLevel' and no accessible extension method 'GetTopLevel' accepting a first argument of type 'Application' could be found (are you missing a using directive or an assembly reference?)
+remember build should succeed, all tests should pass, and application should work properly 
+please do not introduce regressions 
+please generate full files for any file that needs to change 
