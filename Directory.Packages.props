@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     
     <!-- Version variables for consolidated management -->
-    <AvaloniaVersion>11.3.12</AvaloniaVersion>
+    <AvaloniaVersion>11.3.13</AvaloniaVersion>
     <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
     <EfCoreVersion>10.0.5</EfCoreVersion>
     <OpenTelemetryVersion>1.15.0</OpenTelemetryVersion>
