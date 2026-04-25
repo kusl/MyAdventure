@@ -3098,6 +3098,9 @@ Both paths are covered in the `GetClipboard()` helper at the bottom. No other fi
 
 
 
+00
+17
+
 There are two bugs to fix — one is a real game logic bug, one is a display bug.
 
 **Bug 1 — Critical: Angels not applied during live gameplay**
@@ -3125,3 +3128,162 @@ Fix the following:
 - Add new tests for `Tick()` confirming `AngelBonus` is applied to live earnings.
 - Add new tests for `BusinessViewModel.Refresh()` confirming angel multiplier is applied to `RevenueText` and `RevenuePerSecondText`.
 - No other game logic changes.
+
+we also need to update our nuget packages and that might mean a lot more code changes 
+
+here is our existing directory packages props 
+
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    
+    <!-- Version variables for consolidated management -->
+    <AvaloniaVersion>11.3.12</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.5</EfCoreVersion>
+    <OpenTelemetryVersion>1.15.0</OpenTelemetryVersion>
+    <XunitVersion>2.9.3</XunitVersion>
+  </PropertyGroup>
+  
+  <ItemGroup Label="Avalonia - MIT License">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup Label="MVVM - MIT License">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  
+  <ItemGroup Label="EntityFramework - MIT License">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Configuration and DI - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="coverlet.collector" Version="8.0.0" />
+  </ItemGroup>
+</Project>
+```
+
+and here is what we got from nuget 
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/MyAdventure.Core.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj : warning NU1903: Package 'Tmds.DBus.Protocol' 0.21.2 has a known high severity vulnerability, https://github.com/advisories/GHSA-xrw6-gwf8-vvr9
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/MyAdventure.Android.csproj : warning NU1902: Package 'OpenTelemetry.Api' 1.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g94r-2vxg-569j
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+Project `MyAdventure.Android` has the following updates to its packages
+   [net10.0-android36.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Avalonia.Android                              11.3.12     11.3.12    12.0.1
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12    12.0.1
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12    12.0.1
+   > Microsoft.Extensions.DependencyInjection      10.0.5      10.0.5     10.0.7
+
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved   Latest
+   > Microsoft.Extensions.Logging      10.0.5      10.0.5     10.0.7
+   > OpenTelemetry.Api                 1.15.0      1.15.0     1.15.3
+
+Project `MyAdventure.Desktop` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest 
+   > Avalonia.Desktop                              11.3.12     11.3.12    12.0.1 
+   > Avalonia.Diagnostics                          11.3.12     11.3.12    11.3.14
+   > Avalonia.Fonts.Inter                          11.3.12     11.3.12    12.0.1 
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12    12.0.1 
+   > Microsoft.Extensions.DependencyInjection      10.0.5      10.0.5     10.0.7 
+
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved   Latest
+   > Microsoft.EntityFrameworkCore.Design                         10.0.5      10.0.5     10.0.7
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.Configuration                           10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.Configuration.Json                      10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.DependencyInjection                     10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.Logging                                 10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.Logging.Console                         10.0.5      10.0.5     10.0.7
+   > OpenTelemetry                                                1.15.0      1.15.0     1.15.3
+   > OpenTelemetry.Exporter.Console                               1.15.0      1.15.0     1.15.3
+   > OpenTelemetry.Extensions.Hosting                             1.15.0      1.15.0     1.15.3
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.0      1.15.0     1.15.1
+
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Avalonia                                      11.3.12     11.3.12    12.0.1
+   > Avalonia.Themes.Fluent                        11.3.12     11.3.12    12.0.1
+   > CommunityToolkit.Mvvm                         8.4.0       8.4.0      8.4.2 
+   > Microsoft.Extensions.DependencyInjection      10.0.5      10.0.5     10.0.7
+   > Microsoft.Extensions.Logging                  10.0.5      10.0.5     10.0.7
+
+Project `MyAdventure.Core.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > coverlet.collector          8.0.0       8.0.0      10.0.0
+   > Microsoft.NET.Test.Sdk      18.3.0      18.3.0     18.4.0
+
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved   Latest
+   > coverlet.collector                          8.0.0       8.0.0      10.0.0
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.5      10.0.5     10.0.7
+   > Microsoft.NET.Test.Sdk                      18.3.0      18.3.0     18.4.0
+
+Project `MyAdventure.UI.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > coverlet.collector          8.0.0       8.0.0      10.0.0
+   > Microsoft.NET.Test.Sdk      18.3.0      18.3.0     18.4.0
+
+Please give me full files for all files that changed. 
+Please fully update directory.packages.props as well 
+also please fully update the readme file if it needs any change. 
+also please give a summary as to why this critical game engine defect was missed and what we can do to avoid this in the future 
+
+Opus 4.7 Adaptive 
