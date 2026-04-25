@@ -3013,3 +3013,115 @@ Both paths are covered in the `GetClipboard()` helper at the bottom. No other fi
 
 100
 91
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+There are two bugs to fix — one is a real game logic bug, one is a display bug.
+
+**Bug 1 — Critical: Angels not applied during live gameplay**
+
+In `GameEngine.Tick()`, the payout is:
+```csharp
+var earned = biz.Revenue * cycles;
+```
+`AngelBonus` is never applied. Compare with `CalculateOfflineEarnings()` which correctly multiplies by `AngelBonus`. This means angel investors have zero effect during normal play and only apply to offline earnings. Fix:
+```csharp
+var earned = biz.Revenue * cycles * AngelBonus;
+```
+
+**Bug 2 — Display: Revenue shown pre-angel in UI**
+
+`Business.Revenue` and `Business.RevenuePerSecond` do not include the angel multiplier, so all figures shown in the UI are 16× smaller than actual earnings.
+
+Fix the following:
+1. Pass `angelBonus` (the multiplier value, e.g. `engine.AngelBonus`) into `BusinessViewModel.Refresh()` alongside `cash`, and apply it to `RevenueText` and `RevenuePerSecondText`.
+2. `RevenuePerSecondText` is already computed in `BusinessViewModel` but not bound in either AXAML view (`MainView` in Desktop and Android). Add it to the UI in both views.
+
+**Requirements:**
+- Bug 1 fix must not double-apply angels — verify `CalculateOfflineEarnings()` is unaffected.
+- All existing tests must pass. Update any tests asserting pre-angel revenue display values to reflect post-angel values.
+- Add new tests for `Tick()` confirming `AngelBonus` is applied to live earnings.
+- Add new tests for `BusinessViewModel.Refresh()` confirming angel multiplier is applied to `RevenueText` and `RevenuePerSecondText`.
+- No other game logic changes.
