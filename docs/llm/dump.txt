@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sat Apr 25 02:18:01 AM EDT 2026
+Generated: Sat Apr 25 02:39:29 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -551,22 +551,30 @@ SIZE: 1.02 KB
 
 ================================================================================
 FILE: Directory.Packages.props
-SIZE: 3.91 KB
+SIZE: 4.53 KB
 ================================================================================
 
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    
-    <!-- Version variables for consolidated management -->
-    <AvaloniaVersion>11.3.12</AvaloniaVersion>
-    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
-    <EfCoreVersion>10.0.5</EfCoreVersion>
-    <OpenTelemetryVersion>1.15.0</OpenTelemetryVersion>
+
+    <!-- Version variables for consolidated management.
+         NOTE: Avalonia 12.x is available but Avalonia.Diagnostics has not yet
+         caught up (latest is 11.3.14), so we hold the whole stack on the
+         11.3.x train until the ecosystem is aligned. Bumping Avalonia to
+         12.x is a separate PR — it's a major version with breaking changes
+         and warrants its own focused review. -->
+    <AvaloniaVersion>11.3.14</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <!-- Instrumentation.Runtime versions independently of the rest of OTel -->
+    <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
     <XunitVersion>2.9.3</XunitVersion>
   </PropertyGroup>
-  
+
   <ItemGroup Label="Avalonia - MIT License">
     <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
@@ -577,18 +585,18 @@ SIZE: 3.91 KB
     <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="MVVM - MIT License">
-    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
-  
+
   <ItemGroup Label="EntityFramework - MIT License">
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="Configuration and DI - MIT License">
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
@@ -597,7 +605,7 @@ SIZE: 3.91 KB
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
@@ -606,17 +614,17 @@ SIZE: 3.91 KB
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
     <PackageVersion Include="xunit" Version="$(XunitVersion)" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="coverlet.collector" Version="8.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
   </ItemGroup>
 </Project>
 
@@ -665,7 +673,7 @@ SIZE: .71 KB
 
 ================================================================================
 FILE: README.md
-SIZE: 15.17 KB
+SIZE: 15.82 KB
 ================================================================================
 
 # MyAdventure
@@ -714,7 +722,7 @@ Six businesses, each with increasing cost, revenue, and cycle time:
 | Donut Shop | 🍩 | $103,680 | $51,840 | 24.0s | 1.12× |
 | Shrimp Boat | 🦐 | $1,244,160 | $622,080 | 96.0s | 1.11× |
 
-Each additional unit you buy costs more (base cost × multiplier^owned). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses.
+Each additional unit you buy costs more (base cost × multiplier^owned). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses and your angel-investor bonus.
 
 ### Core Mechanics
 
@@ -745,7 +753,7 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 
 ### Prestige System
 
-Once your lifetime earnings reach a threshold (approximately $1 trillion), you can **prestige**: reset all businesses and cash in exchange for Angel Investors. Each angel provides a permanent +2% bonus to all revenue, forever. The formula is: `floor(150 × sqrt(lifetime_earnings / 1e13))` angels.
+Once your lifetime earnings reach a threshold (approximately $1 trillion), you can **prestige**: reset all businesses and cash in exchange for Angel Investors. Each angel provides a permanent +2% bonus to all revenue, forever — applied to both live cycle earnings and offline earnings. The formula is: `floor(150 × sqrt(lifetime_earnings / 1e13))` angels.
 
 Prestige is optional. You can keep playing without it, but the angel bonus compounds and makes subsequent runs dramatically faster.
 
@@ -826,6 +834,7 @@ MyAdventure.slnx
 - **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android.
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android.
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause trimming crashes. Re-enable once trimmer roots are properly configured.
+- **Angel bonus is applied identically to live and offline earnings.** `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. An invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
 - **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 
@@ -838,15 +847,17 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Category | Technology | License |
 |----------|-----------|---------|
 | Runtime | .NET 10 / C# 14 | MIT |
-| UI Framework | Avalonia UI 11.3.12 | MIT |
-| MVVM | CommunityToolkit.Mvvm 8.4.0 | MIT |
-| Database | SQLite via EF Core 10.0.5 | MIT |
-| Observability | OpenTelemetry 1.15.0 | Apache-2.0 |
+| UI Framework | Avalonia UI 11.3.14 | MIT |
+| MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
+| Database | SQLite via EF Core 10.0.7 | MIT |
+| Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
 | Mocking | NSubstitute 5.3.0 | BSD |
 | Test Data | Bogus 35.6.5 | MIT |
-| Coverage | Coverlet 8.0.0 | MIT |
+| Coverage | Coverlet 10.0.0 | MIT |
+
+> Avalonia 12.x is available but is held at 11.3.x in this project until `Avalonia.Diagnostics` (still on the 11.3.x train) and the rest of the ecosystem ship a 12.x release. Bumping the major is a separate, focused PR.
 
 ### Modern .NET Practices
 
@@ -1196,7 +1207,7 @@ SIZE: .32 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/Views/MainView.axaml
-SIZE: 16.97 KB
+SIZE: 17.38 KB
 ================================================================================
 
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -1311,12 +1322,17 @@ SIZE: 16.97 KB
                                         </Border>
                                     </Grid>
 
-                                    <!-- Row 2: Compact info line -->
+                                    <!-- Row 2: Revenue (with per-second underneath) + Cost -->
                                     <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,2">
-                                        <TextBlock Grid.Column="0" Text="{Binding RevenueText}" FontSize="10" 
-                                                   Foreground="#00E676" />
-                                        <TextBlock Grid.Column="1" Text="{Binding CostText}" FontSize="10" 
-                                                   Foreground="#FFAB40" HorizontalAlignment="Right" />
+                                        <StackPanel Grid.Column="0" Orientation="Vertical">
+                                            <TextBlock Text="{Binding RevenueText}" FontSize="10"
+                                                       Foreground="#00E676" />
+                                            <TextBlock Text="{Binding RevenuePerSecondText}" FontSize="9"
+                                                       Foreground="#80CBC4" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding CostText}" FontSize="10"
+                                                   Foreground="#FFAB40" HorizontalAlignment="Right"
+                                                   VerticalAlignment="Top" />
                                     </Grid>
 
                                     <!-- Row 3: Compact detail line — milestone + affordable -->
@@ -1766,7 +1782,7 @@ SIZE: .18 KB
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 12.62 KB
+SIZE: 13.45 KB
 ================================================================================
 
 using System.Text;
@@ -1861,6 +1877,11 @@ public class GameEngine(
         var sw = Stopwatch.StartNew();
         TickCounter.Add(1);
 
+        // Snapshot the angel multiplier once per tick so all businesses
+        // settle their cycles against the same value, and so the call to
+        // AngelBonus is paid once instead of per-business.
+        var angelBonus = AngelBonus;
+
         foreach (var biz in Businesses)
         {
             if (!biz.IsRunning || biz.Owned <= 0) continue;
@@ -1870,7 +1891,11 @@ public class GameEngine(
             if (biz.ProgressPercent >= 100.0)
             {
                 var cycles = (int)(biz.ProgressPercent / 100.0);
-                var earned = biz.Revenue * cycles;
+                // Angel bonus applies to live earnings just like it does to
+                // offline earnings — see CalculateOfflineEarnings(), which
+                // multiplies by AngelBonus once at the end. These two paths
+                // must stay in sync; an invariant test guards this.
+                var earned = biz.Revenue * cycles * angelBonus;
                 Cash += earned;
                 LifetimeEarnings += earned;
                 EarningsCounter.Add(earned, new KeyValuePair<string, object?>("business", biz.Id));
@@ -2014,6 +2039,10 @@ public class GameEngine(
             var cycles = elapsed.TotalSeconds / biz.CycleTimeSeconds;
             total += biz.Revenue * cycles;
         }
+        // AngelBonus is applied once here at the end of the offline path,
+        // matching the per-cycle application inside Tick(). Do not multiply
+        // biz.Revenue by AngelBonus inside the loop — that would
+        // double-apply when paired with this final multiplication.
         return total * AngelBonus;
     }
 
@@ -3077,7 +3106,7 @@ public record ToastItem(string Message)
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-SIZE: 6.30 KB
+SIZE: 6.99 KB
 ================================================================================
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -3206,23 +3235,37 @@ public partial class BusinessViewModel(
         }
     }
 
-    /// <summary>Refresh all bindable properties from the model.</summary>
-    public void Refresh(double cash)
+    /// <summary>
+    /// Refresh all bindable properties from the model.
+    /// </summary>
+    /// <param name="cash">Current player cash, used for affordability flags.</param>
+    /// <param name="angelBonus">
+    /// The current angel multiplier from <see cref="GameEngine.AngelBonus"/>
+    /// (e.g. 2.0 for +100%). Applied to <see cref="RevenueText"/> and
+    /// <see cref="RevenuePerSecondText"/> so the UI shows what the player will
+    /// actually earn — not the pre-bonus base values.
+    /// </param>
+    public void Refresh(double cash, double angelBonus)
     {
         Owned = model.Owned;
         ProgressPercent = model.ProgressPercent;
         IsRunning = model.IsRunning;
         HasManager = model.HasManager;
         CostText = NumberFormatter.Format(model.NextCost);
-        RevenueText = model.Owned > 0 ? NumberFormatter.Format(model.Revenue) : "—";
+        // Display the post-angel revenue. Owned == 0 still shows "—" because
+        // there's no business to earn from yet.
+        RevenueText = model.Owned > 0
+            ? NumberFormatter.Format(model.Revenue * angelBonus)
+            : "—";
         ManagerCostText = NumberFormatter.Format(model.BaseCost * 1000);
         CanAfford = cash >= model.NextCost;
         CanAffordManager = !model.HasManager && cash >= model.BaseCost * 1000;
 
         // Extended details
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
+        // Same angel adjustment applies to the per-second figure.
         RevenuePerSecondText = model.Owned > 0
-            ? $"${NumberFormatter.Format(model.RevenuePerSecond)}/s"
+            ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
             : "—";
 
         AffordableCount = model.AffordableCount(cash);
@@ -3265,7 +3308,7 @@ public partial class BusinessViewModel(
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
-SIZE: 7.56 KB
+SIZE: 7.77 KB
 ================================================================================
 
 using System.Collections.ObjectModel;
@@ -3490,8 +3533,11 @@ public partial class GameViewModel : ViewModelBase
             PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
         }
 
+        // Snapshot AngelBonus once and pass to every business so all cards
+        // display consistent post-bonus revenue figures within a single tick.
+        var angelBonus = _engine.AngelBonus;
         foreach (var bvm in Businesses)
-            bvm.Refresh(_engine.Cash);
+            bvm.Refresh(_engine.Cash, angelBonus);
     }
 
     /// <summary>
@@ -3686,7 +3732,7 @@ public class BusinessTests
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-SIZE: 8.09 KB
+SIZE: 11.82 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -3769,6 +3815,103 @@ public class GameEngineTests
 
         // Revenue should be base × owned × multiplier
         lemonade.Revenue.ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
+    }
+
+    // ---------------------------------------------------------------
+    // Bug-1 regression coverage: AngelBonus must apply during live play.
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+        SetAngels(50); // AngelBonus = 1 + 50 * 0.02 = 2.0
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0; // exactly one cycle ready to settle
+
+        var cashBefore = _engine.Cash;
+        _engine.Tick(0.0);
+
+        var earned = _engine.Cash - cashBefore;
+        // 1 owned × $1 base × 1.0 milestone × 2.0 angel bonus = $2
+        earned.ShouldBe(lemonade.Revenue * 2.0);
+        earned.ShouldBe(2.0);
+    }
+
+    [Fact]
+    public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
+    {
+        // Prevents the inverse mistake: with no angels (bonus = 1.0),
+        // the multiplier must not change anything.
+        await _engine.LoadAsync();
+        SetCash(1000);
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0;
+
+        var cashBefore = _engine.Cash;
+        _engine.Tick(0.0);
+
+        (_engine.Cash - cashBefore).ShouldBe(lemonade.Revenue);
+        _engine.AngelBonus.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public async Task Tick_AngelsAlsoBoostLifetimeEarnings()
+    {
+        // Lifetime earnings drive the prestige threshold, so the bonus must
+        // count into them too (exactly as it does for cash).
+        await _engine.LoadAsync();
+        SetCash(1000);
+        SetAngels(50); // ×2
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0;
+
+        var ltBefore = _engine.LifetimeEarnings;
+        _engine.Tick(0.0);
+
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * 2.0);
+    }
+
+    [Fact]
+    public async Task OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice()
+    {
+        // Invariant: offline earnings for N cycles == live earnings for N cycles
+        // when angels are present. This catches both the original "live missed
+        // the bonus" bug and the inverse "offline applies it twice" bug.
+        var pastTime = DateTime.UtcNow.AddSeconds(-60);
+        var savedState = new GameState
+        {
+            Cash = 0,
+            LifetimeEarnings = 0,
+            AngelInvestors = 50, // ×2 bonus
+            BusinessDataJson = """{"lemonade":1}""",
+            ManagerDataJson = """{"lemonade":true}""",
+            LastPlayedAt = pastTime,
+            UpdatedAt = pastTime
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(savedState));
+
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+
+        // Lemonade: cycle 0.6s, base revenue $1, 1 owned, no milestones.
+        // 60s / 0.6s = 100 cycles. Per-cycle revenue = $1 (pre-bonus).
+        // With ×2 bonus applied once: 100 × 1 × 2 = $200.
+        // Tolerance accounts for the small gap between pastTime and "now".
+        engine.Cash.ShouldBeInRange(190, 220);
+        engine.AngelBonus.ShouldBe(2.0);
     }
 
     [Fact]
@@ -3966,6 +4109,12 @@ public class GameEngineTests
     {
         var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
         cashProp.GetSetMethod(true)!.Invoke(_engine, [amount]);
+    }
+
+    private void SetAngels(double count)
+    {
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!;
+        prop.GetSetMethod(true)!.Invoke(_engine, [count]);
     }
 }
 
@@ -4244,7 +4393,7 @@ SIZE: 1.01 KB
 
 ================================================================================
 FILE: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
-SIZE: 3.36 KB
+SIZE: 7.16 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -4260,6 +4409,8 @@ namespace MyAdventure.UI.Tests;
 
 public class BusinessViewModelTests
 {
+    private const double NoAngels = 1.0;
+
     [Fact]
     public void Refresh_ShouldUpdateAllProperties()
     {
@@ -4281,7 +4432,7 @@ public class BusinessViewModelTests
         var toasts = new ToastService();
         var vm = new BusinessViewModel(biz, engine, toasts);
 
-        vm.Refresh(500);
+        vm.Refresh(500, NoAngels);
 
         vm.Owned.ShouldBe(3);
         vm.CostText.ShouldNotBeNullOrEmpty();
@@ -4309,7 +4460,7 @@ public class BusinessViewModelTests
         var toasts = new ToastService();
         var vm = new BusinessViewModel(biz, engine, toasts);
 
-        vm.Refresh(5);
+        vm.Refresh(5, NoAngels);
 
         vm.CanAfford.ShouldBeFalse();
     }
@@ -4335,7 +4486,7 @@ public class BusinessViewModelTests
         var toasts = new ToastService();
         var vm = new BusinessViewModel(biz, engine, toasts);
 
-        vm.Refresh(10_000);
+        vm.Refresh(10_000, NoAngels);
 
         // 20 owned, next milestone is 25, so 5 more needed
         vm.HasNextMilestone.ShouldBeTrue();
@@ -4364,10 +4515,146 @@ public class BusinessViewModelTests
         var toasts = new ToastService();
         var vm = new BusinessViewModel(biz, engine, toasts);
 
-        vm.Refresh(10_000);
+        vm.Refresh(10_000, NoAngels);
 
         vm.HasNextMilestone.ShouldBeFalse();
         vm.CanBuyToNextMilestone.ShouldBeFalse();
+    }
+
+    // ---------------------------------------------------------------
+    // Bug-2 regression coverage: angel multiplier must reach the UI.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void Refresh_WithAngelBonus_ShouldMultiplyRevenueText()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 100,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.1,
+            Owned = 1
+        };
+
+        var (vm, _) = MakeVm(biz);
+
+        // Pre-bonus revenue would be 1 × 100 × 1.0 = 100.00
+        // With 2.0× angel bonus: 200.00
+        vm.Refresh(1_000_000, angelBonus: 2.0);
+
+        vm.RevenueText.ShouldBe("200.00");
+    }
+
+    [Fact]
+    public void Refresh_WithAngelBonus_ShouldMultiplyRevenuePerSecondText()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 60,
+            BaseTimeSeconds = 2, // 60 / 2 = 30/s pre-bonus
+            CostMultiplier = 1.1,
+            Owned = 1
+        };
+
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(1_000_000, angelBonus: 3.0);
+
+        // 60 (revenue) / 2 (cycle) × 3.0 (angels) = 90/s
+        vm.RevenuePerSecondText.ShouldBe("$90.00/s");
+    }
+
+    [Fact]
+    public void Refresh_NoAngelBonus_ShouldShowBaseRevenue()
+    {
+        // Inverse check: 1.0× must produce identical text to no multiplication.
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 100,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.1,
+            Owned = 1
+        };
+
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(1_000_000, angelBonus: 1.0);
+
+        vm.RevenueText.ShouldBe("100.00");
+        vm.RevenuePerSecondText.ShouldBe("$100.00/s");
+    }
+
+    [Fact]
+    public void Refresh_AngelBonusWithMilestones_ShouldStack()
+    {
+        // Bonuses compound: milestone multiplier × angel bonus.
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 10,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.01,
+            Owned = 25 // ×2 milestone
+        };
+
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(1_000_000, angelBonus: 4.0);
+
+        // 25 owned × $1 base × 2.0 milestone × 4.0 angels = $200
+        vm.RevenueText.ShouldBe("200.00");
+    }
+
+    [Fact]
+    public void Refresh_ZeroOwned_ShouldShowDashRegardlessOfAngelBonus()
+    {
+        // Angel bonus must not turn an unowned business into a "—" with a number.
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 100,
+            BaseRevenue = 10,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.1,
+            Owned = 0
+        };
+
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(1_000_000, angelBonus: 50.0);
+
+        vm.RevenueText.ShouldBe("—");
+        vm.RevenuePerSecondText.ShouldBe("—");
+    }
+
+    private static (BusinessViewModel vm, GameEngine engine) MakeVm(Business biz)
+    {
+        var repo = Substitute.For<IGameStateRepository>();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
+        return (vm, engine);
     }
 }
 
