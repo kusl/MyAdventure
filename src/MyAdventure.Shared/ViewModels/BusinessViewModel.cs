@@ -124,23 +124,37 @@ public partial class BusinessViewModel(
         }
     }
 
-    /// <summary>Refresh all bindable properties from the model.</summary>
-    public void Refresh(double cash)
+    /// <summary>
+    /// Refresh all bindable properties from the model.
+    /// </summary>
+    /// <param name="cash">Current player cash, used for affordability flags.</param>
+    /// <param name="angelBonus">
+    /// The current angel multiplier from <see cref="GameEngine.AngelBonus"/>
+    /// (e.g. 2.0 for +100%). Applied to <see cref="RevenueText"/> and
+    /// <see cref="RevenuePerSecondText"/> so the UI shows what the player will
+    /// actually earn — not the pre-bonus base values.
+    /// </param>
+    public void Refresh(double cash, double angelBonus)
     {
         Owned = model.Owned;
         ProgressPercent = model.ProgressPercent;
         IsRunning = model.IsRunning;
         HasManager = model.HasManager;
         CostText = NumberFormatter.Format(model.NextCost);
-        RevenueText = model.Owned > 0 ? NumberFormatter.Format(model.Revenue) : "—";
+        // Display the post-angel revenue. Owned == 0 still shows "—" because
+        // there's no business to earn from yet.
+        RevenueText = model.Owned > 0
+            ? NumberFormatter.Format(model.Revenue * angelBonus)
+            : "—";
         ManagerCostText = NumberFormatter.Format(model.BaseCost * 1000);
         CanAfford = cash >= model.NextCost;
         CanAffordManager = !model.HasManager && cash >= model.BaseCost * 1000;
 
         // Extended details
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
+        // Same angel adjustment applies to the per-second figure.
         RevenuePerSecondText = model.Owned > 0
-            ? $"${NumberFormatter.Format(model.RevenuePerSecond)}/s"
+            ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
             : "—";
 
         AffordableCount = model.AffordableCount(cash);

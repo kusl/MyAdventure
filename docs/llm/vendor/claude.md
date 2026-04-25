@@ -3287,3 +3287,59 @@ also please fully update the readme file if it needs any change.
 also please give a summary as to why this critical game engine defect was missed and what we can do to avoid this in the future 
 
 Opus 4.7 Adaptive 
+
+Looking at this carefully — Bug 1 is a serious one. Let me fix both bugs, update the packages, refresh the tests, and address the post-mortem question at the end.
+
+Let me set up the output directory and create the changed files.
+
+59
+25
+
+Looking at this carefully — Bug 1 is a serious one. Let me fix both bugs, update the packages, refresh the tests, and address the post-mortem question at the end.
+Let me set up the output directory and create the changed files.Verified file integrity and prepared comprehensive deliverablesVerified file integrity and prepared comprehensive deliverablesBoth fixes are confirmed in place. Presenting all 8 files now.Presented 8 filesPresented 8 filesHere's the rundown.
+What changed
+Bug 1 — Angels not applied to live earnings (GameEngine.cs). Tick() now snapshots var angelBonus = AngelBonus; once at the top of the method and the payout line reads var earned = biz.Revenue * cycles * angelBonus;. The snapshot is deliberate so all businesses in a single tick see a consistent multiplier. CalculateOfflineEarnings() is untouched — it still multiplies total * AngelBonus exactly once at the end of the loop. I added comment blocks on both paths explicitly warning that they must stay in sync, since this is exactly the failure mode that produced the bug.
+Bug 2 — UI showing pre-angel revenue.
+
+BusinessViewModel.Refresh signature changed to Refresh(double cash, double angelBonus). RevenueText and RevenuePerSecondText now multiply by angelBonus (still showing "—" when Owned == 0). Other display properties (cost, owned count, milestone progress) are unaffected — those don't scale with angels.
+GameViewModel.RefreshAll() snapshots var angelBonus = _engine.AngelBonus; once per tick before the foreach, so every business sees the same value.
+One correction to your description: Desktop's MainWindow.axaml already had RevenuePerSecondText bound — only MainView.axaml on Android was missing it. I changed Row 2 there to a vertical StackPanel (Revenue in green #00E676 on top, RevenuePerSecondText in teal #80CBC4 size 9 underneath) on the left, with Cost on the right at VerticalAlignment="Top". No layout overflow, no scrollbars introduced.
+
+Tests. All existing vm.Refresh(x) calls in BusinessViewModelTests updated to vm.Refresh(x, NoAngels) with a NoAngels = 1.0 constant. New tests:
+In GameEngineTests:
+
+Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings — 50 angels, 1 lemonade, expects Revenue * 2.0.
+Tick_NoAngels_ShouldEarnExactlyBaseRevenue — inverse sanity check.
+Tick_AngelsAlsoBoostLifetimeEarnings — confirms the boost flows into LifetimeEarnings (which gates the next prestige).
+OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice — the invariant test: loads a save 60s in the past with 50 angels and a lemonade with manager, asserts the result is in the ×2 band, not ×4. This is the test that would have caught Bug 1 if it had existed before.
+
+In BusinessViewModelTests:
+
+Refresh_WithAngelBonus_ShouldMultiplyRevenueText, Refresh_WithAngelBonus_ShouldMultiplyRevenuePerSecondText, Refresh_NoAngelBonus_ShouldShowBaseRevenue, Refresh_AngelBonusWithMilestones_ShouldStack (verifies milestones × angels compose), and Refresh_ZeroOwned_ShouldShowDashRegardlessOfAngelBonus.
+
+NuGet updates (Directory.Packages.props).
+
+OpenTelemetry → 1.15.3 (clears NU1902 GHSA-g94r-2vxg-569j).
+OpenTelemetry.Instrumentation.Runtime → its own variable at 1.15.1, since its latest diverged from the rest.
+MS Extensions → 10.0.7, EF Core → 10.0.7, CommunityToolkit.Mvvm → 8.4.2, Microsoft.NET.Test.Sdk → 18.4.0, coverlet.collector → 10.0.0.
+Avalonia held at 11.3.14, NOT bumped to 12.0.1. Reason: Avalonia.Diagnostics's latest is still 11.3.14 — the 12.x line isn't fully published yet across the ecosystem we depend on. A v12 bump is a major-version migration that deserves its own focused PR with the migration guide, breaking-change audit, and platform smoke tests; mixing it into a security/bugfix PR would be reckless. There's a comment in the props file capturing this.
+Tmds.DBus.Protocol (NU1903 high, transitive in Desktop): I did not pin an explicit override. Avalonia 11.3.14 should bring an updated transitive — re-run dotnet restore and check. If the warning persists, add an explicit <PackageVersion Include="Tmds.DBus.Protocol" Version="0.21.3" /> (or whatever the patched version is) to the central props; transitive pinning is already enabled.
+
+README. Tech-stack table updated to reflect the new versions and a note that Avalonia 12 is intentionally deferred. Added a line under "Key Technical Decisions" stating that the angel bonus applies identically to live and offline earnings, and naming OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice as the cross-path invariant.
+
+Post-mortem: why the angel bug shipped
+Four root causes, in order of how much each one mattered:
+1. The test fixtures defaulted to a value that erased the bug. Every existing Tick() test ran with zero angel investors, so AngelBonus was always 1.0. Multiplying by 1.0 is the identity operation — the missing factor was a no-op in every code path the tests exercised. The bug was perfectly invisible from inside the test suite. This is the single biggest lesson: when a multiplier defaults to the identity element, tests that don't explicitly perturb it cannot see the multiplier at all. A test fixture for Tick() should default to a non-trivial angel count (say, 50, giving ×2.0), and a separate test should pin the zero case.
+2. Tick() and CalculateOfflineEarnings() duplicated the per-cycle revenue math instead of sharing it. The same arithmetic — "revenue per cycle × cycles, then multiply by angel bonus" — lived in two places, and only one of them was correct. There was no shared helper, no single chokepoint for "compute earnings for a business over N cycles." Drift was inevitable; we just got unlucky about which path happened to be wrong. The structural fix is to extract a private helper like EarningsForCycles(Business biz, int cycles, double angelBonus) and call it from both paths. I didn't make that refactor as part of this fix because you said "no other game logic changes" — but it should be the very next thing.
+3. No invariant test linked the live and offline paths. The two paths model the same physical thing: "how much does this game earn in N seconds with these businesses, managers, and angels?" That equivalence is a property the system must hold, but nothing asserted it. The new OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice test is a step in that direction; a fuller version would generate random states and assert that Tick-based simulation over N seconds produces the same total as CalculateOfflineEarnings for the same N seconds. That's a property test, and it would have lit up like a Christmas tree the moment Bug 1 landed.
+4. AngelBonus was a property accessed at scattered call sites rather than enforced at one chokepoint. The codebase trusted every payout site to remember to multiply. This is fragile by construction. With the helper in (2), the * angelBonus lives in exactly one place and can never be forgotten by a new payout site.
+What to do going forward, in priority order:
+
+Extract the shared EarningsForCycles helper so the two paths can't drift again. (Highest leverage, smallest change.)
+Add a property/invariant test that simulates equivalent live-vs-offline scenarios with randomized angel counts, manager states, and durations.
+Default test fixtures for anything earnings-related to non-trivial angel counts, with the zero-angel case as an explicit, separate test.
+Consider mutation testing (Stryker.NET works fine on .NET 10) — a mutation of * AngelBonus to * 1.0 in CalculateOfflineEarnings would have survived every existing test, which is precisely what mutation testing is designed to flag. Even one CI run would have surfaced this class of bug.
+Audit other multipliers for the same shape: anywhere a multiplier defaults to 1.0 (the identity element), search for whether the tests ever exercise it at a non-1.0 value. Milestone multipliers, manager speed modifiers, and any future prestige tiers all have this risk profile.
+
+The display bug (Bug 2) is a different kind of miss — it's that the model and the view exposed two different "revenue" concepts (raw vs. effective) and the view bound the wrong one. The structural fix there is the same shape: have one place that produces "the number to show the user" and bind to that, rather than letting each view do its own math. The Refresh(cash, angelBonus) signature is now that chokepoint for the view layer.
+

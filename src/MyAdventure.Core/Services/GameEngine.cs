@@ -90,6 +90,11 @@ public class GameEngine(
         var sw = Stopwatch.StartNew();
         TickCounter.Add(1);
 
+        // Snapshot the angel multiplier once per tick so all businesses
+        // settle their cycles against the same value, and so the call to
+        // AngelBonus is paid once instead of per-business.
+        var angelBonus = AngelBonus;
+
         foreach (var biz in Businesses)
         {
             if (!biz.IsRunning || biz.Owned <= 0) continue;
@@ -99,7 +104,11 @@ public class GameEngine(
             if (biz.ProgressPercent >= 100.0)
             {
                 var cycles = (int)(biz.ProgressPercent / 100.0);
-                var earned = biz.Revenue * cycles;
+                // Angel bonus applies to live earnings just like it does to
+                // offline earnings — see CalculateOfflineEarnings(), which
+                // multiplies by AngelBonus once at the end. These two paths
+                // must stay in sync; an invariant test guards this.
+                var earned = biz.Revenue * cycles * angelBonus;
                 Cash += earned;
                 LifetimeEarnings += earned;
                 EarningsCounter.Add(earned, new KeyValuePair<string, object?>("business", biz.Id));
@@ -243,6 +252,10 @@ public class GameEngine(
             var cycles = elapsed.TotalSeconds / biz.CycleTimeSeconds;
             total += biz.Revenue * cycles;
         }
+        // AngelBonus is applied once here at the end of the offline path,
+        // matching the per-cycle application inside Tick(). Do not multiply
+        // biz.Revenue by AngelBonus inside the loop — that would
+        // double-apply when paired with this final multiplication.
         return total * AngelBonus;
     }
 

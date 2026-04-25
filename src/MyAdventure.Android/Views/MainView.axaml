@@ -110,12 +110,17 @@
                                         </Border>
                                     </Grid>
 
-                                    <!-- Row 2: Compact info line -->
+                                    <!-- Row 2: Revenue (with per-second underneath) + Cost -->
                                     <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,2">
-                                        <TextBlock Grid.Column="0" Text="{Binding RevenueText}" FontSize="10" 
-                                                   Foreground="#00E676" />
-                                        <TextBlock Grid.Column="1" Text="{Binding CostText}" FontSize="10" 
-                                                   Foreground="#FFAB40" HorizontalAlignment="Right" />
+                                        <StackPanel Grid.Column="0" Orientation="Vertical">
+                                            <TextBlock Text="{Binding RevenueText}" FontSize="10"
+                                                       Foreground="#00E676" />
+                                            <TextBlock Text="{Binding RevenuePerSecondText}" FontSize="9"
+                                                       Foreground="#80CBC4" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding CostText}" FontSize="10"
+                                                   Foreground="#FFAB40" HorizontalAlignment="Right"
+                                                   VerticalAlignment="Top" />
                                     </Grid>
 
                                     <!-- Row 3: Compact detail line — milestone + affordable -->

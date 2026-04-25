@@ -2,15 +2,23 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    
-    <!-- Version variables for consolidated management -->
-    <AvaloniaVersion>11.3.12</AvaloniaVersion>
-    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
-    <EfCoreVersion>10.0.5</EfCoreVersion>
-    <OpenTelemetryVersion>1.15.0</OpenTelemetryVersion>
+
+    <!-- Version variables for consolidated management.
+         NOTE: Avalonia 12.x is available but Avalonia.Diagnostics has not yet
+         caught up (latest is 11.3.14), so we hold the whole stack on the
+         11.3.x train until the ecosystem is aligned. Bumping Avalonia to
+         12.x is a separate PR — it's a major version with breaking changes
+         and warrants its own focused review. -->
+    <AvaloniaVersion>11.3.14</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <!-- Instrumentation.Runtime versions independently of the rest of OTel -->
+    <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
     <XunitVersion>2.9.3</XunitVersion>
   </PropertyGroup>
-  
+
   <ItemGroup Label="Avalonia - MIT License">
     <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
@@ -21,18 +29,18 @@
     <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="MVVM - MIT License">
-    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
-  
+
   <ItemGroup Label="EntityFramework - MIT License">
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="Configuration and DI - MIT License">
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
@@ -41,7 +49,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
@@ -50,16 +58,16 @@
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
     <PackageVersion Include="xunit" Version="$(XunitVersion)" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="coverlet.collector" Version="8.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
   </ItemGroup>
 </Project>

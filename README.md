@@ -44,7 +44,7 @@ Six businesses, each with increasing cost, revenue, and cycle time:
 | Donut Shop | 🍩 | $103,680 | $51,840 | 24.0s | 1.12× |
 | Shrimp Boat | 🦐 | $1,244,160 | $622,080 | 96.0s | 1.11× |
 
-Each additional unit you buy costs more (base cost × multiplier^owned). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses.
+Each additional unit you buy costs more (base cost × multiplier^owned). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses and your angel-investor bonus.
 
 ### Core Mechanics
 
@@ -75,7 +75,7 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 
 ### Prestige System
 
-Once your lifetime earnings reach a threshold (approximately $1 trillion), you can **prestige**: reset all businesses and cash in exchange for Angel Investors. Each angel provides a permanent +2% bonus to all revenue, forever. The formula is: `floor(150 × sqrt(lifetime_earnings / 1e13))` angels.
+Once your lifetime earnings reach a threshold (approximately $1 trillion), you can **prestige**: reset all businesses and cash in exchange for Angel Investors. Each angel provides a permanent +2% bonus to all revenue, forever — applied to both live cycle earnings and offline earnings. The formula is: `floor(150 × sqrt(lifetime_earnings / 1e13))` angels.
 
 Prestige is optional. You can keep playing without it, but the angel bonus compounds and makes subsequent runs dramatically faster.
 
@@ -156,6 +156,7 @@ MyAdventure.slnx
 - **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android.
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android.
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause trimming crashes. Re-enable once trimmer roots are properly configured.
+- **Angel bonus is applied identically to live and offline earnings.** `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. An invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
 - **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 
@@ -168,15 +169,17 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Category | Technology | License |
 |----------|-----------|---------|
 | Runtime | .NET 10 / C# 14 | MIT |
-| UI Framework | Avalonia UI 11.3.12 | MIT |
-| MVVM | CommunityToolkit.Mvvm 8.4.0 | MIT |
-| Database | SQLite via EF Core 10.0.5 | MIT |
-| Observability | OpenTelemetry 1.15.0 | Apache-2.0 |
+| UI Framework | Avalonia UI 11.3.14 | MIT |
+| MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
+| Database | SQLite via EF Core 10.0.7 | MIT |
+| Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
 | Mocking | NSubstitute 5.3.0 | BSD |
 | Test Data | Bogus 35.6.5 | MIT |
-| Coverage | Coverlet 8.0.0 | MIT |
+| Coverage | Coverlet 10.0.0 | MIT |
+
+> Avalonia 12.x is available but is held at 11.3.x in this project until `Avalonia.Diagnostics` (still on the 11.3.x train) and the rest of the ecosystem ship a 12.x release. Bumping the major is a separate, focused PR.
 
 ### Modern .NET Practices
 

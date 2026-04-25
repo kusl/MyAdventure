@@ -220,8 +220,11 @@ public partial class GameViewModel : ViewModelBase
             PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
         }
 
+        // Snapshot AngelBonus once and pass to every business so all cards
+        // display consistent post-bonus revenue figures within a single tick.
+        var angelBonus = _engine.AngelBonus;
         foreach (var bvm in Businesses)
-            bvm.Refresh(_engine.Cash);
+            bvm.Refresh(_engine.Cash, angelBonus);
     }
 
     /// <summary>

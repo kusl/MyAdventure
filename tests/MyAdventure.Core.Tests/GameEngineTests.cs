@@ -80,6 +80,103 @@ public class GameEngineTests
         lemonade.Revenue.ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
     }
 
+    // ---------------------------------------------------------------
+    // Bug-1 regression coverage: AngelBonus must apply during live play.
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings()
+    {
+        await _engine.LoadAsync();
+        SetCash(1000);
+        SetAngels(50); // AngelBonus = 1 + 50 * 0.02 = 2.0
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0; // exactly one cycle ready to settle
+
+        var cashBefore = _engine.Cash;
+        _engine.Tick(0.0);
+
+        var earned = _engine.Cash - cashBefore;
+        // 1 owned × $1 base × 1.0 milestone × 2.0 angel bonus = $2
+        earned.ShouldBe(lemonade.Revenue * 2.0);
+        earned.ShouldBe(2.0);
+    }
+
+    [Fact]
+    public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
+    {
+        // Prevents the inverse mistake: with no angels (bonus = 1.0),
+        // the multiplier must not change anything.
+        await _engine.LoadAsync();
+        SetCash(1000);
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0;
+
+        var cashBefore = _engine.Cash;
+        _engine.Tick(0.0);
+
+        (_engine.Cash - cashBefore).ShouldBe(lemonade.Revenue);
+        _engine.AngelBonus.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public async Task Tick_AngelsAlsoBoostLifetimeEarnings()
+    {
+        // Lifetime earnings drive the prestige threshold, so the bonus must
+        // count into them too (exactly as it does for cash).
+        await _engine.LoadAsync();
+        SetCash(1000);
+        SetAngels(50); // ×2
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0;
+
+        var ltBefore = _engine.LifetimeEarnings;
+        _engine.Tick(0.0);
+
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * 2.0);
+    }
+
+    [Fact]
+    public async Task OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice()
+    {
+        // Invariant: offline earnings for N cycles == live earnings for N cycles
+        // when angels are present. This catches both the original "live missed
+        // the bonus" bug and the inverse "offline applies it twice" bug.
+        var pastTime = DateTime.UtcNow.AddSeconds(-60);
+        var savedState = new GameState
+        {
+            Cash = 0,
+            LifetimeEarnings = 0,
+            AngelInvestors = 50, // ×2 bonus
+            BusinessDataJson = """{"lemonade":1}""",
+            ManagerDataJson = """{"lemonade":true}""",
+            LastPlayedAt = pastTime,
+            UpdatedAt = pastTime
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(savedState));
+
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+
+        // Lemonade: cycle 0.6s, base revenue $1, 1 owned, no milestones.
+        // 60s / 0.6s = 100 cycles. Per-cycle revenue = $1 (pre-bonus).
+        // With ×2 bonus applied once: 100 × 1 × 2 = $200.
+        // Tolerance accounts for the small gap between pastTime and "now".
+        engine.Cash.ShouldBeInRange(190, 220);
+        engine.AngelBonus.ShouldBe(2.0);
+    }
+
     [Fact]
     public async Task Prestige_NotEnoughEarnings_ShouldFail()
     {
@@ -275,5 +372,11 @@ public class GameEngineTests
     {
         var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
         cashProp.GetSetMethod(true)!.Invoke(_engine, [amount]);
+    }
+
+    private void SetAngels(double count)
+    {
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!;
+        prop.GetSetMethod(true)!.Invoke(_engine, [count]);
     }
 }
