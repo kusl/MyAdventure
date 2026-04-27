@@ -1,22 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <!-- API 23 (Android 6.0 Marshmallow, Oct 2015) is required because
+         Avalonia.Android 12 transitively depends on
+         androidx.lifecycle.lifecycle-runtime-android, which itself declares
+         minSdk 23. The manifest merger refuses to silently downgrade it,
+         and using tools:overrideLibrary would only mask the mismatch and
+         risk runtime crashes on API 21–22 devices. API 23 covers ~99.9%
+         of Android devices in active use. -->
+    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <ApplicationId>com.kusl.myadventure</ApplicationId>
     <ApplicationVersion>$(BuildNumber)</ApplicationVersion>
     <ApplicationDisplayVersion>1.0.$(BuildNumber)</ApplicationDisplayVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    
+
     <!-- Disable AOT entirely until the app runs successfully.
          AOT + EF Core reflection + OpenTelemetry = likely trimming crashes.
          Re-enable once the app is stable and add trimmer roots. -->
     <RunAOTCompilation>false</RunAOTCompilation>
     <PublishTrimmed>false</PublishTrimmed>
-    
+
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
     <AndroidEnableAppCompatTheme>true</AndroidEnableAppCompatTheme>
-    
+
     <!-- Keep reflection metadata for DI, EF Core, and OpenTelemetry -->
     <TrimmerDefaultAction>link</TrimmerDefaultAction>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
@@ -27,7 +34,7 @@
     <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
     <ProjectReference Include="..\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
     <PackageReference Include="Avalonia.Themes.Fluent" />

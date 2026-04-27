@@ -24,18 +24,18 @@
                     <!-- Cash -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                         <TextBlock Text="💰" FontSize="32" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding CashText}" FontSize="36" FontWeight="Bold" 
+                        <TextBlock Text="{Binding CashText}" FontSize="36" FontWeight="Bold"
                                    Foreground="#00E676" VerticalAlignment="Center" />
                     </StackPanel>
-                    
+
                     <!-- Angels -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="20,0">
                         <TextBlock Text="😇" FontSize="20" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding AngelText}" FontSize="18" Foreground="#FFD740" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding AngelBonusText}" FontSize="14" Foreground="#FFD740" 
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="14" Foreground="#FFD740"
                                    Opacity="0.7" VerticalAlignment="Center" />
                     </StackPanel>
-                    
+
                     <!-- Prestige -->
                     <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <Button Command="{Binding PrestigeCommand}"
@@ -46,11 +46,11 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <TextBlock Text="🔄" VerticalAlignment="Center" />
                                 <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding NextAngelText, StringFormat='+{0}'}" 
+                                <TextBlock Text="{Binding NextAngelText, StringFormat='+{0}'}"
                                            FontSize="12" Opacity="0.8" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <TextBlock Text="{Binding PrestigeExplanation}" FontSize="10" 
+                        <TextBlock Text="{Binding PrestigeExplanation}" FontSize="10"
                                    Foreground="#AAAAAA" HorizontalAlignment="Center"
                                    MaxWidth="300" TextWrapping="Wrap" TextAlignment="Center" />
                     </StackPanel>
@@ -90,7 +90,7 @@
                                     <!-- Row 0: Icon + Name + Owned -->
                                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="28" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="16" FontWeight="Bold" 
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="16" FontWeight="Bold"
                                                    Foreground="White" VerticalAlignment="Center" Margin="8,0,0,0" />
                                         <Border Grid.Column="2" Background="#0D47A1" CornerRadius="10" Padding="8,2">
                                             <TextBlock Text="{Binding Owned}" FontSize="14" FontWeight="Bold"
@@ -101,7 +101,7 @@
                                     <!-- Row 1: Progress bar -->
                                     <Grid Grid.Row="1" Margin="0,2,0,4">
                                         <Border Background="#0A0A1A" CornerRadius="4" Height="8" />
-                                        <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}" 
+                                        <Border Background="{Binding Color, Converter={StaticResource HexToBrush}}"
                                                 CornerRadius="4" Height="8"
                                                 HorizontalAlignment="Stretch"
                                                 RenderTransformOrigin="0,0.5">
@@ -115,12 +115,12 @@
                                     <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,4">
                                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
                                             <TextBlock Text="💵" FontSize="11" VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding RevenueText}" FontSize="12" 
+                                            <TextBlock Text="{Binding RevenueText}" FontSize="12"
                                                        Foreground="#00E676" VerticalAlignment="Center" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
                                             <TextBlock Text="🏷️" FontSize="11" VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding CostText}" FontSize="12" 
+                                            <TextBlock Text="{Binding CostText}" FontSize="12"
                                                        Foreground="#FFAB40" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Grid>
@@ -130,32 +130,32 @@
                                         <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
                                             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
                                                 <TextBlock Text="⏱️" FontSize="10" VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding CycleTimeText}" FontSize="11" 
+                                                <TextBlock Text="{Binding CycleTimeText}" FontSize="11"
                                                            Foreground="#B0BEC5" VerticalAlignment="Center" />
                                             </StackPanel>
                                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
                                                 <TextBlock Text="📈" FontSize="10" VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding RevenuePerSecondText}" FontSize="11" 
+                                                <TextBlock Text="{Binding RevenuePerSecondText}" FontSize="11"
                                                            Foreground="#80CBC4" VerticalAlignment="Center" />
                                             </StackPanel>
 
-                                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                                         Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
                                                 <TextBlock Text="🛒" FontSize="10" VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding AffordableCountText}" FontSize="11" 
+                                                <TextBlock Text="{Binding AffordableCountText}" FontSize="11"
                                                            Foreground="#CE93D8" VerticalAlignment="Center" />
                                             </StackPanel>
 
-                                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" 
+                                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                                                         Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
                                                 <TextBlock Text="⭐" FontSize="10" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding MilestoneMultiplierText}" FontSize="11"
                                                            Foreground="#FFD740" VerticalAlignment="Center" />
-                                                <TextBlock Text="multiplier" FontSize="10" 
+                                                <TextBlock Text="multiplier" FontSize="10"
                                                            Foreground="#666" VerticalAlignment="Center" />
                                             </StackPanel>
 
-                                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" 
+                                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                                                         Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
                                                         IsVisible="{Binding HasNextMilestone}">
                                                 <TextBlock Text="🎯" FontSize="10" VerticalAlignment="Center" />
@@ -187,14 +187,14 @@
                                                 Opacity="{Binding CanAfford, Converter={StaticResource BoolToOpacity}}">
                                             <TextBlock Text="BUY" />
                                         </Button>
-                                        
+
                                         <Button Grid.Column="2" Command="{Binding ClickBusinessCommand}"
                                                 Background="#2196F3" Foreground="White"
                                                 FontWeight="Bold" FontSize="13"
                                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                                 Padding="0,8" CornerRadius="6"
                                                 Content="▶ RUN" />
-                                        
+
                                         <Button Grid.Column="4" Command="{Binding BuyManagerCommand}"
                                                 IsVisible="{Binding !HasManager}"
                                                 Background="#FF6F00" Foreground="White"
@@ -271,7 +271,7 @@
                                  Foreground="#E0E0E0"
                                  CornerRadius="8"
                                  Padding="12"
-                                 Watermark="Paste your export string here..." />
+                                 PlaceholderText="Paste your export string here..." />
                     </DockPanel>
                 </Border>
             </Panel>
