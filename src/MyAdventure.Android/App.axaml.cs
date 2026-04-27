@@ -37,8 +37,25 @@ public partial class App : Avalonia.Application
 
             await DependencyInjection.InitializeDatabaseAsync(Services);
 
-            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+            // Avalonia 12: Android uses IActivityApplicationLifetime with a
+            // MainViewFactory (a Func<Control>) instead of ISingleViewApplicationLifetime
+            // with a single MainView reference. Android can recreate the activity
+            // multiple times during the app's lifetime — the factory is invoked
+            // for each fresh activity, producing a fresh view + fresh ViewModel
+            // that re-loads from the database.
+            if (ApplicationLifetime is IActivityApplicationLifetime activityLifetime)
             {
+                activityLifetime.MainViewFactory = () =>
+                {
+                    var vm = Services!.GetRequiredService<GameViewModel>();
+                    return new MainView { DataContext = vm };
+                };
+            }
+            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+            {
+                // Fallback for any non-Android single-view platforms (browser, iOS)
+                // in case this same App class is ever reused there. Android will
+                // never hit this branch in v12.
                 var vm = Services.GetRequiredService<GameViewModel>();
                 singleView.MainView = new MainView { DataContext = vm };
             }

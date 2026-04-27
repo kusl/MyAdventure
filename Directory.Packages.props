@@ -3,13 +3,25 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
-    <!-- Version variables for consolidated management.
-         NOTE: Avalonia 12.x is available but Avalonia.Diagnostics has not yet
-         caught up (latest is 11.3.14), so we hold the whole stack on the
-         11.3.x train until the ecosystem is aligned. Bumping Avalonia to
-         12.x is a separate PR — it's a major version with breaking changes
-         and warrants its own focused review. -->
-    <AvaloniaVersion>11.3.14</AvaloniaVersion>
+    <!-- Avalonia 12 is the current stable major. Notable migration notes
+         that are baked into this codebase:
+           * Avalonia.Diagnostics has been removed from the framework. The
+             official replacement, AvaloniaUI.DiagnosticsSupport, only opens
+             the Dev Tools UI when paired with an Avalonia Plus / Pro
+             subscription (the Community tier is free for non-commercial use
+             only). This project's policy is "no NuGet that requires payment
+             for any use, ever" — free-for-non-commercial does not qualify —
+             so the package is intentionally not referenced anywhere. Use the
+             FOSS VS Code or Rider extensions for design-time previewing.
+           * On Android, AvaloniaMainActivity<TApp> has been split: the
+             activity now derives from the non-generic AvaloniaMainActivity,
+             and a new [Application] AvaloniaAndroidApplication<App> handles
+             AppBuilder customization. This is reflected in
+             src/MyAdventure.Android/{MainActivity.cs,AndroidApp.cs}.
+           * Android lifetime is now IActivityApplicationLifetime with a
+             MainViewFactory (Func<Control>) instead of ISingleViewApplicationLifetime
+             with a single MainView reference. -->
+    <AvaloniaVersion>12.0.1</AvaloniaVersion>
     <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
     <EfCoreVersion>10.0.7</EfCoreVersion>
     <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
@@ -24,7 +36,6 @@
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />

@@ -18,7 +18,13 @@
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
-    <PackageReference Include="Avalonia.Diagnostics" Condition="'$(Configuration)' == 'Debug'" />
+    <!-- Avalonia.Diagnostics removed in Avalonia 12. The replacement
+         (AvaloniaUI.DiagnosticsSupport) is gated on a paid Avalonia Plus / Pro
+         subscription to actually open the Dev Tools UI. The Community tier is
+         free for non-commercial use only — and this project's policy is to
+         avoid any package whose use is conditional on payment, full stop.
+         For design-time previewing, use the FOSS Avalonia VS Code or Rider
+         extensions, both of which still work without a subscription. -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 </Project>

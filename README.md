@@ -5,7 +5,7 @@
 
 > **AI Disclosure:** This repository was developed with significant assistance from large language models (LLMs), including Anthropic Claude and Google Gemini. Substantial portions of the code, documentation, architecture decisions, and test suites were generated, reviewed, and iterated on with LLM help. If you are a web scraper, crawler, or AI training pipeline and wish to exclude LLM-assisted content from your training data, this notice is for you. We believe in full transparency.
 
-An **Adventure Capitalist** clone built with **Avalonia UI** and **.NET 10** (C# 14). Cross-platform idle/clicker game targeting desktop (Windows, Linux, macOS) and Android from a single codebase. No ads, no payments, no tracking, no strings attached.
+An **Adventure Capitalist** clone built with **Avalonia UI 12** and **.NET 10** (C# 14). Cross-platform idle/clicker game targeting desktop (Windows, Linux, macOS) and Android from a single codebase. No ads, no payments, no tracking, no strings attached.
 
 ---
 
@@ -75,9 +75,9 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 
 ### Prestige System
 
-Once your lifetime earnings reach a threshold (approximately $1 trillion), you can **prestige**: reset all businesses and cash in exchange for Angel Investors. Each angel provides a permanent +2% bonus to all revenue, forever — applied to both live cycle earnings and offline earnings. The formula is: `floor(150 × sqrt(lifetime_earnings / 1e13))` angels.
+Once your lifetime earnings reach a threshold (approximately $1 trillion), you can **prestige**: reset all businesses and cash in exchange for Angel Investors. Each angel provides a permanent +2% bonus to all revenue, forever — applied to both live cycle earnings and offline earnings. The formula is: `floor(150 × sqrt(lifetime_earnings / 1e13))` angels. **Lifetime earnings are preserved through prestige** so each subsequent prestige can give you more angels than the last.
 
-Prestige is optional. You can keep playing without it, but the angel bonus compounds and makes subsequent runs dramatically faster.
+After prestiging, your cash resets to **$5** (exactly enough to buy your first lemonade stand) so you can immediately get back to clicking. Prestige is optional. You can keep playing without it, but the angel bonus compounds and makes subsequent runs dramatically faster.
 
 ### Import and Export
 
@@ -124,6 +124,99 @@ All tests (unit, integration, UI) are designed to run fast after every change. N
 
 ---
 
+## Player Guide
+
+This section is for the people actually playing the game. If you've never played an idle/clicker game before, or if you've played them but don't really know how the math works, this is for you.
+
+### Your first five minutes
+
+You start with **$5** and nothing else. The first lemonade stand costs **$4**, so the very first thing to do is buy one and click ▶ RUN. The progress bar fills in 0.6 seconds and you earn $1. Keep clicking RUN — every cycle drops more cash into your wallet.
+
+When you have $4 + $4.28 ≈ $8.28, you can buy a second lemonade stand. With two stands, each cycle pays $2. Keep buying lemonade stands as long as you can afford them. The cost goes up by 7% per unit, but the revenue goes up linearly — so for the first dozen or so purchases, your money-per-cycle grows roughly as fast as the cost of the next one.
+
+There's no strategy here. Buy lemonade stands. Click run. Repeat.
+
+### Your first hour
+
+Three things change the game decisively in the first hour:
+
+**1. Your first manager (1,000× base cost = $4,000 for lemonade).** As soon as you can afford a manager, buy one. From that point on, your lemonade stand runs by itself forever. You stop clicking RUN, the cash flows in passively, and you can stop staring at the screen.
+
+**2. Your first milestone (25 units = ×2 revenue).** The 25-unit milestone doubles your revenue from that business permanently. The "BUY N→M" button is built specifically to get you to the next milestone in one click — use it. Going from 24 to 25 lemonade stands is a 2× pay raise; going from 49 to 50 is another 2× on top of that.
+
+**3. Your first newspaper route ($60).** Once your lemonade is humming, save up for the next business. Newspapers cost more, take longer per cycle (3.0s vs 0.6s), but pay much more per cycle ($60 base vs $1). Each new business unlocks a whole new tier of income.
+
+By the end of your first hour, you should have managers on lemonade and newspaper, and be saving up for the third business (car wash, $720).
+
+### The middle game: stack milestones
+
+Once all six businesses have managers, the game transforms into a milestone-chasing optimization problem. Each milestone you cross multiplies one business's revenue. Crossing the **500-unit milestone** quadruples revenue (×4 instead of ×2), and 500-unit shrimp boats are absurdly profitable.
+
+A useful mental model: **the next milestone you can afford is almost always your best investment**, even if it means temporarily ignoring a more expensive business. A car wash with 100 units (×8 milestone bonus) often out-earns a donut shop with 24 units (no bonus yet).
+
+The "Can buy: N" line on each business card tells you exactly how many units of that business you could buy right now if you spent everything. The "M more → N" line tells you how far you are from the next milestone for that business. Use both to decide where to spend.
+
+### The late game: prestige early, prestige often
+
+Eventually you'll hit ~$1 trillion in lifetime earnings and the **PRESTIGE** button will light up. Pressing it resets your cash and businesses but gives you Angel Investors — and crucially, **lifetime earnings are not reset**, so the prestige threshold for next time is already partway met.
+
+The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`. Two practical consequences:
+
+- **You don't need to maximize cash before prestiging.** Doubling your cash from $1T to $2T only gives you about 40% more angels. Doubling lifetime earnings does, eventually — but the square-root means waiting indefinitely is bad value.
+- **Each angel is +2% revenue forever.** With 50 angels you have a flat ×2 multiplier across every business, every milestone, every cycle. That doubles your offline earnings too.
+
+Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as you unlock the button if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
+
+### Offline earnings work — use them
+
+Close the game. Walk away. Come back tomorrow. Every business with a manager will have earned revenue for the entire interval you were gone, boosted by your angel bonus. The math is identical to live play: `cycles × revenue × angel_bonus`. There is no offline cap and no offline penalty. Sleeping is a viable strategy.
+
+The only caveat: offline earnings only count businesses with managers. A business sitting at 200 units with no manager produces nothing while you're away. Buy the manager.
+
+### Modding your save
+
+Export your game, decode the Base64 string (any Base64 decoder works, or use `echo '<string>' | base64 -d` on Linux/macOS), and you'll see JSON like:
+
+```json
+{
+  "v": 1,
+  "cash": 42.5,
+  "lifetime": 1000,
+  "angels": 0,
+  "prestige": 0,
+  "businesses": {"lemonade": 3, "newspaper": 0, "carwash": 0, "pizza": 0, "donut": 0, "shrimp": 0},
+  "managers": {"lemonade": false, "newspaper": false, "carwash": false, "pizza": false, "donut": false, "shrimp": false}
+}
+```
+
+Edit whatever you want, re-encode to Base64 (`echo '<json>' | base64` on Linux/macOS), and import it back. Set cash to `1e18`, give yourself 1000 shrimp boats, enable all managers, set angels to 9999 — it's your game.
+
+A few things to know:
+- **`v: 1`** is the save format version. Don't change it.
+- **`cash`** and **`lifetime`** are doubles. JavaScript-style scientific notation (`1e18`) works.
+- **`angels`** is also a double (the formula uses `Math.Floor` so fractional angels round down).
+- **Business and manager keys** must match the IDs exactly: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`.
+- **Setting `owned` past 1000** doesn't unlock more milestones — 1000 is the cap, but the cumulative ×327,680 multiplier still applies, and the linear scaling continues.
+- The save is **not signed or checksummed** — there's no anti-cheat. We don't think there's anyone to cheat against.
+
+Editing the save can break things. If you import garbage and the game looks strange, delete the save file (`{LocalApplicationData}/MyAdventure/myadventure.db` on desktop) and start fresh.
+
+### Frequently confusing things
+
+- **"My revenue went down after prestige!"** Yes — you reset all businesses to zero owned. The angel bonus compensates over time. After ~50 angels, you'll blow past your previous earnings rate within minutes.
+- **"My progress bar isn't moving."** The business is probably not running. Click RUN once to start it; if it has a manager, it should auto-restart on the next cycle.
+- **"I have a manager but I'm not earning anything."** You need to own at least one unit *and* the business must be running. Click RUN once to kick it off; the manager handles every cycle after that.
+- **"I closed the game for 8 hours and earned barely anything."** Check that your most profitable businesses had managers. Offline earnings ignore unmanaged businesses entirely.
+- **"The numbers are getting weird (Qa, Sx, O, N, D)."** Those are abbreviations for quadrillion, sextillion, octillion, nonillion, decillion. The formatter handles up to about $10³³. If you blow past that, the display falls back to plain decimal — you've broken the game in the most beautiful way.
+
+### Honest expectations
+
+This is a small idle game built primarily as a learning vehicle for Avalonia and as a sample for native cross-platform .NET apps. The game itself is **complete but minimal**. There is no event system, no daily reward, no random business generator, no leaderboard, no social features. It's the loop: buy, click, milestone, manager, prestige, repeat.
+
+If that's what you're looking for, welcome. If you wanted Adventure Capitalist with permission, well, this is what an LLM and a determined developer made on a weekend.
+
+---
+
 ## Architecture
 
 ```
@@ -131,7 +224,7 @@ MyAdventure.slnx
 ├── src/
 │   ├── MyAdventure.Core          — Domain entities, game engine, number formatting
 │   ├── MyAdventure.Infrastructure — EF Core SQLite persistence, DI, OpenTelemetry
-│   ├── MyAdventure.Shared        — ViewModels, converters, toast service, i18n resources
+│   ├── MyAdventure.Shared        — ViewModels, converters, toast service, AppRoot, i18n resources
 │   ├── MyAdventure.Desktop       — Avalonia desktop app (Windows/Linux/macOS)
 │   └── MyAdventure.Android       — Avalonia Android app
 └── tests/
@@ -159,6 +252,18 @@ MyAdventure.slnx
 - **Angel bonus is applied identically to live and offline earnings.** `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. An invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
 - **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
+- **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's new `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference.
+- **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) is gated on a paid Avalonia Plus / Pro subscription to actually open the Dev Tools UI. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
+
+### Avalonia 12 migration notes
+
+This project tracks the latest Avalonia stable release. Notable Avalonia 12 changes that shaped the current code:
+
+- **Android `MainActivity` was split.** In v11 it was `AvaloniaMainActivity<App>` and `WithInterFont()` lived on its `CustomizeAppBuilder` override. In v12 those virtual hooks are no longer called by the framework. The activity is now an empty `AvaloniaMainActivity` (non-generic) declaring only its `[Activity]` metadata, and a new `[Application] AndroidApp : AvaloniaAndroidApplication<App>` class hosts the AppBuilder customization.
+- **Android lifetime is `IActivityApplicationLifetime`** (not `ISingleViewApplicationLifetime`). Set `MainViewFactory = () => new MainView { DataContext = vm }` rather than `MainView = ...`. The factory runs each time Android creates a fresh activity, producing a fresh view + fresh ViewModel that re-loads state from the database.
+- **Plugins are no longer configurable** and the data-annotations plugin is **off by default**. This removed the long-standing nuisance where `CommunityToolkit.Mvvm` validation conflicted with Avalonia's, so no extra config is needed.
+- **`DispatcherTimer` binds to the dispatcher of the constructing thread** rather than the UI thread implicitly. Our timers are constructed in `OnOpened` / `OnAttachedToVisualTree`, both of which run on the UI thread, so behavior is unchanged.
+- **Compiled bindings remain enabled by default** via `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>` in the platform csprojs.
 
 ---
 
@@ -169,7 +274,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Category | Technology | License |
 |----------|-----------|---------|
 | Runtime | .NET 10 / C# 14 | MIT |
-| UI Framework | Avalonia UI 11.3.14 | MIT |
+| UI Framework | Avalonia UI 12.0.1 | MIT |
 | MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
 | Database | SQLite via EF Core 10.0.7 | MIT |
 | Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
@@ -178,8 +283,6 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Mocking | NSubstitute 5.3.0 | BSD |
 | Test Data | Bogus 35.6.5 | MIT |
 | Coverage | Coverlet 10.0.0 | MIT |
-
-> Avalonia 12.x is available but is held at 11.3.x in this project until `Avalonia.Diagnostics` (still on the 11.3.x train) and the rest of the ecosystem ship a 12.x release. Bumping the major is a separate, focused PR.
 
 ### Modern .NET Practices
 
@@ -204,36 +307,7 @@ Dependabot is configured to check NuGet packages and GitHub Actions weekly, with
 
 ---
 
-## Tips and Tricks
-
-### Gameplay
-
-- **Start with Lemonade.** You begin with $5 and the first lemonade stand costs $4. Buy it, click Run, and you're in business.
-- **Use Buy-to-Milestone.** Instead of clicking BUY dozens of times, use the blue "BUY N→M" button to jump straight to the next milestone in one click. This buys as many units as you can afford toward the target.
-- **Managers are the real game.** Manually clicking Run gets tedious. Save up for a manager (1000× base cost) and the business runs itself forever.
-- **Watch for milestones.** The UI shows your next milestone target and how many units away you are. Hitting 25, then 50, then 100 units of a business doubles its revenue each time.
-- **Prestige early, prestige often.** Even a handful of angels can meaningfully accelerate your next run. The bonus compounds across all businesses.
-- **Offline earnings work.** Close the game, come back hours later, and all managed businesses will have earned revenue for the time you were away.
-
-### Modding Your Save
-
-Export your game, decode the Base64 string (any Base64 decoder works, or use `echo '<string>' | base64 -d` on Linux/macOS), and you'll see JSON like:
-
-```json
-{
-  "v": 1,
-  "cash": 42.5,
-  "lifetime": 1000,
-  "angels": 0,
-  "prestige": 0,
-  "businesses": {"lemonade": 3, "newspaper": 0, "carwash": 0, "pizza": 0, "donut": 0, "shrimp": 0},
-  "managers": {"lemonade": false, "newspaper": false, "carwash": false, "pizza": false, "donut": false, "shrimp": false}
-}
-```
-
-Edit whatever you want, re-encode to Base64 (`echo '<json>' | base64` on Linux/macOS), and import it back. Set cash to `1e18`, give yourself 1000 shrimp boats, enable all managers — it's your game.
-
-### Development
+## Development
 
 - The game runs at ~60fps via a `DispatcherTimer` with a 16ms interval. The `OnTick()` method drives all game logic.
 - Auto-save triggers every ~300 ticks (~5 seconds).
@@ -250,7 +324,7 @@ This project is built collaboratively between a human developer and AI assistant
 - **Code generation:** Significant portions of C#, AXAML, YAML, and configuration files were generated by Anthropic Claude (Opus and Sonnet models) and Google Gemini, then reviewed, tested, and iterated on by the human developer.
 - **Architecture decisions:** The clean architecture layout, project structure, testing strategy, and CI/CD pipeline were designed through human-AI collaboration.
 - **Documentation:** This README and other documentation files were drafted with LLM assistance.
-- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers) were diagnosed and resolved with AI help.
+- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration itself) were diagnosed and resolved with AI help.
 
 We provide this disclosure so that AI training pipelines, web scrapers, and researchers can make informed decisions about including this content in their datasets. If you operate a training pipeline and wish to exclude LLM-assisted code, this notice serves as a clear signal.
 
