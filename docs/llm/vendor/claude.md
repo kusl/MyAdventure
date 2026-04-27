@@ -3343,3 +3343,270 @@ Audit other multipliers for the same shape: anywhere a multiplier defaults to 1.
 
 The display bug (Bug 2) is a different kind of miss — it's that the model and the view exposed two different "revenue" concepts (raw vs. effective) and the view bound the wrong one. The structural fix there is the same shape: have one place that produces "the number to show the user" and bind to that, rather than letting each view do its own math. The Refresh(cash, angelBonus) signature is now that chokepoint for the view layer.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+00
+39
+
+Please read the whole dump, thoroughly plan, and execute an upgrade to the latest versions of avalonia available 
+
+roject `MyAdventure.Android` has the following updates to its packages
+   [net10.0-android36.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > Avalonia.Android            11.3.14     11.3.14    12.0.1
+   > Avalonia.Fonts.Inter        11.3.14     11.3.14    12.0.1
+   > Avalonia.Themes.Fluent      11.3.14     11.3.14    12.0.1
+
+The given project `MyAdventure.Core` has no updates given the current sources.
+Project `MyAdventure.Desktop` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > Avalonia.Desktop            11.3.14     11.3.14    12.0.1
+   > Avalonia.Fonts.Inter        11.3.14     11.3.14    12.0.1
+   > Avalonia.Themes.Fluent      11.3.14     11.3.14    12.0.1
+
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > Avalonia                    11.3.14     11.3.14    12.0.1
+   > Avalonia.Themes.Fluent      11.3.14     11.3.14    12.0.1
+
+here is the current directory packages props 
+
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <!-- Version variables for consolidated management.
+         NOTE: Avalonia 12.x is available but Avalonia.Diagnostics has not yet
+         caught up (latest is 11.3.14), so we hold the whole stack on the
+         11.3.x train until the ecosystem is aligned. Bumping Avalonia to
+         12.x is a separate PR — it's a major version with breaking changes
+         and warrants its own focused review. -->
+    <AvaloniaVersion>11.3.14</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <!-- Instrumentation.Runtime versions independently of the rest of OTel -->
+    <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
+    <XunitVersion>2.9.3</XunitVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia - MIT License">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM - MIT License">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="EntityFramework - MIT License">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Configuration and DI - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+  </ItemGroup>
+</Project>
+
+```
+
+Remember to return full files for all files that need to change. 
+Also remember to update the README.md 
+make sure the game mechanics described in readme are fully up to date 
+also be sure to add comprehensive guidelines to players.
+
+Opus 4.7 Adaptive: 
