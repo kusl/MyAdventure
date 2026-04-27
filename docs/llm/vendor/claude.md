@@ -3611,45 +3611,23 @@ also be sure to add comprehensive guidelines to players.
 
 Opus 4.7 Adaptive: 
 
-The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary: Cataloging Avalonia 12 breaking changes and package replacements
-The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary: Cataloging Avalonia 12 breaking changes and package replacements
-Let me search the web for Avalonia 12 release information and breaking changes before continuing.
+The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary:
 
+Cataloging Avalonia 12 breaking changes and package replacementsThe user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary:
 
-I cannot provide a summary because the user prompt is empty
-I cannot provide a summary because the user prompt is empty
-Let me dig deeper into a critical concern: Avalonia.Diagnostics has been removed in v12. The user requires all packages to be free (not even "free for non-commercial").
+Cataloging Avalonia 12 breaking changes and package replacementsLet me search the web for Avalonia 12 release information and breaking changes before continuing.I cannot provide a summary because the user prompt is emptyI cannot provide a summary because the user prompt is emptyLet me dig deeper into a critical concern: Avalonia.Diagnostics has been removed in v12. The user requires all packages to be free (not even "free for non-commercial").The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary:
 
+Deciphering Android lifecycle interface replacements and nuancesThe user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary:
 
-The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary: Deciphering Android lifecycle interface replacements and nuances
-The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, here is the summary: Deciphering Android lifecycle interface replacements and nuances
-Let me search more specifically about the Android migration path for AvaloniaMainActivity in v12.
+Deciphering Android lifecycle interface replacements and nuancesLet me search more specifically about the Android migration path for AvaloniaMainActivity in v12.The user prompt is empty, so I cannot determine the primary language. However, based on the thinking block which is in English, here is the summary:
 
+Investigated Android migration complexities and API replacementsThe user prompt is empty, so I cannot determine the primary language. However, based on the thinking block which is in English, here is the summary:
 
-The user prompt is empty, so I cannot determine the primary language. However, based on the thinking block which is in English, here is the summary: Investigated Android migration complexities and API replacements
-The user prompt is empty, so I cannot determine the primary language. However, based on the thinking block which is in English, here is the summary: Investigated Android migration complexities and API replacements
-Let me check NuGet versions for the related packages.
+Investigated Android migration complexities and API replacementsLet me check NuGet versions for the related packages.I cannot provide a summary because the user prompt is emptyI cannot provide a summary because the user prompt is emptyLet me continue reading the dump file to understand the rest of the codebase.I cannot provide a summary because the user prompt is emptyI cannot provide a summary because the user prompt is emptyLet me search for more details on IActivityApplicationLifetime to plan the clipboard migration carefully.I cannot provide a summary because the user prompt is emptyI cannot provide a summary because the user prompt is emptyLet me search for AvaloniaAndroidApplication CustomizeAppBuilder details.The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, I'll provide a summary in English:
 
+Verifying configuration updates against requirementsThe user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, I'll provide a summary in English:
 
-I cannot provide a summary because the user prompt is empty
-I cannot provide a summary because the user prompt is empty
-Let me continue reading the dump file to understand the rest of the codebase.
-
-
-I cannot provide a summary because the user prompt is empty
-I cannot provide a summary because the user prompt is empty
-Let me search for more details on IActivityApplicationLifetime to plan the clipboard migration carefully.
-
-
-I cannot provide a summary because the user prompt is empty
-I cannot provide a summary because the user prompt is empty
-Let me search for AvaloniaAndroidApplication CustomizeAppBuilder details.
-
-
-Architected comprehensive Avalonia 12 migration strategy with implementation plan
-Architected comprehensive Avalonia 12 migration strategy with implementation plan
-I have all the information I need. Let me now plan the migration and start implementing.
-
+Verifying configuration updates against requirementsI have all the information I need. Let me now plan the migration and start implementing.
 Migration Plan: Avalonia 11.3.14 → 12.0.1
 Breaking changes that affect this codebase:
 
@@ -3659,14 +3637,16 @@ Android ISingleViewApplicationLifetime → IActivityApplicationLifetime. Old: si
 Clipboard via the lifetime breaks. IActivityApplicationLifetime only exposes a factory, not a live view. The fix: register the active visual via a static AppRoot.CurrentVisual from OnAttachedToVisualTree/OnOpened, and read from TopLevel.GetTopLevel(AppRoot.CurrentVisual)?.Clipboard. This unifies desktop and mobile cleanly — no per-platform branching in the ViewModel.
 Plugins no longer configurable + data-annotations plugin disabled by default. Net positive: no more conflict between Avalonia validation and CommunityToolkit.Mvvm. Nothing to do — code already uses [ObservableProperty].
 DispatcherTimer uses current dispatcher at construction time. Our timers are constructed inside OnOpened/OnAttachedToVisualTree which run on the UI thread, so no change needed.
+
 Scope discipline: the user asked for Avalonia upgrade specifically — I'm not touching OpenTelemetry / EF Core / MS.Extensions / xUnit versions. That's a separate PR.
+Let me start implementing.Create working directory structureCreate working directory structureNow let me create each file. Starting with the package management:Created 8 filesCreated 8 filesNow the GameViewModel - simplified clipboard access using AppRoot:Updated GameViewModel - clipboard access via AppRoot, no more lifetime branchingUpdated GameViewModel - clipboard access via AppRoot, no more lifetime branchingNow the README. I want to keep the game mechanics docs accurate, remove the "held back" caveat, and significantly expand the player guidelines section as requested.Verified Avalonia 12 upgrade implementation across multiple project filesVerified Avalonia 12 upgrade implementation across multiple project filesLet me self-review the implementation by examining each file once more and verifying consistency.Verified Avalonia 12 migration completeness across all project filesVerified Avalonia 12 migration completeness across all project filesAll 10 files in place. Let me do a final consistency check on the full flow before delivering.The user prompt is empty, so there is no primary language specified. However, I'll provide a summary of the thinking block in English:
 
-Let me start implementing.
+Verified cross-references and finalized code organization systematicallyThe user prompt is empty, so there is no primary language specified. However, I'll provide a summary of the thinking block in English:
 
-
-Create working directory structure
-Create working directory structure
-Now let me create each file. Starting with the package management:
-
-
-Updated Android App.axaml.cs using IActivityApplicationLifetime / MainViewFactory
+Verified cross-references and finalized code organization systematicallyEverything is consistent. Let me copy the files to the output directory now.Copy all files to outputs directoryCopy all files to outputs directoryNow let me update the project memory to reflect the new Avalonia 12 reality.Used 4 toolsUsed 4 toolsNow let me present the deliverables.Presented 10 filesPresented 10 filesSummary of what changed
+10 files — full contents above, ready to drop into the repo at the same paths.
+The migration in one paragraph: Avalonia 11.3.14 → 12.0.1 across the whole stack. Android went from AvaloniaMainActivity<App> to a non-generic AvaloniaMainActivity plus a new [Application] AndroidApp : AvaloniaAndroidApplication<App> (because v12 stopped invoking the activity's CustomizeAppBuilder). Android's lifetime cast switched from ISingleViewApplicationLifetime.MainView = ... to IActivityApplicationLifetime.MainViewFactory = () => ... per v12's new activity-recreation model. To keep clipboard access working without per-platform branching, I introduced a tiny AppRoot.CurrentVisual that the active view registers from OnOpened/OnAttachedToVisualTree — GameViewModel.GetClipboard() is now four lines and uniform across desktop, Android, iOS, and browser. Avalonia.Diagnostics was deleted entirely (not replaced) because the v12 replacement requires a paid subscription to actually use, and your policy excludes that even at the free-for-non-commercial tier — comments in both Directory.Packages.props and the Desktop csproj record this so future maintainers don't accidentally re-add it.
+No new files anywhere except the two genuinely new ones (AndroidApp.cs, AppRoot.cs). No build-android.sh, no separate solution, no platform-specific test split, no warning-suppression CSPROJ flags hiding v12 differences. The build is the build.
+Tests are unaffected. I checked every test file — none touch the Avalonia API surfaces that changed in v12 (lifetime types, clipboard mechanics, Android activity model). All 40+ existing tests should pass on first dotnet test after restore.
+The README's player guide section was rewritten into a proper player guide: first five minutes, first hour, mid-game milestone-stacking, late-game prestige cadence with the actual square-root math, offline earnings caveats, save-modding caveats, an FAQ for the things that genuinely confuse new players, and an "honest expectations" closer. The technology-stack table reflects 12.0.1 and the held-back-at-11 caveat is gone.
+One thing you may want to bump yourself but I left alone: VersionPrefix in Directory.Build.props. This is a major dep upgrade and 1.0.0 → 1.1.0 would be defensible, but versioning is a project-call so I didn't presume. Everything else is in.
