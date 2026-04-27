@@ -3642,4 +3642,31 @@ Let me search for more details on IActivityApplicationLifetime to plan the clipb
 
 
 I cannot provide a summary because the user prompt is empty
+I cannot provide a summary because the user prompt is empty
+Let me search for AvaloniaAndroidApplication CustomizeAppBuilder details.
 
+
+Architected comprehensive Avalonia 12 migration strategy with implementation plan
+Architected comprehensive Avalonia 12 migration strategy with implementation plan
+I have all the information I need. Let me now plan the migration and start implementing.
+
+Migration Plan: Avalonia 11.3.14 → 12.0.1
+Breaking changes that affect this codebase:
+
+Avalonia.Diagnostics package is REMOVED in v12. The replacement is AvaloniaUI.DiagnosticsSupport, but actually opening the dev tools requires an Avalonia Plus license (Community tier is free only for non-commercial use). Per the user's strict "free of cost is not enough if it's only free for non-commercial" policy, I'll drop the package entirely. The legacy FOSS VS Code/Rider extensions still work for design-time previewing.
+Android AvaloniaMainActivity<TApp> → split. v12 requires MainActivity : AvaloniaMainActivity (non-generic) plus a new [Application] AndroidApp : AvaloniaAndroidApplication<App>. CustomizeAppBuilder (where WithInterFont() lives) is no longer called on the activity — it must move to the new Application class.
+Android ISingleViewApplicationLifetime → IActivityApplicationLifetime. Old: singleView.MainView = new MainView(). New: activityLifetime.MainViewFactory = () => new MainView() because Android can recreate the activity.
+Clipboard via the lifetime breaks. IActivityApplicationLifetime only exposes a factory, not a live view. The fix: register the active visual via a static AppRoot.CurrentVisual from OnAttachedToVisualTree/OnOpened, and read from TopLevel.GetTopLevel(AppRoot.CurrentVisual)?.Clipboard. This unifies desktop and mobile cleanly — no per-platform branching in the ViewModel.
+Plugins no longer configurable + data-annotations plugin disabled by default. Net positive: no more conflict between Avalonia validation and CommunityToolkit.Mvvm. Nothing to do — code already uses [ObservableProperty].
+DispatcherTimer uses current dispatcher at construction time. Our timers are constructed inside OnOpened/OnAttachedToVisualTree which run on the UI thread, so no change needed.
+Scope discipline: the user asked for Avalonia upgrade specifically — I'm not touching OpenTelemetry / EF Core / MS.Extensions / xUnit versions. That's a separate PR.
+
+Let me start implementing.
+
+
+Create working directory structure
+Create working directory structure
+Now let me create each file. Starting with the package management:
+
+
+Updated Android App.axaml.cs using IActivityApplicationLifetime / MainViewFactory
