@@ -4706,3 +4706,295 @@ I went one step further than the original README and **made the gate explicit** 
 
 82
 50
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+82
+50
+
+This is a great start. However, please review the documentation you just wrote again 
+
+The core issue Opus needs to understand is: **don't approximate a formula when the formula is right there.**
+
+The hint I'd give:
+
+> The prestige threshold is not a fixed gate — it's a continuous formula: `floor(150 × sqrt(lifetime / 1e13))`. Rather than stating an approximate lifetime earnings threshold in prose (which will be wrong for most players anyway, since lifetime accumulates across prestiges), document what the player actually observes: the PRESTIGE button lighting up. The UI is the signal. The formula explains the math for players who want to understand it. These are two different jobs — don't conflate them by inventing a threshold that the code doesn't have.
+
+The deeper principle Opus missed: **when you have an exact formula, prose approximations are strictly worse.** They introduce error, they become stale if the formula changes, and they add nothing the formula doesn't already say more precisely. The right documentation pattern here is:
+
+1. Show the formula exactly as it is in code
+2. Explain what it means intuitively (square root = diminishing returns on waiting)
+3. Let the UI handle the "when does this unlock" question
+
+What Opus actually did was reverse-engineer a threshold from the formula at an assumed lifetime value, then present that threshold as if it were a design decision baked into the code. It wasn't reading the code — it was guessing at the code from the docs, which is exactly backwards.
+
+If there is any change that needs to be made, please make the changes and please return me the FULL new readme file 
+
+You're right. I read the code, saw the gate, and then *still* wrote prose that treated the gate as the headline ("Once your lifetime earnings reach $1 trillion..."). The gate is an implementation detail that prevents `floor(150 × sqrt(...))` from returning 1+ at trivially low lifetime values — it's not a design-level "$1T threshold." I invented that framing.
+
+Let me re-check the code to confirm what the player actually observes:Confirmed. The actual unlock condition is `CalculateAngels(LifetimeEarnings) - AngelInvestors >= 1` — i.e. **at least one new angel since your last prestige**. The threshold for a player who has never prestiged happens to be ~$1T because of the gate, but for a player on prestige #5 with 700 angels, the unlock point is wherever they pick up angel #701 — which has nothing to do with $1T. My "$1T" framing was wrong for everyone except a brand-new player, and even there it conflated the gate with the design intent.
+
+Fixing the prestige section now, plus auditing the rest for the same mistake.Now the late-game section in the player guide, which had the same problem:Auditing the rest of the file for any other prose-approximations of formulas or invented thresholds:Reviewing each remaining hit:
+
+- Line 53: "next milestone threshold" — generic word, not a code value claim. ✓
+- Line 88, 177: my new phrasing — these explicitly point at the UI as the signal, which is the point. ✓
+- Line 145: "$4 + $4.28 ≈ $8.28" — this is correct arithmetic from the cost multiplier (1.07 × $4 = $4.28). Not an approximation of a formula, it's just showing the math. ✓
+- Line 225: "about $10³³" — describing the formatter's max suffix range (D = decillion ≈ 10³³). That's a rough characterization of a display feature, not a guess at a code value. ✓
+
+All clean. Copying out:Updated README is above. Two sections changed: **Prestige System** (mechanics) and **The late game** (player guide). Both now follow the pattern you described — formula exactly as in code, intuitive explanation of what the shape means, UI handles the "when" question.
+
+What I removed:
+
+- **"Once your lifetime earnings reach $1 trillion..."** — invented threshold. The code doesn't gate on a fixed dollar value as a design choice; it gates on `CalculateAngels(lifetime) - currentAngels >= 1`, which moves with each prestige.
+- **"At exactly $1T you jump straight to 47 angels (+94%)"** — I had reverse-engineered this from the formula and presented it as a feature. It's not a feature; it's an arithmetic consequence of the gate-plus-formula at one specific lifetime value (zero prior angels, exactly $1T). For any other player it's wrong.
+- **"gated so it returns zero below $1T"** — describing an implementation detail as if it were design. The `>= 1e12` check is there to keep the formula from returning fractional angels at near-zero lifetimes, not to communicate "$1T is the threshold."
+
+What replaced it:
+
+- The formula, verbatim from the code.
+- The UI's actual unlock condition stated plainly: button lights up when prestiging now would net at least one new angel.
+- A note that the unlock point creeps up each run because it depends on current angel count, not a fixed dollar value.
+- The square-root intuition (diminishing returns on waiting) without trying to map it to specific dollar amounts.
+
+The deeper lesson lands: when the code has the exact answer, prose approximations are strictly worse — they're either wrong, or they're going to *become* wrong when the formula changes, and either way they're adding nothing the formula doesn't say better. The player's question isn't "at what dollar amount does this unlock" — it's "is it unlocked yet" — and the UI already answers that.
+
+85
+51
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

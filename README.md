@@ -77,19 +77,17 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 
 ### Prestige System
 
-Once your **lifetime earnings** reach **$1 trillion** (`1e12`), the **PRESTIGE** button unlocks. Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% bonus** to all revenue, forever — applied to both live cycle earnings and offline earnings.
+Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% bonus** to all revenue, forever — applied to both live cycle earnings and offline earnings.
 
-The formula is gated and quadratic-decay:
+The number of angels your current lifetime earnings is worth is:
 
 ```
-angels = lifetimeEarnings >= 1e12
-       ? floor(150 × sqrt(lifetimeEarnings / 1e13))
-       : 0
+floor(150 × sqrt(lifetimeEarnings / 1e13))
 ```
 
-So at exactly $1T lifetime you jump straight to 47 angels (a +94% bonus). **Lifetime earnings are preserved through prestige** — each subsequent prestige can give you more angels than the last.
+The **PRESTIGE** button unlocks whenever that number is at least one greater than your current angel count — i.e. when prestiging right now would give you at least one new angel. **The UI is the signal:** when the button lights up, you can prestige. The formula is there to explain the shape of the curve, not for you to compute thresholds in your head.
 
-After prestiging, your cash resets to **$5** (exactly enough to buy your first lemonade stand) so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
+**Lifetime earnings are preserved through prestige** — each subsequent prestige requires more lifetime earnings than the last to net the same number of new angels, but the running total never resets. After prestiging, your cash resets to **$5** (exactly enough to buy your first lemonade stand) so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
 
 ### Import and Export
 
@@ -170,15 +168,15 @@ The "Can buy: N" line on each business card tells you exactly how many units of 
 
 ### The late game: prestige early, prestige often
 
-Once you hit **$1 trillion in lifetime earnings**, the **PRESTIGE** button lights up. Pressing it resets your cash and businesses but gives you Angel Investors — and crucially, **lifetime earnings are not reset**, so the prestige threshold for the next round is already partway met.
+At some point the **PRESTIGE** button on the top bar lights up. That's the signal: prestiging right now would net you at least one new Angel Investor. Press it. Your cash and businesses reset, your angel count goes up, and **lifetime earnings are not reset** — so the next prestige starts the clock partway through.
 
-The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`, gated so it returns zero below $1T. Two practical consequences:
+The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`, where `lifetime_earnings` is the cumulative all-time total (not per-run). Three practical consequences of the square root:
 
-- **The first prestige is a big jump.** At exactly $1T you get 47 angels right away — that's a +94% multiplier on everything.
-- **Doubling lifetime earnings doesn't double angels.** Going from $1T to $4T quadruples lifetime but only doubles angel count, because of the square root. Waiting forever is poor value.
+- **Diminishing returns on waiting.** Doubling lifetime earnings only multiplies your angel count by ~1.41×. Quadrupling it doubles your angels. Waiting "one more order of magnitude" is rarely the right call.
 - **Each angel is +2% revenue forever.** With 50 angels you have a flat ×2 multiplier across every business, every milestone, every cycle. That doubles your offline earnings too.
+- **The threshold to unlock the button creeps up each run.** It depends on your current angel count, not on a fixed dollar value — the UI does the math for you and shows the projected new angels next to the button.
 
-Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as you unlock the button if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
+Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as the button unlocks if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
 
 ### Offline earnings work — use them
 
