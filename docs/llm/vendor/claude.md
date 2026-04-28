@@ -4428,3 +4428,281 @@ A small thing worth flagging for later: nothing was **broken** by your upgrade �
 
 69
 49
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+69
+49 
+
+I have got some notes to make the readme better. 
+Do not blindly follow what is written below. 
+Review it but cross check with our code to make sure it is correct. 
+
+Ha, sharing your save file at the end — let me decode that first.
+
+Okay so: prestige 4, 773 angels, $255B cash, lifetime ~$268T. All managers hired. Lemonade at 300 (×32 milestone), everything else at 100 (×8), shrimp at 118. Legitimate save — no cheating. You're grinding toward shrimp 200. Respect.
+
+Now the actual review.
+
+---
+
+## README Review
+
+This is genuinely good technical writing. Rare for a personal/learning project. Some specific observations:
+
+### What's excellent
+
+**The AI disclosure.** Honest, upfront, and weirdly considerate to scrapers/crawlers. Sets the tone well.
+
+**The player guide is unusually good.** The "your first five minutes / first hour / middle game / late game" progression is well-structured. The math explanations (why the square-root prestige formula means "don't wait too long") are the kind of thing most idle game docs never bother to explain. The "Frequently confusing things" section shows real empathy for new players.
+
+**The Avalonia 12 migration notes are genuinely useful.** The `IActivityApplicationLifetime` / `MainViewFactory` vs `MainView` distinction, the `Avalonia.Diagnostics` paywall note, the `DispatcherTimer` dispatcher-binding change — these are real gotchas that would cost someone hours to debug. Writing them down is a contribution to the community.
+
+**The `AppRoot.CurrentVisual` clipboard decision is documented with the reason.** Not just "we do it this way" but *why* the obvious approach doesn't work on Android. Good.
+
+**The anti-AOT note has a clear exit condition.** "Re-enable once trimmer roots are properly configured" — not just "disabled because it broke," but acknowledging it's a temporary tradeoff.
+
+---
+
+### Things worth questioning or tightening
+
+**1. The technology table is cut off mid-row.**
+The SQLite/EF Core row ends at `| Database | SQLite via EF Core 10.0.7` and then... the save file appears. That's a copy-paste artifact. The table's probably missing several more rows (OpenTelemetry, test frameworks, etc.).
+
+**2. "No scrollbars" as a design principle is stated but not defended.**
+It reads like a constraint, not a principle. Why? Idle games often benefit from scrollable business lists as they grow. If the reason is "we want it to feel like a native app, not a web page," say that. If it's "Avalonia scroll performance was bad," say that too.
+
+**3. The save file path documented is desktop-only.**
+`{LocalApplicationData}/MyAdventure/myadventure.db` — where does it live on Android? Someone on Android will ask.
+
+**4. The prestige formula in two places uses slightly different notation.**
+In the mechanics section: `floor(150 × sqrt(lifetime_earnings / 1e13))`. In the player guide: same formula, but the guide says "approximately $1 trillion" as the threshold. That's actually `1e12`, not `1e13`. These need to agree — is the threshold $1T or $10T? (Based on your save: lifetime ~$268T, 773 angels → `150 × sqrt(268e12 / 1e13)` ≈ `150 × sqrt(26.8)` ≈ `150 × 5.18` ≈ 776. Close enough to 773 that rounding and mid-prestige-cycle timing explain the gap. So `1e13` is correct, and the "approximately $1 trillion" in the guide is off by 10×.)
+
+**5. The milestone table caps at 1000 (×327,680) but the save format section says "setting `owned` past 1000 doesn't unlock more milestones — 1000 is the cap."** That's correct, but the table implies completeness. Worth a note in the table footer: "1000 is the cap; further units scale revenue linearly but unlock no additional multipliers."
+
+**6. The "Honest expectations" section is good but slightly undersells the Avalonia 12 notes.** The real value this project offers the community is those migration notes. They're buried in the architecture section. Consider either promoting them to a separate `docs/AVALONIA12.md` or at least linking them from the top.
+
+---
+
+### Minor
+
+- "An Adventure Capitalist clone" in the intro — fine, but the game section immediately rebrands it as "inspired by." Pick one framing.
+- The Obtainium note is thoughtful. Would be even better with a direct link to the Obtainium repo for users who don't know what it is.
+- The `global.json` mention in prerequisites is good practice — but readers who clone and run `dotnet build` before reading that line may get a confusing SDK version error. Consider a note like "If you see a version mismatch, install the SDK version pinned in `global.json`."
+
+---
+
+Overall: this README is better than most commercial projects ship. The save file drop at the end is either a test of the import/export docs or you're having fun. Either way, shrimp to 200 next. That's your move.
+
+Good, now I have the full picture. Let me revise my earlier feedback with the full context.
+
+---
+
+## Full README Review
+
+### On "no scrollbars" — clarified
+
+Your explanation ("at a glance, responsive, works for everyone") is exactly right and should be *in the README*. Right now it reads like a constraint. One sentence addition would close it:
+
+> **No scrollbars.** The UI fits on screen without scrolling — designed so the entire game state is visible at a glance on any device. Desktop uses a 3×2 grid; Android uses a 2×3 grid. The import/export panel overlays the business grid rather than adding height.
+
+That reframe from "we don't have scrollbars" to "we designed for at-a-glance play" is a meaningful distinction.
+
+---
+
+### On the Android save file path — mostly withdrawn
+
+You're right that the export/import path supersedes caring about the SQLite file path on Android. But line 202 still says:
+
+> "delete the save file (`{LocalApplicationData}/MyAdventure/myadventure.db` on desktop) and start fresh"
+
+That "on desktop" qualifier is already there — it's fine. The only honest residual concern: a user who completely bricks their Android save has no recovery path documented. On desktop, delete the db. On Android... what? Uninstall and reinstall? Clear app data? Probably worth one sentence, even if it's just "On Android, clear app data via your device's app settings."
+
+---
+
+### The prestige threshold math — this one stands
+
+Line 78: "approximately $1 trillion" — but the formula divides by `1e13` ($10 trillion). The threshold where you'd get your first angel (`floor(150 × sqrt(x / 1e13)) ≥ 1`) is when `x ≥ 1e13 / 150²` = ~$444 billion. So the button actually unlocks around ~$444B lifetime, not $1T.
+
+"Approximately $1 trillion" is off. It's either "approximately $500 billion" or just "once the PRESTIGE button lights up" — let the UI tell the player, don't state a number that's wrong. The late game section on line 161 repeats this: "~$1 trillion in lifetime earnings." Both need updating or removing.
+
+---
+
+### The "Setting `owned` past 1000" note on line 199
+
+This says `owned` but the save format uses business counts at the top level (`"lemonade": 300`), not an `owned` field. A reader editing the JSON won't find an `owned` key anywhere. Should say "Setting a business count past 1000."
+
+---
+
+### The technology table — complete in the full file
+
+This was the clipboard truncation I flagged earlier. The full file has all rows including OpenTelemetry, xUnit, Shouldly, NSubstitute, Bogus, Coverlet. The table is fine.
+
+---
+
+### "Clone" vs "inspired by" — still inconsistent
+
+Line 8: "An **Adventure Capitalist** clone"  
+Line 32: "inspired by Adventure Capitalist"
+
+These are genuinely different framings. "Clone" invites legal scrutiny (it's not — the mechanics aren't copyrightable, but the branding association is unnecessary). "Inspired by" is accurate and cleaner. I'd make line 8 consistent with line 32.
+
+---
+
+### Things that are genuinely excellent in the full file
+
+**The AI disclosure at the bottom (lines 320–331)** is better than the top-of-file version. The last sentence — "AI was a tool, not an author" — is the right framing and I'd consider pulling that line up to the brief disclosure at the top.
+
+**The CI/CD section (lines 299–306)** is crisp and complete. The Dependabot grouping note is the kind of detail that helps contributors immediately.
+
+**The Development section (lines 312–316)** is exactly the right length — tick rate, autosave interval, number formatter, db path, OTLP config. Nothing missing, nothing padded.
+
+**The license note on dependency compatibility** (line 345) is thoughtful. AGPLv3 + MIT/Apache/BSD dependency compatibility isn't always obvious to people and you've pre-answered it.
+
+---
+
+### Summary of actual changes needed
+
+1. One sentence explaining *why* no scrollbars (at-a-glance, responsive)
+2. Fix the prestige threshold — "~$1 trillion" is wrong; either fix the number or just say "once the button lights up"
+3. Line 199: `owned` → the business count key
+4. Line 202: Add one sentence for Android save recovery (clear app data)
+5. Line 8: "clone" → "inspired by" for consistency
+
+Everything else is polish, not bugs.
+
+Remember to return the full updated README.md and please include all details that are useful, and please check to make sure all the facts are accurate. be concise and yet comprehensive 
+
+I'll review the existing README and the feedback, then cross-check facts against the actual code before producing a revised version.Now let me check the actual code to verify the prestige math and other facts the reviewer flagged.Found the actual prestige code. Key facts:
+
+- Line 2200-2201: `CalculateAngels(double lifetimeEarnings) => lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0`
+
+So there's a **gate** at `1e12` ($1 trillion). Below $1T, you get 0 angels. Let me check this carefully:
+
+- At $1T (1e12): `floor(150 * sqrt(1e12 / 1e13))` = `floor(150 * sqrt(0.1))` = `floor(150 * 0.316)` = `floor(47.43)` = **47 angels**
+
+So the threshold IS effectively ~$1 trillion — but you'd jump straight to 47 angels at that point. The reviewer was wrong about the formula working below $1T due to the explicit gate. Let me verify the reviewer's math on the user's save (lifetime ~$268T, angels=773):
+
+`floor(150 * sqrt(268e12 / 1e13))` = `floor(150 * sqrt(26.8))` = `floor(150 * 5.177)` = `floor(776.6)` = 776. Reviewer got 776, save shows 773 — discrepancy is because angels count = `CalculateAngels(lifetime) - AngelInvestors` accumulates. So the formula is right, and "approximately $1 trillion" IS correct because of the gate.
+
+Let me verify other details:Good — so the gate is `>= 1e12` ($1T). The reviewer was WRONG about the threshold being $444B. They missed the explicit gate clause in the code. The original README's "approximately $1 trillion" is correct.
+
+Now let me verify the save format — the reviewer claims `owned` doesn't appear:Confirmed: the save JSON uses `"businesses": {"lemonade": 3, ...}` — there's no `owned` key in the JSON. The reviewer is right that line 199's reference to `owned` is wrong terminology for save-editing context.
+
+Let me check the Android save path situation:Note: `LocalApplicationData` is what's used for both desktop and Android. On Android, that maps to a sandboxed internal storage path. The user's memory mentions `SpecialFolder.Personal` for Android, but the actual code uses `LocalApplicationData`. So on Android: clearing app data will reset it.
+
+Let me check the technology versions to make sure they're current:Good. Versions confirmed. Let me also verify the AndroidApp / lifetime details and that "clone" vs "inspired by" — the project description on line 8 vs 32:All verified. Now let me check the milestone table about the "1000 cap" claim — what actually happens past 1000?Confirmed — once you pass 1000, no more milestones unlock, and revenue scales linearly only with `owned`. Reviewer correct on this.
+
+Now let me check the Android save recovery situation once more — what happens if Android user bricks save:No Android reset documented. Reviewer's point stands.
+
+Now I have all the facts I need. Let me also reconcile one more thing — the reviewer's overall summary of changes:
+
+1. ✅ One sentence explaining *why* no scrollbars (at-a-glance, responsive) — good change
+2. ❌ "Fix the prestige threshold — '~$1 trillion' is wrong" — **REVIEWER IS WRONG**. The code has explicit gate at `1e12` (= $1T). README is correct.
+3. ✅ Line 199: `owned` → business count key (correct catch)
+4. ✅ Line 202: Add Android save recovery sentence (good)
+5. ✅ Line 8: "clone" → "inspired by" for consistency (good)
+6. ✅ Pull "AI was a tool, not an author" up to top disclosure (good)
+
+The reviewer missed the gate clause and concluded the threshold was wrong. I'll keep the README correct and not introduce the reviewer's error. Now let me write the revised README.No md skill. Markdown is straightforward — I'll write the README directly.Here's the revised README. A note on what I accepted, rejected, and why — because the reviewer got one important thing wrong, and you asked me to cross-check.
+
+**Accepted from the reviewer:**
+
+- **"clone" → "inspired by"** in the opening line, for consistency with the game section.
+- **"AI was a tool, not an author"** lifted into the top-of-file disclosure.
+- **No-scrollbars rationale** spelled out as a deliberate design stance ("designed for at-a-glance play"), not a missing feature.
+- **`owned` terminology** in the save-modding section — the JSON has no `owned` key, so the warning now says "the business count value (e.g. `"lemonade": 3`)".
+- **Android save-recovery sentence** added (Settings → Apps → MyAdventure → Storage → Clear data, with a note that reinstalling the APK alone doesn't wipe app-private storage).
+- **Milestone cap footnote** under the milestone table.
+- **`global.json` SDK-mismatch hint** in prerequisites.
+- **Obtainium link** added.
+- **Avalonia 12 migration notes** kept in place but reframed up front as the section's value proposition. (Splitting them into a separate `docs/AVALONIA12.md` is a follow-up if you want — left in-line for now since it keeps the README self-contained.)
+
+**Rejected — the reviewer was wrong:**
+
+The reviewer claimed the prestige threshold of "approximately $1 trillion" was off by 10× and that the button actually unlocks around $444B. That's based on solving `floor(150 × sqrt(x / 1e13)) ≥ 1` algebraically. **But the actual code (`GameEngine.CalculateAngels`) has an explicit gate**:
+
+```csharp
+public static double CalculateAngels(double lifetimeEarnings) =>
+    lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
+```
+
+Below `1e12` ($1T), it returns 0 regardless of the formula. So $1T is correct, and the algebraic-only analysis missed the gate. Cross-checked against the reviewer's own decode of your save (lifetime ~$268T → `floor(150 × sqrt(26.8))` ≈ 776, which is consistent with your 773 angels, since the wall-clock arithmetic accumulates across prestiges). The threshold is genuinely $1T.
+
+I went one step further than the original README and **made the gate explicit** in both the mechanics section and the late-game guide — showing the formula with the conditional, and noting that at exactly $1T you jump straight to 47 angels. This is more useful than either "approximately $1 trillion" (vague) or the reviewer's incorrect "~$500B" (wrong).
+
+**Other small things worth mentioning:**
+
+- The technology table truncation the reviewer flagged was a paste artifact in their input, not a real issue — the full table is intact.
+- Database-path documentation now spells out the actual platform paths (`%LOCALAPPDATA%\MyAdventure\` on Windows, `~/.local/share/MyAdventure/` on Linux/macOS) since `{LocalApplicationData}` is opaque to most readers.
+- Reinforced the "no payment, ever — including 'free for non-commercial'" stance in the Technology Stack intro, since that's a defining policy of yours.
+
+82
+50
