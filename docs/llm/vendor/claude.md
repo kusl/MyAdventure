@@ -4998,3 +4998,11 @@ The deeper lesson lands: when the code has the exact answer, prose approximation
 
 
 
+Now I have the full picture. Let me write the root cause analysis document.
+
+The RCA covers everything Opus needs to implement this cleanly. Key things it will find:
+
+- `CalculateOfflineEarnings` is currently `private` — needs to become `public` (or paired with a new `ApplyOfflineEarnings` method that also mutates `Cash` and `LifetimeEarnings`, since those have private setters)
+- `MainActivity` is intentionally empty in Avalonia 12 — the lifecycle hooks live in `MainView.axaml.cs` via `OnAttachedToVisualTree` / `OnDetachedFromVisualTree`, not in the Activity
+- The cold-start vs. resume distinction must be guarded carefully so `LoadAsync` and `OnResumed` never double-apply the same gap
+- The `Math.Min(delta, 1.0)` cap must stay — it's not the bug, just the place where the bug manifests
