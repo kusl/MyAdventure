@@ -1,67 +1,67 @@
-kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+kushal@fedora:~/src/bash$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
 
 Build succeeded in 1.1s
 
-real	0m1.311s
-user	0m1.102s
-sys	0m0.330s
-Restore complete (0.7s)
+real	0m1.393s
+user	0m1.061s
+sys	0m0.369s
+Restore complete (0.6s)
 
-Build succeeded in 0.8s
+Build succeeded in 0.7s
 
-real	0m0.971s
-user	0m1.113s
-sys	0m0.225s
-Restore complete (0.7s)
-  MyAdventure.Core net10.0 succeeded (0.3s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.3s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
-  MyAdventure.Core.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+real	0m0.902s
+user	0m1.026s
+sys	0m0.209s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (2.6s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.6s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Integration.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
-  MyAdventure.Shared net10.0 succeeded (0.8s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Shared net10.0 succeeded (1.2s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
   MyAdventure.UI.Tests net10.0 succeeded (0.6s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
   MyAdventure.Desktop net10.0 succeeded (1.3s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
-  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
   MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.Android net10.0-android succeeded (24.0s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+  MyAdventure.Android net10.0-android succeeded (25.1s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
 
-Build succeeded in 26.4s
+Build succeeded in 30.4s
 
-real	0m26.641s
-user	1m40.763s
-sys	0m4.044s
-Restore complete (0.6s)
-  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+real	0m30.624s
+user	1m41.533s
+sys	0m5.582s
+Restore complete (0.7s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
   MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
   MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
   MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
-  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.6)
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.6)
-[xUnit.net 00:00:00.09]   Discovering: MyAdventure.Core.Tests
-[xUnit.net 00:00:00.08]   Discovering: MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.14]   Discovered:  MyAdventure.Core.Tests
-[xUnit.net 00:00:00.12]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.08]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.12]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.15]   Starting:    MyAdventure.Core.Tests
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.6)
-[xUnit.net 00:00:00.17]   Starting:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.15]   Starting:    MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.10]   Discovering: MyAdventure.UI.Tests
-[xUnit.net 00:00:00.15]   Discovered:  MyAdventure.UI.Tests
-[xUnit.net 00:00:00.17]   Starting:    MyAdventure.UI.Tests
-[xUnit.net 00:00:00.42]   Finished:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.36]   Finished:    MyAdventure.UI.Tests
-  MyAdventure.Core.Tests test net10.0 succeeded (1.2s)
-  MyAdventure.UI.Tests test net10.0 succeeded (1.1s)
-[xUnit.net 00:00:00.87]   Finished:    MyAdventure.Integration.Tests
-  MyAdventure.Integration.Tests test net10.0 succeeded (1.6s)
+[xUnit.net 00:00:00.33]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.UI.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (1.1s)
+[xUnit.net 00:00:00.26]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (0.8s)
+[xUnit.net 00:00:00.71]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.4s)
 
-Test summary: total: 75, failed: 0, succeeded: 75, skipped: 0, duration: 1.7s
-Build succeeded in 2.6s
+Test summary: total: 96, failed: 0, succeeded: 96, skipped: 0, duration: 1.5s
+Build succeeded in 2.5s
 
-real	0m2.780s
-user	0m1.895s
-sys	0m0.429s
+real	0m2.742s
+user	0m2.021s
+sys	0m0.502s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -146,9 +146,9 @@ Project 'MyAdventure.UI.Tests' has the following package references
 
 (A) : Auto-referenced package.
 
-real	0m2.068s
-user	0m2.094s
-sys	0m0.533s
+real	0m2.102s
+user	0m2.124s
+sys	0m0.511s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -194,13 +194,13 @@ Project `MyAdventure.UI.Tests` has the following updates to its packages
    > Microsoft.NET.Test.Sdk      18.4.0      18.4.0     18.5.1
 
 
-real	0m2.491s
-user	0m2.639s
-sys	0m0.505s
+real	0m4.665s
+user	0m3.702s
+sys	0m0.634s
 
-real	0m8.780s
-user	0m14.146s
-sys	0m1.319s
+real	0m9.534s
+user	0m15.276s
+sys	0m1.408s
 ==============================================
   Generating Clean Project Export
 ==============================================
@@ -254,6 +254,7 @@ Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
 Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
 Processed: src/MyAdventure.Shared/Resources/i18n/en.json
 Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
 Processed: src/MyAdventure.Shared/Services/AppRoot.cs
 Processed: src/MyAdventure.Shared/Services/ToastService.cs
 Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
@@ -268,13 +269,15 @@ Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
 Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
 Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
 Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
 Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
 Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
 Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
 
 Export Complete: docs/llm/dump.txt
 
-real	0m0.709s
-user	0m0.375s
-sys	0m0.447s
+real	0m0.715s
+user	0m0.376s
+sys	0m0.463s
 kushal@fedora:~/src/dotnet/MyAdventure$ 

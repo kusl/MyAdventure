@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sat May  2 02:06:26 PM EDT 2026
+Generated: Sat May  2 04:10:27 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -103,6 +103,7 @@ DIRECTORY STRUCTURE:
 │       │       ├── en.json
 │       │       └── es.json
 │       ├── Services
+│       │   ├── AppLifecycleManager.cs
 │       │   ├── AppRoot.cs
 │       │   └── ToastService.cs
 │       └── ViewModels
@@ -122,7 +123,9 @@ DIRECTORY STRUCTURE:
     │   ├── GameStateRepositoryTests.cs
     │   └── MyAdventure.Integration.Tests.csproj
     └── MyAdventure.UI.Tests
+        ├── AppLifecycleManagerTests.cs
         ├── BusinessViewModelTests.cs
+        ├── GameViewModelLifecycleTests.cs
         ├── MyAdventure.UI.Tests.csproj
         └── ToastServiceTests.cs
 
@@ -1179,7 +1182,7 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/App.axaml.cs
-SIZE: 2.90 KB
+SIZE: 3.48 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
@@ -1232,6 +1235,16 @@ public partial class App : Avalonia.Application
                 activityLifetime.MainViewFactory = () =>
                 {
                     var vm = Services!.GetRequiredService<GameViewModel>();
+
+                    // Wire the cross-platform suspend/resume signal. We
+                    // call this inside the factory because each activity
+                    // recreation produces a fresh VM, and AppLifecycleManager
+                    // holds a single static "current target" reference —
+                    // each Attach replaces the previous target so old VMs
+                    // stop receiving events. See AppLifecycleManager for
+                    // the full rationale.
+                    AppLifecycleManager.Attach(vm);
+
                     return new MainView { DataContext = vm };
                 };
             }
@@ -1242,6 +1255,7 @@ public partial class App : Avalonia.Application
                 // never hit this branch in v12.
                 var vm = Services.GetRequiredService<GameViewModel>();
                 singleView.MainView = new MainView { DataContext = vm };
+                AppLifecycleManager.Attach(vm);
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -1979,7 +1993,7 @@ SIZE: .18 KB
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 13.45 KB
+SIZE: 16.20 KB
 ================================================================================
 
 using System.Text;
@@ -2006,6 +2020,14 @@ public class GameEngine(
     private static readonly Counter<long> TickCounter = GameMeter.CreateCounter<long>("game.ticks");
     private static readonly Counter<double> EarningsCounter = GameMeter.CreateCounter<double>("game.earnings");
     private static readonly Histogram<double> TickDuration = GameMeter.CreateHistogram<double>("game.tick_duration_ms");
+
+    /// <summary>
+    /// Threshold below which an "offline" gap is treated as no gap at all.
+    /// One second is comfortably above any normal tick delta (~16 ms) and
+    /// well below any user-perceptible pause, so it can't accidentally
+    /// double-count live ticks while still firing for any real suspension.
+    /// </summary>
+    private const double MinimumOfflineGapSeconds = 1.0;
 
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
@@ -2035,15 +2057,16 @@ public class GameEngine(
         ApplyBusinessData(state.BusinessDataJson);
         ApplyManagerData(state.ManagerDataJson);
 
-        // Calculate offline earnings
+        // Apply offline earnings via the shared public method. The same
+        // calculation now also serves the foreground-resume path
+        // (GameViewModel.OnResumed -> ApplyOfflineEarnings). Keeping a
+        // single entry point ensures cold-load and resume can never drift.
         var elapsed = _time.GetUtcNow().UtcDateTime - state.LastPlayedAt;
-        if (elapsed.TotalSeconds > 1)
+        var earned = ApplyOfflineEarnings(elapsed);
+        if (earned > 0)
         {
-            var offlineEarnings = CalculateOfflineEarnings(elapsed);
-            Cash += offlineEarnings;
-            LifetimeEarnings += offlineEarnings;
-            logger.LogInformation("Applied offline earnings: {Earnings:F2} for {Seconds:F0}s away",
-                offlineEarnings, elapsed.TotalSeconds);
+            logger.LogInformation("Applied offline earnings on load: {Earnings:F2} for {Seconds:F0}s away",
+                earned, elapsed.TotalSeconds);
         }
 
         activity?.SetTag("cash", Cash);
@@ -2227,6 +2250,53 @@ public class GameEngine(
 
     public static double CalculateAngels(double lifetimeEarnings) =>
         lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
+
+    /// <summary>
+    /// Apply offline earnings for a given elapsed time span and return
+    /// how much was earned. This is the single public entry point used by
+    /// both <see cref="LoadAsync"/> (cold start) and the foreground-resume
+    /// path on the ViewModel layer. Keeping a single calculation reachable
+    /// from both call sites is what allows live ticks and offline payouts
+    /// to remain provably equivalent.
+    ///
+    /// <para>
+    /// Behavior:
+    /// <list type="bullet">
+    ///   <item>Returns 0 if <paramref name="elapsed"/> is at or below the
+    ///         <see cref="MinimumOfflineGapSeconds"/> threshold — protects
+    ///         against being called with a near-zero or negative span,
+    ///         which would otherwise generate a tiny double-count next to
+    ///         the live tick loop.</item>
+    ///   <item>Returns 0 if no business currently has a manager and at
+    ///         least one unit owned. Manager-less businesses require an
+    ///         active player click to run — the offline path deliberately
+    ///         excludes them.</item>
+    ///   <item>Adds the result to both <see cref="Cash"/> and
+    ///         <see cref="LifetimeEarnings"/>. Lifetime earnings drives
+    ///         prestige progression, so offline earnings must count there
+    ///         identically to live earnings.</item>
+    ///   <item>The <see cref="AngelBonus"/> is applied <i>once</i> at the
+    ///         end of the calculation — never per-cycle inside the loop —
+    ///         to mirror the live <see cref="Tick"/> path. Drift between
+    ///         the two is guarded by an invariant test.</item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    /// <param name="elapsed">Wall-clock duration the player was away.</param>
+    /// <returns>The amount earned (already added to Cash and LifetimeEarnings).</returns>
+    public double ApplyOfflineEarnings(TimeSpan elapsed)
+    {
+        if (elapsed.TotalSeconds <= MinimumOfflineGapSeconds) return 0;
+
+        var earned = CalculateOfflineEarnings(elapsed);
+        if (earned <= 0) return 0;
+
+        Cash += earned;
+        LifetimeEarnings += earned;
+
+        EarningsCounter.Add(earned, new KeyValuePair<string, object?>("source", "offline"));
+        return earned;
+    }
 
     private double CalculateOfflineEarnings(TimeSpan elapsed)
     {
@@ -2412,7 +2482,7 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/App.axaml.cs
-SIZE: 1.19 KB
+SIZE: 1.64 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
@@ -2447,6 +2517,14 @@ public partial class App : Avalonia.Application
         {
             var vm = _services.GetRequiredService<GameViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = vm };
+
+            // Wire the cross-platform suspend/resume signal. On desktop
+            // this fires on hibernate/sleep transitions; on Android the
+            // same call wires the activity background/foreground events.
+            // One shared implementation, no per-platform lifecycle code
+            // in the Views — see AppLifecycleManager for the full
+            // rationale on why this lives in Shared.
+            AppLifecycleManager.Attach(vm);
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -3209,7 +3287,7 @@ public class PercentToFractionConverter : IValueConverter
 
 ================================================================================
 FILE: src/MyAdventure.Shared/MyAdventure.Shared.csproj
-SIZE: .65 KB
+SIZE: 1.02 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
@@ -3228,6 +3306,14 @@ SIZE: .65 KB
   
   <ItemGroup>
     <AvaloniaResource Include="Resources\i18n\*.json" />
+  </ItemGroup>
+
+  <!-- Grant the UI test project access to internal members so it can
+       reach the AppLifecycleManager.ResetForTesting() seam. Production
+       callers cannot use ResetForTesting (it's internal); the tests
+       need it to keep the manager's static state isolated between cases. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="MyAdventure.UI.Tests" />
   </ItemGroup>
 </Project>
 
@@ -3271,6 +3357,150 @@ SIZE: .29 KB
   "Revenue": "Ingreso",
   "Cost": "Costo",
   "OfflineEarnings": "Mientras no estabas, ganaste {0}!"
+}
+
+
+================================================================================
+FILE: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+SIZE: 5.70 KB
+================================================================================
+
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using MyAdventure.Shared.ViewModels;
+
+namespace MyAdventure.Shared.Services;
+
+/// <summary>
+/// Wires the cross-platform <see cref="IActivatableLifetime"/> (current in
+/// Avalonia 12) to the active <see cref="GameViewModel"/> so the game can
+/// react to the OS suspending and resuming the app.
+///
+/// <para>
+/// <b>Why this exists.</b>
+/// The game's <c>DispatcherTimer</c> stops firing while the app is in the
+/// background (Android backgrounded, desktop suspended/hibernated). When the
+/// timer resumes, the very first tick sees a multi-minute <c>delta</c>,
+/// which the engine clamps to 1 second to avoid pathological cold-start
+/// behavior. Without a separate signal, the rest of the gap is silently
+/// discarded — the player loses up to many minutes of earnings on every
+/// app switch. This class delivers the missing signal: <c>Deactivated</c>
+/// for "going to background" (save + stamp), <c>Activated</c> for "coming
+/// back" (apply offline earnings for the gap).
+/// </para>
+///
+/// <para>
+/// <b>Why one cross-platform implementation.</b>
+/// Avalonia 12's <see cref="IActivatableLifetime"/> is the same feature
+/// on desktop, Android, iOS, and browser. Subscribing here once means
+/// desktop and Android share a single code path — no per-platform
+/// lifecycle wiring scattered across <c>MainWindow.OnOpened</c>,
+/// <c>MainView.OnAttachedToVisualTree</c>, <c>Window.Activated</c>, etc.
+/// If the suspend/resume logic ever needs to change, it changes in
+/// exactly one place and immediately benefits every target.
+/// </para>
+///
+/// <para>
+/// <b>Why <see cref="ActivationKind.Background"/> only.</b>
+/// The same events also fire for protocol activation (deep links),
+/// reopen-from-dock, and other reasons. We filter to
+/// <see cref="ActivationKind.Background"/> so unrelated activations don't
+/// trigger an offline-earnings calculation.
+/// </para>
+///
+/// <para>
+/// <b>Why a static current-VM target instead of one subscription per VM.</b>
+/// On Android, <c>MainViewFactory</c> can be invoked multiple times across
+/// an app's lifetime (each activity recreation produces a fresh VM). If
+/// every fresh VM added its own event handler, the lifetime would
+/// accumulate handlers and old VMs would keep receiving events after their
+/// view was destroyed — a memory and correctness leak. Instead, this class
+/// subscribes once on first <see cref="Attach"/>, then forwards events to
+/// whatever VM is currently registered. <see cref="Attach"/> simply
+/// updates the target.
+/// </para>
+/// </summary>
+public static class AppLifecycleManager
+{
+    private static readonly object Gate = new();
+    private static GameViewModel? _current;
+    private static bool _subscribed;
+
+    /// <summary>
+    /// Register the given <see cref="GameViewModel"/> as the active target
+    /// for application lifecycle events. On first call, subscribes to the
+    /// <see cref="IActivatableLifetime"/> if available. On subsequent calls
+    /// (e.g. Android activity recreation produces a fresh VM), simply
+    /// replaces the previously-registered VM — old VMs stop receiving
+    /// events with no manual unsubscribe needed.
+    /// </summary>
+    /// <param name="viewModel">The game's main ViewModel.</param>
+    /// <returns>
+    /// <c>true</c> if the lifetime feature was found and we are now
+    /// forwarding events to <paramref name="viewModel"/>; <c>false</c> if
+    /// the platform doesn't expose <see cref="IActivatableLifetime"/>
+    /// (e.g. headless tests). The caller does not need to special-case the
+    /// false return — the rest of the app remains functional, just without
+    /// background/foreground earnings compensation.
+    /// </returns>
+    public static bool Attach(GameViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+
+        lock (Gate)
+        {
+            _current = viewModel;
+
+            if (_subscribed) return true;
+
+            var app = Application.Current;
+            if (app is null) return false;
+
+            var lifetime = app.TryGetFeature<IActivatableLifetime>();
+            if (lifetime is null) return false;
+
+            // Filter to Background-kind activations only. Protocol/Reopen/etc.
+            // come through the same channels and must not be treated as
+            // "the player came back from being away" — those don't pause
+            // the tick loop, so there's no gap to compensate for.
+            lifetime.Deactivated += OnLifetimeDeactivated;
+            lifetime.Activated += OnLifetimeActivated;
+            _subscribed = true;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Test seam: clear the current target and reset subscription state.
+    /// Production code never calls this; tests use it to reset between
+    /// cases without leaking state across them.
+    /// </summary>
+    internal static void ResetForTesting()
+    {
+        lock (Gate)
+        {
+            _current = null;
+            // Note: we deliberately do NOT detach the event handler from
+            // any real IActivatableLifetime here — unit tests don't have
+            // one. Resetting _subscribed lets a follow-up test re-Attach
+            // and test the subscription path again if it ever needs to.
+            _subscribed = false;
+        }
+    }
+
+    private static void OnLifetimeDeactivated(object? sender, ActivatedEventArgs args)
+    {
+        if (args.Kind != ActivationKind.Background) return;
+        var target = Volatile.Read(ref _current);
+        target?.OnSuspended();
+    }
+
+    private static void OnLifetimeActivated(object? sender, ActivatedEventArgs args)
+    {
+        if (args.Kind != ActivationKind.Background) return;
+        var target = Volatile.Read(ref _current);
+        target?.OnResumed();
+    }
 }
 
 
@@ -3573,7 +3803,7 @@ public partial class BusinessViewModel(
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
-SIZE: 8.03 KB
+SIZE: 13.13 KB
 ================================================================================
 
 using System.Collections.ObjectModel;
@@ -3595,8 +3825,19 @@ public partial class GameViewModel : ViewModelBase
     private readonly GameEngine _engine;
     private readonly ILogger<GameViewModel> _logger;
     private readonly ToastService _toasts;
+    private readonly TimeProvider _time;
     private DateTime _lastTick;
     private int _saveCounter;
+
+    /// <summary>
+    /// UTC timestamp captured when the OS notifies us that the app is going
+    /// to background (<see cref="OnSuspended"/>). <c>null</c> means we have
+    /// not been suspended in the current process lifetime — important
+    /// because cold start runs <see cref="GameEngine.LoadAsync"/>, which
+    /// already covers the offline gap, and we must not also run
+    /// <see cref="OnResumed"/>'s gap calculation in that case (double-pay).
+    /// </summary>
+    private DateTime? _suspendedAt;
 
     [ObservableProperty] private string _cashText = "$0.00";
     [ObservableProperty] private string _angelText = "0";
@@ -3615,11 +3856,22 @@ public partial class GameViewModel : ViewModelBase
     public ToastService Toasts => _toasts;
 
     public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts)
+        : this(engine, logger, toasts, TimeProvider.System)
+    {
+    }
+
+    /// <summary>
+    /// Test-friendly overload that accepts a <see cref="TimeProvider"/>
+    /// so unit tests can drive <see cref="OnSuspended"/> / <see cref="OnResumed"/>
+    /// against a controllable clock without sleeping the test thread.
+    /// </summary>
+    public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts, TimeProvider timeProvider)
     {
         _engine = engine;
         _logger = logger;
         _toasts = toasts;
-        _lastTick = DateTime.UtcNow;
+        _time = timeProvider;
+        _lastTick = _time.GetUtcNow().UtcDateTime;
     }
 
     public async Task InitializeAsync()
@@ -3637,10 +3889,16 @@ public partial class GameViewModel : ViewModelBase
     /// <summary>Called by the UI timer (~60fps).</summary>
     public void OnTick()
     {
-        var now = DateTime.UtcNow;
+        var now = _time.GetUtcNow().UtcDateTime;
         var delta = (now - _lastTick).TotalSeconds;
         _lastTick = now;
 
+        // Defensive cap. This protects cold start (where _lastTick is
+        // initialized in the constructor but the first OnTick may be
+        // many seconds later) and debugger pauses. The suspend/resume
+        // gap is handled by OnSuspended/OnResumed, NOT by relaxing this
+        // cap — silent multi-minute deltas would otherwise produce
+        // confusing UI behavior on the first post-resume tick.
         delta = Math.Min(delta, 1.0);
 
         _engine.Tick(delta);
@@ -3656,6 +3914,93 @@ public partial class GameViewModel : ViewModelBase
             _saveCounter = 0;
             _ = SaveAsync();
         }
+    }
+
+    /// <summary>
+    /// Called by <see cref="AppLifecycleManager"/> when the OS notifies the
+    /// app it is entering the background (Android backgrounded, desktop
+    /// hibernate/sleep). Stamps the suspension time so we can compute the
+    /// gap on resume, and triggers an immediate save so the persisted
+    /// <c>LastPlayedAt</c> is as fresh as possible in case the OS later
+    /// kills the process without ever resuming us.
+    ///
+    /// <para>
+    /// Idempotent: calling twice in a row simply re-stamps the timestamp,
+    /// which is fine — the only thing that matters is that
+    /// <see cref="OnResumed"/> sees a value to subtract from "now."
+    /// </para>
+    /// </summary>
+    public void OnSuspended()
+    {
+        _suspendedAt = _time.GetUtcNow().UtcDateTime;
+        _logger.LogInformation("App suspended at {SuspendedAt:o}", _suspendedAt);
+
+        // Fire-and-forget save: the OS gives us limited time after going to
+        // background, and we already use the same fire-and-forget pattern
+        // in OnTick's auto-save. If the save loses to the suspend, the
+        // cold-load offline-earnings path will still pick up the gap from
+        // the last successful auto-save.
+        _ = SaveAsync();
+    }
+
+    /// <summary>
+    /// Called by <see cref="AppLifecycleManager"/> when the OS notifies the
+    /// app it is returning to the foreground from a background suspension.
+    /// Computes the time gap since <see cref="OnSuspended"/>, applies
+    /// offline earnings for that gap, resets the tick timestamp so the
+    /// next tick computes a small natural delta, and shows the player a
+    /// "while you were away" toast. Then forces a UI refresh.
+    ///
+    /// <para>
+    /// <b>Guard against double-counting:</b> if <see cref="_suspendedAt"/>
+    /// is <c>null</c> we skip the gap calculation entirely. Cold start
+    /// already runs <see cref="GameEngine.LoadAsync"/>, which has its own
+    /// offline-earnings path, and we must not run both.
+    /// </para>
+    /// </summary>
+    public void OnResumed()
+    {
+        // Snapshot _suspendedAt and clear it BEFORE doing anything else,
+        // so a re-entrant call (rare, but observed on some platforms that
+        // fire duplicate Activated events) can't double-pay. The cold-start
+        // guard then degenerates to "is the snapshot null?".
+        var suspended = _suspendedAt;
+        _suspendedAt = null;
+
+        if (suspended is null)
+        {
+            // No prior OnSuspended in this process lifetime — this is
+            // either cold start or a spurious activation event. Either
+            // way: nothing to compensate for, just resync _lastTick so
+            // the next tick is sane.
+            _lastTick = _time.GetUtcNow().UtcDateTime;
+            return;
+        }
+
+        var now = _time.GetUtcNow().UtcDateTime;
+        var elapsed = now - suspended.Value;
+
+        var earned = _engine.ApplyOfflineEarnings(elapsed);
+
+        // Reset _lastTick AFTER applying offline earnings: otherwise the
+        // first post-resume tick would still see a multi-minute delta
+        // (clamped to 1s) on top of what we just applied — a small but
+        // unnecessary double-count.
+        _lastTick = now;
+
+        if (earned > 0)
+        {
+            _logger.LogInformation("Applied resume earnings: {Earned:F2} for {Seconds:F0}s suspended",
+                earned, elapsed.TotalSeconds);
+            _toasts.Show($"While you were away, you earned ${NumberFormatter.Format(earned)}!");
+        }
+        else
+        {
+            _logger.LogDebug("Resume gap was {Seconds:F2}s; no offline earnings applied",
+                elapsed.TotalSeconds);
+        }
+
+        RefreshAll();
     }
 
     [RelayCommand]
@@ -3995,7 +4340,7 @@ public class BusinessTests
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-SIZE: 11.82 KB
+SIZE: 18.12 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -4175,6 +4520,160 @@ public class GameEngineTests
         // Tolerance accounts for the small gap between pastTime and "now".
         engine.Cash.ShouldBeInRange(190, 220);
         engine.AngelBonus.ShouldBe(2.0);
+    }
+
+    // ---------------------------------------------------------------
+    // ApplyOfflineEarnings — public API used by both LoadAsync (cold
+    // start) and the foreground-resume path on GameViewModel.
+    //
+    // The same calculation must be reachable from outside the engine
+    // because background-resume is detected by the View/lifecycle layer
+    // and dispatched into the engine via this method. Drift between
+    // this method and LoadAsync's usage of it is what allows the live
+    // tick path and the offline path to stay in sync — the Bug-1 /
+    // OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice invariant
+    // depends on there being a single calculation, called from both
+    // entry points.
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task ApplyOfflineEarnings_ShouldAddToCashAndLifetime()
+    {
+        await _engine.LoadAsync();
+
+        // Set up a managed lemonade stand so it's eligible for offline.
+        SetCash(1_000_000);
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        var cashBefore = _engine.Cash;
+        var ltBefore = _engine.LifetimeEarnings;
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        earned.ShouldBeGreaterThan(0);
+        (_engine.Cash - cashBefore).ShouldBe(earned);
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(earned);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_NoManagedBusinesses_ShouldReturnZero()
+    {
+        // Owned but no manager: live play earns from this business, but
+        // offline play does not. Nothing to apply in this scenario.
+        await _engine.LoadAsync();
+        SetCash(1000);
+        _engine.BuyBusiness("lemonade"); // owned but no manager
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromMinutes(10));
+
+        earned.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_NoBusinessesOwned_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromMinutes(10));
+        earned.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_TinyGap_ShouldReturnZero()
+    {
+        // Below the 1-second threshold the engine treats the gap as
+        // "no gap at all" — this protects callers from accidentally
+        // double-counting against the live tick loop.
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        _engine.ApplyOfflineEarnings(TimeSpan.FromMilliseconds(500)).ShouldBe(0);
+        _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(1)).ShouldBe(0);
+        _engine.ApplyOfflineEarnings(TimeSpan.Zero).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_NegativeGap_ShouldReturnZero()
+    {
+        // Defensive: clock skew or test-clock weirdness must never
+        // award negative earnings (which would corrupt cash/lifetime).
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        var cashBefore = _engine.Cash;
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(-30));
+
+        earned.ShouldBe(0);
+        _engine.Cash.ShouldBe(cashBefore);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_AppliesAngelBonus()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+        SetAngels(50); // ×2 bonus
+        _engine.BuyBusiness("lemonade"); // 1 owned
+        _engine.BuyManager("lemonade");
+
+        // Drain the auto-start cycle's progress so we measure offline only.
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.ProgressPercent = 0;
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // 60s / 0.6s cycle = 100 cycles × $1 base × 2.0 bonus = $200.
+        earned.ShouldBe(200.0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_AndLiveTick_AreEquivalent()
+    {
+        // Strong invariant: applying offline earnings for N seconds must
+        // yield the same amount as ticking the engine for N seconds with
+        // the same managed setup. This is what the bug fix relies on:
+        // resuming from background must compensate the player as if the
+        // tick loop had been running the whole time.
+        var repoOffline = Substitute.For<IGameStateRepository>();
+        repoOffline.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        var offlineEngine = new GameEngine(repoOffline, NullLogger<GameEngine>.Instance);
+        await offlineEngine.LoadAsync();
+        SetCashOn(offlineEngine, 1_000_000);
+        offlineEngine.BuyBusiness("lemonade");
+        offlineEngine.BuyManager("lemonade");
+        offlineEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
+
+        var repoLive = Substitute.For<IGameStateRepository>();
+        repoLive.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        var liveEngine = new GameEngine(repoLive, NullLogger<GameEngine>.Instance);
+        await liveEngine.LoadAsync();
+        SetCashOn(liveEngine, 1_000_000);
+        liveEngine.BuyBusiness("lemonade");
+        liveEngine.BuyManager("lemonade");
+        liveEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
+
+        var cashBeforeOffline = offlineEngine.Cash;
+        var cashBeforeLive = liveEngine.Cash;
+
+        // 60 seconds offline.
+        offlineEngine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // 60 seconds of 0.1s ticks — 600 ticks. (Smaller deltas keep the
+        // floating-point progress accumulation closer to ideal.)
+        for (var i = 0; i < 600; i++) liveEngine.Tick(0.1);
+
+        var earnedOffline = offlineEngine.Cash - cashBeforeOffline;
+        var earnedLive = liveEngine.Cash - cashBeforeLive;
+
+        // Live tick uses integer cycle counting which can leave a small
+        // residual fraction of a cycle in ProgressPercent. Tolerate up to
+        // one cycle of revenue ($1 in this setup) of difference.
+        Math.Abs(earnedOffline - earnedLive).ShouldBeLessThan(1.5);
     }
 
     [Fact]
@@ -4368,10 +4867,12 @@ public class GameEngineTests
         lemonade.IsRunning.ShouldBeTrue();
     }
 
-    private void SetCash(double amount)
+    private void SetCash(double amount) => SetCashOn(_engine, amount);
+
+    private static void SetCashOn(GameEngine engine, double amount)
     {
         var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
-        cashProp.GetSetMethod(true)!.Invoke(_engine, [amount]);
+        cashProp.GetSetMethod(true)!.Invoke(engine, [amount]);
     }
 
     private void SetAngels(double count)
@@ -4655,6 +5156,90 @@ SIZE: 1.01 KB
 
 
 ================================================================================
+FILE: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+SIZE: 2.98 KB
+================================================================================
+
+using Microsoft.Extensions.Logging.Abstractions;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+using NSubstitute;
+using Shouldly;
+
+namespace MyAdventure.UI.Tests;
+
+/// <summary>
+/// Tests for <see cref="AppLifecycleManager"/>, the cross-platform glue
+/// between Avalonia's <c>IActivatableLifetime</c> and the game's
+/// suspend/resume hooks. These tests exercise the parts of the manager
+/// that don't require a running Avalonia app — argument validation, the
+/// no-op fallback when no lifetime feature is exposed, and the
+/// "current target gets replaced on subsequent Attach" semantics that
+/// keep Android activity recreation from leaking event handlers.
+/// </summary>
+public class AppLifecycleManagerTests
+{
+    /// <summary>
+    /// Ensures every test starts with a clean static-state slate so that
+    /// test ordering doesn't matter. <see cref="AppLifecycleManager"/>
+    /// holds a single static "current target" reference; without this
+    /// reset, tests would observe each other's targets.
+    /// </summary>
+    public AppLifecycleManagerTests() => AppLifecycleManager.ResetForTesting();
+
+    [Fact]
+    public void Attach_NullViewModel_ShouldThrow()
+    {
+        // ArgumentNullException up front beats a NullReferenceException
+        // surfacing later from inside an event handler that we have no
+        // good way of unwinding once subscribed.
+        Should.Throw<ArgumentNullException>(() => AppLifecycleManager.Attach(null!));
+    }
+
+    [Fact]
+    public void Attach_WithoutAvaloniaApp_ShouldReturnFalse()
+    {
+        // In a unit test there's no Application.Current, so no
+        // IActivatableLifetime. The manager must degrade gracefully:
+        // returning false rather than throwing means the rest of the
+        // game still boots in environments that don't expose lifecycle
+        // events (headless tests, embedded targets without it, etc.).
+        var vm = MakeViewModel();
+        AppLifecycleManager.Attach(vm).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Attach_TwiceWithDifferentVms_ShouldReplaceTarget()
+    {
+        // Even without a real lifetime feature, re-attaching must not
+        // throw — Android activity recreation calls Attach repeatedly
+        // and the manager has to be tolerant of that.
+        var vm1 = MakeViewModel();
+        var vm2 = MakeViewModel();
+
+        Should.NotThrow(() =>
+        {
+            AppLifecycleManager.Attach(vm1);
+            AppLifecycleManager.Attach(vm2);
+        });
+    }
+
+    private static GameViewModel MakeViewModel()
+    {
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        return new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts);
+    }
+}
+
+
+================================================================================
 FILE: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
 SIZE: 7.16 KB
 ================================================================================
@@ -4918,6 +5503,288 @@ public class BusinessViewModelTests
         var toasts = new ToastService();
         var vm = new BusinessViewModel(biz, engine, toasts);
         return (vm, engine);
+    }
+}
+
+
+================================================================================
+FILE: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+SIZE: 10.37 KB
+================================================================================
+
+using Microsoft.Extensions.Logging.Abstractions;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+using NSubstitute;
+using Shouldly;
+
+namespace MyAdventure.UI.Tests;
+
+/// <summary>
+/// Tests for <see cref="GameViewModel.OnSuspended"/> and
+/// <see cref="GameViewModel.OnResumed"/> — the foreground-resume hooks
+/// that compensate the player for time spent with the app suspended in
+/// the background. These cover the bug where the
+/// <c>DispatcherTimer</c>'s post-resume <c>delta</c> was clamped to 1
+/// second, silently discarding the rest of the suspension period.
+/// </summary>
+public class GameViewModelLifecycleTests
+{
+    /// <summary>
+    /// Minimal hand-rolled fake to drive the ViewModel's clock from tests.
+    /// Avoids adding a Microsoft.Extensions.TimeProvider.Testing dependency
+    /// just for two test files; all we need is settable "now."
+    /// </summary>
+    private sealed class TestTimeProvider : TimeProvider
+    {
+        private DateTimeOffset _now;
+        public TestTimeProvider(DateTime utcStart) => _now = new DateTimeOffset(utcStart, TimeSpan.Zero);
+        public override DateTimeOffset GetUtcNow() => _now;
+        public void Advance(TimeSpan by) => _now = _now.Add(by);
+    }
+
+    private static (GameViewModel vm, GameEngine engine, TestTimeProvider clock, ToastService toasts) MakeVm(double angels = 0)
+    {
+        var clock = new TestTimeProvider(new DateTime(2025, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance, clock);
+        var toasts = new ToastService();
+        var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts, clock);
+
+        // Force initial cash & angels via reflection so we don't depend on
+        // BuyBusiness side-effects bleeding into earnings calculations.
+        if (angels > 0)
+            typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!
+                .GetSetMethod(true)!.Invoke(engine, [angels]);
+        typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!
+            .GetSetMethod(true)!.Invoke(engine, [1_000_000.0]);
+
+        // Set up a managed lemonade stand so offline earnings have
+        // something to compute.
+        engine.BuyBusiness("lemonade");
+        engine.BuyManager("lemonade");
+        // Reset progress so the auto-started cycle doesn't skew results.
+        engine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
+
+        return (vm, engine, clock, toasts);
+    }
+
+    // ---------------------------------------------------------------
+    // OnResumed without a prior OnSuspended is a no-op for earnings.
+    // This is the cold-start guard: LoadAsync handles the offline gap
+    // there, and OnResumed must not double-count.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void OnResumed_WithoutPriorSuspend_ShouldNotApplyEarnings()
+    {
+        var (vm, engine, _, _) = MakeVm();
+        var cashBefore = engine.Cash;
+
+        vm.OnResumed();
+
+        engine.Cash.ShouldBe(cashBefore);
+    }
+
+    // ---------------------------------------------------------------
+    // The guard must hold across the FULL lifecycle, not just before
+    // the first activation event. If lifecycle events ever fire in an
+    // unexpected order (Activated without a prior Deactivated), we
+    // must not pay out random amounts of money.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void OnResumed_TwiceWithoutSuspend_ShouldNotApplyEarnings()
+    {
+        var (vm, engine, _, _) = MakeVm();
+        var cashBefore = engine.Cash;
+
+        vm.OnResumed();
+        vm.OnResumed();
+
+        engine.Cash.ShouldBe(cashBefore);
+    }
+
+    [Fact]
+    public void OnSuspendedThenOnResumed_ShouldApplyEarningsForGap()
+    {
+        var (vm, engine, clock, _) = MakeVm();
+        var cashBefore = engine.Cash;
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMinutes(10));
+        vm.OnResumed();
+
+        // Lemonade: cycle 0.6s, base $1, 1 owned, no angels.
+        // 600s / 0.6s = 1000 cycles × $1 × 1.0 bonus = $1000.
+        var earned = engine.Cash - cashBefore;
+        earned.ShouldBe(1000.0);
+    }
+
+    [Fact]
+    public void OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce()
+    {
+        // Same calculation as above but with angels — must match the
+        // canonical OfflineEarnings path (one bonus multiplier, applied
+        // once at the end). This is the GameViewModel-level mirror of
+        // OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice in the
+        // engine tests.
+        var (vm, engine, clock, _) = MakeVm(angels: 50); // ×2 bonus
+        var cashBefore = engine.Cash;
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromSeconds(60));
+        vm.OnResumed();
+
+        // 60s / 0.6s = 100 cycles × $1 × 2.0 bonus = $200.
+        var earned = engine.Cash - cashBefore;
+        earned.ShouldBe(200.0);
+    }
+
+    [Fact]
+    public void OnResumed_ShouldShowToast_WhenEarningsApplied()
+    {
+        var (vm, _, clock, toasts) = MakeVm();
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMinutes(5));
+        vm.OnResumed();
+
+        toasts.ActiveToasts.Count.ShouldBe(1);
+        toasts.ActiveToasts[0].Message.ShouldContain("While you were away");
+    }
+
+    [Fact]
+    public void OnResumed_ShouldNotShowToast_WhenNoEarnings()
+    {
+        // No managed business + a suspend/resume cycle -> no earnings,
+        // no toast. The "while you were away" message would be misleading
+        // when nothing was actually earned.
+        var clock = new TestTimeProvider(new DateTime(2025, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance, clock);
+        var toasts = new ToastService();
+        var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts, clock);
+
+        // No managed businesses; offline path returns 0.
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMinutes(5));
+        vm.OnResumed();
+
+        toasts.ActiveToasts.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void OnResumed_TinyGap_ShouldNotApplyEarnings()
+    {
+        // Sub-1-second resume gap (e.g. screen flicker, ultra-brief lock)
+        // is below the engine's MinimumOfflineGapSeconds threshold and
+        // must produce no earnings. This protects against double-counting
+        // the live tick loop.
+        var (vm, engine, clock, _) = MakeVm();
+        var cashBefore = engine.Cash;
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMilliseconds(500));
+        vm.OnResumed();
+
+        engine.Cash.ShouldBe(cashBefore);
+    }
+
+    [Fact]
+    public void OnResumed_AfterFirstResume_RequiresNewSuspend()
+    {
+        // After OnResumed clears _suspendedAt, a SECOND OnResumed call
+        // (without an intervening OnSuspended) must not pay out again.
+        // This covers the case where the activatable lifetime fires
+        // duplicate Activated events (rare but known on some platforms).
+        var (vm, engine, clock, _) = MakeVm();
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMinutes(5));
+        vm.OnResumed();
+
+        var cashAfterFirst = engine.Cash;
+        clock.Advance(TimeSpan.FromMinutes(5));
+
+        vm.OnResumed(); // no new suspend -> no new payout
+
+        engine.Cash.ShouldBe(cashAfterFirst);
+    }
+
+    [Fact]
+    public void OnResumed_ShouldResetLastTickToCurrentTime()
+    {
+        // After resume, the very next OnTick must NOT see a multi-minute
+        // delta. _lastTick has to be reset to "now" inside OnResumed so
+        // the resume gap and the live tick path don't overlap.
+        var (vm, engine, clock, _) = MakeVm();
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMinutes(10));
+        vm.OnResumed();
+
+        var cashAfterResume = engine.Cash;
+
+        // Now simulate the very next tick: delta should be ~0, so
+        // running OnTick must add at most ~one cycle of earnings, not
+        // ten minutes' worth. (We start the lemonade fresh at 0% so a
+        // sub-cycle delta produces no payout.)
+        engine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
+        clock.Advance(TimeSpan.FromMilliseconds(16));
+        vm.OnTick();
+
+        // 16ms / 600ms = 2.67% progress. No cycle should have completed,
+        // so cash is unchanged.
+        engine.Cash.ShouldBe(cashAfterResume);
+    }
+
+    [Fact]
+    public void OnResumed_ShouldApplyEarningsBeforeRefreshingUi()
+    {
+        // The CashText binding has to reflect the new cash on resume —
+        // not require the next tick to update. Without this, the player
+        // would see their old cash for ~16ms after resume (visible flicker).
+        var (vm, engine, clock, _) = MakeVm();
+
+        // Pre-suspend cash is whatever MakeVm left after buying the
+        // lemonade ($4) and its manager ($4,000). What matters is that
+        // CashText after resume reflects post-payout, not pre-payout.
+        var cashBeforeResume = engine.Cash;
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromMinutes(10));
+        vm.OnResumed();
+
+        // 10 minutes / 0.6s cycle = 1000 cycles × $1 × 1.0 bonus = $1,000.
+        engine.Cash.ShouldBe(cashBeforeResume + 1000.0);
+
+        // CashText must be a fresh format of the post-payout cash, not
+        // a stale snapshot taken before OnSuspended saved.
+        vm.CashText.ShouldBe($"${NumberFormatter.Format(engine.Cash)}");
+    }
+
+    [Fact]
+    public void OnSuspended_ShouldRecordTimestamp_AndAllowSubsequentResume()
+    {
+        // The most basic invariant: OnSuspended records something, and
+        // a subsequent OnResumed pays out. Without the timestamp being
+        // captured, OnResumed would see _suspendedAt == null and skip
+        // the payout — effectively the bug.
+        var (vm, engine, clock, _) = MakeVm();
+        var cashBefore = engine.Cash;
+
+        vm.OnSuspended();
+        clock.Advance(TimeSpan.FromSeconds(30));
+        vm.OnResumed();
+
+        engine.Cash.ShouldBeGreaterThan(cashBefore);
     }
 }
 
