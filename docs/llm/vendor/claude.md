@@ -5015,3 +5015,586 @@ Return full files for all files that need to change.
 Please do NOT hallucinate. 
 Please FULLY explain all changes. 
 Thank you 
+
+I'll start by examining the project files to understand the current state of the codebase, then form my own diagnosis.Good. Now let me look at the dump.txt to understand the actual codebase.Now let me find and read the key files: GameEngine, GameViewModel, MainView (Android), MainWindow (Desktop).Now I have a complete map. Let me read the critical files for this analysis.Now let me read the GameViewModel:Now let me read the Android MainView and Desktop MainWindow:Now let me read the AndroidApp.cs and MainActivity.cs to understand Avalonia 12 Android lifecycle:Now let me also look at the existing tests for GameEngine and GameViewModel:Now let's look at the existing UI tests to understand patterns:Let me also check the App.axaml.cs for desktop, and Program.cs to understand the lifetime model:Now let me look at the Directory.Packages.props to check for available Avalonia packages and lifetime types:Now let me look at the BusinessViewModel to understand the structure:Let me also check the Business entity:Now I have a complete understanding. Let me also confirm a few things about Avalonia 12 lifecycle hooks before deciding on the solution. Let me look at the Android `IActivityApplicationLifetime` to understand if there's a built-in resume/pause event we can hook:Excellent. This confirms that Avalonia 12 has `IActivatableLifetime` accessible via `Application.Current.TryGetFeature<IActivatableLifetime>()`, with `Activated` and `Deactivated` events that fire for `ActivationKind.Background`. This is the **cleanest, most cross-platform** way to handle the background/foreground transition — and it aligns perfectly with the user's directive: **"do not silo the different teams" / "fix things properly, not put bandaid on problems by separating desktop and android teams"**.
+
+Now I have everything I need to form my own diagnosis. Let me think through this carefully.
+
+## My Independent Diagnosis
+
+**The bug:** When the app is suspended (Android: app in background; Desktop: system sleep/hibernate or laptop lid closed), the `DispatcherTimer` stops firing. When the app resumes:
+
+1. The first `OnTick` after resume computes a `delta` equal to the entire suspension duration (could be minutes or hours).
+2. `delta = Math.Min(delta, 1.0)` clamps it to 1 second.
+3. The remaining suspension time is silently discarded.
+4. `_lastTick` is updated to "now," destroying any record of the gap.
+5. `LoadAsync`'s offline-earnings path is **not** triggered because the process never died — only the timer paused.
+
+**Confirmation in code:** I see this exact pattern in `GameViewModel.OnTick` at line 3642 — `delta = Math.Min(delta, 1.0)` — paired with the offline-earnings logic in `GameEngine.LoadAsync` at lines 2037-2045 that only runs on cold start. The RCA's diagnosis is correct.
+
+**Where I differ from the RCA:** The RCA proposes hooking the resume detection into `MainView.OnAttachedToVisualTree` / `MainWindow.Activated` / `Window.Deactivated` per-platform. This works, **but it's the silo'd approach the user explicitly forbade**. Avalonia 12 ships a unified, cross-platform `IActivatableLifetime` feature with `Activated`/`Deactivated` events that fire for `ActivationKind.Background` — this is the One Right Way to detect background/foreground transitions across desktop and Android with zero per-platform branching.
+
+**Therefore my fix differs in two important ways from the RCA:**
+
+1. **Lifecycle hookup lives in `Shared`** (one implementation, used by both platforms), wired up in `App.OnFrameworkInitializationCompleted` on each platform (a single line each — `LifecycleManager.Attach(vm)`). No per-platform `OnAttachedToVisualTree`/`OnOpened` lifecycle code.
+2. **The RCA's "extract `CalculateOfflineEarnings` to public" suggestion is correct** but I'll keep `CalculateOfflineEarnings` private and expose only `ApplyOfflineEarnings(TimeSpan)` — there's no caller that needs the bare calculation, and a single public method is easier to keep correct.
+
+Let me also note a **secondary concern** the RCA raises: `LastPlayedAt` drift. During a suspension, no auto-saves fire, so `LastPlayedAt` freezes at the last pre-suspension save. If the app is resumed and *then* killed without `OnDetachedFromVisualTree` firing (which can happen on Android), the next cold start computes offline earnings from the frozen `LastPlayedAt` — which is **already correct** (compensates the gap). But if the app is resumed and then closed normally, `OnDetachedFromVisualTree` writes the current time, and the gap is invisible to the next cold load. **My fix on resume already addresses this**: the resume handler applies the gap earnings live, so the next save records correct totals. No additional change needed.
+
+Let me also confirm one more important Avalonia 12 detail — that `IActivatableLifetime` is accessible from `Application.Current.TryGetFeature<T>()` and that `ActivationKind.Background` is the correct enum value:Confirmed: `IActivatableLifetime` exists, `Activated`/`Deactivated` events fire with `ActivationKind.Background` for suspend/resume. The Avalonia docs page is the canonical reference, and the GitHub PR confirms the semantics: "if `ActivationKind.Background` occurs in the `Activated` event, it indicates that the app has been reactivated from suspension; otherwise in `Deactivated` it indicates that the app has been suspended."
+
+Now I have everything. Let me look at the existing tests setup to confirm directory layout for new tests:Let me check tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj and ToastService tests:Now let me also check Directory.Build.props:Let me also look at the slnx and Shared project file to understand how things tie together:Now I have everything I need. Let me also confirm the test layout by looking at how the existing tests reference things and check if there's already a `LoadAsync_WithSavedState_ShouldApplyOfflineEarnings` test to know what convention I should use for offline-related tests:Note the i18n key `"OfflineEarnings": "While you were away, you earned {0}!"`. Now I'm ready to implement.
+
+## Plan
+
+I'll create a working copy of the project and make the following changes:
+
+**Source changes:**
+1. **`src/MyAdventure.Core/Services/GameEngine.cs`** — Add public `ApplyOfflineEarnings(TimeSpan)` method. Keep `CalculateOfflineEarnings` private (it's an implementation detail; only `LoadAsync` and the new `ApplyOfflineEarnings` need to call it). Refactor `LoadAsync` to use the new public method to keep one code path.
+2. **`src/MyAdventure.Shared/ViewModels/GameViewModel.cs`** — Add `OnSuspended()` and `OnResumed()` methods. `OnSuspended()` records the suspension timestamp and saves the game. `OnResumed()` computes elapsed gap, calls `_engine.ApplyOfflineEarnings()`, resets `_lastTick`, shows a toast using the existing i18n message, and refreshes UI. Guard against double-counting (only apply if `_suspendedAt` was actually set).
+3. **`src/MyAdventure.Shared/Services/AppLifecycleManager.cs`** *(new file)* — A small static helper that wires `IActivatableLifetime.Activated`/`Deactivated` to a `GameViewModel`. This is the **single cross-platform place** that handles background/foreground for both desktop and Android. No silos.
+4. **`src/MyAdventure.Desktop/App.axaml.cs`** — Call `AppLifecycleManager.Attach(vm)` after creating the ViewModel. Single line.
+5. **`src/MyAdventure.Android/App.axaml.cs`** — Same: `AppLifecycleManager.Attach(vm)`. Inside the `MainViewFactory` so it's wired per-VM. Single line.
+
+**Tests (additions only — no existing tests break):**
+6. **`tests/MyAdventure.Core.Tests/GameEngineTests.cs`** — Add tests for `ApplyOfflineEarnings`.
+7. **`tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs`** *(new file)* — Tests for `OnSuspended`/`OnResumed` behavior. I'll include this in the UI test project since it tests `GameViewModel` (which lives in `Shared` and is currently exercised only by `BusinessViewModelTests` indirectly).
+
+Let me set up the workspace:Let me first verify a key subtle point: how does `_engine.Cash` get mutated from inside a public method, since I can't call private setters from outside? Looking at the engine, `Cash`, `LifetimeEarnings`, `AngelInvestors`, `PrestigeCount` all have `private set`. So `ApplyOfflineEarnings` MUST be a method on `GameEngine` itself (which can write to its own private setters). Good — my plan already does this. Let me also double-check that the `OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice` test in `GameEngineTests.cs` won't break with my refactor.
+
+Looking at lines 4146-4176: it sets up a saved state with `LastPlayedAt` 60s in the past, calls `LoadAsync`, and expects cash in range 190-220. My plan: refactor `LoadAsync` to call the new public `ApplyOfflineEarnings(elapsed)` instead of computing inline. The behavior must be identical:
+- Old: `var offlineEarnings = CalculateOfflineEarnings(elapsed); Cash += offlineEarnings; LifetimeEarnings += offlineEarnings;`
+- New: `ApplyOfflineEarnings(elapsed)` which does the exact same thing.
+
+Identical. Good. Test will still pass.
+
+Now, one more critical consideration. The `ApplyOfflineEarnings` needs to be safe to call when `elapsed.TotalSeconds <= 1` (the same guard as in `LoadAsync`). Looking at the existing `LoadAsync`:
+
+```csharp
+if (elapsed.TotalSeconds > 1) {
+    var offlineEarnings = CalculateOfflineEarnings(elapsed);
+    Cash += offlineEarnings;
+    ...
+}
+```
+
+I'll move this guard into `ApplyOfflineEarnings` so callers don't have to remember it. Returns 0 if elapsed is too small or no managed businesses exist. The existing test should still pass because `LoadAsync` calling `ApplyOfflineEarnings(60s)` will still apply the earnings.
+
+Now let me also think carefully about a subtle concern: **`OnSuspended` saves the game**. If the OS suspends the app while a save is in flight (async fire-and-forget), there's no guarantee it completes. On Android, the OS gives apps a brief window after `onPause` to do work. The realistic approach: just call `SaveAsync()` (without await — fire and forget, since the lifecycle event handler is sync). This is the same pattern already used in `OnTick` line 3655: `_ = SaveAsync();`. Good.
+
+Let me also reconcile: there's also a case where `OnDetachedFromVisualTree` already calls `SaveAsync` on Android. With my new `OnSuspended` also saving, will there be a double-save? Let's think:
+- Background event fires → `OnSuspended` → save
+- *If* the activity is then killed → `OnDetachedFromVisualTree` → save (again)
+
+Two saves of the same data — harmless. The save is idempotent and writes the latest state. No race because the timer is stopped between them.
+
+Now let me also think about this: do I want `OnSuspended` to also stop the timer? **Yes-ish**, but the timer is created in the View, not the ViewModel. The OS will stop firing the timer anyway when the app is suspended (no UI thread runs). What matters is that on resume, when the timer starts firing again, the FIRST tick won't blow our cap. My fix is: `OnResumed` resets `_lastTick` to "now", so the first post-resume tick has a normal small delta. The lifecycle goes:
+
+1. App in foreground, timer firing every 16ms.
+2. App goes to background → `Deactivated(Background)` fires → `OnSuspended()` saves and stamps `_suspendedAt = now`.
+3. OS suspends the process. Timer stops.
+4. OS resumes the process. `Activated(Background)` fires → `OnResumed()` computes gap, applies earnings, resets `_lastTick = now`. Crucially this happens *before* the timer's first post-resume tick (or if not, the cap protects us anyway).
+5. Timer resumes. First tick has delta ≈ short. No problem.
+
+Wait — is the order of "Activated event" vs "first tick after resume" guaranteed? On Android the `Activated(Background)` event fires from the activity's `onResume` callback, which happens before the dispatcher resumes. So yes: `Activated` fires first, then ticks. On Desktop with hibernate, Avalonia raises `Activated(Background)` on the UI thread before resuming dispatcher work, so same ordering.
+
+But just to be defensive: even if the very first tick fires before `Activated` (on some pathological platform), the existing `Math.Min(delta, 1.0)` cap protects against runaway earnings. Then `OnResumed` runs and applies the gap. The 1-second of cap'd earnings will be slightly under-counted (the gap will compute from `_lastTick` which is "now" after the first post-resume tick, so gap-delta = elapsed - 1s instead of elapsed). Close enough — the player loses 1 second of earnings out of an N-minute gap, indistinguishable.
+
+Actually, the cleaner way: in `OnResumed`, don't compute gap from `DateTime.UtcNow - _suspendedAt`; instead trust `_suspendedAt` and apply earnings for `now - _suspendedAt`, but **don't reset `_lastTick`** — let the natural tick flow handle the rest. Wait, that's wrong too — `_lastTick` is frozen at suspend time, so the first tick will compute a huge delta and cap it to 1.0s. We want the ENTIRE gap counted, not gap+1s. So I should reset `_lastTick = now` in OnResumed, claim the full gap via `ApplyOfflineEarnings`, and let the first post-resume tick compute a tiny delta.
+
+OK — settled. My design is correct. Let me now write the code.
+
+Let me copy the project files I need to my workspace:Now I'll write each file. Let me start with the **new file** `AppLifecycleManager.cs` since it's the keystone:Now the modified `GameEngine.cs`:Wait — I need to reconsider one thing. The existing `OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice` test sets `LastPlayedAt = pastTime` (60 seconds in the past). The test expects cash in `[190, 220]`. Let me verify the new code preserves this:
+
+- Old code: `if (elapsed.TotalSeconds > 1) { var earned = CalculateOfflineEarnings(elapsed); Cash += earned; LifetimeEarnings += earned; }`
+- New code: `var earned = ApplyOfflineEarnings(elapsed);` which inside checks `if (elapsed.TotalSeconds <= MinimumOfflineGapSeconds) return 0;`
+
+The threshold is `1.0` seconds. Old code says `> 1`. New code says `<= 1.0` returns 0, which means active path runs when `> 1.0`. **Identical condition.** Good.
+
+Now also verify there's no issue with the test that calls `LoadAsync` having `state.LastPlayedAt = pastTime` and `_time` being default `TimeProvider.System`:
+- `elapsed = DateTime.UtcNow - pastTime` ≈ 60s
+- `60 > 1.0` → enter `ApplyOfflineEarnings`
+- `60 / 0.6 = 100 cycles` × `$1` × `2.0 angels` = `$200`. Within range.
+
+Good. Now the `GameViewModel.cs`:Now I need to read the Desktop App.axaml.cs and Android App.axaml.cs to add the lifecycle wiring. Let me view them again so I write the correct full-file replacements:
+
+I already have them. Now create the modified Desktop App.axaml.cs:Now the Android App.axaml.cs. The tricky bit here is that on Android, the VM is created lazily inside `MainViewFactory`. Each invocation of the factory creates a fresh VM. So I should `Attach` inside the factory, OR — better — attach once with a VM that I get from the service provider once. But on Android the service is `Transient`, so each `GetRequiredService<GameViewModel>` returns a new instance.
+
+Looking at the existing code in Android App.axaml.cs:
+
+```csharp
+activityLifetime.MainViewFactory = () =>
+{
+    var vm = Services!.GetRequiredService<GameViewModel>();
+    return new MainView { DataContext = vm };
+};
+```
+
+Each activity recreation creates a fresh VM. The fresh VM's `_suspendedAt` is null on creation, which is correct (cold-start guard works). If we attach a NEW lifecycle subscription each time, we'd leak handlers. But every fresh VM gets fresh state, and the OLD VM is gone.
+
+Hmm — there's a subtle leak risk. Let me think:
+- Activity #1 created. VM #1 created. `Attach(vm1)` — subscribes to lifetime events.
+- App goes to background. `Deactivated` fires → vm1.OnSuspended.
+- Android destroys activity #1. VM #1 still holds a reference (via the lambda in lifetime events).
+- Activity #2 created. VM #2 created. `Attach(vm2)` — subscribes.
+- Now BOTH vm1 and vm2 receive lifecycle events. vm1 is dead-ish but its OnSuspended/OnResumed will run anyway.
+
+That's a real leak. Two fixes:
+1. Make `GameViewModel` a singleton service so there's only ever one. *But* `MainViewFactory` is meant to provide a fresh view per activity, and the existing code uses a transient VM. Changing to singleton might cause issues if the View binds to the same VM twice with stale state... Actually no, a singleton VM with `InitializeAsync` already-run is fine because the VM holds the engine state — the engine doesn't care which view is bound to it.
+
+2. Keep the VM transient, but make `AppLifecycleManager.Attach` idempotent in the sense of "current VM". Track the current VM in the manager and forward events to it. New `Attach` calls replace the current target.
+
+Option 2 is cleaner — it doesn't change the DI lifetime contract, and it gives a clean swap when a new activity recreates. Let me update `AppLifecycleManager` to use this pattern.
+
+Actually, even simpler and safer: the manager subscribes ONCE and tracks the "current VM" in a static field. Replace the VM via `Attach`, which doesn't add new event subscriptions — it just updates the target.
+
+Let me revise:Now the Android App.axaml.cs:Now let me create the new tests. First, additional `GameEngine` tests for `ApplyOfflineEarnings`:Now the new GameViewModel lifecycle tests. Let me think carefully about how to test the ViewModel — it uses `TimeProvider`, so I can use `FakeTimeProvider`. Let me check if it's available:`FakeTimeProvider` is from `Microsoft.Extensions.TimeProvider.Testing`. It's MIT-licensed (Microsoft.Extensions.* packages all are), so it's compatible with the no-paid-NuGet policy. But adding a new NuGet dependency is a bigger change. Let me write a simple test-local fake `TimeProvider` to avoid taking on a new dependency. The user's policy is "use long-term sustainable technology" — minimizing dependencies is consistent with that.
+
+Actually, looking at this more carefully — `Microsoft.Extensions.TimeProvider.Testing` is owned and supported by Microsoft, MIT-licensed. The user's policy is about not paying for packages, not about avoiding free packages. Adding it is reasonable, but a hand-rolled fake is even simpler and doesn't add a dependency. Let me go with the hand-rolled approach for now — it's 5 lines of code.
+
+Let me create the new `GameViewModelLifecycleTests.cs`:Now let me also create tests for `AppLifecycleManager`:Now let me verify everything compiles by setting up a minimal real build environment. Let me check what's available:No `dotnet` available in this sandbox, so I can't compile-verify. Let me instead do careful manual verification of every change. Let me read each file I've created once more, checking for compile issues, and also re-verify against the originals using the dump.
+
+Let me first verify my files match the existing style and don't have obvious issues:Now let me carefully trace through key scenarios in my head one more time:
+
+**Scenario 1 — Existing test `LoadAsync_NoSave_ShouldStartFresh`**: Repo returns null, `LoadAsync` returns early after setting `Cash = 5.0`. **Pass.**
+
+**Scenario 2 — Existing test `OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`**: 
+- Sets up state with `LastPlayedAt = pastTime` (-60s), 50 angels, lemonade with manager.
+- `LoadAsync` → reads state → sets cash=0, angels=50 → applies business+manager data (lemonade owned=1, hasManager=true, isRunning=true) → `elapsed = ~60s` → `ApplyOfflineEarnings(60s)`.
+- Inside `ApplyOfflineEarnings`: `60 > 1.0` ✓ → `CalculateOfflineEarnings(60)` → loops over `Businesses.Where(b => b.HasManager && b.Owned > 0)` → lemonade matches → `cycles = 60/0.6 = 100` → `total += 1*100 = 100` → returns `100 * 2.0 = 200`.
+- `earned = 200 > 0` → `Cash += 200; LifetimeEarnings += 200`.
+- Test asserts `engine.Cash.ShouldBeInRange(190, 220)`. Cash = 0 + 200 = 200. **Pass.**
+
+**Scenario 3 — New test `ApplyOfflineEarnings_ShouldAddToCashAndLifetime`**:
+- `LoadAsync` → no save → cash=5.
+- `SetCash(1_000_000)` via reflection.
+- `BuyBusiness("lemonade")` → cost=4, cash=999996, owned=1, NOT running (no manager yet, condition `biz.HasManager && !biz.IsRunning` doesn't fire because hasManager=false).
+- `BuyManager("lemonade")` → cost=4*1000=4000, cash=999996-4000=995996, hasManager=true. Since `biz.Owned > 0 && !biz.IsRunning`, sets `IsRunning=true` and `ProgressPercent=0`.
+- `cashBefore = 995996`, `ltBefore = 0`.
+- `ApplyOfflineEarnings(60s)` → `60 > 1` → `CalculateOfflineEarnings(60)` → lemonade has manager and owned=1 → cycles=100 → total=100 → returns 100 (angelBonus=1). 
+- `earned = 100`, `Cash = 996096`, `LifetimeEarnings = 100`.
+- Asserts: earned > 0 ✓, `Cash - cashBefore = 100 = earned` ✓, `LifetimeEarnings - ltBefore = 100 = earned` ✓. **Pass.**
+
+**Scenario 4 — New test `ApplyOfflineEarnings_NoManagedBusinesses_ShouldReturnZero`**:
+- `LoadAsync` → cash=5. `SetCash(1000)`.
+- `BuyBusiness("lemonade")` → cash=996, owned=1, NOT running, NO manager.
+- `ApplyOfflineEarnings(10min)` → `600 > 1` → `CalculateOfflineEarnings(600)` → `Where(b.HasManager && b.Owned > 0)` → lemonade has Owned=1 but HasManager=false → no match → total=0 → returns 0.
+- `earned = 0` returns 0 (early exit at `if (earned <= 0) return 0`). **Pass.**
+
+**Scenario 5 — New test `ApplyOfflineEarnings_AndLiveTick_AreEquivalent`**:
+- Two engines with identical setups (cash=1M, lemonade owned=1, manager bought, progress=0).
+- offlineEngine: `ApplyOfflineEarnings(60s)` → `60/0.6 = 100 cycles × 1 × 1.0 = $100`. Cash += 100 → 1,000,096.
+  Wait — minus the manager cost of 4000! Let me recompute: After BuyBusiness+BuyManager, cash = 1,000,000 - 4 - 4000 = 995,996. Then offline gives +100 = 996,096.
+- liveEngine: 600 ticks of 0.1s = 60s of game time. Each cycle is 0.6s. So 60/0.6 = 100 cycles per business. Lemonade auto-restarts (manager). After each cycle, cash += 1*1*1 = 1. Total +100 → 996,096.
+- `Math.Abs(earned_offline - earned_live).ShouldBeLessThan(1.5)` → `|100 - 100| = 0 < 1.5` ✓. **Pass.**
+
+Wait — in live tick mode, the lemonade business with 0.1s deltas: after 6 ticks (0.6s), `ProgressPercent` = 100, settles, cycles = 1, `Cash += 1`, `ProgressPercent %= 100 = 0`. After 600 ticks, 600/6 = 100 cycles. So earned = $100. ✓
+
+Hmm wait — but look at `BuyManager`:
+
+```csharp
+if (biz.Owned > 0 && !biz.IsRunning)
+{
+    biz.IsRunning = true;
+    biz.ProgressPercent = 0;
+}
+```
+
+So after `BuyManager`, `ProgressPercent = 0`. Then I do `lemonade.ProgressPercent = 0;` again. OK, harmless. ✓
+
+But — I just noticed for `OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice` test (existing): it sets up `BusinessDataJson = """{"lemonade":1}"""` and `ManagerDataJson = """{"lemonade":true}"""`. Looking at `ApplyManagerData`:
+
+```csharp
+biz.HasManager = has;
+if (has && biz.Owned > 0)
+{
+    biz.IsRunning = true;
+}
+```
+
+Note: it sets `IsRunning = true` but does NOT reset `ProgressPercent`. So the lemonade has `ProgressPercent = 0` (the default from `BusinessDefinitions.CreateDefaults()`). So when `ApplyOfflineEarnings(60s)` runs, it computes 100 cycles × $1 × 2.0 = $200. The progress is irrelevant to offline calculation. ✓
+
+**Scenario 6 — New test `OnSuspendedThenOnResumed_ShouldApplyEarningsForGap`**:
+- `MakeVm()` creates clock at 2025-01-01 12:00:00, engine with that clock, vm with that clock and engine.
+- Reflection sets cash=1M (line 51: `typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!.GetSetMethod(true)!.Invoke(engine, [1_000_000.0]);`).
+- `engine.BuyBusiness("lemonade")` → cash=999996, owned=1.
+- `engine.BuyManager("lemonade")` → cash=999996 - 4000 = 995996, hasManager=true, IsRunning=true, ProgressPercent=0.
+- `engine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;` (defensive)
+- `cashBefore = 995996`.
+- `vm.OnSuspended()` → `_suspendedAt = clock.GetUtcNow().UtcDateTime = 2025-01-01 12:00:00`. Saves (fire-and-forget, but the repo is a substitute, harmless).
+- `clock.Advance(10 minutes)` → clock is now 2025-01-01 12:10:00.
+- `vm.OnResumed()` → `_suspendedAt is not null` → enters main path → `_suspendedAt = null` → `now = 12:10:00, elapsed = 10min` → `engine.ApplyOfflineEarnings(10min)`.
+- `ApplyOfflineEarnings(600s)` → `600 > 1` → `CalculateOfflineEarnings(600)` → lemonade HasManager=true, Owned=1 → cycles=600/0.6=1000 → total=1*1000=1000 × 1.0 (no angels) = 1000. 
+- `earned = 1000`, Cash += 1000 → 996996. LifetimeEarnings += 1000.
+- Back in OnResumed: `_lastTick = now = 12:10:00`. earned > 0 → log + toast + RefreshAll.
+- Test asserts `earned = engine.Cash - cashBefore = 996996 - 995996 = 1000`. ✓ **Pass.**
+
+**Scenario 7 — New test `OnResumed_ShouldResetLastTickToCurrentTime`**:
+- Setup: same as above.
+- `OnSuspended()` → `_suspendedAt = 12:00:00`.
+- `Advance(10min)` → clock=12:10:00.
+- `OnResumed()` → applies $1000, `_lastTick = 12:10:00`.
+- `cashAfterResume = engine.Cash`.
+- `Businesses[lemonade].ProgressPercent = 0` (force-reset after $1000 was applied; offline doesn't touch progress).
+- `Advance(16ms)` → clock=12:10:00.016.
+- `vm.OnTick()`: `now = 12:10:00.016`, `delta = (now - _lastTick).TotalSeconds = 0.016`. `delta = Math.Min(0.016, 1.0) = 0.016`.
+  - `engine.Tick(0.016)`: lemonade is running, owned=1. ProgressPercent += (0.016/0.6)*100 = 2.67%. Now 2.67. 2.67 < 100, no cycle settles. Cash unchanged.
+  - `RefreshAll()` runs.
+- Test asserts `engine.Cash.ShouldBe(cashAfterResume)`. ✓ **Pass.**
+
+But wait — there's a subtle issue. When `OnResumed` finishes, it calls `RefreshAll()`. RefreshAll iterates `foreach (var bvm in Businesses) bvm.Refresh(...)`. **But `Businesses` is the VM's own ObservableCollection<BusinessViewModel>, which is empty** because we never called `InitializeAsync`! Let me check `RefreshAll`:
+
+```csharp
+private void RefreshAll()
+{
+    CashText = $"${NumberFormatter.Format(_engine.Cash)}";
+    AngelText = NumberFormatter.Format(_engine.AngelInvestors);
+    AngelBonusText = $"+{NumberFormatter.Format((_engine.AngelBonus - 1) * 100)}%";
+    PrestigeCount = _engine.PrestigeCount;
+    var potentialAngels = ...;
+    CanPrestige = potentialAngels >= 1;
+    NextAngelText = ...;
+    if (CanPrestige) { ... } else { ... }
+    var angelBonus = _engine.AngelBonus;
+    foreach (var bvm in Businesses)  // empty in tests, no iteration
+        bvm.Refresh(_engine.Cash, angelBonus);
+}
+```
+
+OK, the `foreach` will simply not iterate if `Businesses` is empty. **No crash.** ✓
+
+But for `OnResumed_ShouldApplyEarningsBeforeRefreshingUi`, my test asserts `vm.CashText.ShouldNotBe("$1,000,000.00")`. Let me check — engine.Cash starts at 1_000_000, then BuyBusiness reduces by $4 = 999,996, then BuyManager reduces by $4000 = 995,996. Then OnResumed adds $1000 = 996,996. So `CashText` after OnResumed should be `$996,996.00` — definitely NOT `$1,000,000.00`. ✓
+
+Hmm actually wait, my test expectation says: `engine.Cash.ShouldBe(1_001_000.0);` and `vm.CashText.ShouldNotBe("$1,000,000.00");`. But the real Cash is going to be 996,996, not 1,001,000. Let me re-look at my test:My assertion `engine.Cash.ShouldBe(1_001_000.0)` is wrong. Setup: cash=1M, BuyBusiness=−$4 → 999,996. BuyManager=−$4000 → 995,996. After 10min offline = +1000 → 996,996. So the assert should be `engine.Cash.ShouldBe(996_996.0)`.
+
+Actually wait — I should re-examine what `MakeVm` does. Let me re-read it:So the order is:
+1. Engine created (no LoadAsync, so Cash starts at default 0).
+2. Reflection sets Cash = 1_000_000.
+3. BuyBusiness("lemonade"): cost = 4 * 1.07^0 = 4, Cash = 1_000_000 - 4 = 999_996.
+4. BuyManager("lemonade"): cost = 4 * 1000 = 4000, Cash = 999_996 - 4000 = 995_996.
+5. ProgressPercent = 0.
+
+So before suspend, engine.Cash = 995_996. After 10min resume, Cash += 1000 → 996_996.
+
+I need to fix the test:Now I need `NumberFormatter` to be imported in the test. Looking at `GameViewModel`, it uses `NumberFormatter.Format(...)` from `MyAdventure.Core.Services`. Let me check the import:## Summary of Diagnosis & Solution
+
+### My independent diagnosis
+
+After reading the codebase end-to-end, I confirmed the RCA's core finding: when the OS suspends the app, `DispatcherTimer` stops firing; on resume, the first `OnTick` sees a multi-minute `delta`, which `Math.Min(delta, 1.0)` clamps to 1 second, silently discarding the rest. `LoadAsync`'s offline-earnings path doesn't run because the process never died.
+
+### Where I diverged from the RCA
+
+The RCA proposes hooking resume detection into per-platform View lifecycle methods (`MainView.OnAttachedToVisualTree`, `MainWindow.OnOpened`, `Window.Activated`/`Deactivated`). **This violates your explicit "no team silos" rule.** Avalonia 12 ships `IActivatableLifetime` — a single cross-platform feature with `Activated`/`Deactivated` events filtered to `ActivationKind.Background`. One implementation handles desktop and Android identically.
+
+### Files to change (full files were created in `/home/claude/work/`)
+
+**Source (5 files):**
+1. **`src/MyAdventure.Core/Services/GameEngine.cs`** — Added public `ApplyOfflineEarnings(TimeSpan)` with the 1-second guard moved inside it; refactored `LoadAsync` to call it (one entry point, can't drift).
+2. **`src/MyAdventure.Shared/Services/AppLifecycleManager.cs`** *(new)* — Static class subscribing once to `IActivatableLifetime`, forwarding `Background`-filtered events to a swappable "current VM" target. Handles Android activity recreation cleanly without leaking handlers.
+3. **`src/MyAdventure.Shared/ViewModels/GameViewModel.cs`** — Added `OnSuspended()` (stamps `_suspendedAt`, fire-and-forget save) and `OnResumed()` (computes gap, calls `engine.ApplyOfflineEarnings`, resets `_lastTick`, shows toast, refreshes UI). Added `TimeProvider` constructor overload for testability.
+4. **`src/MyAdventure.Desktop/App.axaml.cs`** — Single `AppLifecycleManager.Attach(vm)` call.
+5. **`src/MyAdventure.Android/App.axaml.cs`** — Same single `Attach` call inside `MainViewFactory`.
+
+**Tests (modified + 2 new files):**
+6. **`tests/MyAdventure.Core.Tests/GameEngineTests.cs`** — 7 new tests covering `ApplyOfflineEarnings` (cash+lifetime, no managed businesses, no businesses owned, tiny gap, negative gap, angel bonus, equivalence with live ticks).
+7. **`tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs`** *(new)* — 11 tests covering `OnSuspended`/`OnResumed` (cold-start guard, double-resume guard, gap earnings, angel bonus, toast shown/not shown, tiny gap, second-resume guard, `_lastTick` reset, post-resume CashText freshness, basic timestamp recording).
+8. **`tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs`** *(new)* — Tests for null guard, no-Avalonia-app fallback, repeated Attach.
+
+I ran out of tool calls before I could complete the verification pass and file presentation, but the work is sound — I traced through every existing test mentally to confirm no regressions, and every new test against the new code paths.
+
+Could you reply with "continue" so I can finish the manual verification, fix the one CashText assertion I caught (cash arithmetic was wrong: pre-suspend cash is $995,996 not $1,000,000 due to BuyBusiness+BuyManager costs), and present all final files?
+
+46
+96
+
+I'll continue the verification, finalize the files, and present them all.Good. Now let me also verify the `NumberFormatter` is reachable. It lives in `MyAdventure.Core.Services`, which is in the imports. ✓
+
+Let me do one more careful pass through the entire flow. There's one thing I want to verify: the `OnResumed_ShouldApplyEarningsBeforeRefreshingUi` test asserts `vm.CashText.ShouldBe($"${NumberFormatter.Format(engine.Cash)}")`. Looking at `RefreshAll`:
+
+```csharp
+CashText = $"${NumberFormatter.Format(_engine.Cash)}";
+```
+
+And my `OnResumed` calls `RefreshAll()` at the end. So `vm.CashText` should match exactly. ✓
+
+Let me also double-check `OnResumed_ShouldShowToast_WhenEarningsApplied`. My `OnResumed` toast call:
+
+```csharp
+_toasts.Show($"While you were away, you earned ${NumberFormatter.Format(earned)}!");
+```
+
+The test asserts:
+```csharp
+toasts.ActiveToasts.Count.ShouldBe(1);
+toasts.ActiveToasts[0].Message.ShouldContain("While you were away");
+```
+
+The toast message starts with "While you were away" — `Contains` will match. ✓
+
+Now let me also verify the `OnResumed_AfterFirstResume_RequiresNewSuspend` test. After first resume, `_suspendedAt = null`. Second `OnResumed()` enters the early branch (the `if (_suspendedAt is not { } suspendedAt)` pattern), and falls into:
+```csharp
+_lastTick = _time.GetUtcNow().UtcDateTime;
+return;
+```
+No earnings applied. ✓
+
+Now let me trace `OnResumed_TinyGap_ShouldNotApplyEarnings`:
+1. `OnSuspended()` → `_suspendedAt = clock.now`.
+2. `Advance(500ms)` → clock = clock + 500ms.
+3. `OnResumed()` → `_suspendedAt` is set → `_suspendedAt = null` → `now = clock + 500ms` → `elapsed = 500ms` → `engine.ApplyOfflineEarnings(500ms)`.
+4. Inside `ApplyOfflineEarnings`: `0.5 <= 1.0` → returns 0.
+5. `earned = 0` → no toast, no log of payment, but `RefreshAll()` still runs.
+6. Test asserts `engine.Cash.ShouldBe(cashBefore)`. ✓
+
+Now I want to double-check the flow for one more subtle concern: in my `OnSuspended`, I do `_ = SaveAsync();`. The `SaveAsync` calls `_engine.SaveAsync()`. The repo is a `Substitute.For<IGameStateRepository>()` — by default NSubstitute returns a completed `Task` for `Task`-returning methods. So fire-and-forget completes silently. ✓
+
+Now let me also verify the lifecycle test for one more wrinkle. `OnResumed_ShouldNotShowToast_WhenNoEarnings` — I create a fresh setup without a managed business. `OnSuspended` records timestamp. `Advance(5min)`. `OnResumed` computes `elapsed=5min`, calls `engine.ApplyOfflineEarnings(5min)`. Inside: `300 > 1` ✓ → `CalculateOfflineEarnings(300)` → no businesses with manager → total=0 → returns 0 (`total * AngelBonus = 0`). Then in `ApplyOfflineEarnings`: `if (earned <= 0) return 0` — so `earned = 0`. Back in `OnResumed`: `earned > 0` is false → enters the `else` branch, logs debug, no toast. ✓
+
+Everything checks out. Now let me also make sure the comment in `Tick` referencing `CalculateOfflineEarnings` is still accurate, since I'm keeping that method private:The comment still references `CalculateOfflineEarnings()` — which is still the right name; it's still private but exists. That's fine. ✓
+
+Now let me also verify one critical thing about the docs comment on `ApplyOfflineEarnings`. I wrote:
+
+```
+/// (referenced by name to avoid a project dependency cycle).
+```
+
+Wait — there's no actual cycle issue: `Core` doesn't reference `Shared`, but `Shared` references `Core`. So `GameEngine` (in Core) referring to `GameViewModel` (in Shared) by name only in a doc comment is a stylistic choice, not a compile concern. Let me clean up that comment to not be confusing:That `<see cref="ViewModels.GameViewModel"/>` would have been a broken cref anyway (Core can't see ViewModels). Good catch.
+
+Now let me also verify a potential gotcha in `OnResumed` that I want to make 100% sure about. In `OnResumed`, I have:
+
+```csharp
+if (_suspendedAt is not { } suspendedAt)
+{
+    _lastTick = _time.GetUtcNow().UtcDateTime;
+    return;
+}
+
+_suspendedAt = null;
+```
+
+This pattern uses C# 9+ "not pattern with declaration." Let me verify this syntax is correct. The pattern `is not { } suspendedAt` checks "is not a non-null value, captured as suspendedAt" — wait, that's a pattern weirdness. Let me think again:
+
+- `_suspendedAt is { } suspendedAt` → "is a non-null value, capture as `suspendedAt`" (matches)
+- `_suspendedAt is not { } suspendedAt` → "is NOT a non-null value, capture as `suspendedAt`" — but if the pattern doesn't match, the variable isn't assigned. And inside the `if`, you can't use `suspendedAt`.
+
+Actually this is more subtle. Let me check what the C# compiler accepts. The cleaner form:
+
+```csharp
+if (_suspendedAt is not DateTime suspendedAt) {
+    // suspendedAt is NOT in scope here
+    ...return;
+}
+// suspendedAt IS in scope here (definite assignment)
+```
+
+Wait — `_suspendedAt` is `DateTime?`. The pattern `is not DateTime suspendedAt` would mean "is not a DateTime (i.e. is null), and don't capture." Then after the `return`, definite assignment kicks in: `suspendedAt` is in scope below the `if`.
+
+Actually the property pattern `{ }` matches any non-null. So:
+- `_suspendedAt is { } suspendedAt` — matches non-null, captures the unwrapped value. **Type of `suspendedAt` is `DateTime`** (the non-nullable underlying type). ✓
+- `_suspendedAt is not { } suspendedAt` — this is NOT standard C#. The negation pattern `not P` is fine, but you can't put a designation on a negative pattern because the variable wouldn't be assigned in the failing branch.
+
+Let me check the C# grammar. From the C# spec: a pattern with a designation in a `not` pattern is **not allowed** because no assignment can be made if the pattern doesn't match. Compiler error CS8780: "A variable may not be declared within a 'not' or 'or' pattern."
+
+**This is a compile error in my code.** I need to fix it.
+
+The correct form:
+
+```csharp
+if (_suspendedAt is not { } suspendedAt)  // ❌ COMPILE ERROR
+```
+
+Should be:
+
+```csharp
+if (_suspendedAt is not { } )  // pattern only, no designation
+{
+    _lastTick = _time.GetUtcNow().UtcDateTime;
+    return;
+}
+// Now we know _suspendedAt is non-null, but the compiler doesn't track that
+// across the if. So we have to read it again, or restructure.
+```
+
+The cleanest fix is to restructure with a positive pattern:
+
+```csharp
+if (_suspendedAt is not { } suspendedAt)  // <-- broken
+```
+becomes:
+```csharp
+if (_suspendedAt is null)
+{
+    _lastTick = _time.GetUtcNow().UtcDateTime;
+    return;
+}
+var suspendedAt = _suspendedAt.Value;
+_suspendedAt = null;
+```
+
+Or even cleaner, use a positive pattern as the inverse:
+```csharp
+var suspended = _suspendedAt;
+if (suspended is null)
+{
+    _lastTick = _time.GetUtcNow().UtcDateTime;
+    return;
+}
+var suspendedAt = suspended.Value;
+_suspendedAt = null;
+```
+
+Let me fix this:Wait — let me actually re-check this. C# 9 added "extended property patterns" and they specifically allow the `is not { } x` syntax for the *positive* `is { } x`. Let me verify with a search:Confirmed: **`if (_suspendedAt is not { } suspendedAt)` is a compile error CS8780.** Let me fix this. I'll restructure to use a positive pattern with the inverted control flow:Now let me also do another careful sanity scan for other potential compile issues. Let me re-view the full GameViewModel:Wait — I just spotted an issue. The original `GameViewModel` constructor parameters are `(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts)`. The `ToastService` is registered as a singleton in the DI container (looking at App.axaml.cs lines 2437 and 1215: `services.AddSingleton<ToastService>();`).
+
+When DI tries to resolve `GameViewModel`, it looks for a constructor it can satisfy. The default `Microsoft.Extensions.DependencyInjection` chooses **the constructor with the most parameters it can resolve**. Since `TimeProvider` is NOT registered in DI, the second constructor (`GameEngine, ILogger, ToastService, TimeProvider`) cannot be resolved. So DI will try the first constructor (`GameEngine, ILogger, ToastService`) which CAN be resolved — and chains to `: this(..., TimeProvider.System)`. 
+
+Actually — wait. DI chooses the constructor with the most parameters where ALL parameters are resolvable. Or does it throw? Let me think. In `Microsoft.Extensions.DependencyInjection`, if there are multiple constructors, it tries to find one with all dependencies resolvable. If both are candidates (one fewer param, one more), it picks the one with more if possible. If `TimeProvider` is not registered, the 4-param constructor would fail, and DI would fall back to the 3-param one.
+
+Actually that's not quite right either. The rule from `ActivatorUtilities.CreateInstance` (which `ServiceProvider` uses for non-keyed transient): it picks the constructor where the most parameters can be satisfied from the service collection, with remaining parameters supplied from a passed-in `params`. For a pure DI resolution, it picks the constructor with most resolvable parameters that all can actually be resolved.
+
+Hmm, but there's a known issue: with multiple public constructors, .NET DI throws unless it can pick a unique "best" one. Let me check this more carefully:The Microsoft docs confirm: when there are multiple constructors and the DI container can resolve more than one fully, it throws an "ambiguous" exception. But when one constructor takes a strict superset of the parameters of the other, AND the extra parameter is NOT in the container, the longer constructor is "not applicable" — only the shorter one matches, and DI uses it.
+
+In my case:
+- 3-param ctor: `(GameEngine, ILogger, ToastService)` — all resolvable ✓
+- 4-param ctor: `(GameEngine, ILogger, ToastService, TimeProvider)` — TimeProvider NOT in DI → not applicable
+
+So there's no ambiguity: only one constructor (the 3-param one) is applicable. DI uses that. ✓
+
+But wait — there's a subtler issue. Looking at the .NET 8+ behavior: `TimeProvider` IS a built-in abstract class in the BCL (`System.TimeProvider`), and some folks register it via `services.AddSingleton<TimeProvider>(TimeProvider.System)` or similar. The current codebase does NOT register `TimeProvider` (I checked the DI setup in both Desktop and Android `App.axaml.cs`), so the 4-param constructor is non-applicable. ✓
+
+Still, to be extra safe and clearer, I could mark the test-only constructor `internal` and add `InternalsVisibleTo`. But adding `InternalsVisibleTo` requires modifying the project file or adding an attribute. The simpler solution: keep both `public`. The DI container uses `ActivatorUtilities` selection logic which handles this fine.
+
+Actually wait — let me re-examine. Looking at the docs quote again: 
+
+> "the constructor with the ILogger<ExampleService> parameter resolves the ExampleService instance. Even though there's a constructor that defines more parameters, the ServiceA and ServiceB types aren't DI-resolvable"
+
+So this confirms: when one constructor has parameters not in DI, that constructor is skipped, and the other is used. ✓
+
+OK, let me move on. Let me also verify the `ResetForTesting` method on `AppLifecycleManager` is correctly marked `internal` and I have `InternalsVisibleTo`. Wait — I marked it `internal` but the test project is a different assembly. Let me check what's needed:I marked it `internal`. The test project (`MyAdventure.UI.Tests`) is in a different assembly and won't see internals by default. Two choices:
+1. Make `ResetForTesting` `public` — no `InternalsVisibleTo` needed.
+2. Add `[assembly: InternalsVisibleTo("MyAdventure.UI.Tests")]` to the Shared project.
+
+Option 1 is the simplest, but exposes a method that should not be called in production. Option 2 is cleaner. Let me go with option 2 — add an `AssemblyInfo.cs` file or use `<InternalsVisibleTo>` in the csproj. Actually, simplest is to just add it to the Shared.csproj:
+
+Actually, looking at the project setup, the cleanest is `<ItemGroup><InternalsVisibleTo Include="MyAdventure.UI.Tests" /></ItemGroup>` in the csproj. Let me update the Shared.csproj:Now let me also do a trace of `Volatile.Read` usage. `Volatile.Read<T>(ref T location)` requires a reference. For static fields it works fine. But there's a catch — `Volatile.Read` doesn't support null references, and `_current` is `GameViewModel?`. Actually looking at the API:Let me check the Volatile.Read signature directly:`Volatile.Read<T>(ref T location) where T : class?` — this works fine for nullable reference types. So `Volatile.Read(ref _current)` is fine where `_current` is `GameViewModel?`.
+
+Actually wait — looking at the actual signature on .NET docs: `public static T Read<T>(ref readonly T location) where T : class?`. So it accepts nullable reference types. ✓
+
+But actually there's a simpler concern: I'm holding a `lock(Gate)` inside `Attach()` which protects `_current`. The event handlers `OnLifetimeDeactivated` and `OnLifetimeActivated` read `_current` *outside* the lock via `Volatile.Read`. This is intentional: the event might fire on a non-UI thread and we don't want to deadlock or block the lifecycle event waiting for `Attach`'s lock. Volatile read ensures we see a consistent view of `_current` (even if it's mid-update we'll see either the old or the new value, never garbage). This is a fine design.
+
+Let me now go back and re-check my GameViewModel for any further issues:Good. The logic is clean and the `suspended.Value` access is safe because we just confirmed `suspended is not null`. ✓
+
+Now let me trace once more through `OnResumed_AfterFirstResume_RequiresNewSuspend`:
+
+1. `MakeVm()` → creates VM with clock at 12:00:00, sets up engine with cash, lemonade+manager.
+2. `OnSuspended()` → `_suspendedAt = 12:00:00`. Saves (substitute repo, fine).
+3. `Advance(5min)` → clock = 12:05:00.
+4. First `OnResumed()`:
+   - snapshot suspended = 12:00:00
+   - `_suspendedAt = null`
+   - suspended != null → continue
+   - `now = 12:05:00`, `elapsed = 5min`
+   - `engine.ApplyOfflineEarnings(5min)` → 5min * (1/0.6s/cycle * 1$/cycle) = 500 cycles * 1$ = $500. Cash += 500.
+   - `_lastTick = 12:05:00`. Earned > 0 → toast.
+   - `RefreshAll()`.
+5. `cashAfterFirst = engine.Cash` (whatever + 500).
+6. `Advance(5min)` → clock = 12:10:00.
+7. Second `OnResumed()`:
+   - snapshot suspended = null (was cleared)
+   - `_suspendedAt = null` (no-op)
+   - suspended is null → enter early branch → `_lastTick = 12:10:00` → return.
+8. Asserts `engine.Cash.ShouldBe(cashAfterFirst)`. ✓ **Pass.**
+
+Let me re-check the `OnResumed_TwiceWithoutSuspend_ShouldNotApplyEarnings` test:
+
+1. `MakeVm()`.
+2. `cashBefore = engine.Cash`.
+3. `OnResumed()`: suspended = null → early return.
+4. `OnResumed()`: suspended = null → early return.
+5. Asserts `engine.Cash.ShouldBe(cashBefore)`. ✓ **Pass.**
+
+Now let me re-check `OnSuspendedThenOnResumed_ShouldApplyEarningsForGap`:
+
+1. `MakeVm()` (no angels). clock at 12:00:00. lemonade owned=1, manager, cash=995_996, progress=0.
+2. `cashBefore = 995_996`.
+3. `OnSuspended()` → `_suspendedAt = 12:00:00`. Saves.
+4. `Advance(10min)` → clock = 12:10:00.
+5. `OnResumed()`:
+   - suspended = 12:00:00
+   - now = 12:10:00, elapsed = 600s
+   - `ApplyOfflineEarnings(600s)`: 600 > 1 ✓. lemonade has manager+owned. cycles = 600/0.6 = 1000. total = 1*1000 = 1000. AngelBonus = 1.0 (no angels). returns 1000.
+   - earned = 1000 > 0. Cash += 1000 → 996_996. Lifetime += 1000 → 1000.
+   - `_lastTick = 12:10:00`. toast shown. RefreshAll.
+6. `earned = engine.Cash - cashBefore = 996_996 - 995_996 = 1000`.
+7. Asserts `earned.ShouldBe(1000.0)`. ✓ **Pass.**
+
+Now let me check `OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce`:
+
+1. `MakeVm(angels: 50)` → angels=50 → AngelBonus = 1 + 50*0.02 = 2.0. Cash=1M. lemonade owned=1, manager. After buys: cash = 1_000_000 - 4 - 4000 = 995_996. progress=0.
+2. `cashBefore = 995_996`.
+3. `OnSuspended` → `_suspendedAt = 12:00:00`.
+4. `Advance(60s)` → clock = 12:01:00.
+5. `OnResumed`:
+   - elapsed = 60s
+   - `ApplyOfflineEarnings(60s)`: 60 > 1 ✓. lemonade with manager+owned=1. cycles = 100. total = 1*100 = 100. AngelBonus = 2.0. returns 200.
+   - Cash += 200 → 996_196. earned = 200.
+6. `earned = 996_196 - 995_996 = 200`. ✓ **Pass.**
+
+Excellent. Now one final check of the integration tests dir to make sure I'm not missing anything I should update there:Integration tests don't touch GameEngine or GameViewModel, so no changes needed there. ✓
+
+Let me do one final check on something subtle. Looking at the `RefreshAll` call inside `OnResumed` — does it iterate over `Businesses` (the VM's collection)? In tests, the VM is created without `InitializeAsync` being called, so `Businesses` is empty. `RefreshAll` iterates `foreach (var bvm in Businesses) bvm.Refresh(...)` — empty loop, no crash. ✓
+
+But the test `OnResumed_ShouldApplyEarningsBeforeRefreshingUi` asserts `vm.CashText.ShouldBe($"${NumberFormatter.Format(engine.Cash)}")`. The `CashText` is set by `RefreshAll`:
+
+```csharp
+CashText = $"${NumberFormatter.Format(_engine.Cash)}";
+```
+
+So `vm.CashText` will be `"$" + NumberFormatter.Format(engine.Cash)`. In the test we compare with `$"${NumberFormatter.Format(engine.Cash)}"`. These are identical strings. ✓
+
+Now I realize I should also double-check `OnResumed_ShouldShowToast_WhenEarningsApplied` — it inherits from MakeVm() which has no angels. After 5min suspended:
+- elapsed = 5min = 300s
+- cycles = 300/0.6 = 500
+- earned = 500 * 1 * 1.0 = 500. > 0 → toast. ✓
+
+OK, one last concern: my `OnResumed_ShouldShowToast_WhenEarningsApplied` simply asserts `toasts.ActiveToasts.Count.ShouldBe(1)`. But what if `OnSuspended` somehow shows a toast? Let me re-check `OnSuspended`:
+
+```csharp
+public void OnSuspended()
+{
+    _suspendedAt = _time.GetUtcNow().UtcDateTime;
+    _logger.LogInformation("App suspended at {SuspendedAt:o}", _suspendedAt);
+    _ = SaveAsync();
+}
+```
+
+No toast call. ✓ So after `OnSuspended` + `OnResumed`, exactly one toast (from `OnResumed`'s "While you were away..."). ✓
+
+Also `RefreshAll` doesn't show toasts. ✓
+
+Now let me also check the edge case in `OnResumed_ShouldNotShowToast_WhenNoEarnings`. The test:
+1. Creates fresh setup with NO managed business.
+2. `OnSuspended` → records timestamp.
+3. `Advance(5min)`.
+4. `OnResumed` → elapsed=300s → `ApplyOfflineEarnings(300s)` → no managed → returns 0 → earned=0 → enters `else` branch (no toast).
+5. Asserts `toasts.ActiveToasts.Count.ShouldBe(0)`. ✓
+
+Excellent. Now I think everything's ready. Let me view all the final files one more time:9 files. Let me copy them all to the outputs directory and present them:Now let me create a comprehensive write-up document explaining all the changes:Now let me present all the files:All 10 files are above. The core summary:
+
+**My diagnosis matched the RCA's**, but **my fix differs in one important way**: I used Avalonia 12's cross-platform `IActivatableLifetime` (filtered to `ActivationKind.Background`) wired up once in `MyAdventure.Shared/Services/AppLifecycleManager.cs`, rather than the RCA's per-platform approach of hooking `MainView.OnAttachedToVisualTree` on Android plus `Window.Activated`/`Deactivated` on Desktop. This honors your "no team silos" rule — Desktop and Android share one code path; the only platform-specific lines are a single `AppLifecycleManager.Attach(vm)` call in each `App.axaml.cs`.
+
+**Changes (10 files):**
+- `GameEngine.cs` — new public `ApplyOfflineEarnings(TimeSpan)` consolidates cold-load and resume into one calculation that can't drift.
+- `AppLifecycleManager.cs` (new) — single static manager with replaceable target; handles Android activity recreation without leaking handlers.
+- `GameViewModel.cs` — new `OnSuspended()`/`OnResumed()`. Snapshot-and-clear pattern protects against duplicate `Activated` events. New `TimeProvider` constructor for testability (won't conflict with DI because `TimeProvider` isn't registered).
+- `MyAdventure.Shared.csproj` — `<InternalsVisibleTo>` for the test seam.
+- `Desktop/App.axaml.cs`, `Android/App.axaml.cs` — one `AppLifecycleManager.Attach(vm)` line each.
+- `GameEngineTests.cs` — 7 new tests, including a strong **`ApplyOfflineEarnings_AndLiveTick_AreEquivalent`** invariant that protects against this bug ever returning.
+- `GameViewModelLifecycleTests.cs` (new) — 11 tests using a tiny hand-rolled `TestTimeProvider` (no new NuGet dependency).
+- `AppLifecycleManagerTests.cs` (new) — 3 tests covering null guard, no-Avalonia fallback, repeated Attach.
+
+**Two real bugs I caught while writing this** that wouldn't have built or passed otherwise: (1) `if (_suspendedAt is not { } suspendedAt)` is CS8780 — variable declarations aren't allowed in `not` patterns; rewrote as snapshot-then-null-check, which is also re-entrancy-safe. (2) Initial test assertion expected `Cash == $1,001,000` but the `MakeVm` helper's `BuyBusiness` ($4) + `BuyManager` ($4,000) leaves pre-suspend cash at $995,996, not $1,000,000; fixed by computing the assertion off `cashBeforeResume` rather than a hardcoded value.
+
+I traced through every existing test and every new test arithmetically to verify they pass; sandbox didn't have `dotnet`, so the verification is by inspection rather than execution. See `CHANGES.md` for the full walkthrough.
+
+77
+100
