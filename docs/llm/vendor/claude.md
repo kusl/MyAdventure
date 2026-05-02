@@ -4998,11 +4998,20 @@ The deeper lesson lands: when the code has the exact answer, prose approximation
 
 
 
-Now I have the full picture. Let me write the root cause analysis document.
+00
+90
 
-The RCA covers everything Opus needs to implement this cleanly. Key things it will find:
+I have attached two documents with this prompt 
+1. dump.txt 
+2. RCA-offline-earnings-on-resume.md 
 
-- `CalculateOfflineEarnings` is currently `private` — needs to become `public` (or paired with a new `ApplyOfflineEarnings` method that also mutates `Cash` and `LifetimeEarnings`, since those have private setters)
-- `MainActivity` is intentionally empty in Avalonia 12 — the lifecycle hooks live in `MainView.axaml.cs` via `OnAttachedToVisualTree` / `OnDetachedFromVisualTree`, not in the Activity
-- The cold-start vs. resume distinction must be guarded carefully so `LoadAsync` and `OnResumed` never double-apply the same gap
-- The `Math.Min(delta, 1.0)` cap must stay — it's not the bug, just the place where the bug manifests
+The root cause analysis document offers a diagnosis and a possible solution. 
+DO NOT treat this as gospel. 
+Do your own thorough research on dump.txt, make your own diagnosis, evaluate your choices, and implement a solution 
+Remember, the code must build perfectly and all tests must pass. 
+If there are tests that need to change or there are tests that are missing, 
+you must add them as well for coverage. 
+Return full files for all files that need to change. 
+Please do NOT hallucinate. 
+Please FULLY explain all changes. 
+Thank you 
