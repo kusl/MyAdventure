@@ -48,6 +48,16 @@ public partial class App : Avalonia.Application
                 activityLifetime.MainViewFactory = () =>
                 {
                     var vm = Services!.GetRequiredService<GameViewModel>();
+
+                    // Wire the cross-platform suspend/resume signal. We
+                    // call this inside the factory because each activity
+                    // recreation produces a fresh VM, and AppLifecycleManager
+                    // holds a single static "current target" reference —
+                    // each Attach replaces the previous target so old VMs
+                    // stop receiving events. See AppLifecycleManager for
+                    // the full rationale.
+                    AppLifecycleManager.Attach(vm);
+
                     return new MainView { DataContext = vm };
                 };
             }
@@ -58,6 +68,7 @@ public partial class App : Avalonia.Application
                 // never hit this branch in v12.
                 var vm = Services.GetRequiredService<GameViewModel>();
                 singleView.MainView = new MainView { DataContext = vm };
+                AppLifecycleManager.Attach(vm);
             }
 
             base.OnFrameworkInitializationCompleted();

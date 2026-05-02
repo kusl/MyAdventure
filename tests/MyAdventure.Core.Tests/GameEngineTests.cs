@@ -177,6 +177,160 @@ public class GameEngineTests
         engine.AngelBonus.ShouldBe(2.0);
     }
 
+    // ---------------------------------------------------------------
+    // ApplyOfflineEarnings — public API used by both LoadAsync (cold
+    // start) and the foreground-resume path on GameViewModel.
+    //
+    // The same calculation must be reachable from outside the engine
+    // because background-resume is detected by the View/lifecycle layer
+    // and dispatched into the engine via this method. Drift between
+    // this method and LoadAsync's usage of it is what allows the live
+    // tick path and the offline path to stay in sync — the Bug-1 /
+    // OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice invariant
+    // depends on there being a single calculation, called from both
+    // entry points.
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task ApplyOfflineEarnings_ShouldAddToCashAndLifetime()
+    {
+        await _engine.LoadAsync();
+
+        // Set up a managed lemonade stand so it's eligible for offline.
+        SetCash(1_000_000);
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        var cashBefore = _engine.Cash;
+        var ltBefore = _engine.LifetimeEarnings;
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        earned.ShouldBeGreaterThan(0);
+        (_engine.Cash - cashBefore).ShouldBe(earned);
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(earned);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_NoManagedBusinesses_ShouldReturnZero()
+    {
+        // Owned but no manager: live play earns from this business, but
+        // offline play does not. Nothing to apply in this scenario.
+        await _engine.LoadAsync();
+        SetCash(1000);
+        _engine.BuyBusiness("lemonade"); // owned but no manager
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromMinutes(10));
+
+        earned.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_NoBusinessesOwned_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromMinutes(10));
+        earned.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_TinyGap_ShouldReturnZero()
+    {
+        // Below the 1-second threshold the engine treats the gap as
+        // "no gap at all" — this protects callers from accidentally
+        // double-counting against the live tick loop.
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        _engine.ApplyOfflineEarnings(TimeSpan.FromMilliseconds(500)).ShouldBe(0);
+        _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(1)).ShouldBe(0);
+        _engine.ApplyOfflineEarnings(TimeSpan.Zero).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_NegativeGap_ShouldReturnZero()
+    {
+        // Defensive: clock skew or test-clock weirdness must never
+        // award negative earnings (which would corrupt cash/lifetime).
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+        _engine.BuyBusiness("lemonade");
+        _engine.BuyManager("lemonade");
+
+        var cashBefore = _engine.Cash;
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(-30));
+
+        earned.ShouldBe(0);
+        _engine.Cash.ShouldBe(cashBefore);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_AppliesAngelBonus()
+    {
+        await _engine.LoadAsync();
+        SetCash(1_000_000);
+        SetAngels(50); // ×2 bonus
+        _engine.BuyBusiness("lemonade"); // 1 owned
+        _engine.BuyManager("lemonade");
+
+        // Drain the auto-start cycle's progress so we measure offline only.
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.ProgressPercent = 0;
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // 60s / 0.6s cycle = 100 cycles × $1 base × 2.0 bonus = $200.
+        earned.ShouldBe(200.0);
+    }
+
+    [Fact]
+    public async Task ApplyOfflineEarnings_AndLiveTick_AreEquivalent()
+    {
+        // Strong invariant: applying offline earnings for N seconds must
+        // yield the same amount as ticking the engine for N seconds with
+        // the same managed setup. This is what the bug fix relies on:
+        // resuming from background must compensate the player as if the
+        // tick loop had been running the whole time.
+        var repoOffline = Substitute.For<IGameStateRepository>();
+        repoOffline.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        var offlineEngine = new GameEngine(repoOffline, NullLogger<GameEngine>.Instance);
+        await offlineEngine.LoadAsync();
+        SetCashOn(offlineEngine, 1_000_000);
+        offlineEngine.BuyBusiness("lemonade");
+        offlineEngine.BuyManager("lemonade");
+        offlineEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
+
+        var repoLive = Substitute.For<IGameStateRepository>();
+        repoLive.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        var liveEngine = new GameEngine(repoLive, NullLogger<GameEngine>.Instance);
+        await liveEngine.LoadAsync();
+        SetCashOn(liveEngine, 1_000_000);
+        liveEngine.BuyBusiness("lemonade");
+        liveEngine.BuyManager("lemonade");
+        liveEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
+
+        var cashBeforeOffline = offlineEngine.Cash;
+        var cashBeforeLive = liveEngine.Cash;
+
+        // 60 seconds offline.
+        offlineEngine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // 60 seconds of 0.1s ticks — 600 ticks. (Smaller deltas keep the
+        // floating-point progress accumulation closer to ideal.)
+        for (var i = 0; i < 600; i++) liveEngine.Tick(0.1);
+
+        var earnedOffline = offlineEngine.Cash - cashBeforeOffline;
+        var earnedLive = liveEngine.Cash - cashBeforeLive;
+
+        // Live tick uses integer cycle counting which can leave a small
+        // residual fraction of a cycle in ProgressPercent. Tolerate up to
+        // one cycle of revenue ($1 in this setup) of difference.
+        Math.Abs(earnedOffline - earnedLive).ShouldBeLessThan(1.5);
+    }
+
     [Fact]
     public async Task Prestige_NotEnoughEarnings_ShouldFail()
     {
@@ -368,10 +522,12 @@ public class GameEngineTests
         lemonade.IsRunning.ShouldBeTrue();
     }
 
-    private void SetCash(double amount)
+    private void SetCash(double amount) => SetCashOn(_engine, amount);
+
+    private static void SetCashOn(GameEngine engine, double amount)
     {
         var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
-        cashProp.GetSetMethod(true)!.Invoke(_engine, [amount]);
+        cashProp.GetSetMethod(true)!.Invoke(engine, [amount]);
     }
 
     private void SetAngels(double count)

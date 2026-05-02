@@ -23,6 +23,14 @@ public class GameEngine(
     private static readonly Counter<double> EarningsCounter = GameMeter.CreateCounter<double>("game.earnings");
     private static readonly Histogram<double> TickDuration = GameMeter.CreateHistogram<double>("game.tick_duration_ms");
 
+    /// <summary>
+    /// Threshold below which an "offline" gap is treated as no gap at all.
+    /// One second is comfortably above any normal tick delta (~16 ms) and
+    /// well below any user-perceptible pause, so it can't accidentally
+    /// double-count live ticks while still firing for any real suspension.
+    /// </summary>
+    private const double MinimumOfflineGapSeconds = 1.0;
+
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
     public double Cash { get; private set; }
@@ -51,15 +59,16 @@ public class GameEngine(
         ApplyBusinessData(state.BusinessDataJson);
         ApplyManagerData(state.ManagerDataJson);
 
-        // Calculate offline earnings
+        // Apply offline earnings via the shared public method. The same
+        // calculation now also serves the foreground-resume path
+        // (GameViewModel.OnResumed -> ApplyOfflineEarnings). Keeping a
+        // single entry point ensures cold-load and resume can never drift.
         var elapsed = _time.GetUtcNow().UtcDateTime - state.LastPlayedAt;
-        if (elapsed.TotalSeconds > 1)
+        var earned = ApplyOfflineEarnings(elapsed);
+        if (earned > 0)
         {
-            var offlineEarnings = CalculateOfflineEarnings(elapsed);
-            Cash += offlineEarnings;
-            LifetimeEarnings += offlineEarnings;
-            logger.LogInformation("Applied offline earnings: {Earnings:F2} for {Seconds:F0}s away",
-                offlineEarnings, elapsed.TotalSeconds);
+            logger.LogInformation("Applied offline earnings on load: {Earnings:F2} for {Seconds:F0}s away",
+                earned, elapsed.TotalSeconds);
         }
 
         activity?.SetTag("cash", Cash);
@@ -243,6 +252,53 @@ public class GameEngine(
 
     public static double CalculateAngels(double lifetimeEarnings) =>
         lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
+
+    /// <summary>
+    /// Apply offline earnings for a given elapsed time span and return
+    /// how much was earned. This is the single public entry point used by
+    /// both <see cref="LoadAsync"/> (cold start) and the foreground-resume
+    /// path on the ViewModel layer. Keeping a single calculation reachable
+    /// from both call sites is what allows live ticks and offline payouts
+    /// to remain provably equivalent.
+    ///
+    /// <para>
+    /// Behavior:
+    /// <list type="bullet">
+    ///   <item>Returns 0 if <paramref name="elapsed"/> is at or below the
+    ///         <see cref="MinimumOfflineGapSeconds"/> threshold — protects
+    ///         against being called with a near-zero or negative span,
+    ///         which would otherwise generate a tiny double-count next to
+    ///         the live tick loop.</item>
+    ///   <item>Returns 0 if no business currently has a manager and at
+    ///         least one unit owned. Manager-less businesses require an
+    ///         active player click to run — the offline path deliberately
+    ///         excludes them.</item>
+    ///   <item>Adds the result to both <see cref="Cash"/> and
+    ///         <see cref="LifetimeEarnings"/>. Lifetime earnings drives
+    ///         prestige progression, so offline earnings must count there
+    ///         identically to live earnings.</item>
+    ///   <item>The <see cref="AngelBonus"/> is applied <i>once</i> at the
+    ///         end of the calculation — never per-cycle inside the loop —
+    ///         to mirror the live <see cref="Tick"/> path. Drift between
+    ///         the two is guarded by an invariant test.</item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    /// <param name="elapsed">Wall-clock duration the player was away.</param>
+    /// <returns>The amount earned (already added to Cash and LifetimeEarnings).</returns>
+    public double ApplyOfflineEarnings(TimeSpan elapsed)
+    {
+        if (elapsed.TotalSeconds <= MinimumOfflineGapSeconds) return 0;
+
+        var earned = CalculateOfflineEarnings(elapsed);
+        if (earned <= 0) return 0;
+
+        Cash += earned;
+        LifetimeEarnings += earned;
+
+        EarningsCounter.Add(earned, new KeyValuePair<string, object?>("source", "offline"));
+        return earned;
+    }
 
     private double CalculateOfflineEarnings(TimeSpan elapsed)
     {

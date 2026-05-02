@@ -17,8 +17,19 @@ public partial class GameViewModel : ViewModelBase
     private readonly GameEngine _engine;
     private readonly ILogger<GameViewModel> _logger;
     private readonly ToastService _toasts;
+    private readonly TimeProvider _time;
     private DateTime _lastTick;
     private int _saveCounter;
+
+    /// <summary>
+    /// UTC timestamp captured when the OS notifies us that the app is going
+    /// to background (<see cref="OnSuspended"/>). <c>null</c> means we have
+    /// not been suspended in the current process lifetime — important
+    /// because cold start runs <see cref="GameEngine.LoadAsync"/>, which
+    /// already covers the offline gap, and we must not also run
+    /// <see cref="OnResumed"/>'s gap calculation in that case (double-pay).
+    /// </summary>
+    private DateTime? _suspendedAt;
 
     [ObservableProperty] private string _cashText = "$0.00";
     [ObservableProperty] private string _angelText = "0";
@@ -37,11 +48,22 @@ public partial class GameViewModel : ViewModelBase
     public ToastService Toasts => _toasts;
 
     public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts)
+        : this(engine, logger, toasts, TimeProvider.System)
+    {
+    }
+
+    /// <summary>
+    /// Test-friendly overload that accepts a <see cref="TimeProvider"/>
+    /// so unit tests can drive <see cref="OnSuspended"/> / <see cref="OnResumed"/>
+    /// against a controllable clock without sleeping the test thread.
+    /// </summary>
+    public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts, TimeProvider timeProvider)
     {
         _engine = engine;
         _logger = logger;
         _toasts = toasts;
-        _lastTick = DateTime.UtcNow;
+        _time = timeProvider;
+        _lastTick = _time.GetUtcNow().UtcDateTime;
     }
 
     public async Task InitializeAsync()
@@ -59,10 +81,16 @@ public partial class GameViewModel : ViewModelBase
     /// <summary>Called by the UI timer (~60fps).</summary>
     public void OnTick()
     {
-        var now = DateTime.UtcNow;
+        var now = _time.GetUtcNow().UtcDateTime;
         var delta = (now - _lastTick).TotalSeconds;
         _lastTick = now;
 
+        // Defensive cap. This protects cold start (where _lastTick is
+        // initialized in the constructor but the first OnTick may be
+        // many seconds later) and debugger pauses. The suspend/resume
+        // gap is handled by OnSuspended/OnResumed, NOT by relaxing this
+        // cap — silent multi-minute deltas would otherwise produce
+        // confusing UI behavior on the first post-resume tick.
         delta = Math.Min(delta, 1.0);
 
         _engine.Tick(delta);
@@ -78,6 +106,93 @@ public partial class GameViewModel : ViewModelBase
             _saveCounter = 0;
             _ = SaveAsync();
         }
+    }
+
+    /// <summary>
+    /// Called by <see cref="AppLifecycleManager"/> when the OS notifies the
+    /// app it is entering the background (Android backgrounded, desktop
+    /// hibernate/sleep). Stamps the suspension time so we can compute the
+    /// gap on resume, and triggers an immediate save so the persisted
+    /// <c>LastPlayedAt</c> is as fresh as possible in case the OS later
+    /// kills the process without ever resuming us.
+    ///
+    /// <para>
+    /// Idempotent: calling twice in a row simply re-stamps the timestamp,
+    /// which is fine — the only thing that matters is that
+    /// <see cref="OnResumed"/> sees a value to subtract from "now."
+    /// </para>
+    /// </summary>
+    public void OnSuspended()
+    {
+        _suspendedAt = _time.GetUtcNow().UtcDateTime;
+        _logger.LogInformation("App suspended at {SuspendedAt:o}", _suspendedAt);
+
+        // Fire-and-forget save: the OS gives us limited time after going to
+        // background, and we already use the same fire-and-forget pattern
+        // in OnTick's auto-save. If the save loses to the suspend, the
+        // cold-load offline-earnings path will still pick up the gap from
+        // the last successful auto-save.
+        _ = SaveAsync();
+    }
+
+    /// <summary>
+    /// Called by <see cref="AppLifecycleManager"/> when the OS notifies the
+    /// app it is returning to the foreground from a background suspension.
+    /// Computes the time gap since <see cref="OnSuspended"/>, applies
+    /// offline earnings for that gap, resets the tick timestamp so the
+    /// next tick computes a small natural delta, and shows the player a
+    /// "while you were away" toast. Then forces a UI refresh.
+    ///
+    /// <para>
+    /// <b>Guard against double-counting:</b> if <see cref="_suspendedAt"/>
+    /// is <c>null</c> we skip the gap calculation entirely. Cold start
+    /// already runs <see cref="GameEngine.LoadAsync"/>, which has its own
+    /// offline-earnings path, and we must not run both.
+    /// </para>
+    /// </summary>
+    public void OnResumed()
+    {
+        // Snapshot _suspendedAt and clear it BEFORE doing anything else,
+        // so a re-entrant call (rare, but observed on some platforms that
+        // fire duplicate Activated events) can't double-pay. The cold-start
+        // guard then degenerates to "is the snapshot null?".
+        var suspended = _suspendedAt;
+        _suspendedAt = null;
+
+        if (suspended is null)
+        {
+            // No prior OnSuspended in this process lifetime — this is
+            // either cold start or a spurious activation event. Either
+            // way: nothing to compensate for, just resync _lastTick so
+            // the next tick is sane.
+            _lastTick = _time.GetUtcNow().UtcDateTime;
+            return;
+        }
+
+        var now = _time.GetUtcNow().UtcDateTime;
+        var elapsed = now - suspended.Value;
+
+        var earned = _engine.ApplyOfflineEarnings(elapsed);
+
+        // Reset _lastTick AFTER applying offline earnings: otherwise the
+        // first post-resume tick would still see a multi-minute delta
+        // (clamped to 1s) on top of what we just applied — a small but
+        // unnecessary double-count.
+        _lastTick = now;
+
+        if (earned > 0)
+        {
+            _logger.LogInformation("Applied resume earnings: {Earned:F2} for {Seconds:F0}s suspended",
+                earned, elapsed.TotalSeconds);
+            _toasts.Show($"While you were away, you earned ${NumberFormatter.Format(earned)}!");
+        }
+        else
+        {
+            _logger.LogDebug("Resume gap was {Seconds:F2}s; no offline earnings applied",
+                elapsed.TotalSeconds);
+        }
+
+        RefreshAll();
     }
 
     [RelayCommand]

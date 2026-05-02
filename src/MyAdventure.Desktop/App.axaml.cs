@@ -30,6 +30,14 @@ public partial class App : Avalonia.Application
         {
             var vm = _services.GetRequiredService<GameViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = vm };
+
+            // Wire the cross-platform suspend/resume signal. On desktop
+            // this fires on hibernate/sleep transitions; on Android the
+            // same call wires the activity background/foreground events.
+            // One shared implementation, no per-platform lifecycle code
+            // in the Views — see AppLifecycleManager for the full
+            // rationale on why this lives in Shared.
+            AppLifecycleManager.Attach(vm);
         }
 
         base.OnFrameworkInitializationCompleted();
