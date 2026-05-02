@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sat May  2 04:31:40 PM EDT 2026
+Generated: Sat May  2 04:35:27 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -40,7 +40,8 @@ DIRECTORY STRUCTURE:
 │               ├── 011.txt
 │               ├── 012.txt
 │               ├── 013.txt
-│               └── 014.txt
+│               ├── 014.txt
+│               └── 015.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -562,7 +563,7 @@ SIZE: 1.02 KB
 
 ================================================================================
 FILE: Directory.Packages.props
-SIZE: 5.31 KB
+SIZE: 5.36 KB
 ================================================================================
 
 <Project>
@@ -588,7 +589,7 @@ SIZE: 5.31 KB
            * Android lifetime is now IActivityApplicationLifetime with a
              MainViewFactory (Func<Control>) instead of ISingleViewApplicationLifetime
              with a single MainView reference. -->
-    <AvaloniaVersion>12.0.1</AvaloniaVersion>
+    <AvaloniaVersion>12.0.2</AvaloniaVersion>
     <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
     <EfCoreVersion>10.0.7</EfCoreVersion>
     <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
@@ -596,6 +597,7 @@ SIZE: 5.31 KB
     <!-- Instrumentation.Runtime versions independently of the rest of OTel -->
     <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
     <XunitVersion>2.9.3</XunitVersion>
+    <TestSdkVersion>18.5.1</TestSdkVersion>
   </PropertyGroup>
 
   <ItemGroup Label="Avalonia - MIT License">
@@ -642,7 +644,7 @@ SIZE: 5.31 KB
   <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
     <PackageVersion Include="xunit" Version="$(XunitVersion)" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
