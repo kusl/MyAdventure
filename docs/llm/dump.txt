@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sat May  2 04:35:27 PM EDT 2026
+Generated: Sat May  9 02:11:01 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -25,6 +25,7 @@ DIRECTORY STRUCTURE:
 │           ├── RCA-offline-earnings-on-resume.md
 │           ├── claude.md
 │           ├── commands.txt
+│           ├── debugging.md
 │           ├── instructions.md
 │           └── output
 │               ├── 001.txt
