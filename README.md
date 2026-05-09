@@ -239,7 +239,7 @@ MyAdventure.slnx
 ├── src/
 │   ├── MyAdventure.Core           — Domain entities, game engine, number formatting
 │   ├── MyAdventure.Infrastructure — EF Core SQLite persistence, DI, OpenTelemetry
-│   ├── MyAdventure.Shared         — ViewModels, converters, toast service, AppRoot, i18n
+│   ├── MyAdventure.Shared         — ViewModels, converters, toast service, AppRoot, AppLifecycleManager, i18n
 │   ├── MyAdventure.Desktop        — Avalonia desktop app (Windows/Linux/macOS)
 │   └── MyAdventure.Android        — Avalonia Android app
 └── tests/
@@ -268,6 +268,8 @@ MyAdventure.slnx
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
 - **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 - **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's new `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference.
+- **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that both platform apps wire into their respective lifetime events (`Activated`/`Deactivated` on desktop, the Android activity lifecycle on Android). When the app suspends, `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. On resume, it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout.
+- **Localization** is wired via `Microsoft.Extensions.Localization` with JSON resource files (`src/MyAdventure.Shared/Resources/i18n/`). English (`en.json`) and Spanish (`es.json`) are included. The infrastructure is in place to add more locales by adding a new JSON file and updating the supported-cultures list in `DependencyInjection.cs`.
 - **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) gates the actual Dev Tools UI behind a paid Avalonia Plus / Pro subscription. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
 
 ### Avalonia 12 migration notes
@@ -289,7 +291,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Category | Technology | License |
 |----------|-----------|---------|
 | Runtime | .NET 10 / C# 14 | MIT |
-| UI Framework | Avalonia UI 12.0.1 | MIT |
+| UI Framework | Avalonia UI 12.0.2 | MIT |
 | MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
 | Database | SQLite via EF Core 10.0.7 | MIT |
 | Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
