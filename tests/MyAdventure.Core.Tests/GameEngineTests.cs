@@ -9,6 +9,14 @@ namespace MyAdventure.Core.Tests;
 
 public class GameEngineTests
 {
+    /// <summary>
+    /// AngelBonus at 50 angels under the compound formula. Captured here
+    /// once so individual tests don't repeat the literal — and so the
+    /// rationale for the value is in one place: <c>1.02^50 ≈ 2.6916</c>,
+    /// not 2.0 (which was the linear formula's value).
+    /// </summary>
+    private static readonly double FiftyAngelBonus = Math.Pow(1.02, 50);
+
     private readonly IGameStateRepository _repo = Substitute.For<IGameStateRepository>();
     private readonly GameEngine _engine;
 
@@ -76,7 +84,9 @@ public class GameEngineTests
         lemonade.Owned.ShouldBe(25);
         lemonade.MilestoneMultiplier.ShouldBe(2.0);
 
-        // Revenue should be base × owned × multiplier
+        // Revenue should be base × owned × multiplier × post-milestone scaling.
+        // PostMilestoneScaling is exactly 1.0 below 1000 owned, so the
+        // pre-cap math is identical to before.
         lemonade.Revenue.ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
     }
 
@@ -88,7 +98,7 @@ public class GameEngineTests
     {
         await _engine.LoadAsync();
         SetCash(1000);
-        SetAngels(50); // AngelBonus = 1 + 50 * 0.02 = 2.0
+        SetAngels(50); // AngelBonus = 1.02^50 ≈ 2.6916 (compound, not 2.0 linear)
 
         _engine.BuyBusiness("lemonade");
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
@@ -99,16 +109,17 @@ public class GameEngineTests
         _engine.Tick(0.0);
 
         var earned = _engine.Cash - cashBefore;
-        // 1 owned × $1 base × 1.0 milestone × 2.0 angel bonus = $2
-        earned.ShouldBe(lemonade.Revenue * 2.0);
-        earned.ShouldBe(2.0);
+        // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69
+        earned.ShouldBe(lemonade.Revenue * FiftyAngelBonus);
+        earned.ShouldBe(FiftyAngelBonus);
     }
 
     [Fact]
     public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
     {
         // Prevents the inverse mistake: with no angels (bonus = 1.0),
-        // the multiplier must not change anything.
+        // the multiplier must not change anything. Under the compound
+        // formula 1.02^0 = 1.0, so this invariant still holds.
         await _engine.LoadAsync();
         SetCash(1000);
 
@@ -131,7 +142,7 @@ public class GameEngineTests
         // count into them too (exactly as it does for cash).
         await _engine.LoadAsync();
         SetCash(1000);
-        SetAngels(50); // ×2
+        SetAngels(50); // ~×2.69 compound bonus
 
         _engine.BuyBusiness("lemonade");
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
@@ -141,7 +152,7 @@ public class GameEngineTests
         var ltBefore = _engine.LifetimeEarnings;
         _engine.Tick(0.0);
 
-        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * 2.0);
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * FiftyAngelBonus);
     }
 
     [Fact]
@@ -155,7 +166,7 @@ public class GameEngineTests
         {
             Cash = 0,
             LifetimeEarnings = 0,
-            AngelInvestors = 50, // ×2 bonus
+            AngelInvestors = 50, // ~×2.69 compound bonus
             BusinessDataJson = """{"lemonade":1}""",
             ManagerDataJson = """{"lemonade":true}""",
             LastPlayedAt = pastTime,
@@ -170,11 +181,14 @@ public class GameEngineTests
         await engine.LoadAsync();
 
         // Lemonade: cycle 0.6s, base revenue $1, 1 owned, no milestones.
-        // 60s / 0.6s = 100 cycles. Per-cycle revenue = $1 (pre-bonus).
-        // With ×2 bonus applied once: 100 × 1 × 2 = $200.
-        // Tolerance accounts for the small gap between pastTime and "now".
-        engine.Cash.ShouldBeInRange(190, 220);
-        engine.AngelBonus.ShouldBe(2.0);
+        // ~60s / 0.6s ≈ 100 cycles. Per-cycle revenue = $1 (pre-bonus).
+        // With ~×2.69 bonus applied once: 100 × 1 × 2.6916 ≈ $269.16.
+        // The window (255–290) tolerates the small gap between pastTime
+        // and "now" plus the difference between integer-cycle live ticks
+        // and the continuous offline path.
+        var expected = 100.0 * FiftyAngelBonus; // ≈ 269.16
+        engine.Cash.ShouldBeInRange(expected - 15, expected + 15);
+        engine.AngelBonus.ShouldBe(FiftyAngelBonus);
     }
 
     // ---------------------------------------------------------------
@@ -270,7 +284,7 @@ public class GameEngineTests
     {
         await _engine.LoadAsync();
         SetCash(1_000_000);
-        SetAngels(50); // ×2 bonus
+        SetAngels(50); // ~×2.69 compound bonus
         _engine.BuyBusiness("lemonade"); // 1 owned
         _engine.BuyManager("lemonade");
 
@@ -280,8 +294,8 @@ public class GameEngineTests
 
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
 
-        // 60s / 0.6s cycle = 100 cycles × $1 base × 2.0 bonus = $200.
-        earned.ShouldBe(200.0);
+        // 60s / 0.6s cycle = 100 cycles × $1 base × ~2.69 bonus ≈ $269.16.
+        earned.ShouldBe(100.0 * FiftyAngelBonus);
     }
 
     [Fact]
@@ -520,6 +534,123 @@ public class GameEngineTests
 
         _engine.BuyMultiple("lemonade", 5);
         lemonade.IsRunning.ShouldBeTrue();
+    }
+
+    // ---------------------------------------------------------------
+    // Compound angel bonus — explicit values for the new formula.
+    // Documents what each angel count is worth so that an accidental
+    // revert to the linear formula breaks something specific instead
+    // of just shifting the integration-style ranges by a small amount.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void AngelBonus_AtZeroAngels_ShouldBeOne()
+    {
+        // 1.02^0 = 1.0 — same as the old linear formula at zero angels.
+        // This is what protects the no-angels-yet starting experience.
+        _engine.AngelBonus.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void AngelBonus_Compounds_NotLinear()
+    {
+        SetAngels(50);
+        // Linear formula: 1 + 50*0.02 = 2.00 (the old behavior)
+        // Compound formula: 1.02^50 ≈ 2.6916 (the new behavior)
+        _engine.AngelBonus.ShouldBeGreaterThan(2.5);
+        _engine.AngelBonus.ShouldBeLessThan(2.8);
+    }
+
+    [Fact]
+    public void AngelBonus_AtLargeAngelCount_StaysFinite()
+    {
+        // Defensive: a player who already has thousands of angels (e.g.
+        // someone who imported a hand-edited save) should still produce
+        // a finite, comparable AngelBonus rather than infinity. 1.02^1500
+        // is around 8.3×10^12 — large but representable.
+        SetAngels(1500);
+        _engine.AngelBonus.ShouldBeGreaterThan(1e12);
+        double.IsFinite(_engine.AngelBonus).ShouldBeTrue();
+    }
+
+    // ---------------------------------------------------------------
+    // PostMilestoneScaling — the fix that keeps unit purchases past
+    // the 1000-unit milestone cap from collapsing into "you'll never
+    // afford the next one". Below 1000 owned the multiplier is 1.0
+    // (exact equality, not approximate) so all existing balance is
+    // preserved.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void PostMilestoneScaling_BelowCap_IsExactlyOne()
+    {
+        var biz = new Business
+        {
+            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
+            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 999
+        };
+        biz.PostMilestoneScaling.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void PostMilestoneScaling_AtCap_IsExactlyOne()
+    {
+        var biz = new Business
+        {
+            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
+            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 1000
+        };
+        biz.PostMilestoneScaling.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void PostMilestoneScaling_PastCap_GrowsAsSqrtOfCost()
+    {
+        // At Owned = 1100, scaling = 1.07^((1100-1000)/2) = 1.07^50 ≈ 29.46.
+        // This compensates for the fact that unit 1100 itself costs about
+        // 1.07^100 ≈ 868× more than unit 1000.
+        var biz = new Business
+        {
+            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
+            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 1100
+        };
+        biz.PostMilestoneScaling.ShouldBe(Math.Pow(1.07, 50));
+    }
+
+    [Fact]
+    public void Revenue_BelowCap_DoesNotIncludePostMilestoneScaling()
+    {
+        // Pre-cap, revenue is exactly base × owned × milestone — the new
+        // PostMilestoneScaling factor is identically 1.0, so all existing
+        // balance numbers, milestone tests, and player-side intuitions
+        // are preserved unchanged.
+        var biz = new Business
+        {
+            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
+            BaseCost = 1, BaseRevenue = 5, BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 100 // hits 25/50/100 -> ×8 milestone
+        };
+        biz.Revenue.ShouldBe(5 * 100 * 8);
+    }
+
+    [Fact]
+    public void Revenue_PastCap_IncludesPostMilestoneScaling()
+    {
+        var biz = new Business
+        {
+            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
+            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 1100
+        };
+        var milestone = biz.MilestoneMultiplier; // ×327,680 (capped at 1000)
+        var expected = 1.0 * 1100 * milestone * Math.Pow(1.07, 50);
+        biz.Revenue.ShouldBe(expected);
     }
 
     private void SetCash(double amount) => SetCashOn(_engine, amount);

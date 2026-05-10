@@ -6,7 +6,21 @@
              x:Class="MyAdventure.Android.Views.MainView"
              x:DataType="vm:GameViewModel"
              Background="#1A1A2E"
-             x:Name="RootView">
+             x:Name="RootView"
+             TopLevel.AutoSafeAreaPadding="False">
+
+    <!--
+        TopLevel.AutoSafeAreaPadding="False" turns OFF Avalonia's default
+        behaviour of silently inserting safe-area padding into the window's
+        root view. We do it ourselves in MainView.axaml.cs so we own the
+        padding explicitly: it's applied to THIS UserControl's Padding, the
+        InsetsManager.SafeAreaChanged event keeps it current across
+        rotation / cutout / status-bar visibility changes, and the initial
+        value is captured on attach (rather than waiting for a change).
+        On Android 15+ edge-to-edge is enforced, so without this the top
+        bar gets drawn under the status bar / camera cutout and the first
+        row of business cards visually rides on top of the prestige bar.
+    -->
 
     <UserControl.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrush" />

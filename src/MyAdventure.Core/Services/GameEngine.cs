@@ -31,6 +31,21 @@ public class GameEngine(
     /// </summary>
     private const double MinimumOfflineGapSeconds = 1.0;
 
+    /// <summary>
+    /// Per-angel revenue multiplier base. Each angel multiplies revenue by
+    /// this value, compounded — so 50 angels = 1.02^50 ≈ ×2.69, not ×2.00.
+    /// <para>
+    /// The compound formulation is what restores prestige as a meaningful
+    /// progression mechanic deep into the game: under the previous linear
+    /// "+2% per angel" formula a player with 700+ angels was getting only
+    /// a ×15 multiplier, and one more prestige (gaining ~140 angels)
+    /// would only edge that up to ×17 — not enough to motivate a reset.
+    /// Compounded, the same prestige goes from ×4.4M to ×68M, which is
+    /// the "press the button" moment idle games are built around.
+    /// </para>
+    /// </summary>
+    private const double AngelMultiplierPerAngel = 1.02;
+
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
     public double Cash { get; private set; }
@@ -247,9 +262,30 @@ public class GameEngine(
         return (newAngels, true);
     }
 
-    /// <summary>Angel investor bonus: 2% per angel.</summary>
-    public double AngelBonus => 1.0 + (AngelInvestors * 0.02);
+    /// <summary>
+    /// Compounded angel-investor revenue multiplier:
+    /// <c>1.02 ^ AngelInvestors</c>. Every angel adds 2% on top of the
+    /// previous angel's contribution rather than 2% of base revenue.
+    /// <para>
+    /// 50 angels = ×2.69 (not ×2.00). 200 angels = ×52.5. 1000 angels =
+    /// ×4.0×10^8. These are the multipliers that keep the late game
+    /// interesting and that make a marginal prestige worthwhile.
+    /// </para>
+    /// <para>
+    /// Save compatibility: the formula is computed from
+    /// <see cref="AngelInvestors"/>, which is unchanged on disk. Old
+    /// saves load and immediately benefit from the compound multiplier
+    /// without any migration step.
+    /// </para>
+    /// </summary>
+    public double AngelBonus => Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
 
+    /// <summary>
+    /// Compute how many angels the player's lifetime earnings are
+    /// currently worth. Returns the cumulative count, not the delta —
+    /// callers subtract <see cref="AngelInvestors"/> to get the
+    /// available-to-claim count.
+    /// </summary>
     public static double CalculateAngels(double lifetimeEarnings) =>
         lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
 

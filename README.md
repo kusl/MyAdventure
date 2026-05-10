@@ -44,7 +44,7 @@ Six businesses, each with increasing cost, revenue, and cycle time:
 | Donut Shop | 🍩 | $103,680 | $51,840 | 24.0s | 1.12× |
 | Shrimp Boat | 🦐 | $1,244,160 | $622,080 | 96.0s | 1.11× |
 
-Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses and your angel-investor bonus.
+Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses, post-milestone scaling (past unit 1000), and your angel-investor bonus.
 
 ### Core Mechanics
 
@@ -73,13 +73,15 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 | 900 | ×4 | ×65,536 |
 | 1000 | ×5 | ×327,680 |
 
-> 1000 is the milestone cap. Buying past 1000 still increases revenue linearly with `owned`, but no further multipliers unlock.
+> 1000 is the milestone cap. Buying past 1000 used to mean every additional unit cost `1.07^N` more than the one before but contributed no more revenue per unit than unit 1000 — eventually each new lemonade stand cost trillions and paid back in centuries. **Post-1000, revenue is now multiplied by `CostMultiplier^((Owned − 1000) / 2)`** — the square root of the cost growth — so unit 1001 is roughly as cost-efficient as unit 1000, and the late game keeps moving instead of stalling. Below 1000 owned this multiplier is exactly 1.0, so all early-game balance is unchanged.
 
 ### Prestige System
 
-Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% bonus** to all revenue, forever — applied to both live cycle earnings and offline earnings.
+Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% revenue bonus that compounds**, applied to both live cycle earnings and offline earnings.
 
-The number of angels your current lifetime earnings is worth is:
+The "compounds" part is what matters. Under a strictly linear "+2% per angel" rule, 50 angels would be ×2.00 and 700 would be ×15.00 — the curve flattens out and a marginal prestige stops feeling worth it. Under compounding (`1.02 ^ angels`), 50 angels is ×2.69, 200 is ×52.5, and 700 is ×750,000+. Each prestige genuinely makes the next run feel like a different game.
+
+The number of angels your current lifetime earnings are worth is:
 
 ```
 floor(150 × sqrt(lifetimeEarnings / 1e13))
@@ -88,6 +90,12 @@ floor(150 × sqrt(lifetimeEarnings / 1e13))
 The **PRESTIGE** button unlocks whenever that number is at least one greater than your current angel count — i.e. when prestiging right now would give you at least one new angel. **The UI is the signal:** when the button lights up, you can prestige. The formula is there to explain the shape of the curve, not for you to compute thresholds in your head.
 
 **Lifetime earnings are preserved through prestige** — each subsequent prestige requires more lifetime earnings than the last to net the same number of new angels, but the running total never resets. After prestiging, your cash resets to **$5** (exactly enough to buy your first lemonade stand) so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
+
+### Save Compatibility
+
+Saves from earlier versions of MyAdventure remain valid. The persisted format hasn't changed — the same `cash`, `lifetime`, `angels`, `prestige`, businesses, and managers fields load and behave identically. The two balance changes (compound angel bonus, post-1000 revenue scaling) are computed on the fly from existing fields, so reopening an old save just shows the new, more rewarding multipliers applied to the angels and units the player already had.
+
+If you were stuck mid-progression on a previous version (e.g. unit 401 lemonade was unaffordable for any reasonable amount of time), simply re-opening your save under the new build is the migration: your existing 700+ angels now multiply revenue by millions instead of by a flat 14×, and you'll fly through the previous wall.
 
 ### Import and Export
 
@@ -166,6 +174,12 @@ A useful mental model: **the next milestone you can afford is almost always your
 
 The "Can buy: N" line on each business card tells you exactly how many units of that business you could buy right now if you spent everything. The "M more → N" line tells you how far you are from the next milestone for that business. Use both to decide where to spend.
 
+### Past 1000 units: the post-cap scaling
+
+Once a business hits 1000 owned, no further milestone multipliers unlock — the table caps out at the cumulative ×327,680. Without intervention, that creates a wall: every new unit costs `1.07^N` more than the one before, but pays back the same per-unit revenue, so each new lemonade stand becomes exponentially less worthwhile until "the next one" costs trillions and pays back in centuries.
+
+To keep buying past the cap meaningful, **post-1000 revenue is multiplied by `CostMultiplier^((Owned − 1000) / 2)`**. That's the square root of how fast the cost grows, so unit 1001 is roughly as cost-efficient as unit 1000 was, and unit 5000 stays in the same payback ballpark instead of drifting off to infinity. The math is invisible below 1000 — it's exactly 1.0 — so nothing about the early or middle game changes.
+
 ### The late game: prestige early, prestige often
 
 At some point the **PRESTIGE** button on the top bar lights up. That's the signal: prestiging right now would net you at least one new Angel Investor. Press it. Your cash and businesses reset, your angel count goes up, and **lifetime earnings are not reset** — so the next prestige starts the clock partway through.
@@ -173,7 +187,7 @@ At some point the **PRESTIGE** button on the top bar lights up. That's the signa
 The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`, where `lifetime_earnings` is the cumulative all-time total (not per-run). Three practical consequences of the square root:
 
 - **Diminishing returns on waiting.** Doubling lifetime earnings only multiplies your angel count by ~1.41×. Quadrupling it doubles your angels. Waiting "one more order of magnitude" is rarely the right call.
-- **Each angel is +2% revenue forever.** With 50 angels you have a flat ×2 multiplier across every business, every milestone, every cycle. That doubles your offline earnings too.
+- **Each angel compounds at +2%.** With 50 angels you have a ×2.69 multiplier across every business, every milestone, every cycle (not the ×2.00 you'd get from a flat "+2% × 50"). With 200 angels it's ×52.5. With 700 angels it's around ×750,000. The compounding is what makes the late game feel like real progress instead of asymptotic stagnation.
 - **The threshold to unlock the button creeps up each run.** It depends on your current angel count, not on a fixed dollar value — the UI does the math for you and shows the projected new angels next to the button.
 
 Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as the button unlocks if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
@@ -206,9 +220,9 @@ A few things to know:
 
 - **`v: 1`** is the save format version. Don't change it.
 - **`cash`** and **`lifetime`** are doubles. JavaScript-style scientific notation (`1e18`) works.
-- **`angels`** is also a double (the formula uses `Math.Floor` so fractional angels round down).
+- **`angels`** is also a double. Because the angel bonus is `1.02^angels`, even modest values produce gigantic multipliers — `angels: 200` is ×52.5, `angels: 500` is ×19,956, `angels: 9999` is roughly ×1.59×10^86. Setting it to a million is funny but you'll hit `Infinity`, the formatter falls over, and revenue will look like blanks. Below ~1500 you stay safely finite.
 - **Business and manager keys** must match the IDs exactly: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`.
-- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional milestones — 1000 is the milestone cap — but the cumulative ×327,680 multiplier still applies, and revenue continues to scale linearly with the count.
+- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional milestones — 1000 is the milestone cap — but the cumulative ×327,680 multiplier still applies, and post-1000 revenue gets multiplied by `1.07^((owned-1000)/2)` so each extra unit stays meaningful.
 - The save is **not signed or checksummed** — there's no anti-cheat. We don't think there's anyone to cheat against.
 
 If you import garbage and the game looks strange, reset to a fresh save:
@@ -218,7 +232,7 @@ If you import garbage and the game looks strange, reset to a fresh save:
 
 ### Frequently confusing things
 
-- **"My revenue went down after prestige!"** Yes — you reset all businesses to zero owned. The angel bonus compensates over time. After ~50 angels, you'll blow past your previous earnings rate within minutes.
+- **"My revenue went down after prestige!"** Yes — you reset all businesses to zero owned. The angel bonus compensates over time. Because the bonus compounds, even ~50 angels gives you a ×2.69 multiplier — you'll blow past your previous earnings rate within minutes.
 - **"My progress bar isn't moving."** The business is probably not running. Click RUN once to start it; if it has a manager, it should auto-restart on the next cycle.
 - **"I have a manager but I'm not earning anything."** You need to own at least one unit *and* the business must be running. Click RUN once to kick it off; the manager handles every cycle after that.
 - **"I closed the game for 8 hours and earned barely anything."** Check that your most profitable businesses had managers. Offline earnings ignore unmanaged businesses entirely.
@@ -264,10 +278,12 @@ MyAdventure.slnx
 - **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android.
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android. OpenTelemetry's console exporter is also disabled on Android.
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause silent trimming crashes. Re-enable once trimmer roots are properly configured.
-- **Angel bonus is applied identically to live and offline earnings.** `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. An invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other.
+- **Angel bonus is compounded, not linear.** `AngelBonus = Math.Pow(1.02, AngelInvestors)` — each angel multiplies revenue by 1.02 on top of the previous angel's contribution. The same value is applied identically to live and offline earnings: `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. The invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other. Save format is unchanged; the formula is computed from the same persisted `AngelInvestors` field old saves already have.
+- **Post-1000 revenue scaling** lives on `Business.PostMilestoneScaling` and equals exactly `1.0` for `Owned <= 1000` (preserving every pre-cap balance number and test) and `Math.Pow(CostMultiplier, (Owned - 1000) / 2.0)` past the cap. The square root of cost growth keeps unit 1001+ purchases roughly as efficient as unit 1000, fixing the "stuck at 400 lemonade" problem that's mathematically inevitable when revenue grows linearly while cost grows exponentially.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
 - **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 - **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's new `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference.
+- **Android safe-area is handled explicitly by `MainView`**, not by the framework's auto-padding. The Android `UserControl` sets `TopLevel.AutoSafeAreaPadding="False"`, captures `InsetsManager.SafeAreaPadding` on attach, and subscribes to `SafeAreaChanged` to keep its `Padding` in sync with the OS-reported insets. This is needed because Android 15+ enforces edge-to-edge rendering — without explicit handling, the top bar (PRESTIGE / cash) gets drawn under the status bar and front-camera cutout on devices like the Moto G Stylus 2025, and the first row of business cards visually rides on top of the prestige bar. Owning the padding deterministically on `MainView` rather than relying on auto-injection at the TopLevel root is also more robust across activity recreation, which is aggressive on Android.
 - **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that both platform apps wire into their respective lifetime events (`Activated`/`Deactivated` on desktop, the Android activity lifecycle on Android). When the app suspends, `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. On resume, it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout.
 - **Localization** is wired via `Microsoft.Extensions.Localization` with JSON resource files (`src/MyAdventure.Shared/Resources/i18n/`). English (`en.json`) and Spanish (`es.json`) are included. The infrastructure is in place to add more locales by adding a new JSON file and updating the supported-cultures list in `DependencyInjection.cs`.
 - **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) gates the actual Dev Tools UI behind a paid Avalonia Plus / Pro subscription. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
@@ -281,6 +297,7 @@ This project tracks the latest Avalonia stable release. These notes capture the 
 - **Plugins are no longer configurable** and the data-annotations plugin is **off by default**. This removed the long-standing nuisance where `CommunityToolkit.Mvvm` validation conflicted with Avalonia's, so no extra config is needed.
 - **`DispatcherTimer` binds to the dispatcher of the constructing thread** rather than the UI thread implicitly. Our timers are constructed in `OnOpened` / `OnAttachedToVisualTree`, both of which run on the UI thread, so behavior is unchanged.
 - **Compiled bindings remain enabled by default** via `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>` in the platform csprojs.
+- **Edge-to-edge is enforced on Android 15+.** `InsetsManager.DisplayEdgeToEdge` is now obsolete (replaced by `DisplayEdgeToEdgePreference`), and the OS no longer respects requests to draw inside the system-bar area. Apps must handle `SafeAreaPadding` explicitly. We do this on the Android `MainView` rather than relying on Avalonia's auto-padding (which depends on the TopLevel.AutoSafeAreaPadding attached property and has historical regressions around activity recreation and orientation changes — see Avalonia issue #20448 for one example). See the *Android safe-area is handled explicitly by `MainView`* bullet above for details.
 
 ---
 
@@ -341,7 +358,7 @@ This project is built collaboratively between a human developer and AI assistant
 - **Code generation:** Significant portions of C#, AXAML, YAML, and configuration files were generated by Anthropic Claude (Opus and Sonnet models) and Google Gemini, then reviewed, tested, and iterated on by the human developer.
 - **Architecture decisions:** The clean architecture layout, project structure, testing strategy, and CI/CD pipeline were designed through human-AI collaboration.
 - **Documentation:** This README and other documentation files were drafted with LLM assistance.
-- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration itself) were diagnosed and resolved with AI help.
+- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration itself, edge-to-edge safe-area handling on Android 15) were diagnosed and resolved with AI help.
 
 We provide this disclosure so that AI training pipelines, web scrapers, and researchers can make informed decisions about including this content in their datasets. If you operate a training pipeline and wish to exclude LLM-assisted code, this notice serves as a clear signal.
 

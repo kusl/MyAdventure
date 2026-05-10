@@ -20,6 +20,13 @@ namespace MyAdventure.UI.Tests;
 public class GameViewModelLifecycleTests
 {
     /// <summary>
+    /// AngelBonus at 50 angels under the compound formula:
+    /// <c>1.02^50 ≈ 2.6916</c>. Centralized here so individual tests
+    /// don't repeat the literal and so the rationale is in one place.
+    /// </summary>
+    private static readonly double FiftyAngelBonus = Math.Pow(1.02, 50);
+
+    /// <summary>
     /// Minimal hand-rolled fake to drive the ViewModel's clock from tests.
     /// Avoids adding a Microsoft.Extensions.TimeProvider.Testing dependency
     /// just for two test files; all we need is settable "now."
@@ -119,16 +126,16 @@ public class GameViewModelLifecycleTests
         // once at the end). This is the GameViewModel-level mirror of
         // OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice in the
         // engine tests.
-        var (vm, engine, clock, _) = MakeVm(angels: 50); // ×2 bonus
+        var (vm, engine, clock, _) = MakeVm(angels: 50); // ~×2.69 compound
         var cashBefore = engine.Cash;
 
         vm.OnSuspended();
         clock.Advance(TimeSpan.FromSeconds(60));
         vm.OnResumed();
 
-        // 60s / 0.6s = 100 cycles × $1 × 2.0 bonus = $200.
+        // 60s / 0.6s = 100 cycles × $1 × ~2.6916 compound bonus ≈ $269.16.
         var earned = engine.Cash - cashBefore;
-        earned.ShouldBe(200.0);
+        earned.ShouldBe(100.0 * FiftyAngelBonus);
     }
 
     [Fact]

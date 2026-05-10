@@ -5994,3 +5994,207 @@ Three places:
 2. **Angel bonus description** — change "+2% per angel" to "each angel compounds at +2% (so 50 angels = ×2.69, not ×2.00)".
 
 3. **Modding section** — the JSON fields don't change, but the player-facing math for angels is now exponential. Worth noting so tinkerers setting `angels: 9999` understand they're getting a truly astronomical multiplier (×3.2×10^86).
+
+
+
+
+I'll start by reading the project files to understand the current state, then analyze the dump.txt for myself before making any decisions.Let me find the key files mentioned in the analysis: Business.cs, GameEngine.cs, GameViewModel.cs, and the test files.Now I have a clear picture of GameEngine. Let me also check GameViewModel and the test files, plus the Android view for the squishing issue.Now let me check the Android view since the user reported a layout issue there.Now I understand the Android layout. The user reports squishing at the top — lemonade and newspaper getting squished riding on top of the prestige line. Let me think about this...
+
+Looking at the layout: it's a `DockPanel` with top items (PRESTIGE bar then Angels bar) docked, bottom items (Import/Export) docked, and the business grid `UniformGrid` filling the remaining space. The `UniformGrid` uses `Columns="2" Rows="3"`.
+
+The issue is likely that on a phone with system bars (status bar at top, gesture nav at bottom), the content fills the screen but doesn't account for safe areas / insets. On the Moto G Stylus 2025, with its display cutout / front camera area, the top of the app probably overlaps with the status bar — making the lemonade/newspaper cards "squish" against the prestige bar visually because the status bar overlay + the prestige bar take vertical space without the OS reporting it.
+
+Let me check the MainActivity and AndroidApp to see if `SafeAreaPadding` / `InsetsManager` is being used.Now I'm understanding the Android squishing problem. The Avalonia view doesn't account for **safe area insets** (status bar). On the Moto G Stylus 2025 the status bar/cutout overlaps the top of the app, so the prestige bar visually shrinks to fit under the system bar — and the topmost row of business cards (lemonade + newspaper) appears to be sitting on top of / overlapping the prestige bar.
+
+Avalonia 12 has built-in `InsetsManager` support — you set `DisplayEdgeToEdgePreference` and apply the safe area as padding on the root `UserControl`. Let me also check the Android styles file.Confirmed — there is no `InsetsManager` / `SafeAreaPadding` handling. Let me search for any existing handling.Confirmed. Zero safe-area handling. Now let me check the test files to see what needs updating.Now let me look at GameViewModelLifecycleTests for the angel-bonus expectations.Now let me check Desktop MainWindow to see if it has any analogous structural concerns I should be aware of, and the README for context. Also let me look at BusinessTests and BusinessAffordableTests.Now let me check the README to understand what to update.Now let me also quickly look at the BusinessViewModel and the Desktop view to understand context (for potential ripple effects of any changes I make), plus any tests that might call the angels things.Now let me check Desktop MainWindow to understand layout consistency.Good — the desktop view doesn't have the safe-area issue (windowing handles this). Now let me also check NumberFormatterTests, MilestoneTests, BusinessViewModelTests for any places that test angel-bonus formatting.I have a complete picture now. Let me independently verify the analysis's core claims with the player's actual save state.
+
+Decoding the latest save from the prompt (`2026-05-10-15-19`):
+
+```
+{"v":1,"cash":4881405016060...,"lifetime":4182334789...,"angels":773,"prestige":4,
+ "businesses":{"lemonade":400,"newspaper":100,"carwash":100,"pizza":100,"donut":100,"shrimp":150},
+ "managers":{...all true...}}
+```
+
+Let me run the math myself to verify:**This is the critical finding.** I do not blindly trust the analysis — I verified it myself. The analysis has serious problems:
+
+1. **The lemonade $2.27T cost / 359k hour payback is real** — confirmed.
+2. **The compound angel bonus fix is correct and powerful** — confirmed: 773 angels go from ×16 to ×4.4M, and a single prestige to 911 angels would improve by 15.4×. ✅
+3. **BUT the prestige-scaled denominator (`1e13 * 3^prestigeCount`) is WRONG.** With the player's current `prestige=4`, the denominator becomes `8.1e14`, which means at lifetime ~$4e15 the formula yields 340 angels — but the player already has **773 angels held**. That gives `340 - 773 = -433` "available angels" — they can never prestige again.
+
+That fix would brick the save. The analysis's own example numbers (saying 139 new angels improving to ×19.22 → ×4.36M etc.) used the OLD formula. The analysis was internally inconsistent.
+
+4. **The PostMilestoneScaling fix only kicks in at Owned > 1000.** The player is stuck at 400 lemonade — they can't reach 1000 because of the cost. The fix doesn't help them. It only helps a player who *already* got to 1000 of something. **It is not the right fix for the problem the player has.**
+
+Let me think carefully about what fix actually addresses the problem.Now my picture is complete. The COMPOUND angel bonus alone, with the existing sqrt formula unchanged, completely solves both problems:
+
+1. **Stuck progression**: With ×4.45M bonus, unit 401 lemonade pays back in 0.05 seconds — buying everything is suddenly trivial.
+2. **Prestige incentive**: Going from 773 → 3067 angels gives an absolutely massive 5.4×10¹⁹× improvement (because compound).
+
+The analysis's other two proposed fixes are either wrong (prestige-scaled denominator bricks the save) or pointless for this player (PostMilestoneScaling for owned > 1000 doesn't help someone stuck at 400). And actually — once the compound bonus kicks in, the player will fly past 1000 of everything within seconds, so PostMilestoneScaling at owned > 1000 will start to matter for keeping unit 1001+ purchases worthwhile.
+
+Let me think about the actual problem the analysis raises: cost grows exponentially (1.07^N), revenue grows linearly with N. Past a certain N, even the next unit isn't worth it. **The PostMilestoneScaling fix is correct in concept** — past 1000 (where milestones cap), a sqrt-of-cost-growth revenue boost makes each new unit roughly as efficient as the last. The save state shows 400-unit lemonade — *they're not at 1000 yet*, but with compound bonus they will be. Including PostMilestoneScaling future-proofs the late game.
+
+So the right fix set is:
+1. ✅ **Compound angel bonus** — `Math.Pow(1.02, AngelInvestors)` instead of linear
+2. ✅ **PostMilestoneScaling for owned > 1000** — keeps late-game unit purchases viable
+3. ❌ **Reject the prestige-scaled denominator** — it would brick the save (player has 773 angels, formula would yield 340)
+
+Now the **save compatibility** — the user explicitly said "the save state should not change so all previous saves should still be compatible". The save format has not changed (cash, lifetime, angels, prestige, businesses, managers — all unchanged). My fixes don't touch any persisted field. ✅
+
+For the **Android squishing**: this is a safe-area inset issue. Avalonia 12 has `InsetsManager` — TopLevel has a `SafeAreaPadding` property and an `InsetsManager` that lets you configure `DisplayEdgeToEdgePreference` and `IsSystemBarVisible`. The cleanest fix is to register the safe-area as padding on the root view via the InsetsManager.SafeAreaChanged event, OR set `DisplayEdgeToEdgePreference=false` so Android lays out content beneath the system bars.
+
+Let me verify Avalonia 12 API for InsetsManager.Excellent — now I have all I need. Key facts from the Avalonia docs:
+
+- "Starting with Avalonia 11.1, any Avalonia app will automatically adjust its root view accordingly to the inset values" — Avalonia *should* be auto-applying SafeAreaPadding to the root view.
+- This is controlled by `TopLevel.AutoSafeAreaPadding` (defaults to true).
+- Modern Android versions (especially 15+) force edge-to-edge mode, which means without explicit handling content draws under the status bar.
+
+The Moto G Stylus 2025 likely runs Android 15. With edge-to-edge enforced, our app's `DockPanel Margin="8"` simply isn't enough — the top items (prestige bar, then the angels strip) get drawn UNDER the status bar / cutout area. The lemonade/newspaper cards are below the angels bar, but visually the prestige bar appears squished because part of it is hidden under the status bar.
+
+**The right fix**: In Avalonia 12, the auto-safe-area should already work — but it applies padding to the *root view* (the UserControl), not inside it. Our root is the UserControl, which contains a `Panel` containing the `DockPanel`. The DockPanel has its own `Margin="8"`. So Avalonia's auto-padding *should* push everything down.
+
+The problem may actually be that the `Panel` (which wraps the DockPanel + the Toast overlay) is the root content — and the auto-padding is applied on `Panel` not on the user control. Let me re-read the XAML more carefully.
+
+Looking at the user control:
+- Root: `<Panel>`
+- Inside: `<DockPanel Margin="8">` with top/bottom/center
+- Plus `<ItemsControl>` (toast overlay) at the bottom
+
+The issue isn't that auto-safe-area doesn't work — it's that **the root Panel is the one getting auto-padded by Avalonia**, but visually that just means children render normally inside the smaller area. Hmm — actually that should work. Let me think again...
+
+The user said: "lemonade stand and newspaper riding on top of the line showing prestige". So the BUSINESS CARDS are visually on top of (overlapping) the prestige bar. That points to the **DockPanel content area not respecting the docked element heights** — likely because Avalonia is aggressively auto-padding the Panel root, but the Panel ALSO has the toast overlay positioned at `VerticalAlignment="Bottom"`, and the layout is computing wrong because the inner DockPanel is fighting with the safe-area.
+
+Actually, I think the explainer is much simpler. The user control has a `Panel` as root. Inside is a `DockPanel`. **`Panel` is a layout-less container that just stacks children at the same position.** With Avalonia 12 auto-safe-area, the padding gets applied to the user control / TopLevel root content. BUT the prestige bar's text (`PrestigeExplanation` with `MaxWidth="180"`) wraps to multiple lines, and on a narrow phone screen with already-cramped headers, this wrapping pushes the angels bar down — and because the `UniformGrid Columns="2" Rows="3"` calculates row height purely as `availableHeight / 3`, the grid extends right up to the bottom of the wrapped prestige bar with no margin. On a very phone-shaped screen, "lemonade and newspaper" (the top row of business cards) appear *adjacent to* the prestige header with no separation, looking "squished" or "riding on top of the line".
+
+There's one more candidate explanation: the Moto G Stylus 2025 has a **hole-punch front camera** at the top center. When edge-to-edge is forced, the safe-area inset for the cutout region gets applied — but only for the cutout column. The status bar height is also reported. If `AutoSafeAreaPadding` is true (default), Avalonia inserts padding into TopLevel content. If our root is correctly receiving that padding then the visual issue is something else.
+
+The most reliable fix is to **explicitly handle SafeAreaChanged in code-behind and apply it as Padding on the UserControl**. This is actually the documented pattern from the Avalonia mobile platforms page. We belt-and-suspenders this with `AutoSafeAreaPadding="False"` so we own the padding deterministically.
+
+Now let me also be careful about another factor: the Android `MainView.axaml` puts the toast overlay inside the same root `Panel` as the DockPanel. The toasts are at the bottom. With edge-to-edge, the bottom gesture-nav region might overlap toasts.
+
+Plan: Apply safe-area padding on the root `UserControl`. Avalonia's auto-handling has historical bugs (e.g. the SurfaceView/scaling issue from the PR I found). Manual handling is more reliable.
+
+Let me also check the Avalonia 12 actual API — `DisplayEdgeToEdge` is obsolete and replaced by `DisplayEdgeToEdgePreference`. We don't need to set it; default behavior on Android 15+ is edge-to-edge enforced anyway.
+
+Now I have everything. Let me build the plan.
+
+---
+
+## My plan of action
+
+### What I verified independently from `dump.txt`
+
+1. **The compound angel bonus is the right fix**: At 773 angels, ×16 → ×4.45M (linear → compound). That single change makes unit 401 lemonade ($2.27T cost) pay back in 0.05 seconds. The "stuck progression" problem dissolves.
+
+2. **The compound bonus also revives the prestige incentive without needing the prestige-scaled denominator**: With current sqrt formula → 3067 angels available. ×4.45M → ×2.4×10²⁶ — overwhelming reason to prestige.
+
+3. **The prestige-scaled-denominator change in the analysis is wrong and harmful**: `1e13 × 3^prestigeCount` at the player's current `prestige=4` yields denominator `8.1e14`, which gives 340 angels at lifetime $4.18e15 — but they hold 773. They could *never* prestige again. Save would be bricked, violating the user's explicit "previous saves must remain compatible" rule. **I'm rejecting this fix.**
+
+4. **PostMilestoneScaling for owned > 1000 is a good late-game fix**: Doesn't help right now (player at 400), but with compound bonus the player will rocket past 1000 in seconds, and from then on, a `Math.Pow(CostMultiplier, (Owned-1000)/2.0)` revenue boost keeps each post-1000 unit worthwhile. **Keeping this part of the analysis.**
+
+5. **Save format unchanged**: The fixes only change behavior of `AngelBonus` and `Revenue` properties; persisted fields (`cash`, `lifetime`, `angels`, `prestige`, businesses, managers) are all untouched. Old saves load and continue to work — just with much more rewarding bonuses applied to existing angel counts.
+
+### Android squishing — root cause
+
+Avalonia 12 + Android 15 edge-to-edge enforcement. The current MainView has zero safe-area handling. The cleanest, deterministic fix:
+- Set `TopLevel.AutoSafeAreaPadding="False"` on the `UserControl`
+- In code-behind `OnAttachedToVisualTree`, subscribe to `InsetsManager.SafeAreaChanged` and apply the safe-area to the UserControl's `Padding` directly
+- Apply the initial value once on attach (not just on change)
+
+Desktop is unaffected (windowed; system bars don't overlap).
+
+### Files to change
+
+1. `src/MyAdventure.Core/Entities/Business.cs` — Add `PostMilestoneScaling`; `Revenue` includes it.
+2. `src/MyAdventure.Core/Services/GameEngine.cs` — Compound angel bonus.
+3. `src/MyAdventure.Android/Views/MainView.axaml` — Add `TopLevel.AutoSafeAreaPadding="False"`; remove fixed margin from outer DockPanel since safe-area will apply via UserControl Padding.
+4. `src/MyAdventure.Android/Views/MainView.axaml.cs` — Wire SafeAreaChanged → UserControl.Padding.
+5. `tests/MyAdventure.Core.Tests/GameEngineTests.cs` — Update angel-bonus test expectations to match compound formula.
+6. `tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs` — Same update.
+7. `README.md` — Document the new compound formula, post-milestone scaling, save compatibility note, and Android safe-area handling.
+
+### What I'm NOT changing
+
+- `BusinessDefinitions.cs` (no balance changes there)
+- `GameViewModel.cs` (no signature change to `CalculateAngels`)
+- `Milestone.cs`
+- The save format
+- The export/import format
+
+Let me set up my work directory and start writing the full files.Now let me view the docx skill if presents, but actually the user wants files that they would put back into their git repo, so I'll just create them as plain files and present them. The skill check rule still applies — let me peek at file-reading and see if it's necessary. I've already read everything from the project. The deliverable here is source code files. Let me proceed.
+
+Let me write each file in full.
+
+### 1. `Business.cs` (updated)### 2. `GameEngine.cs` (updated — only AngelBonus changed; rest preserved verbatim)### 3. Android `MainView.axaml` (updated — disable auto-padding, owned by code-behind)### 4. Android `MainView.axaml.cs` (updated — wire SafeAreaChanged)### 5. `GameEngineTests.cs` (updated test expectations)
+
+Let me work through each impacted test carefully.
+
+The angel-bonus tests need updating because `AngelBonus` is now `Math.Pow(1.02, AngelInvestors)` instead of `1.0 + 0.02 * AngelInvestors`. With 50 angels: `1.02^50 ≈ 2.6916`.
+
+Also: `Tick_NoAngels_ShouldEarnExactlyBaseRevenue` — at 0 angels, `1.02^0 = 1.0`. ✅ unaffected.
+
+`Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings` — expects ×2.0 → now ×`Math.Pow(1.02, 50)`.
+
+`Tick_AngelsAlsoBoostLifetimeEarnings` — same.
+
+`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice` — comment explained 100 cycles × $1 × 2 = $200. Now 100 × 1 × 2.6916 ≈ $269.16. Update range to allow some clock-skew tolerance.
+
+`ApplyOfflineEarnings_AppliesAngelBonus` — same: $200 → $269.16. Use a small range to allow precision.### 6. `GameViewModelLifecycleTests.cs` (one assertion to update)
+
+The only test affected is `OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce` which expects `200.0` for 50 angels. With compound it's `100 * 1.02^50 ≈ 269.16`.Now let me check if BusinessViewModelTests has any angel-bonus-specific tests that I haven't seen yet.Good — these tests pass an `angelBonus` parameter directly (`2.0`, `3.0`, `4.0`, `1.0`, `50.0`), they don't compute it from `AngelInvestors`. They test the multiplication arithmetic in `BusinessViewModel.Refresh`. Compound vs linear doesn't change the contract here. **No changes needed to BusinessViewModelTests.cs**.
+
+Let me also verify MilestoneTests, NumberFormatterTests, AppLifecycleManagerTests, ToastServiceTests, GameStateRepositoryTests don't have anything affected.Good — only the README mention. Now let me look at the README and update it. Let me re-read the relevant sections quickly to know exactly what to change.
+
+The README needs updates in these places:
+1. **Prestige System section** (lines ~782–794): Update the formula description / angel bonus mention from "+2% per angel" to compound. Keep the sqrt formula unchanged.
+2. **Player Guide → Late game** (lines ~873–883): Update "Each angel is +2% revenue forever" to reflect compounding.
+3. **Milestone table caveat** (line ~780): Mention PostMilestoneScaling.
+4. **Modding section** (lines ~907–916): Update the angel description.
+5. **Architecture / Key Technical Decisions** (line ~971): Update the angel-bonus description.
+6. **Add a new "Save compatibility" note** explaining that old saves remain valid.
+7. **Add an Android safe-area note** to Key Technical Decisions or Avalonia 12 migration section.
+
+Let me write the full updated README now. I'll preserve all the unrelated content verbatim.Now I'll write the full updated README. I'll preserve everything verbatim except for the small targeted changes.
+
+71
+26
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
