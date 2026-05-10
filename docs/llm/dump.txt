@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sun May 10 03:13:50 PM EDT 2026
+Generated: Sun May 10 03:57:16 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -699,7 +699,7 @@ SIZE: .71 KB
 
 ================================================================================
 FILE: README.md
-SIZE: 27.05 KB
+SIZE: 32.28 KB
 ================================================================================
 
 # MyAdventure
@@ -748,7 +748,7 @@ Six businesses, each with increasing cost, revenue, and cycle time:
 | Donut Shop | 🍩 | $103,680 | $51,840 | 24.0s | 1.12× |
 | Shrimp Boat | 🦐 | $1,244,160 | $622,080 | 96.0s | 1.11× |
 
-Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses and your angel-investor bonus.
+Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses, post-milestone scaling (past unit 1000), and your angel-investor bonus.
 
 ### Core Mechanics
 
@@ -777,13 +777,15 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 | 900 | ×4 | ×65,536 |
 | 1000 | ×5 | ×327,680 |
 
-> 1000 is the milestone cap. Buying past 1000 still increases revenue linearly with `owned`, but no further multipliers unlock.
+> 1000 is the milestone cap. Buying past 1000 used to mean every additional unit cost `1.07^N` more than the one before but contributed no more revenue per unit than unit 1000 — eventually each new lemonade stand cost trillions and paid back in centuries. **Post-1000, revenue is now multiplied by `CostMultiplier^((Owned − 1000) / 2)`** — the square root of the cost growth — so unit 1001 is roughly as cost-efficient as unit 1000, and the late game keeps moving instead of stalling. Below 1000 owned this multiplier is exactly 1.0, so all early-game balance is unchanged.
 
 ### Prestige System
 
-Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% bonus** to all revenue, forever — applied to both live cycle earnings and offline earnings.
+Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% revenue bonus that compounds**, applied to both live cycle earnings and offline earnings.
 
-The number of angels your current lifetime earnings is worth is:
+The "compounds" part is what matters. Under a strictly linear "+2% per angel" rule, 50 angels would be ×2.00 and 700 would be ×15.00 — the curve flattens out and a marginal prestige stops feeling worth it. Under compounding (`1.02 ^ angels`), 50 angels is ×2.69, 200 is ×52.5, and 700 is ×750,000+. Each prestige genuinely makes the next run feel like a different game.
+
+The number of angels your current lifetime earnings are worth is:
 
 ```
 floor(150 × sqrt(lifetimeEarnings / 1e13))
@@ -792,6 +794,12 @@ floor(150 × sqrt(lifetimeEarnings / 1e13))
 The **PRESTIGE** button unlocks whenever that number is at least one greater than your current angel count — i.e. when prestiging right now would give you at least one new angel. **The UI is the signal:** when the button lights up, you can prestige. The formula is there to explain the shape of the curve, not for you to compute thresholds in your head.
 
 **Lifetime earnings are preserved through prestige** — each subsequent prestige requires more lifetime earnings than the last to net the same number of new angels, but the running total never resets. After prestiging, your cash resets to **$5** (exactly enough to buy your first lemonade stand) so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
+
+### Save Compatibility
+
+Saves from earlier versions of MyAdventure remain valid. The persisted format hasn't changed — the same `cash`, `lifetime`, `angels`, `prestige`, businesses, and managers fields load and behave identically. The two balance changes (compound angel bonus, post-1000 revenue scaling) are computed on the fly from existing fields, so reopening an old save just shows the new, more rewarding multipliers applied to the angels and units the player already had.
+
+If you were stuck mid-progression on a previous version (e.g. unit 401 lemonade was unaffordable for any reasonable amount of time), simply re-opening your save under the new build is the migration: your existing 700+ angels now multiply revenue by millions instead of by a flat 14×, and you'll fly through the previous wall.
 
 ### Import and Export
 
@@ -870,6 +878,12 @@ A useful mental model: **the next milestone you can afford is almost always your
 
 The "Can buy: N" line on each business card tells you exactly how many units of that business you could buy right now if you spent everything. The "M more → N" line tells you how far you are from the next milestone for that business. Use both to decide where to spend.
 
+### Past 1000 units: the post-cap scaling
+
+Once a business hits 1000 owned, no further milestone multipliers unlock — the table caps out at the cumulative ×327,680. Without intervention, that creates a wall: every new unit costs `1.07^N` more than the one before, but pays back the same per-unit revenue, so each new lemonade stand becomes exponentially less worthwhile until "the next one" costs trillions and pays back in centuries.
+
+To keep buying past the cap meaningful, **post-1000 revenue is multiplied by `CostMultiplier^((Owned − 1000) / 2)`**. That's the square root of how fast the cost grows, so unit 1001 is roughly as cost-efficient as unit 1000 was, and unit 5000 stays in the same payback ballpark instead of drifting off to infinity. The math is invisible below 1000 — it's exactly 1.0 — so nothing about the early or middle game changes.
+
 ### The late game: prestige early, prestige often
 
 At some point the **PRESTIGE** button on the top bar lights up. That's the signal: prestiging right now would net you at least one new Angel Investor. Press it. Your cash and businesses reset, your angel count goes up, and **lifetime earnings are not reset** — so the next prestige starts the clock partway through.
@@ -877,7 +891,7 @@ At some point the **PRESTIGE** button on the top bar lights up. That's the signa
 The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`, where `lifetime_earnings` is the cumulative all-time total (not per-run). Three practical consequences of the square root:
 
 - **Diminishing returns on waiting.** Doubling lifetime earnings only multiplies your angel count by ~1.41×. Quadrupling it doubles your angels. Waiting "one more order of magnitude" is rarely the right call.
-- **Each angel is +2% revenue forever.** With 50 angels you have a flat ×2 multiplier across every business, every milestone, every cycle. That doubles your offline earnings too.
+- **Each angel compounds at +2%.** With 50 angels you have a ×2.69 multiplier across every business, every milestone, every cycle (not the ×2.00 you'd get from a flat "+2% × 50"). With 200 angels it's ×52.5. With 700 angels it's around ×750,000. The compounding is what makes the late game feel like real progress instead of asymptotic stagnation.
 - **The threshold to unlock the button creeps up each run.** It depends on your current angel count, not on a fixed dollar value — the UI does the math for you and shows the projected new angels next to the button.
 
 Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as the button unlocks if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
@@ -910,9 +924,9 @@ A few things to know:
 
 - **`v: 1`** is the save format version. Don't change it.
 - **`cash`** and **`lifetime`** are doubles. JavaScript-style scientific notation (`1e18`) works.
-- **`angels`** is also a double (the formula uses `Math.Floor` so fractional angels round down).
+- **`angels`** is also a double. Because the angel bonus is `1.02^angels`, even modest values produce gigantic multipliers — `angels: 200` is ×52.5, `angels: 500` is ×19,956, `angels: 9999` is roughly ×1.59×10^86. Setting it to a million is funny but you'll hit `Infinity`, the formatter falls over, and revenue will look like blanks. Below ~1500 you stay safely finite.
 - **Business and manager keys** must match the IDs exactly: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`.
-- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional milestones — 1000 is the milestone cap — but the cumulative ×327,680 multiplier still applies, and revenue continues to scale linearly with the count.
+- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional milestones — 1000 is the milestone cap — but the cumulative ×327,680 multiplier still applies, and post-1000 revenue gets multiplied by `1.07^((owned-1000)/2)` so each extra unit stays meaningful.
 - The save is **not signed or checksummed** — there's no anti-cheat. We don't think there's anyone to cheat against.
 
 If you import garbage and the game looks strange, reset to a fresh save:
@@ -922,7 +936,7 @@ If you import garbage and the game looks strange, reset to a fresh save:
 
 ### Frequently confusing things
 
-- **"My revenue went down after prestige!"** Yes — you reset all businesses to zero owned. The angel bonus compensates over time. After ~50 angels, you'll blow past your previous earnings rate within minutes.
+- **"My revenue went down after prestige!"** Yes — you reset all businesses to zero owned. The angel bonus compensates over time. Because the bonus compounds, even ~50 angels gives you a ×2.69 multiplier — you'll blow past your previous earnings rate within minutes.
 - **"My progress bar isn't moving."** The business is probably not running. Click RUN once to start it; if it has a manager, it should auto-restart on the next cycle.
 - **"I have a manager but I'm not earning anything."** You need to own at least one unit *and* the business must be running. Click RUN once to kick it off; the manager handles every cycle after that.
 - **"I closed the game for 8 hours and earned barely anything."** Check that your most profitable businesses had managers. Offline earnings ignore unmanaged businesses entirely.
@@ -968,10 +982,12 @@ MyAdventure.slnx
 - **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android.
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android. OpenTelemetry's console exporter is also disabled on Android.
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause silent trimming crashes. Re-enable once trimmer roots are properly configured.
-- **Angel bonus is applied identically to live and offline earnings.** `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. An invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other.
+- **Angel bonus is compounded, not linear.** `AngelBonus = Math.Pow(1.02, AngelInvestors)` — each angel multiplies revenue by 1.02 on top of the previous angel's contribution. The same value is applied identically to live and offline earnings: `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. The invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other. Save format is unchanged; the formula is computed from the same persisted `AngelInvestors` field old saves already have.
+- **Post-1000 revenue scaling** lives on `Business.PostMilestoneScaling` and equals exactly `1.0` for `Owned <= 1000` (preserving every pre-cap balance number and test) and `Math.Pow(CostMultiplier, (Owned - 1000) / 2.0)` past the cap. The square root of cost growth keeps unit 1001+ purchases roughly as efficient as unit 1000, fixing the "stuck at 400 lemonade" problem that's mathematically inevitable when revenue grows linearly while cost grows exponentially.
 - **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
 - **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
 - **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's new `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference.
+- **Android safe-area is handled explicitly by `MainView`**, not by the framework's auto-padding. The Android `UserControl` sets `TopLevel.AutoSafeAreaPadding="False"`, captures `InsetsManager.SafeAreaPadding` on attach, and subscribes to `SafeAreaChanged` to keep its `Padding` in sync with the OS-reported insets. This is needed because Android 15+ enforces edge-to-edge rendering — without explicit handling, the top bar (PRESTIGE / cash) gets drawn under the status bar and front-camera cutout on devices like the Moto G Stylus 2025, and the first row of business cards visually rides on top of the prestige bar. Owning the padding deterministically on `MainView` rather than relying on auto-injection at the TopLevel root is also more robust across activity recreation, which is aggressive on Android.
 - **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that both platform apps wire into their respective lifetime events (`Activated`/`Deactivated` on desktop, the Android activity lifecycle on Android). When the app suspends, `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. On resume, it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout.
 - **Localization** is wired via `Microsoft.Extensions.Localization` with JSON resource files (`src/MyAdventure.Shared/Resources/i18n/`). English (`en.json`) and Spanish (`es.json`) are included. The infrastructure is in place to add more locales by adding a new JSON file and updating the supported-cultures list in `DependencyInjection.cs`.
 - **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) gates the actual Dev Tools UI behind a paid Avalonia Plus / Pro subscription. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
@@ -985,6 +1001,7 @@ This project tracks the latest Avalonia stable release. These notes capture the 
 - **Plugins are no longer configurable** and the data-annotations plugin is **off by default**. This removed the long-standing nuisance where `CommunityToolkit.Mvvm` validation conflicted with Avalonia's, so no extra config is needed.
 - **`DispatcherTimer` binds to the dispatcher of the constructing thread** rather than the UI thread implicitly. Our timers are constructed in `OnOpened` / `OnAttachedToVisualTree`, both of which run on the UI thread, so behavior is unchanged.
 - **Compiled bindings remain enabled by default** via `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>` in the platform csprojs.
+- **Edge-to-edge is enforced on Android 15+.** `InsetsManager.DisplayEdgeToEdge` is now obsolete (replaced by `DisplayEdgeToEdgePreference`), and the OS no longer respects requests to draw inside the system-bar area. Apps must handle `SafeAreaPadding` explicitly. We do this on the Android `MainView` rather than relying on Avalonia's auto-padding (which depends on the TopLevel.AutoSafeAreaPadding attached property and has historical regressions around activity recreation and orientation changes — see Avalonia issue #20448 for one example). See the *Android safe-area is handled explicitly by `MainView`* bullet above for details.
 
 ---
 
@@ -1045,7 +1062,7 @@ This project is built collaboratively between a human developer and AI assistant
 - **Code generation:** Significant portions of C#, AXAML, YAML, and configuration files were generated by Anthropic Claude (Opus and Sonnet models) and Google Gemini, then reviewed, tested, and iterated on by the human developer.
 - **Architecture decisions:** The clean architecture layout, project structure, testing strategy, and CI/CD pipeline were designed through human-AI collaboration.
 - **Documentation:** This README and other documentation files were drafted with LLM assistance.
-- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration itself) were diagnosed and resolved with AI help.
+- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration itself, edge-to-edge safe-area handling on Android 15) were diagnosed and resolved with AI help.
 
 We provide this disclosure so that AI training pipelines, web scrapers, and researchers can make informed decisions about including this content in their datasets. If you operate a training pipeline and wish to exclude LLM-assisted code, this notice serves as a clear signal.
 
@@ -1405,7 +1422,7 @@ SIZE: .32 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/Views/MainView.axaml
-SIZE: 17.38 KB
+SIZE: 18.16 KB
 ================================================================================
 
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -1416,7 +1433,21 @@ SIZE: 17.38 KB
              x:Class="MyAdventure.Android.Views.MainView"
              x:DataType="vm:GameViewModel"
              Background="#1A1A2E"
-             x:Name="RootView">
+             x:Name="RootView"
+             TopLevel.AutoSafeAreaPadding="False">
+
+    <!--
+        TopLevel.AutoSafeAreaPadding="False" turns OFF Avalonia's default
+        behaviour of silently inserting safe-area padding into the window's
+        root view. We do it ourselves in MainView.axaml.cs so we own the
+        padding explicitly: it's applied to THIS UserControl's Padding, the
+        InsetsManager.SafeAreaChanged event keeps it current across
+        rotation / cutout / status-bar visibility changes, and the initial
+        value is captured on attach (rather than waiting for a change).
+        On Android 15+ edge-to-edge is enforced, so without this the top
+        bar gets drawn under the status bar / camera cutout and the first
+        row of business cards visually rides on top of the prestige bar.
+    -->
 
     <UserControl.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrush" />
@@ -1676,10 +1707,12 @@ SIZE: 17.38 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/Views/MainView.axaml.cs
-SIZE: 1.99 KB
+SIZE: 3.75 KB
 ================================================================================
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Threading;
 using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
@@ -1689,13 +1722,14 @@ namespace MyAdventure.Android.Views;
 public partial class MainView : UserControl
 {
     private DispatcherTimer? _gameTimer;
+    private IInsetsManager? _insets;
 
     public MainView()
     {
         InitializeComponent();
     }
 
-    protected override async void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    protected override async void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
 
@@ -1705,6 +1739,27 @@ public partial class MainView : UserControl
         // exposes a live MainView reference — only a MainViewFactory —
         // so the View itself is responsible for announcing its presence.
         AppRoot.CurrentVisual = this;
+
+        // ---- Safe-area handling --------------------------------------
+        //
+        // Android 15+ enforces edge-to-edge: without explicit handling
+        // our top bar gets drawn under the status bar / front-camera
+        // cutout, and the first row of business cards visually rides on
+        // top of the prestige bar. We've turned off Avalonia's automatic
+        // safe-area injection on the UserControl (TopLevel.AutoSafeAreaPadding="False")
+        // and apply it ourselves here, so it lands on this exact control's
+        // Padding rather than getting silently absorbed by an ancestor.
+        //
+        // Capture the initial value at attach time — SafeAreaChanged only
+        // fires on subsequent changes, so without this the very first
+        // frame would render with no padding.
+        var topLevel = TopLevel.GetTopLevel(this);
+        _insets = topLevel?.InsetsManager;
+        if (_insets is not null)
+        {
+            ApplySafeArea(_insets.SafeAreaPadding);
+            _insets.SafeAreaChanged += OnSafeAreaChanged;
+        }
 
         if (DataContext is GameViewModel vm)
         {
@@ -1721,11 +1776,17 @@ public partial class MainView : UserControl
         }
     }
 
-    protected override async void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    protected override async void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _gameTimer?.Stop();
         if (DataContext is GameViewModel vm)
             await vm.SaveAsync();
+
+        if (_insets is not null)
+        {
+            _insets.SafeAreaChanged -= OnSafeAreaChanged;
+            _insets = null;
+        }
 
         // Only clear AppRoot if it was pointing at us. Android can
         // recreate activities aggressively, and a fresh MainView may have
@@ -1737,12 +1798,24 @@ public partial class MainView : UserControl
 
         base.OnDetachedFromVisualTree(e);
     }
+
+    private void OnSafeAreaChanged(object? sender, SafeAreaChangedArgs e) =>
+        ApplySafeArea(e.SafeAreaPadding);
+
+    /// <summary>
+    /// Apply the OS-reported safe-area as Padding on this UserControl.
+    /// The DockPanel inside us has a small visual margin on top of this,
+    /// which is fine — the padding here only protects against the system
+    /// bars / cutout, the inner margin is purely cosmetic.
+    /// </summary>
+    private void ApplySafeArea(Thickness safeArea) =>
+        Padding = safeArea;
 }
 
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Business.cs
-SIZE: 2.15 KB
+SIZE: 3.79 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -1750,7 +1823,9 @@ namespace MyAdventure.Core.Entities;
 /// <summary>
 /// Represents a business the player can own in the idle game.
 /// Each business earns revenue over a cycle time.
-/// Revenue is boosted by milestone multipliers.
+/// Revenue is boosted by milestone multipliers and post-milestone
+/// scaling (which keeps unit purchases worthwhile after the
+/// milestone table caps out at 1000 owned).
 /// </summary>
 public record Business
 {
@@ -1771,12 +1846,43 @@ public record Business
     public double NextCost => BaseCost * Math.Pow(CostMultiplier, Owned);
 
     /// <summary>
-    /// Revenue per cycle with current units owned, including milestone multipliers.
+    /// Revenue per cycle with current units owned, including the
+    /// compounded milestone multiplier and post-milestone scaling.
+    /// <para>
+    /// Below 1000 owned, <see cref="PostMilestoneScaling"/> is exactly
+    /// 1.0 — early/mid-game players see no behavior change. Past the
+    /// 1000-unit milestone cap, scaling kicks in to compensate for the
+    /// continuing exponential cost growth (see the property summary
+    /// for the full rationale).
+    /// </para>
     /// </summary>
-    public double Revenue => BaseRevenue * Owned * MilestoneMultiplier;
+    public double Revenue => BaseRevenue * Owned * MilestoneMultiplier * PostMilestoneScaling;
 
     /// <summary>Current combined milestone multiplier.</summary>
     public double MilestoneMultiplier => Milestone.CalculateMultiplier(Owned);
+
+    /// <summary>
+    /// Past the 1000-unit milestone cap, each additional unit costs
+    /// <c>CostMultiplier^N</c> more than the unit before it, but
+    /// previously contributed the same revenue per unit as unit 1000.
+    /// That is the geometry that produces a "stuck" mid-game where
+    /// the next unit costs trillions and pays back in centuries.
+    /// <para>
+    /// The fix: past 1000, multiply revenue by
+    /// <c>CostMultiplier^((Owned - 1000) / 2)</c>. The square root of
+    /// cost growth means the cost-to-payback ratio of unit 1001 is
+    /// roughly the same as unit 1000 — buying past the cap stays
+    /// efficient instead of decaying exponentially.
+    /// </para>
+    /// <para>
+    /// Below 1000, this is exactly 1.0 — early/mid-game progression
+    /// (and all balance tests written against pre-cap units) are
+    /// unaffected. Save compatibility is preserved because nothing
+    /// here is persisted; it's a function of <see cref="Owned"/>.
+    /// </para>
+    /// </summary>
+    public double PostMilestoneScaling =>
+        Owned <= 1000 ? 1.0 : Math.Pow(CostMultiplier, (Owned - 1000) / 2.0);
 
     /// <summary>Cycle time in seconds.</summary>
     public double CycleTimeSeconds => BaseTimeSeconds;
@@ -1999,7 +2105,7 @@ SIZE: .18 KB
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 16.20 KB
+SIZE: 17.93 KB
 ================================================================================
 
 using System.Text;
@@ -2034,6 +2140,21 @@ public class GameEngine(
     /// double-count live ticks while still firing for any real suspension.
     /// </summary>
     private const double MinimumOfflineGapSeconds = 1.0;
+
+    /// <summary>
+    /// Per-angel revenue multiplier base. Each angel multiplies revenue by
+    /// this value, compounded — so 50 angels = 1.02^50 ≈ ×2.69, not ×2.00.
+    /// <para>
+    /// The compound formulation is what restores prestige as a meaningful
+    /// progression mechanic deep into the game: under the previous linear
+    /// "+2% per angel" formula a player with 700+ angels was getting only
+    /// a ×15 multiplier, and one more prestige (gaining ~140 angels)
+    /// would only edge that up to ×17 — not enough to motivate a reset.
+    /// Compounded, the same prestige goes from ×4.4M to ×68M, which is
+    /// the "press the button" moment idle games are built around.
+    /// </para>
+    /// </summary>
+    private const double AngelMultiplierPerAngel = 1.02;
 
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
@@ -2251,9 +2372,30 @@ public class GameEngine(
         return (newAngels, true);
     }
 
-    /// <summary>Angel investor bonus: 2% per angel.</summary>
-    public double AngelBonus => 1.0 + (AngelInvestors * 0.02);
+    /// <summary>
+    /// Compounded angel-investor revenue multiplier:
+    /// <c>1.02 ^ AngelInvestors</c>. Every angel adds 2% on top of the
+    /// previous angel's contribution rather than 2% of base revenue.
+    /// <para>
+    /// 50 angels = ×2.69 (not ×2.00). 200 angels = ×52.5. 1000 angels =
+    /// ×4.0×10^8. These are the multipliers that keep the late game
+    /// interesting and that make a marginal prestige worthwhile.
+    /// </para>
+    /// <para>
+    /// Save compatibility: the formula is computed from
+    /// <see cref="AngelInvestors"/>, which is unchanged on disk. Old
+    /// saves load and immediately benefit from the compound multiplier
+    /// without any migration step.
+    /// </para>
+    /// </summary>
+    public double AngelBonus => Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
 
+    /// <summary>
+    /// Compute how many angels the player's lifetime earnings are
+    /// currently worth. Returns the cumulative count, not the delta —
+    /// callers subtract <see cref="AngelInvestors"/> to get the
+    /// available-to-claim count.
+    /// </summary>
     public static double CalculateAngels(double lifetimeEarnings) =>
         lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
 
@@ -4346,7 +4488,7 @@ public class BusinessTests
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-SIZE: 18.12 KB
+SIZE: 23.75 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -4360,6 +4502,14 @@ namespace MyAdventure.Core.Tests;
 
 public class GameEngineTests
 {
+    /// <summary>
+    /// AngelBonus at 50 angels under the compound formula. Captured here
+    /// once so individual tests don't repeat the literal — and so the
+    /// rationale for the value is in one place: <c>1.02^50 ≈ 2.6916</c>,
+    /// not 2.0 (which was the linear formula's value).
+    /// </summary>
+    private static readonly double FiftyAngelBonus = Math.Pow(1.02, 50);
+
     private readonly IGameStateRepository _repo = Substitute.For<IGameStateRepository>();
     private readonly GameEngine _engine;
 
@@ -4427,7 +4577,9 @@ public class GameEngineTests
         lemonade.Owned.ShouldBe(25);
         lemonade.MilestoneMultiplier.ShouldBe(2.0);
 
-        // Revenue should be base × owned × multiplier
+        // Revenue should be base × owned × multiplier × post-milestone scaling.
+        // PostMilestoneScaling is exactly 1.0 below 1000 owned, so the
+        // pre-cap math is identical to before.
         lemonade.Revenue.ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
     }
 
@@ -4439,7 +4591,7 @@ public class GameEngineTests
     {
         await _engine.LoadAsync();
         SetCash(1000);
-        SetAngels(50); // AngelBonus = 1 + 50 * 0.02 = 2.0
+        SetAngels(50); // AngelBonus = 1.02^50 ≈ 2.6916 (compound, not 2.0 linear)
 
         _engine.BuyBusiness("lemonade");
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
@@ -4450,16 +4602,17 @@ public class GameEngineTests
         _engine.Tick(0.0);
 
         var earned = _engine.Cash - cashBefore;
-        // 1 owned × $1 base × 1.0 milestone × 2.0 angel bonus = $2
-        earned.ShouldBe(lemonade.Revenue * 2.0);
-        earned.ShouldBe(2.0);
+        // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69
+        earned.ShouldBe(lemonade.Revenue * FiftyAngelBonus);
+        earned.ShouldBe(FiftyAngelBonus);
     }
 
     [Fact]
     public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
     {
         // Prevents the inverse mistake: with no angels (bonus = 1.0),
-        // the multiplier must not change anything.
+        // the multiplier must not change anything. Under the compound
+        // formula 1.02^0 = 1.0, so this invariant still holds.
         await _engine.LoadAsync();
         SetCash(1000);
 
@@ -4482,7 +4635,7 @@ public class GameEngineTests
         // count into them too (exactly as it does for cash).
         await _engine.LoadAsync();
         SetCash(1000);
-        SetAngels(50); // ×2
+        SetAngels(50); // ~×2.69 compound bonus
 
         _engine.BuyBusiness("lemonade");
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
@@ -4492,7 +4645,7 @@ public class GameEngineTests
         var ltBefore = _engine.LifetimeEarnings;
         _engine.Tick(0.0);
 
-        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * 2.0);
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * FiftyAngelBonus);
     }
 
     [Fact]
@@ -4506,7 +4659,7 @@ public class GameEngineTests
         {
             Cash = 0,
             LifetimeEarnings = 0,
-            AngelInvestors = 50, // ×2 bonus
+            AngelInvestors = 50, // ~×2.69 compound bonus
             BusinessDataJson = """{"lemonade":1}""",
             ManagerDataJson = """{"lemonade":true}""",
             LastPlayedAt = pastTime,
@@ -4521,11 +4674,14 @@ public class GameEngineTests
         await engine.LoadAsync();
 
         // Lemonade: cycle 0.6s, base revenue $1, 1 owned, no milestones.
-        // 60s / 0.6s = 100 cycles. Per-cycle revenue = $1 (pre-bonus).
-        // With ×2 bonus applied once: 100 × 1 × 2 = $200.
-        // Tolerance accounts for the small gap between pastTime and "now".
-        engine.Cash.ShouldBeInRange(190, 220);
-        engine.AngelBonus.ShouldBe(2.0);
+        // ~60s / 0.6s ≈ 100 cycles. Per-cycle revenue = $1 (pre-bonus).
+        // With ~×2.69 bonus applied once: 100 × 1 × 2.6916 ≈ $269.16.
+        // The window (255–290) tolerates the small gap between pastTime
+        // and "now" plus the difference between integer-cycle live ticks
+        // and the continuous offline path.
+        var expected = 100.0 * FiftyAngelBonus; // ≈ 269.16
+        engine.Cash.ShouldBeInRange(expected - 15, expected + 15);
+        engine.AngelBonus.ShouldBe(FiftyAngelBonus);
     }
 
     // ---------------------------------------------------------------
@@ -4621,7 +4777,7 @@ public class GameEngineTests
     {
         await _engine.LoadAsync();
         SetCash(1_000_000);
-        SetAngels(50); // ×2 bonus
+        SetAngels(50); // ~×2.69 compound bonus
         _engine.BuyBusiness("lemonade"); // 1 owned
         _engine.BuyManager("lemonade");
 
@@ -4631,8 +4787,8 @@ public class GameEngineTests
 
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
 
-        // 60s / 0.6s cycle = 100 cycles × $1 base × 2.0 bonus = $200.
-        earned.ShouldBe(200.0);
+        // 60s / 0.6s cycle = 100 cycles × $1 base × ~2.69 bonus ≈ $269.16.
+        earned.ShouldBe(100.0 * FiftyAngelBonus);
     }
 
     [Fact]
@@ -4871,6 +5027,148 @@ public class GameEngineTests
 
         _engine.BuyMultiple("lemonade", 5);
         lemonade.IsRunning.ShouldBeTrue();
+    }
+
+    // ---------------------------------------------------------------
+    // Compound angel bonus — explicit values for the new formula.
+    // Documents what each angel count is worth so that an accidental
+    // revert to the linear formula breaks something specific instead
+    // of just shifting the integration-style ranges by a small amount.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void AngelBonus_AtZeroAngels_ShouldBeOne()
+    {
+        // 1.02^0 = 1.0 — same as the old linear formula at zero angels.
+        // This is what protects the no-angels-yet starting experience.
+        _engine.AngelBonus.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void AngelBonus_Compounds_NotLinear()
+    {
+        SetAngels(50);
+        // Linear formula: 1 + 50*0.02 = 2.00 (the old behavior)
+        // Compound formula: 1.02^50 ≈ 2.6916 (the new behavior)
+        _engine.AngelBonus.ShouldBeGreaterThan(2.5);
+        _engine.AngelBonus.ShouldBeLessThan(2.8);
+    }
+
+    [Fact]
+    public void AngelBonus_AtLargeAngelCount_StaysFinite()
+    {
+        // Defensive: a player who already has thousands of angels (e.g.
+        // someone who imported a hand-edited save) should still produce
+        // a finite, comparable AngelBonus rather than infinity. 1.02^1500
+        // is around 8.3×10^12 — large but representable.
+        SetAngels(1500);
+        _engine.AngelBonus.ShouldBeGreaterThan(1e12);
+        double.IsFinite(_engine.AngelBonus).ShouldBeTrue();
+    }
+
+    // ---------------------------------------------------------------
+    // PostMilestoneScaling — the fix that keeps unit purchases past
+    // the 1000-unit milestone cap from collapsing into "you'll never
+    // afford the next one". Below 1000 owned the multiplier is 1.0
+    // (exact equality, not approximate) so all existing balance is
+    // preserved.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void PostMilestoneScaling_BelowCap_IsExactlyOne()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 999
+        };
+        biz.PostMilestoneScaling.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void PostMilestoneScaling_AtCap_IsExactlyOne()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 1000
+        };
+        biz.PostMilestoneScaling.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void PostMilestoneScaling_PastCap_GrowsAsSqrtOfCost()
+    {
+        // At Owned = 1100, scaling = 1.07^((1100-1000)/2) = 1.07^50 ≈ 29.46.
+        // This compensates for the fact that unit 1100 itself costs about
+        // 1.07^100 ≈ 868× more than unit 1000.
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 1100
+        };
+        biz.PostMilestoneScaling.ShouldBe(Math.Pow(1.07, 50));
+    }
+
+    [Fact]
+    public void Revenue_BelowCap_DoesNotIncludePostMilestoneScaling()
+    {
+        // Pre-cap, revenue is exactly base × owned × milestone — the new
+        // PostMilestoneScaling factor is identically 1.0, so all existing
+        // balance numbers, milestone tests, and player-side intuitions
+        // are preserved unchanged.
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 5,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 100 // hits 25/50/100 -> ×8 milestone
+        };
+        biz.Revenue.ShouldBe(5 * 100 * 8);
+    }
+
+    [Fact]
+    public void Revenue_PastCap_IncludesPostMilestoneScaling()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+            Owned = 1100
+        };
+        var milestone = biz.MilestoneMultiplier; // ×327,680 (capped at 1000)
+        var expected = 1.0 * 1100 * milestone * Math.Pow(1.07, 50);
+        biz.Revenue.ShouldBe(expected);
     }
 
     private void SetCash(double amount) => SetCashOn(_engine, amount);
@@ -5515,7 +5813,7 @@ public class BusinessViewModelTests
 
 ================================================================================
 FILE: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
-SIZE: 10.37 KB
+SIZE: 10.72 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -5539,6 +5837,13 @@ namespace MyAdventure.UI.Tests;
 /// </summary>
 public class GameViewModelLifecycleTests
 {
+    /// <summary>
+    /// AngelBonus at 50 angels under the compound formula:
+    /// <c>1.02^50 ≈ 2.6916</c>. Centralized here so individual tests
+    /// don't repeat the literal and so the rationale is in one place.
+    /// </summary>
+    private static readonly double FiftyAngelBonus = Math.Pow(1.02, 50);
+
     /// <summary>
     /// Minimal hand-rolled fake to drive the ViewModel's clock from tests.
     /// Avoids adding a Microsoft.Extensions.TimeProvider.Testing dependency
@@ -5639,16 +5944,16 @@ public class GameViewModelLifecycleTests
         // once at the end). This is the GameViewModel-level mirror of
         // OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice in the
         // engine tests.
-        var (vm, engine, clock, _) = MakeVm(angels: 50); // ×2 bonus
+        var (vm, engine, clock, _) = MakeVm(angels: 50); // ~×2.69 compound
         var cashBefore = engine.Cash;
 
         vm.OnSuspended();
         clock.Advance(TimeSpan.FromSeconds(60));
         vm.OnResumed();
 
-        // 60s / 0.6s = 100 cycles × $1 × 2.0 bonus = $200.
+        // 60s / 0.6s = 100 cycles × $1 × ~2.6916 compound bonus ≈ $269.16.
         var earned = engine.Cash - cashBefore;
-        earned.ShouldBe(200.0);
+        earned.ShouldBe(100.0 * FiftyAngelBonus);
     }
 
     [Fact]

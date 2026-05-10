@@ -584,8 +584,13 @@ public class GameEngineTests
     {
         var biz = new Business
         {
-            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
-            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
             Owned = 999
         };
@@ -597,8 +602,13 @@ public class GameEngineTests
     {
         var biz = new Business
         {
-            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
-            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
             Owned = 1000
         };
@@ -613,8 +623,13 @@ public class GameEngineTests
         // 1.07^100 ≈ 868× more than unit 1000.
         var biz = new Business
         {
-            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
-            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
             Owned = 1100
         };
@@ -630,8 +645,13 @@ public class GameEngineTests
         // are preserved unchanged.
         var biz = new Business
         {
-            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
-            BaseCost = 1, BaseRevenue = 5, BaseTimeSeconds = 1,
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 5,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
             Owned = 100 // hits 25/50/100 -> ×8 milestone
         };
@@ -643,8 +663,13 @@ public class GameEngineTests
     {
         var biz = new Business
         {
-            Id = "t", Name = "T", Icon = "T", Color = "#FFF",
-            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
             Owned = 1100
         };
