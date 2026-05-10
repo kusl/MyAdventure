@@ -6198,3 +6198,203 @@ Let me write the full updated README now. I'll preserve all the unrelated conten
 
 
 
+71
+26
+
+Restore complete (0.7s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.6)
+[xUnit.net 00:00:00.08]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.6)
+[xUnit.net 00:00:00.13]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.6)
+[xUnit.net 00:00:00.16]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.12]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.29]     MyAdventure.Core.Tests.GameEngineTests.Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings [FAIL]
+[xUnit.net 00:00:00.29]       Shouldly.ShouldAssertException : earned
+[xUnit.net 00:00:00.29]           should be
+[xUnit.net 00:00:00.29]       2.691588029073608d
+[xUnit.net 00:00:00.29]           but was
+[xUnit.net 00:00:00.29]       2.691588029073614d
+[xUnit.net 00:00:00.30]       Stack Trace:
+[xUnit.net 00:00:00.30]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(113,0): at MyAdventure.Core.Tests.GameEngineTests.Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings()
+[xUnit.net 00:00:00.30]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.30]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.30]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.30]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.30]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.30]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.30]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.30]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.30]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.30]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.36]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.30]     MyAdventure.UI.Tests.GameViewModelLifecycleTests.OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce [FAIL]
+[xUnit.net 00:00:00.30]       Shouldly.ShouldAssertException : earned
+[xUnit.net 00:00:00.30]           should be
+[xUnit.net 00:00:00.30]       269.1588029073608d
+[xUnit.net 00:00:00.30]           but was
+[xUnit.net 00:00:00.30]       269.15880290733185d
+[xUnit.net 00:00:00.30]       Stack Trace:
+[xUnit.net 00:00:00.30]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs(138,0): at MyAdventure.UI.Tests.GameViewModelLifecycleTests.OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce()
+[xUnit.net 00:00:00.30]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.30]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  MyAdventure.Core.Tests test net10.0 failed with 1 error(s) (1.0s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(113): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings (22ms): Error Message: Shouldly.ShouldAssertException : earned
+          should be
+      2.691588029073608d
+          but was
+      2.691588029073614d
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 113
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.30]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.UI.Tests test net10.0 failed with 1 error(s) (0.9s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs(138): error TESTERROR: 
+      MyAdventure.UI.Tests.GameViewModelLifecycleTests.OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce (22ms): Error Message: Shouldly.ShouldAssertException : earned
+          should be
+      269.1588029073608d
+          but was
+      269.15880290733185d
+      Stack Trace:
+         at MyAdventure.UI.Tests.GameViewModelLifecycleTests.OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs:l
+      ine 138
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.72]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.4s)
+
+Test summary: total: 104, failed: 2, succeeded: 102, skipped: 0, duration: 1.5s
+Build failed with 2 error(s) in 2.5s
+
+Floating-point precision — the test expectations were computed with `Math.Pow(1.02, 50)` but the runtime accumulates the same value through a different path (likely repeated multiplication in `Tick`), producing a result that differs in the last 1–2 ULPs. Both numbers are arithmetically "the same"; `ShouldBe` is doing exact equality.
+
+Two failures, identical fix: use a tolerance.Two assertions are checking exact equality on a value computed via a different multiplication path. Shouldly's `ShouldBe(double)` does exact equality unless given a tolerance. The fix is `ShouldBe(expected, tolerance)`. A tolerance of `1e-9` (relative ~3.7e-10) is far tighter than any realistic floating-point error and won't hide real bugs.
+
+Lines 113, 114, 155, and one in the UI tests need this. Let me also check 298:Same risk on 298. The didn't fail on this run, but the offline path multiplies cycles × base × bonus while the live tick path goes through `Revenue * FiftyAngelBonus` — same ULP risk lurks. I'll add tolerance there too. Lines 113, 114, 155, 298 in core; 138-region in UI.Now the UI test. The error said line 138 in `GameViewModelLifecycleTests.cs`:Let me also scan for any other angel-bonus assertions I might have missed and double-check the whole file looks sensible:Line 196 (`engine.AngelBonus.ShouldBe(FiftyAngelBonus)`) is fine — `AngelBonus` is computed as a single `Math.Pow(1.02, AngelInvestors)` call inside the engine, identical to the test reference, so exact equality holds. Line 194 is just a local variable assignment, not an assertion.
+
+Now present the two updated test files:This is IEEE 754 noise, not a real bug. Look at the diffs:
+
+```
+expected: 2.691588029073608
+actual:   2.691588029073614   (Δ = 6e-15, ≈3 ULP)
+
+expected: 269.1588029073608
+actual:   269.15880290733185  (Δ = 3e-12, ≈100 ULP scaled)
+```
+
+`Math.Pow(1.02, 50)` and a sequence of multiplications that mathematically equal it can land on different bit patterns because IEEE 754 multiplication isn't associative. The engine likely accumulates `cycles × base × bonus` in a different order than the test's reference `100.0 * FiftyAngelBonus`. Both are correct; only their last 1–3 ULPs disagree.
+
+Two ways to fix this — tighten the engine to multiply in exactly the test's order, or give the assertions a tolerance. Tightening the engine couples production code to test arithmetic order, which is fragile (a future refactor that reorders multiplications would silently break tests for no semantic reason). Tolerance is the right call.
+
+I added `tolerance: 1e-9` to the live-tick assertions (single multiplication → tiny ULP error) and `tolerance: 1e-7` to the offline/lifecycle assertions (100 cycles accumulated → larger ULP budget, still ~10 orders of magnitude smaller than any real bug). Comments at each site explain why, so this doesn't look like a tolerance creep band-aid.
+
+Two assertion sites that didn't fail this run but were vulnerable (line 160 lifetime earnings, line 305 offline live-equivalence) got the same treatment preemptively — they pass today but would flake on a different JIT or hardware. Better to fix the class of problem.
+
+Line 196 (`engine.AngelBonus.ShouldBe(FiftyAngelBonus)`) deliberately stays exact. That value comes from a single `Math.Pow(1.02, 50)` call inside the engine, byte-identical to the test reference. If that ever drifts, it means the formula changed and we want the failure.
+
+75
+26
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

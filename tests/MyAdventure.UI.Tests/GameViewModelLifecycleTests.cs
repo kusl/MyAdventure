@@ -134,8 +134,10 @@ public class GameViewModelLifecycleTests
         vm.OnResumed();
 
         // 60s / 0.6s = 100 cycles × $1 × ~2.6916 compound bonus ≈ $269.16.
+        // Tolerance accounts for IEEE 754 ordering between the engine's
+        // accumulation path and the test's (100 * bonus) reference value.
         var earned = engine.Cash - cashBefore;
-        earned.ShouldBe(100.0 * FiftyAngelBonus);
+        earned.ShouldBe(100.0 * FiftyAngelBonus, tolerance: 1e-7);
     }
 
     [Fact]

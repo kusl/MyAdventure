@@ -109,9 +109,14 @@ public class GameEngineTests
         _engine.Tick(0.0);
 
         var earned = _engine.Cash - cashBefore;
-        // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69
-        earned.ShouldBe(lemonade.Revenue * FiftyAngelBonus);
-        earned.ShouldBe(FiftyAngelBonus);
+        // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69.
+        // Use a small tolerance: the engine may compute the bonus through
+        // a different multiplication order than the test (e.g. base*owned*mult
+        // *bonus vs (base*owned*mult)*bonus), differing by ~1 ULP. That is
+        // not a bug, just IEEE 754. The tolerance is far smaller than any
+        // real change a logic bug would produce.
+        earned.ShouldBe(lemonade.Revenue * FiftyAngelBonus, tolerance: 1e-9);
+        earned.ShouldBe(FiftyAngelBonus, tolerance: 1e-9);
     }
 
     [Fact]
@@ -152,7 +157,7 @@ public class GameEngineTests
         var ltBefore = _engine.LifetimeEarnings;
         _engine.Tick(0.0);
 
-        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * FiftyAngelBonus);
+        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * FiftyAngelBonus, tolerance: 1e-9);
     }
 
     [Fact]
@@ -295,7 +300,9 @@ public class GameEngineTests
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
 
         // 60s / 0.6s cycle = 100 cycles × $1 base × ~2.69 bonus ≈ $269.16.
-        earned.ShouldBe(100.0 * FiftyAngelBonus);
+        // Tolerance accounts for IEEE 754 ordering: 100 cycles accumulate
+        // through a different multiplication path than (100 * bonus).
+        earned.ShouldBe(100.0 * FiftyAngelBonus, tolerance: 1e-7);
     }
 
     [Fact]
