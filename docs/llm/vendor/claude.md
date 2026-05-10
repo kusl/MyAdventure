@@ -5715,3 +5715,242 @@ Everything else in the README checked out against `dump.txt` — the prestige fo
 
 04
 77
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+03
+16
+
+Let me decode these save states to understand where the player actually is.
+
+This confirms everything. Now I have exact numbers to work with. Here's the full picture:
+
+---
+
+## What the saves reveal
+
+**The player is completely stuck.** All three saves are nearly identical — prestige 3, 772 angels, businesses capped at 100-400 units, cash just accumulating with nowhere productive to spend it.
+
+The smoking gun numbers:
+
+- **Lemonade unit 401 costs $2.27 trillion** but adds **$1,753/s** in revenue. Payback: **359,000 hours**. Effectively unsellable.
+- **Shrimp unit 101 costs $42 billion** and pays back in **829 minutes** — this is the only business still worth buying, barely.
+- **Prestiging now** gives 139 new angels, improving the bonus from ×16.44 to ×19.22 — a **17% improvement**. That's not worth resetting everything.
+- **Angel formula result is 911** against 772 held — so there are 139 angels sitting uncollected but the reward is too weak to bother.
+
+The lemonade problem is the clearest illustration of Problem 1: 400 units has already blown past all milestones (capped at ×64 at the 400-unit mark, maxes at ×327,680 at 1000), so the exponential cost curve has completely lapped the linear revenue gain.
+
+---
+
+## Concrete fixes, no harder manager costs
+
+### Fix 1: `Business.cs` — `PostMilestoneScaling`
+
+The only change to this file. Paste this revised `Revenue` property and add the new computed property:
+
+```csharp
+/// <summary>
+/// Revenue per cycle with current units owned, including milestone multipliers
+/// and post-milestone scaling to keep purchasing worthwhile past 1000 units.
+/// </summary>
+public double Revenue => BaseRevenue * Owned * MilestoneMultiplier * PostMilestoneScaling;
+
+/// <summary>
+/// Past the 1000-unit milestone cap, each additional unit costs CostMultiplier^N
+/// more but previously earned the same per-unit base as unit 1000. This applies
+/// the square root of that exponential cost growth as a compensating revenue
+/// multiplier, so buying unit 1001 is roughly as efficient as buying unit 1000.
+/// Below 1000 units this is exactly 1.0 — no effect on early/mid game.
+/// </summary>
+private double PostMilestoneScaling =>
+    Owned <= 1000 ? 1.0 : Math.Pow(CostMultiplier, (Owned - 1000) / 2.0);
+```
+
+### Fix 2: `GameEngine.cs` — compound angel bonus
+
+Replace the one-liner:
+
+```csharp
+// Before:
+public double AngelBonus => 1.0 + (AngelInvestors * 0.02);
+
+// After:
+public double AngelBonus => Math.Pow(1.02, AngelInvestors);
+```
+
+For this player specifically: their current 772 angels go from ×16.44 to **×4,358,455**. Their 139 potential new angels would take them to **×68,352,826** — a 15× improvement from one prestige. That's a reason to press the button.
+
+### Fix 3: `GameEngine.cs` — prestige-scaled angel denominator
+
+The `CalculateAngels` signature needs `PrestigeCount`. Add it as a parameter:
+
+```csharp
+// Before:
+public static double CalculateAngels(double lifetimeEarnings) =>
+    lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
+
+// After:
+public static double CalculateAngels(double lifetimeEarnings, int prestigeCount) =>
+    lifetimeEarnings >= 1e12
+        ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / (1e13 * Math.Pow(3.0, prestigeCount))))
+        : 0;
+```
+
+Then update the two call sites in `GameEngine.cs`:
+
+```csharp
+// In Prestige():
+var newAngels = CalculateAngels(LifetimeEarnings, PrestigeCount) - AngelInvestors;
+
+// Note: PrestigeCount is incremented AFTER this line, so PrestigeCount here
+// correctly reflects the run that just ended.
+```
+
+And the one call site in `GameViewModel.cs` inside `RefreshAll()`:
+
+```csharp
+// Before:
+var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
+
+// After:
+var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings, _engine.PrestigeCount) 
+                      - _engine.AngelInvestors;
+```
+
+There are two occurrences of this line in `RefreshAll` and `PrestigeAsync` — update both.
+
+### Fix 4: Tests — update the signature and expected values
+
+Any test calling `GameEngine.CalculateAngels(x)` needs a second argument. The existing tests use it like:
+
+```csharp
+// Before:
+GameEngine.CalculateAngels(1e11).ShouldBe(0);
+GameEngine.CalculateAngels(1e14).ShouldBeGreaterThan(0);
+
+// After — prestige 0 is the baseline, denominator unchanged at 1e13:
+GameEngine.CalculateAngels(1e11, 0).ShouldBe(0);
+GameEngine.CalculateAngels(1e14, 0).ShouldBeGreaterThan(0);
+```
+
+The angel bonus tests in `GameEngineTests.cs` that set 50 angels and expect `AngelBonus == 2.0` need updating:
+
+```csharp
+// Before: SetAngels(50) → AngelBonus expected to be 2.0 (1 + 50*0.02)
+// After:  SetAngels(50) → AngelBonus is Math.Pow(1.02, 50) ≈ 2.6916
+
+// In Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings:
+earned.ShouldBe(lemonade.Revenue * 2.0);  // change 2.0 → Math.Pow(1.02, 50)
+earned.ShouldBe(2.0);                      // change 2.0 → Math.Pow(1.02, 50)
+
+// In ApplyOfflineEarnings_AppliesAngelBonus:
+earned.ShouldBe(200.0);  // was 100 cycles × $1 × 2.0
+                          // now:  100 cycles × $1 × 2.6916 ≈ 269.16
+                          // change to: earned.ShouldBeInRange(265, 275)
+
+// In OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice:
+engine.Cash.ShouldBeInRange(190, 220);  
+// Now Math.Pow(1.02, 50) ≈ 2.69, so 100 cycles × $1 × 2.69 ≈ $269
+// change to: engine.Cash.ShouldBeInRange(255, 290)
+
+// AngelBonus assertion:
+engine.AngelBonus.ShouldBe(2.0);  // change to: engine.AngelBonus.ShouldBe(Math.Pow(1.02, 50))
+
+// GameViewModelLifecycleTests — OnSuspendedThenOnResumed_ShouldApplyAngelBonusOnce:
+// uses 50 angels, expects $200 → change to Math.Pow(1.02,50) * 100 ≈ 269.16
+earned.ShouldBe(200.0);  // → earned.ShouldBeInRange(265, 275)
+```
+
+The invariant test `ApplyOfflineEarnings_AndLiveTick_AreEquivalent` doesn't use angels so it's unaffected. The `BoolToOpacity` tests, lifecycle guard tests, and repository tests are all untouched.
+
+---
+
+## README updates needed
+
+Three places:
+
+1. **Prestige formula block** — update to `floor(150 × sqrt(lifetimeEarnings / (1e13 × 3^prestigeCount)))` and note that the denominator grows each run to keep the reward curve meaningful.
+
+2. **Angel bonus description** — change "+2% per angel" to "each angel compounds at +2% (so 50 angels = ×2.69, not ×2.00)".
+
+3. **Modding section** — the JSON fields don't change, but the player-facing math for angels is now exponential. Worth noting so tinkerers setting `angels: 9999` understand they're getting a truly astronomical multiplier (×3.2×10^86).
