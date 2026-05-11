@@ -580,6 +580,177 @@ public class GameEngineTests
     }
 
     // ---------------------------------------------------------------
+    // Defect-1 regression coverage: AngelBonus must remain finite at
+    // any AngelInvestors count. 1.02^N overflows to PositiveInfinity
+    // around N ≈ 35,750; anything past that previously produced
+    // "infinity D infinity angels + infinity D% Next +NaN" in the UI
+    // and crashed JSON export. The cap on AngelBonus is what prevents
+    // that cascade.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void AngelBonus_PastOverflowPoint_StaysFinite()
+    {
+        // 50,000 angels: raw 1.02^50000 is Infinity. Capped value
+        // must be finite and large.
+        SetAngels(50_000);
+        var bonus = _engine.AngelBonus;
+        double.IsFinite(bonus).ShouldBeTrue();
+        bonus.ShouldBeGreaterThan(1e50);
+    }
+
+    [Fact]
+    public void AngelBonus_AtMillionAngels_StillFinite()
+    {
+        // A wildly hand-edited save: 1,000,000 angels. The raw bonus is
+        // Infinity, the angel count itself is way past the practical cap;
+        // both must be clamped to finite values so subsequent arithmetic
+        // doesn't propagate non-finite values into cash, lifetime, or
+        // the JSON export.
+        SetAngels(1_000_000);
+        double.IsFinite(_engine.AngelBonus).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AngelBonus_NegativeAngelInvestors_ShouldBeOne()
+    {
+        // Edge case: a corrupted save with a negative angel count must
+        // not produce a fractional multiplier (1.02^-N < 1.0) — that
+        // would actively reduce player earnings. Treat as zero angels.
+        SetAngels(-100);
+        _engine.AngelBonus.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void CalculateAngels_ShouldNotOverflowOnExtremeLifetime()
+    {
+        // A player whose lifetime earnings have reached the engine's
+        // money cap (1e200) must still receive a finite angel count,
+        // not Infinity. Before the clamp this would propagate Infinity
+        // into AngelInvestors during prestige.
+        var angels = GameEngine.CalculateAngels(1e200);
+        double.IsFinite(angels).ShouldBeTrue();
+        angels.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void CalculateAngels_NaNInput_ShouldReturnZero()
+    {
+        GameEngine.CalculateAngels(double.NaN).ShouldBe(0);
+    }
+
+    [Fact]
+    public void CalculateAngels_InfinityInput_ShouldReturnFiniteCap()
+    {
+        var angels = GameEngine.CalculateAngels(double.PositiveInfinity);
+        double.IsFinite(angels).ShouldBeTrue();
+        angels.ShouldBeGreaterThan(0);
+    }
+
+    // ---------------------------------------------------------------
+    // Defect-1 regression coverage: ExportToString must succeed even
+    // when in-engine state has somehow become non-finite. The engine
+    // sanitizes on the way out as a final safety net so this can never
+    // force-close the app.
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task ExportToString_WithInfinityCash_ShouldNotThrow()
+    {
+        await _engine.LoadAsync();
+        SetCash(double.PositiveInfinity);
+
+        // Must not throw — this used to force-close on Export.
+        var exported = Should.NotThrow(() => _engine.ExportToString());
+        exported.ShouldNotBeNullOrWhiteSpace();
+
+        // Round-trip must produce a valid finite cash value.
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(exported).ShouldBeTrue();
+        double.IsFinite(engine2.Cash).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExportToString_WithNaNLifetime_ShouldNotThrow()
+    {
+        await _engine.LoadAsync();
+        var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+        ltProp.GetSetMethod(true)!.Invoke(_engine, [double.NaN]);
+
+        var exported = Should.NotThrow(() => _engine.ExportToString());
+        exported.ShouldNotBeNullOrWhiteSpace();
+
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(exported).ShouldBeTrue();
+        double.IsFinite(engine2.LifetimeEarnings).ShouldBeTrue();
+        // NaN becomes 0 under SanitizeMoney.
+        engine2.LifetimeEarnings.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WithInfinityInSave_ShouldClampToFinite()
+    {
+        // Simulates the user's actual scenario: a save file written
+        // before the sanitization fix, containing Infinity in cash
+        // or lifetime. The load path must produce a playable game,
+        // not a NaN-ridden one.
+        var pastTime = DateTime.UtcNow.AddSeconds(-30);
+        var savedState = new GameState
+        {
+            Cash = double.PositiveInfinity,
+            LifetimeEarnings = double.PositiveInfinity,
+            AngelInvestors = 60_000, // would overflow AngelBonus uncapped
+            BusinessDataJson = """{"lemonade":1000}""",
+            ManagerDataJson = """{"lemonade":true}""",
+            LastPlayedAt = pastTime,
+            UpdatedAt = pastTime
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(savedState));
+
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+
+        double.IsFinite(engine.Cash).ShouldBeTrue();
+        double.IsFinite(engine.LifetimeEarnings).ShouldBeTrue();
+        double.IsFinite(engine.AngelInvestors).ShouldBeTrue();
+        double.IsFinite(engine.AngelBonus).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Tick_AtMaxAngels_CashStaysFinite()
+    {
+        // Comprehensive scenario reproducing the user's bug: 1000 of every
+        // business with the milestone caps reached, plus an absurd angel
+        // count. Ticking must not produce non-finite cash or lifetime.
+        await _engine.LoadAsync();
+        SetAngels(100_000); // capped internally to MaxAngelInvestors
+
+        // Force every business to 1000 owned with a manager so ticks
+        // generate maximum revenue.
+        foreach (var biz in _engine.Businesses)
+        {
+            biz.Owned = 1000;
+            biz.HasManager = true;
+            biz.IsRunning = true;
+            biz.ProgressPercent = 100.0; // ready to settle on next tick
+        }
+
+        // Tick 100 times — each tick settles a cycle and adds revenue.
+        for (var i = 0; i < 100; i++)
+        {
+            // Re-prime ProgressPercent so every tick settles for every business.
+            foreach (var biz in _engine.Businesses) biz.ProgressPercent = 100.0;
+            _engine.Tick(0.0);
+        }
+
+        double.IsFinite(_engine.Cash).ShouldBeTrue();
+        double.IsFinite(_engine.LifetimeEarnings).ShouldBeTrue();
+    }
+
+    // ---------------------------------------------------------------
     // PostMilestoneScaling — the fix that keeps unit purchases past
     // the 1000-unit milestone cap from collapsing into "you'll never
     // afford the next one". Below 1000 owned the multiplier is 1.0
@@ -683,6 +854,70 @@ public class GameEngineTests
         var milestone = biz.MilestoneMultiplier; // ×327,680 (capped at 1000)
         var expected = 1.0 * 1100 * milestone * Math.Pow(1.07, 50);
         biz.Revenue.ShouldBe(expected);
+    }
+
+    // ---------------------------------------------------------------
+    // Defect-1 regression coverage: NextCost and Revenue must stay
+    // finite even at extreme ownership counts. Math.Pow(1.11, 7000)
+    // is Infinity; the clamp keeps the business "effectively
+    // unaffordable" while preserving all downstream finiteness.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void Business_NextCost_AtExtremeOwned_StaysFinite()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.11,
+            Owned = 10_000 // raw 1.11^10000 is Infinity
+        };
+
+        double.IsFinite(biz.NextCost).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Business_Revenue_AtExtremeOwned_StaysFinite()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.11,
+            Owned = 10_000
+        };
+
+        double.IsFinite(biz.Revenue).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Business_AffordableCount_InfiniteCash_StaysSafe()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+        };
+
+        // Non-finite cash must produce 0, not loop forever.
+        biz.AffordableCount(double.PositiveInfinity).ShouldBe(0);
+        biz.AffordableCount(double.NaN).ShouldBe(0);
     }
 
     private void SetCash(double amount) => SetCashOn(_engine, amount);

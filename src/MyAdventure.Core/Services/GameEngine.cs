@@ -46,6 +46,36 @@ public class GameEngine(
     /// </summary>
     private const double AngelMultiplierPerAngel = 1.02;
 
+    /// <summary>
+    /// Hard cap on <see cref="AngelBonus"/>. <c>1.02^N</c> overflows IEEE 754
+    /// doubles around N ≈ 35,750 angels, producing <see cref="double.PositiveInfinity"/>.
+    /// Once any multiplier is Infinity, every downstream calculation
+    /// (cash, lifetime earnings, percent display, JSON export) either
+    /// becomes Infinity, NaN, or throws — the exact failure mode that
+    /// produced "infinity D infinity angels + infinity D% Next +NaN" in
+    /// the wild. Capping the bonus keeps every downstream value finite
+    /// without taking anything away from the player: a ×10⁹⁰ multiplier
+    /// is still effectively unbounded for game purposes.
+    /// </summary>
+    private const double MaxAngelBonus = 1e90;
+
+    /// <summary>
+    /// Hard cap on any monetary quantity (<see cref="Cash"/>,
+    /// <see cref="LifetimeEarnings"/>) to keep arithmetic finite. Chosen
+    /// well below <see cref="double.MaxValue"/> (~1.8e308) so even a few
+    /// further multiplications can't push the value to Infinity.
+    /// </summary>
+    private const double MaxMoney = 1e200;
+
+    /// <summary>
+    /// Hard cap on <see cref="AngelInvestors"/>. Past this point, the
+    /// <see cref="AngelBonus"/> is already at <see cref="MaxAngelBonus"/>,
+    /// so further angels have no in-game effect anyway. Capping keeps
+    /// the stored value sensible and round-trippable through saves and
+    /// exports.
+    /// </summary>
+    private const double MaxAngelInvestors = 1e9;
+
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
     public double Cash { get; private set; }
@@ -66,9 +96,15 @@ public class GameEngine(
             return;
         }
 
-        Cash = state.Cash;
-        LifetimeEarnings = state.LifetimeEarnings;
-        AngelInvestors = state.AngelInvestors;
+        // Sanitize anything loaded from disk. Older saves predating the
+        // overflow fix may contain Infinity / NaN serialized as raw
+        // doubles in SQLite. Loading those values unchecked would
+        // immediately re-corrupt the in-memory state. The clamp also
+        // protects against hand-edited save files (which we explicitly
+        // permit) that set Cash or AngelInvestors to a wildly large value.
+        Cash = SanitizeMoney(state.Cash);
+        LifetimeEarnings = SanitizeMoney(state.LifetimeEarnings);
+        AngelInvestors = SanitizeAngels(state.AngelInvestors);
         PrestigeCount = state.PrestigeCount;
 
         ApplyBusinessData(state.BusinessDataJson);
@@ -96,16 +132,16 @@ public class GameEngine(
         using var activity = ActivitySource.StartActivity("SaveGame");
         var state = new GameState
         {
-            Cash = Cash,
-            LifetimeEarnings = LifetimeEarnings,
-            AngelInvestors = AngelInvestors,
+            Cash = SanitizeMoney(Cash),
+            LifetimeEarnings = SanitizeMoney(LifetimeEarnings),
+            AngelInvestors = SanitizeAngels(AngelInvestors),
             PrestigeCount = PrestigeCount,
             BusinessDataJson = SerializeBusinessData(),
             ManagerDataJson = SerializeManagerData(),
             LastPlayedAt = _time.GetUtcNow().UtcDateTime
         };
         await repository.SaveAsync(state, ct);
-        logger.LogDebug("Game saved. Cash: {Cash:F2}", Cash);
+        logger.LogDebug("Game saved. Cash: {Cash:F2}", state.Cash);
     }
 
     /// <summary>Process one game tick (called ~60fps from UI timer).</summary>
@@ -133,8 +169,8 @@ public class GameEngine(
                 // multiplies by AngelBonus once at the end. These two paths
                 // must stay in sync; an invariant test guards this.
                 var earned = biz.Revenue * cycles * angelBonus;
-                Cash += earned;
-                LifetimeEarnings += earned;
+                Cash = SanitizeMoney(Cash + earned);
+                LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
                 EarningsCounter.Add(earned, new KeyValuePair<string, object?>("business", biz.Id));
                 biz.ProgressPercent %= 100.0;
 
@@ -167,9 +203,11 @@ public class GameEngine(
         if (biz is null) return false;
 
         var cost = biz.NextCost;
-        if (Cash < cost) return false;
+        // If cost itself has gone non-finite due to extreme ownership counts,
+        // refuse the buy rather than corrupting Cash via subtraction.
+        if (!double.IsFinite(cost) || Cash < cost) return false;
 
-        Cash -= cost;
+        Cash = SanitizeMoney(Cash - cost);
         biz.Owned++;
         logger.LogInformation("Bought {Business} #{Count} for {Cost:F2}", biz.Name, biz.Owned, cost);
 
@@ -196,8 +234,8 @@ public class GameEngine(
         for (var i = 0; i < count; i++)
         {
             var cost = biz.NextCost;
-            if (Cash < cost) break;
-            Cash -= cost;
+            if (!double.IsFinite(cost) || Cash < cost) break;
+            Cash = SanitizeMoney(Cash - cost);
             biz.Owned++;
             bought++;
         }
@@ -226,7 +264,7 @@ public class GameEngine(
         var cost = biz.BaseCost * 1000;
         if (Cash < cost) return false;
 
-        Cash -= cost;
+        Cash = SanitizeMoney(Cash - cost);
         biz.HasManager = true;
 
         if (biz.Owned > 0 && !biz.IsRunning)
@@ -249,10 +287,11 @@ public class GameEngine(
             return (0, false);
         }
 
-        AngelInvestors += newAngels;
+        AngelInvestors = SanitizeAngels(AngelInvestors + newAngels);
         PrestigeCount++;
         Cash = 5.0;
-        // LifetimeEarnings = 0; // do not reset lifetime earnings during prestige, there needs to be an incentive to prestige
+        // LifetimeEarnings is intentionally not reset — keeping it across
+        // prestiges is what provides the incentive to prestige again.
 
         // Reset businesses
         var defaults = BusinessDefinitions.CreateDefaults();
@@ -264,30 +303,56 @@ public class GameEngine(
 
     /// <summary>
     /// Compounded angel-investor revenue multiplier:
-    /// <c>1.02 ^ AngelInvestors</c>. Every angel adds 2% on top of the
-    /// previous angel's contribution rather than 2% of base revenue.
+    /// <c>min(1.02 ^ AngelInvestors, MaxAngelBonus)</c>. Every angel adds
+    /// 2% on top of the previous angel's contribution rather than 2% of
+    /// base revenue, capped at <see cref="MaxAngelBonus"/> to prevent
+    /// IEEE 754 overflow at ~35,750 angels.
     /// <para>
-    /// 50 angels = ×2.69 (not ×2.00). 200 angels = ×52.5. 1000 angels =
-    /// ×4.0×10^8. These are the multipliers that keep the late game
-    /// interesting and that make a marginal prestige worthwhile.
+    /// 50 angels = ×2.69. 200 angels = ×52.5. 1000 angels = ×4.0×10^8.
+    /// At the cap, the bonus is still <c>1e90</c> — effectively unbounded
+    /// for game purposes — but it can never become <see cref="double.PositiveInfinity"/>,
+    /// which is what allows every downstream multiplication, percentage
+    /// computation, and JSON export to remain finite and safe.
     /// </para>
     /// <para>
     /// Save compatibility: the formula is computed from
     /// <see cref="AngelInvestors"/>, which is unchanged on disk. Old
     /// saves load and immediately benefit from the compound multiplier
-    /// without any migration step.
+    /// without any migration step; saves that happen to contain a wildly
+    /// large angel count are clamped on load by <see cref="SanitizeAngels"/>.
     /// </para>
     /// </summary>
-    public double AngelBonus => Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
+    public double AngelBonus
+    {
+        get
+        {
+            if (!double.IsFinite(AngelInvestors) || AngelInvestors <= 0) return 1.0;
+            var raw = Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
+            if (!double.IsFinite(raw) || raw > MaxAngelBonus) return MaxAngelBonus;
+            return raw;
+        }
+    }
 
     /// <summary>
     /// Compute how many angels the player's lifetime earnings are
     /// currently worth. Returns the cumulative count, not the delta —
     /// callers subtract <see cref="AngelInvestors"/> to get the
     /// available-to-claim count.
+    /// <para>
+    /// Defensive against non-finite or absurdly large inputs: returns 0
+    /// for NaN/negative input and clamps the result so that
+    /// <see cref="Math.Sqrt"/> of a finite-but-huge input doesn't propagate
+    /// through to <see cref="AngelInvestors"/> as Infinity.
+    /// </para>
     /// </summary>
-    public static double CalculateAngels(double lifetimeEarnings) =>
-        lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
+    public static double CalculateAngels(double lifetimeEarnings)
+    {
+        if (double.IsNaN(lifetimeEarnings) || lifetimeEarnings < 1e12) return 0;
+        if (!double.IsFinite(lifetimeEarnings)) return MaxAngelInvestors;
+        var raw = Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13));
+        if (!double.IsFinite(raw)) return MaxAngelInvestors;
+        return Math.Min(raw, MaxAngelInvestors);
+    }
 
     /// <summary>
     /// Apply offline earnings for a given elapsed time span and return
@@ -329,8 +394,8 @@ public class GameEngine(
         var earned = CalculateOfflineEarnings(elapsed);
         if (earned <= 0) return 0;
 
-        Cash += earned;
-        LifetimeEarnings += earned;
+        Cash = SanitizeMoney(Cash + earned);
+        LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
 
         EarningsCounter.Add(earned, new KeyValuePair<string, object?>("source", "offline"));
         return earned;
@@ -351,6 +416,28 @@ public class GameEngine(
         return total * AngelBonus;
     }
 
+    /// <summary>
+    /// Clamp a monetary value to a finite, sensible range. NaN becomes 0;
+    /// Infinity becomes <see cref="MaxMoney"/>; negative becomes 0.
+    /// </summary>
+    private static double SanitizeMoney(double value)
+    {
+        if (double.IsNaN(value)) return 0;
+        if (value < 0) return 0;
+        if (value > MaxMoney) return MaxMoney;
+        return value;
+    }
+
+    /// <summary>
+    /// Clamp an angel count to a finite, sensible range. See <see cref="MaxAngelInvestors"/>.
+    /// </summary>
+    private static double SanitizeAngels(double value)
+    {
+        if (double.IsNaN(value) || value < 0) return 0;
+        if (value > MaxAngelInvestors) return MaxAngelInvestors;
+        return value;
+    }
+
     private void ApplyBusinessData(string json)
     {
         if (string.IsNullOrWhiteSpace(json) || json == "{}") return;
@@ -359,7 +446,7 @@ public class GameEngine(
             var data = JsonSerializer.Deserialize<Dictionary<string, int>>(json) ?? [];
             foreach (var biz in Businesses)
                 if (data.TryGetValue(biz.Id, out var owned))
-                    biz.Owned = owned;
+                    biz.Owned = Math.Max(0, owned);
         }
         catch (JsonException ex)
         {
@@ -399,15 +486,26 @@ public class GameEngine(
     /// <summary>
     /// Export full game state as a Base64-encoded JSON string.
     /// Players can freely edit the decoded JSON — we encourage tinkering.
+    /// <para>
+    /// All numeric values are sanitized through <see cref="SanitizeMoney"/>
+    /// / <see cref="SanitizeAngels"/> before serialization. This is the
+    /// final defense against any non-finite value ever leaving the
+    /// process: <see cref="JsonSerializer"/> with default options throws
+    /// <see cref="ArgumentException"/> on Infinity/NaN, which previously
+    /// force-closed the app when the user pressed Export. The engine's
+    /// own state is already clamped on load and after every tick, but
+    /// running the sanitizer one more time on the way out makes Export
+    /// safe even if some upstream invariant gets violated.
+    /// </para>
     /// </summary>
     public string ExportToString()
     {
         var data = new Dictionary<string, object>
         {
             ["v"] = 1,
-            ["cash"] = Cash,
-            ["lifetime"] = LifetimeEarnings,
-            ["angels"] = AngelInvestors,
+            ["cash"] = SanitizeMoney(Cash),
+            ["lifetime"] = SanitizeMoney(LifetimeEarnings),
+            ["angels"] = SanitizeAngels(AngelInvestors),
             ["prestige"] = PrestigeCount,
             ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
             ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
@@ -429,9 +527,12 @@ public class GameEngine(
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
             if (data is null) return false;
 
-            Cash = data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0;
-            LifetimeEarnings = data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0;
-            AngelInvestors = data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0;
+            // Read raw values, then sanitize. A hand-edited save that
+            // pokes Infinity into the JSON would otherwise propagate
+            // straight into engine state and resurrect the original bug.
+            Cash = SanitizeMoney(data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0);
+            LifetimeEarnings = SanitizeMoney(data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0);
+            AngelInvestors = SanitizeAngels(data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0);
             PrestigeCount = data.TryGetValue("prestige", out var prEl) ? prEl.GetInt32() : 0;
 
             Businesses = BusinessDefinitions.CreateDefaults();
@@ -441,7 +542,7 @@ public class GameEngine(
                 var bizData = JsonSerializer.Deserialize<Dictionary<string, int>>(bizEl.GetRawText()) ?? [];
                 foreach (var biz in Businesses)
                     if (bizData.TryGetValue(biz.Id, out var owned))
-                        biz.Owned = owned;
+                        biz.Owned = Math.Max(0, owned);
             }
 
             if (data.TryGetValue("managers", out var mgrEl))

@@ -33,7 +33,7 @@ public partial class GameViewModel : ViewModelBase
 
     [ObservableProperty] private string _cashText = "$0.00";
     [ObservableProperty] private string _angelText = "0";
-    [ObservableProperty] private string _angelBonusText = "+0%";
+    [ObservableProperty] private string _angelBonusText = "\u00D71"; // "×1"
     [ObservableProperty] private int _prestigeCount;
     [ObservableProperty] private bool _canPrestige;
     [ObservableProperty] private string _nextAngelText = "0";
@@ -198,10 +198,23 @@ public partial class GameViewModel : ViewModelBase
     [RelayCommand]
     private void Export()
     {
-        TransferText = _engine.ExportToString();
-        IsExportMode = true;
-        IsTransferOpen = true;
-        _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+        // Wrap in try-catch as a final safety net. The engine itself now
+        // sanitizes non-finite values before JSON serialization, so this
+        // catch should never fire — but if a future change somehow
+        // re-introduces a non-finite-in-state bug, the player gets a
+        // toast instead of a force-close.
+        try
+        {
+            TransferText = _engine.ExportToString();
+            IsExportMode = true;
+            IsTransferOpen = true;
+            _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to export game state");
+            _toasts.Show("Could not export — please report this as a bug.");
+        }
     }
 
     [RelayCommand]
@@ -316,7 +329,18 @@ public partial class GameViewModel : ViewModelBase
     {
         CashText = $"${NumberFormatter.Format(_engine.Cash)}";
         AngelText = NumberFormatter.Format(_engine.AngelInvestors);
-        AngelBonusText = $"+{NumberFormatter.Format((_engine.AngelBonus - 1) * 100)}%";
+
+        // Display the angel bonus as a multiplier ("×N") rather than a
+        // percentage. The previous "+(bonus-1)*100%" formulation broke
+        // visually past ~50 angels (showing "+200,000%" was already
+        // illegible) and broke arithmetically past ~35,750 angels, where
+        // the subtraction Infinity - 1 produces NaN and propagates into
+        // the UI as "+NaN%". A multiplier reads the same at every scale:
+        // ×2.69, ×52, ×1.00 K, all the way up to "×∞" only if the engine
+        // ever lets the bonus go non-finite (it doesn't — see the cap on
+        // GameEngine.AngelBonus).
+        AngelBonusText = $"\u00D7{NumberFormatter.Format(_engine.AngelBonus)}";
+
         PrestigeCount = _engine.PrestigeCount;
 
         var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
