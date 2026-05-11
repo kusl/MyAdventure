@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Mon May 11 10:34:43 AM EDT 2026
+Generated: Mon May 11 10:58:49 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -46,7 +46,8 @@ DIRECTORY STRUCTURE:
 │               ├── 016.txt
 │               ├── 017.txt
 │               ├── 018.txt
-│               └── 019.txt
+│               ├── 019.txt
+│               └── 020.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -1818,7 +1819,7 @@ public partial class MainView : UserControl
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Business.cs
-SIZE: 3.79 KB
+SIZE: 6.08 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -1832,6 +1833,19 @@ namespace MyAdventure.Core.Entities;
 /// </summary>
 public record Business
 {
+    /// <summary>
+    /// Hard cap on any double value derived inside this entity (cost,
+    /// revenue, scaling). Chosen well below <see cref="double.MaxValue"/>
+    /// (~1.8e308) so that one or two further multiplications downstream
+    /// can't push the value to <see cref="double.PositiveInfinity"/>.
+    /// <para>
+    /// Caps here are belt-and-braces with the engine-level
+    /// <c>SanitizeMoney</c>: even if a derived value momentarily exceeds
+    /// the cap, the engine clamps before persisting it.
+    /// </para>
+    /// </summary>
+    private const double MaxFiniteValue = 1e200;
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Icon { get; init; }
@@ -1845,8 +1859,26 @@ public record Business
     public double ProgressPercent { get; set; }
     public bool IsRunning { get; set; }
 
-    /// <summary>Cost to buy the next unit of this business.</summary>
-    public double NextCost => BaseCost * Math.Pow(CostMultiplier, Owned);
+    /// <summary>
+    /// Cost to buy the next unit of this business.
+    /// <para>
+    /// At very high <see cref="Owned"/> values <c>Math.Pow(CostMultiplier, Owned)</c>
+    /// can overflow to <see cref="double.PositiveInfinity"/> (e.g. <c>1.11^7000</c>
+    /// exceeds <see cref="double.MaxValue"/>). The clamp keeps the cost
+    /// finite so callers like <c>BuyBusiness</c> can compare against
+    /// <c>Cash</c> without producing NaN. Past the clamp the business is
+    /// effectively unaffordable, which is the desired behavior anyway.
+    /// </para>
+    /// </summary>
+    public double NextCost
+    {
+        get
+        {
+            var raw = BaseCost * Math.Pow(CostMultiplier, Owned);
+            if (!double.IsFinite(raw)) return MaxFiniteValue;
+            return Math.Min(raw, MaxFiniteValue);
+        }
+    }
 
     /// <summary>
     /// Revenue per cycle with current units owned, including the
@@ -1858,8 +1890,23 @@ public record Business
     /// continuing exponential cost growth (see the property summary
     /// for the full rationale).
     /// </para>
+    /// <para>
+    /// Clamped to <see cref="MaxFiniteValue"/> so an extreme combination
+    /// of milestone multiplier, owned count and post-milestone scaling
+    /// can't return Infinity. Without this, a multiplication by the
+    /// AngelBonus downstream could turn finite cash into Infinity and
+    /// cascade into the JSON-export crash.
+    /// </para>
     /// </summary>
-    public double Revenue => BaseRevenue * Owned * MilestoneMultiplier * PostMilestoneScaling;
+    public double Revenue
+    {
+        get
+        {
+            var raw = BaseRevenue * Owned * MilestoneMultiplier * PostMilestoneScaling;
+            if (!double.IsFinite(raw)) return MaxFiniteValue;
+            return Math.Min(raw, MaxFiniteValue);
+        }
+    }
 
     /// <summary>Current combined milestone multiplier.</summary>
     public double MilestoneMultiplier => Milestone.CalculateMultiplier(Owned);
@@ -1883,9 +1930,22 @@ public record Business
     /// unaffected. Save compatibility is preserved because nothing
     /// here is persisted; it's a function of <see cref="Owned"/>.
     /// </para>
+    /// <para>
+    /// Clamped against overflow for the same reason as <see cref="Revenue"/>:
+    /// keeping every derived value finite is what guarantees the rest
+    /// of the engine doesn't have to handle Infinity inputs.
+    /// </para>
     /// </summary>
-    public double PostMilestoneScaling =>
-        Owned <= 1000 ? 1.0 : Math.Pow(CostMultiplier, (Owned - 1000) / 2.0);
+    public double PostMilestoneScaling
+    {
+        get
+        {
+            if (Owned <= 1000) return 1.0;
+            var raw = Math.Pow(CostMultiplier, (Owned - 1000) / 2.0);
+            if (!double.IsFinite(raw)) return MaxFiniteValue;
+            return Math.Min(raw, MaxFiniteValue);
+        }
+    }
 
     /// <summary>Cycle time in seconds.</summary>
     public double CycleTimeSeconds => BaseTimeSeconds;
@@ -1898,13 +1958,14 @@ public record Business
     /// </summary>
     public int AffordableCount(double cash)
     {
+        if (!double.IsFinite(cash) || cash <= 0) return 0;
         var count = 0;
         var simOwned = Owned;
         var remaining = cash;
         while (true)
         {
             var cost = BaseCost * Math.Pow(CostMultiplier, simOwned);
-            if (remaining < cost) break;
+            if (!double.IsFinite(cost) || remaining < cost) break;
             remaining -= cost;
             simOwned++;
             count++;
@@ -2108,7 +2169,7 @@ SIZE: .18 KB
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 17.93 KB
+SIZE: 23.22 KB
 ================================================================================
 
 using System.Text;
@@ -2159,6 +2220,36 @@ public class GameEngine(
     /// </summary>
     private const double AngelMultiplierPerAngel = 1.02;
 
+    /// <summary>
+    /// Hard cap on <see cref="AngelBonus"/>. <c>1.02^N</c> overflows IEEE 754
+    /// doubles around N ≈ 35,750 angels, producing <see cref="double.PositiveInfinity"/>.
+    /// Once any multiplier is Infinity, every downstream calculation
+    /// (cash, lifetime earnings, percent display, JSON export) either
+    /// becomes Infinity, NaN, or throws — the exact failure mode that
+    /// produced "infinity D infinity angels + infinity D% Next +NaN" in
+    /// the wild. Capping the bonus keeps every downstream value finite
+    /// without taking anything away from the player: a ×10⁹⁰ multiplier
+    /// is still effectively unbounded for game purposes.
+    /// </summary>
+    private const double MaxAngelBonus = 1e90;
+
+    /// <summary>
+    /// Hard cap on any monetary quantity (<see cref="Cash"/>,
+    /// <see cref="LifetimeEarnings"/>) to keep arithmetic finite. Chosen
+    /// well below <see cref="double.MaxValue"/> (~1.8e308) so even a few
+    /// further multiplications can't push the value to Infinity.
+    /// </summary>
+    private const double MaxMoney = 1e200;
+
+    /// <summary>
+    /// Hard cap on <see cref="AngelInvestors"/>. Past this point, the
+    /// <see cref="AngelBonus"/> is already at <see cref="MaxAngelBonus"/>,
+    /// so further angels have no in-game effect anyway. Capping keeps
+    /// the stored value sensible and round-trippable through saves and
+    /// exports.
+    /// </summary>
+    private const double MaxAngelInvestors = 1e9;
+
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
     public double Cash { get; private set; }
@@ -2179,9 +2270,15 @@ public class GameEngine(
             return;
         }
 
-        Cash = state.Cash;
-        LifetimeEarnings = state.LifetimeEarnings;
-        AngelInvestors = state.AngelInvestors;
+        // Sanitize anything loaded from disk. Older saves predating the
+        // overflow fix may contain Infinity / NaN serialized as raw
+        // doubles in SQLite. Loading those values unchecked would
+        // immediately re-corrupt the in-memory state. The clamp also
+        // protects against hand-edited save files (which we explicitly
+        // permit) that set Cash or AngelInvestors to a wildly large value.
+        Cash = SanitizeMoney(state.Cash);
+        LifetimeEarnings = SanitizeMoney(state.LifetimeEarnings);
+        AngelInvestors = SanitizeAngels(state.AngelInvestors);
         PrestigeCount = state.PrestigeCount;
 
         ApplyBusinessData(state.BusinessDataJson);
@@ -2209,16 +2306,16 @@ public class GameEngine(
         using var activity = ActivitySource.StartActivity("SaveGame");
         var state = new GameState
         {
-            Cash = Cash,
-            LifetimeEarnings = LifetimeEarnings,
-            AngelInvestors = AngelInvestors,
+            Cash = SanitizeMoney(Cash),
+            LifetimeEarnings = SanitizeMoney(LifetimeEarnings),
+            AngelInvestors = SanitizeAngels(AngelInvestors),
             PrestigeCount = PrestigeCount,
             BusinessDataJson = SerializeBusinessData(),
             ManagerDataJson = SerializeManagerData(),
             LastPlayedAt = _time.GetUtcNow().UtcDateTime
         };
         await repository.SaveAsync(state, ct);
-        logger.LogDebug("Game saved. Cash: {Cash:F2}", Cash);
+        logger.LogDebug("Game saved. Cash: {Cash:F2}", state.Cash);
     }
 
     /// <summary>Process one game tick (called ~60fps from UI timer).</summary>
@@ -2246,8 +2343,8 @@ public class GameEngine(
                 // multiplies by AngelBonus once at the end. These two paths
                 // must stay in sync; an invariant test guards this.
                 var earned = biz.Revenue * cycles * angelBonus;
-                Cash += earned;
-                LifetimeEarnings += earned;
+                Cash = SanitizeMoney(Cash + earned);
+                LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
                 EarningsCounter.Add(earned, new KeyValuePair<string, object?>("business", biz.Id));
                 biz.ProgressPercent %= 100.0;
 
@@ -2280,9 +2377,11 @@ public class GameEngine(
         if (biz is null) return false;
 
         var cost = biz.NextCost;
-        if (Cash < cost) return false;
+        // If cost itself has gone non-finite due to extreme ownership counts,
+        // refuse the buy rather than corrupting Cash via subtraction.
+        if (!double.IsFinite(cost) || Cash < cost) return false;
 
-        Cash -= cost;
+        Cash = SanitizeMoney(Cash - cost);
         biz.Owned++;
         logger.LogInformation("Bought {Business} #{Count} for {Cost:F2}", biz.Name, biz.Owned, cost);
 
@@ -2309,8 +2408,8 @@ public class GameEngine(
         for (var i = 0; i < count; i++)
         {
             var cost = biz.NextCost;
-            if (Cash < cost) break;
-            Cash -= cost;
+            if (!double.IsFinite(cost) || Cash < cost) break;
+            Cash = SanitizeMoney(Cash - cost);
             biz.Owned++;
             bought++;
         }
@@ -2339,7 +2438,7 @@ public class GameEngine(
         var cost = biz.BaseCost * 1000;
         if (Cash < cost) return false;
 
-        Cash -= cost;
+        Cash = SanitizeMoney(Cash - cost);
         biz.HasManager = true;
 
         if (biz.Owned > 0 && !biz.IsRunning)
@@ -2362,10 +2461,11 @@ public class GameEngine(
             return (0, false);
         }
 
-        AngelInvestors += newAngels;
+        AngelInvestors = SanitizeAngels(AngelInvestors + newAngels);
         PrestigeCount++;
         Cash = 5.0;
-        // LifetimeEarnings = 0; // do not reset lifetime earnings during prestige, there needs to be an incentive to prestige
+        // LifetimeEarnings is intentionally not reset — keeping it across
+        // prestiges is what provides the incentive to prestige again.
 
         // Reset businesses
         var defaults = BusinessDefinitions.CreateDefaults();
@@ -2377,30 +2477,56 @@ public class GameEngine(
 
     /// <summary>
     /// Compounded angel-investor revenue multiplier:
-    /// <c>1.02 ^ AngelInvestors</c>. Every angel adds 2% on top of the
-    /// previous angel's contribution rather than 2% of base revenue.
+    /// <c>min(1.02 ^ AngelInvestors, MaxAngelBonus)</c>. Every angel adds
+    /// 2% on top of the previous angel's contribution rather than 2% of
+    /// base revenue, capped at <see cref="MaxAngelBonus"/> to prevent
+    /// IEEE 754 overflow at ~35,750 angels.
     /// <para>
-    /// 50 angels = ×2.69 (not ×2.00). 200 angels = ×52.5. 1000 angels =
-    /// ×4.0×10^8. These are the multipliers that keep the late game
-    /// interesting and that make a marginal prestige worthwhile.
+    /// 50 angels = ×2.69. 200 angels = ×52.5. 1000 angels = ×4.0×10^8.
+    /// At the cap, the bonus is still <c>1e90</c> — effectively unbounded
+    /// for game purposes — but it can never become <see cref="double.PositiveInfinity"/>,
+    /// which is what allows every downstream multiplication, percentage
+    /// computation, and JSON export to remain finite and safe.
     /// </para>
     /// <para>
     /// Save compatibility: the formula is computed from
     /// <see cref="AngelInvestors"/>, which is unchanged on disk. Old
     /// saves load and immediately benefit from the compound multiplier
-    /// without any migration step.
+    /// without any migration step; saves that happen to contain a wildly
+    /// large angel count are clamped on load by <see cref="SanitizeAngels"/>.
     /// </para>
     /// </summary>
-    public double AngelBonus => Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
+    public double AngelBonus
+    {
+        get
+        {
+            if (!double.IsFinite(AngelInvestors) || AngelInvestors <= 0) return 1.0;
+            var raw = Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
+            if (!double.IsFinite(raw) || raw > MaxAngelBonus) return MaxAngelBonus;
+            return raw;
+        }
+    }
 
     /// <summary>
     /// Compute how many angels the player's lifetime earnings are
     /// currently worth. Returns the cumulative count, not the delta —
     /// callers subtract <see cref="AngelInvestors"/> to get the
     /// available-to-claim count.
+    /// <para>
+    /// Defensive against non-finite or absurdly large inputs: returns 0
+    /// for NaN/negative input and clamps the result so that
+    /// <see cref="Math.Sqrt"/> of a finite-but-huge input doesn't propagate
+    /// through to <see cref="AngelInvestors"/> as Infinity.
+    /// </para>
     /// </summary>
-    public static double CalculateAngels(double lifetimeEarnings) =>
-        lifetimeEarnings >= 1e12 ? Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13)) : 0;
+    public static double CalculateAngels(double lifetimeEarnings)
+    {
+        if (double.IsNaN(lifetimeEarnings) || lifetimeEarnings < 1e12) return 0;
+        if (!double.IsFinite(lifetimeEarnings)) return MaxAngelInvestors;
+        var raw = Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13));
+        if (!double.IsFinite(raw)) return MaxAngelInvestors;
+        return Math.Min(raw, MaxAngelInvestors);
+    }
 
     /// <summary>
     /// Apply offline earnings for a given elapsed time span and return
@@ -2442,8 +2568,8 @@ public class GameEngine(
         var earned = CalculateOfflineEarnings(elapsed);
         if (earned <= 0) return 0;
 
-        Cash += earned;
-        LifetimeEarnings += earned;
+        Cash = SanitizeMoney(Cash + earned);
+        LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
 
         EarningsCounter.Add(earned, new KeyValuePair<string, object?>("source", "offline"));
         return earned;
@@ -2464,6 +2590,28 @@ public class GameEngine(
         return total * AngelBonus;
     }
 
+    /// <summary>
+    /// Clamp a monetary value to a finite, sensible range. NaN becomes 0;
+    /// Infinity becomes <see cref="MaxMoney"/>; negative becomes 0.
+    /// </summary>
+    private static double SanitizeMoney(double value)
+    {
+        if (double.IsNaN(value)) return 0;
+        if (value < 0) return 0;
+        if (value > MaxMoney) return MaxMoney;
+        return value;
+    }
+
+    /// <summary>
+    /// Clamp an angel count to a finite, sensible range. See <see cref="MaxAngelInvestors"/>.
+    /// </summary>
+    private static double SanitizeAngels(double value)
+    {
+        if (double.IsNaN(value) || value < 0) return 0;
+        if (value > MaxAngelInvestors) return MaxAngelInvestors;
+        return value;
+    }
+
     private void ApplyBusinessData(string json)
     {
         if (string.IsNullOrWhiteSpace(json) || json == "{}") return;
@@ -2472,7 +2620,7 @@ public class GameEngine(
             var data = JsonSerializer.Deserialize<Dictionary<string, int>>(json) ?? [];
             foreach (var biz in Businesses)
                 if (data.TryGetValue(biz.Id, out var owned))
-                    biz.Owned = owned;
+                    biz.Owned = Math.Max(0, owned);
         }
         catch (JsonException ex)
         {
@@ -2512,15 +2660,26 @@ public class GameEngine(
     /// <summary>
     /// Export full game state as a Base64-encoded JSON string.
     /// Players can freely edit the decoded JSON — we encourage tinkering.
+    /// <para>
+    /// All numeric values are sanitized through <see cref="SanitizeMoney"/>
+    /// / <see cref="SanitizeAngels"/> before serialization. This is the
+    /// final defense against any non-finite value ever leaving the
+    /// process: <see cref="JsonSerializer"/> with default options throws
+    /// <see cref="ArgumentException"/> on Infinity/NaN, which previously
+    /// force-closed the app when the user pressed Export. The engine's
+    /// own state is already clamped on load and after every tick, but
+    /// running the sanitizer one more time on the way out makes Export
+    /// safe even if some upstream invariant gets violated.
+    /// </para>
     /// </summary>
     public string ExportToString()
     {
         var data = new Dictionary<string, object>
         {
             ["v"] = 1,
-            ["cash"] = Cash,
-            ["lifetime"] = LifetimeEarnings,
-            ["angels"] = AngelInvestors,
+            ["cash"] = SanitizeMoney(Cash),
+            ["lifetime"] = SanitizeMoney(LifetimeEarnings),
+            ["angels"] = SanitizeAngels(AngelInvestors),
             ["prestige"] = PrestigeCount,
             ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
             ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
@@ -2542,9 +2701,12 @@ public class GameEngine(
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
             if (data is null) return false;
 
-            Cash = data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0;
-            LifetimeEarnings = data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0;
-            AngelInvestors = data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0;
+            // Read raw values, then sanitize. A hand-edited save that
+            // pokes Infinity into the JSON would otherwise propagate
+            // straight into engine state and resurrect the original bug.
+            Cash = SanitizeMoney(data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0);
+            LifetimeEarnings = SanitizeMoney(data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0);
+            AngelInvestors = SanitizeAngels(data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0);
             PrestigeCount = data.TryGetValue("prestige", out var prEl) ? prEl.GetInt32() : 0;
 
             Businesses = BusinessDefinitions.CreateDefaults();
@@ -2554,7 +2716,7 @@ public class GameEngine(
                 var bizData = JsonSerializer.Deserialize<Dictionary<string, int>>(bizEl.GetRawText()) ?? [];
                 foreach (var biz in Businesses)
                     if (bizData.TryGetValue(biz.Id, out var owned))
-                        biz.Owned = owned;
+                        biz.Owned = Math.Max(0, owned);
             }
 
             if (data.TryGetValue("managers", out var mgrEl))
@@ -2582,17 +2744,53 @@ public class GameEngine(
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/NumberFormatter.cs
-SIZE: .82 KB
+SIZE: 6.57 KB
 ================================================================================
+
+using System.Globalization;
+using System.Text;
 
 namespace MyAdventure.Core.Services;
 
 /// <summary>
 /// Formats large numbers into readable abbreviated strings.
-/// e.g. 1234 -> "1.23K", 1234567 -> "1.23M"
+/// <para>
+/// Below 1000: two decimal places, e.g. <c>999.99</c>.
+/// </para>
+/// <para>
+/// Between 1000 and 1e36: metric-style suffix (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D),
+/// e.g. <c>1234</c> → <c>"1.23 K"</c>, <c>1.5e12</c> → <c>"1.50 T"</c>.
+/// </para>
+/// <para>
+/// At or above 1e36 (where the suffix table runs out): scientific notation
+/// with Unicode superscript exponents, e.g. <c>7.53e40</c> → <c>"7.53 × 10⁴⁰"</c>.
+/// This keeps very large values readable without inventing new suffixes
+/// that nobody recognizes.
+/// </para>
+/// <para>
+/// Non-finite values are handled defensively so they can never propagate
+/// crashes or gibberish through the UI:
+/// <list type="bullet">
+///   <item><c>double.PositiveInfinity</c> → <c>"∞"</c></item>
+///   <item><c>double.NegativeInfinity</c> → <c>"-∞"</c></item>
+///   <item><c>double.NaN</c> → <c>"?"</c></item>
+/// </list>
+/// The point of the NaN/Infinity branches is not that we expect to see
+/// them — the game engine clamps its own state to keep values finite —
+/// but that if a corrupted save or an arithmetic edge case ever produces
+/// one, we render a glyph instead of dumping the literal string "Infinity"
+/// into the UI or crashing a downstream JSON serializer that doesn't accept
+/// non-finite doubles.
+/// </para>
 /// </summary>
 public static class NumberFormatter
 {
+    /// <summary>
+    /// Suffix table, ordered highest-to-lowest so the first matching
+    /// threshold wins. Caps at 1e33 (Decillion); values at or above
+    /// <see cref="ScientificThreshold"/> are formatted with
+    /// <see cref="FormatScientific"/> instead.
+    /// </summary>
     private static readonly (double threshold, string suffix)[] Suffixes =
     [
         (1e33, "D"), (1e30, "N"), (1e27, "O"), (1e24, "Sp"),
@@ -2600,18 +2798,124 @@ public static class NumberFormatter
         (1e9, "B"), (1e6, "M"), (1e3, "K")
     ];
 
+    /// <summary>
+    /// Threshold at which we switch from suffix notation to scientific
+    /// notation. Picked as 1000 × 1e33 = 1e36 so the last suffix bucket
+    /// "D" tops out cleanly at "999.99 D" instead of overflowing into
+    /// "1000.00 D" or worse.
+    /// </summary>
+    private const double ScientificThreshold = 1e36;
+
+    // Unicode superscript digits 0-9 (U+2070, U+00B9, U+00B2, U+00B3, U+2074..U+2079).
+    // Rendering with these means callers don't need a rich-text layout
+    // to display "10⁴⁰".
+    private static readonly char[] SuperscriptDigits =
+    [
+        '\u2070', // ⁰
+        '\u00B9', // ¹
+        '\u00B2', // ²
+        '\u00B3', // ³
+        '\u2074', // ⁴
+        '\u2075', // ⁵
+        '\u2076', // ⁶
+        '\u2077', // ⁷
+        '\u2078', // ⁸
+        '\u2079', // ⁹
+    ];
+
+    private const char SuperscriptMinus = '\u207B'; // ⁻
+
+    /// <summary>
+    /// Render a double as a human-friendly string. See class summary for
+    /// the precise rules — including how Infinity and NaN are handled.
+    /// </summary>
     public static string Format(double value)
     {
+        // Defensive: non-finite values must never leak through the UI or
+        // into JSON. Glyph stand-ins are returned instead.
+        if (double.IsNaN(value)) return "?";
+        if (double.IsPositiveInfinity(value)) return "\u221E";  // ∞
+        if (double.IsNegativeInfinity(value)) return "-\u221E"; // -∞
+
         if (value < 0) return $"-{Format(-value)}";
-        if (value < 1000) return value.ToString("F2");
+        if (value < 1000) return value.ToString("F2", CultureInfo.InvariantCulture);
+
+        // Past the highest named suffix, switch to scientific notation
+        // rather than emitting "1000000.00 D" or inventing new suffixes
+        // that aren't widely recognized.
+        if (value >= ScientificThreshold) return FormatScientific(value);
 
         foreach (var (threshold, suffix) in Suffixes)
         {
             if (value >= threshold)
-                return $"{value / threshold:F2} {suffix}";
+            {
+                var scaled = (value / threshold).ToString("F2", CultureInfo.InvariantCulture);
+                return $"{scaled} {suffix}";
+            }
         }
 
-        return value.ToString("F2");
+        // Defensive fallback — unreachable in practice because the suffix
+        // table covers all of [1000, ScientificThreshold). Kept so the
+        // method has a guaranteed return on every code path.
+        return value.ToString("F2", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Format a value using scientific notation with Unicode superscript
+    /// exponents. The mantissa is rendered with two decimals; the exponent
+    /// becomes superscript digits so the result reads naturally
+    /// (e.g. <c>"7.53 × 10⁴⁰"</c>) without needing rich-text layout.
+    /// <para>
+    /// Public so it can be unit-tested in isolation, and so callers that
+    /// want scientific notation regardless of magnitude can opt in.
+    /// </para>
+    /// </summary>
+    public static string FormatScientific(double value)
+    {
+        if (double.IsNaN(value)) return "?";
+        if (double.IsPositiveInfinity(value)) return "\u221E";
+        if (double.IsNegativeInfinity(value)) return "-\u221E";
+        if (value == 0) return "0";
+        if (value < 0) return $"-{FormatScientific(-value)}";
+
+        var exponent = (int)Math.Floor(Math.Log10(value));
+        var mantissa = value / Math.Pow(10, exponent);
+
+        // Floating-point rounding can push the mantissa to exactly 10.0
+        // (e.g. for 9.9999999...e40). Bump the exponent in that case so
+        // the displayed mantissa stays in [1, 10).
+        if (mantissa >= 10.0)
+        {
+            mantissa /= 10.0;
+            exponent += 1;
+        }
+
+        var mantissaText = mantissa.ToString("F2", CultureInfo.InvariantCulture);
+        return $"{mantissaText} \u00D7 10{ToSuperscript(exponent)}";
+    }
+
+    /// <summary>
+    /// Convert an integer to its Unicode superscript representation.
+    /// e.g. <c>40</c> → <c>"⁴⁰"</c>, <c>-3</c> → <c>"⁻³"</c>.
+    /// </summary>
+    public static string ToSuperscript(int n)
+    {
+        if (n == 0) return SuperscriptDigits[0].ToString();
+
+        var negative = n < 0;
+        // Use long to safely negate int.MinValue without overflow.
+        var abs = negative ? -(long)n : n;
+        var digits = new Stack<char>();
+        while (abs > 0)
+        {
+            digits.Push(SuperscriptDigits[abs % 10]);
+            abs /= 10;
+        }
+
+        var sb = new StringBuilder(digits.Count + (negative ? 1 : 0));
+        if (negative) sb.Append(SuperscriptMinus);
+        while (digits.Count > 0) sb.Append(digits.Pop());
+        return sb.ToString();
     }
 }
 
@@ -3954,7 +4258,7 @@ public partial class BusinessViewModel(
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
-SIZE: 13.13 KB
+SIZE: 14.31 KB
 ================================================================================
 
 using System.Collections.ObjectModel;
@@ -3992,7 +4296,7 @@ public partial class GameViewModel : ViewModelBase
 
     [ObservableProperty] private string _cashText = "$0.00";
     [ObservableProperty] private string _angelText = "0";
-    [ObservableProperty] private string _angelBonusText = "+0%";
+    [ObservableProperty] private string _angelBonusText = "\u00D71"; // "×1"
     [ObservableProperty] private int _prestigeCount;
     [ObservableProperty] private bool _canPrestige;
     [ObservableProperty] private string _nextAngelText = "0";
@@ -4157,10 +4461,23 @@ public partial class GameViewModel : ViewModelBase
     [RelayCommand]
     private void Export()
     {
-        TransferText = _engine.ExportToString();
-        IsExportMode = true;
-        IsTransferOpen = true;
-        _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+        // Wrap in try-catch as a final safety net. The engine itself now
+        // sanitizes non-finite values before JSON serialization, so this
+        // catch should never fire — but if a future change somehow
+        // re-introduces a non-finite-in-state bug, the player gets a
+        // toast instead of a force-close.
+        try
+        {
+            TransferText = _engine.ExportToString();
+            IsExportMode = true;
+            IsTransferOpen = true;
+            _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to export game state");
+            _toasts.Show("Could not export — please report this as a bug.");
+        }
     }
 
     [RelayCommand]
@@ -4275,7 +4592,18 @@ public partial class GameViewModel : ViewModelBase
     {
         CashText = $"${NumberFormatter.Format(_engine.Cash)}";
         AngelText = NumberFormatter.Format(_engine.AngelInvestors);
-        AngelBonusText = $"+{NumberFormatter.Format((_engine.AngelBonus - 1) * 100)}%";
+
+        // Display the angel bonus as a multiplier ("×N") rather than a
+        // percentage. The previous "+(bonus-1)*100%" formulation broke
+        // visually past ~50 angels (showing "+200,000%" was already
+        // illegible) and broke arithmetically past ~35,750 angels, where
+        // the subtraction Infinity - 1 produces NaN and propagates into
+        // the UI as "+NaN%". A multiplier reads the same at every scale:
+        // ×2.69, ×52, ×1.00 K, all the way up to "×∞" only if the engine
+        // ever lets the bonus go non-finite (it doesn't — see the cap on
+        // GameEngine.AngelBonus).
+        AngelBonusText = $"\u00D7{NumberFormatter.Format(_engine.AngelBonus)}";
+
         PrestigeCount = _engine.PrestigeCount;
 
         var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
@@ -4491,7 +4819,7 @@ public class BusinessTests
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-SIZE: 24.31 KB
+SIZE: 32.89 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -5076,6 +5404,177 @@ public class GameEngineTests
     }
 
     // ---------------------------------------------------------------
+    // Defect-1 regression coverage: AngelBonus must remain finite at
+    // any AngelInvestors count. 1.02^N overflows to PositiveInfinity
+    // around N ≈ 35,750; anything past that previously produced
+    // "infinity D infinity angels + infinity D% Next +NaN" in the UI
+    // and crashed JSON export. The cap on AngelBonus is what prevents
+    // that cascade.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void AngelBonus_PastOverflowPoint_StaysFinite()
+    {
+        // 50,000 angels: raw 1.02^50000 is Infinity. Capped value
+        // must be finite and large.
+        SetAngels(50_000);
+        var bonus = _engine.AngelBonus;
+        double.IsFinite(bonus).ShouldBeTrue();
+        bonus.ShouldBeGreaterThan(1e50);
+    }
+
+    [Fact]
+    public void AngelBonus_AtMillionAngels_StillFinite()
+    {
+        // A wildly hand-edited save: 1,000,000 angels. The raw bonus is
+        // Infinity, the angel count itself is way past the practical cap;
+        // both must be clamped to finite values so subsequent arithmetic
+        // doesn't propagate non-finite values into cash, lifetime, or
+        // the JSON export.
+        SetAngels(1_000_000);
+        double.IsFinite(_engine.AngelBonus).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AngelBonus_NegativeAngelInvestors_ShouldBeOne()
+    {
+        // Edge case: a corrupted save with a negative angel count must
+        // not produce a fractional multiplier (1.02^-N < 1.0) — that
+        // would actively reduce player earnings. Treat as zero angels.
+        SetAngels(-100);
+        _engine.AngelBonus.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void CalculateAngels_ShouldNotOverflowOnExtremeLifetime()
+    {
+        // A player whose lifetime earnings have reached the engine's
+        // money cap (1e200) must still receive a finite angel count,
+        // not Infinity. Before the clamp this would propagate Infinity
+        // into AngelInvestors during prestige.
+        var angels = GameEngine.CalculateAngels(1e200);
+        double.IsFinite(angels).ShouldBeTrue();
+        angels.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void CalculateAngels_NaNInput_ShouldReturnZero()
+    {
+        GameEngine.CalculateAngels(double.NaN).ShouldBe(0);
+    }
+
+    [Fact]
+    public void CalculateAngels_InfinityInput_ShouldReturnFiniteCap()
+    {
+        var angels = GameEngine.CalculateAngels(double.PositiveInfinity);
+        double.IsFinite(angels).ShouldBeTrue();
+        angels.ShouldBeGreaterThan(0);
+    }
+
+    // ---------------------------------------------------------------
+    // Defect-1 regression coverage: ExportToString must succeed even
+    // when in-engine state has somehow become non-finite. The engine
+    // sanitizes on the way out as a final safety net so this can never
+    // force-close the app.
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task ExportToString_WithInfinityCash_ShouldNotThrow()
+    {
+        await _engine.LoadAsync();
+        SetCash(double.PositiveInfinity);
+
+        // Must not throw — this used to force-close on Export.
+        var exported = Should.NotThrow(() => _engine.ExportToString());
+        exported.ShouldNotBeNullOrWhiteSpace();
+
+        // Round-trip must produce a valid finite cash value.
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(exported).ShouldBeTrue();
+        double.IsFinite(engine2.Cash).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExportToString_WithNaNLifetime_ShouldNotThrow()
+    {
+        await _engine.LoadAsync();
+        var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+        ltProp.GetSetMethod(true)!.Invoke(_engine, [double.NaN]);
+
+        var exported = Should.NotThrow(() => _engine.ExportToString());
+        exported.ShouldNotBeNullOrWhiteSpace();
+
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(exported).ShouldBeTrue();
+        double.IsFinite(engine2.LifetimeEarnings).ShouldBeTrue();
+        // NaN becomes 0 under SanitizeMoney.
+        engine2.LifetimeEarnings.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WithInfinityInSave_ShouldClampToFinite()
+    {
+        // Simulates the user's actual scenario: a save file written
+        // before the sanitization fix, containing Infinity in cash
+        // or lifetime. The load path must produce a playable game,
+        // not a NaN-ridden one.
+        var pastTime = DateTime.UtcNow.AddSeconds(-30);
+        var savedState = new GameState
+        {
+            Cash = double.PositiveInfinity,
+            LifetimeEarnings = double.PositiveInfinity,
+            AngelInvestors = 60_000, // would overflow AngelBonus uncapped
+            BusinessDataJson = """{"lemonade":1000}""",
+            ManagerDataJson = """{"lemonade":true}""",
+            LastPlayedAt = pastTime,
+            UpdatedAt = pastTime
+        };
+
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(savedState));
+
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+
+        double.IsFinite(engine.Cash).ShouldBeTrue();
+        double.IsFinite(engine.LifetimeEarnings).ShouldBeTrue();
+        double.IsFinite(engine.AngelInvestors).ShouldBeTrue();
+        double.IsFinite(engine.AngelBonus).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Tick_AtMaxAngels_CashStaysFinite()
+    {
+        // Comprehensive scenario reproducing the user's bug: 1000 of every
+        // business with the milestone caps reached, plus an absurd angel
+        // count. Ticking must not produce non-finite cash or lifetime.
+        await _engine.LoadAsync();
+        SetAngels(100_000); // capped internally to MaxAngelInvestors
+
+        // Force every business to 1000 owned with a manager so ticks
+        // generate maximum revenue.
+        foreach (var biz in _engine.Businesses)
+        {
+            biz.Owned = 1000;
+            biz.HasManager = true;
+            biz.IsRunning = true;
+            biz.ProgressPercent = 100.0; // ready to settle on next tick
+        }
+
+        // Tick 100 times — each tick settles a cycle and adds revenue.
+        for (var i = 0; i < 100; i++)
+        {
+            // Re-prime ProgressPercent so every tick settles for every business.
+            foreach (var biz in _engine.Businesses) biz.ProgressPercent = 100.0;
+            _engine.Tick(0.0);
+        }
+
+        double.IsFinite(_engine.Cash).ShouldBeTrue();
+        double.IsFinite(_engine.LifetimeEarnings).ShouldBeTrue();
+    }
+
+    // ---------------------------------------------------------------
     // PostMilestoneScaling — the fix that keeps unit purchases past
     // the 1000-unit milestone cap from collapsing into "you'll never
     // afford the next one". Below 1000 owned the multiplier is 1.0
@@ -5179,6 +5678,70 @@ public class GameEngineTests
         var milestone = biz.MilestoneMultiplier; // ×327,680 (capped at 1000)
         var expected = 1.0 * 1100 * milestone * Math.Pow(1.07, 50);
         biz.Revenue.ShouldBe(expected);
+    }
+
+    // ---------------------------------------------------------------
+    // Defect-1 regression coverage: NextCost and Revenue must stay
+    // finite even at extreme ownership counts. Math.Pow(1.11, 7000)
+    // is Infinity; the clamp keeps the business "effectively
+    // unaffordable" while preserving all downstream finiteness.
+    // ---------------------------------------------------------------
+    [Fact]
+    public void Business_NextCost_AtExtremeOwned_StaysFinite()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.11,
+            Owned = 10_000 // raw 1.11^10000 is Infinity
+        };
+
+        double.IsFinite(biz.NextCost).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Business_Revenue_AtExtremeOwned_StaysFinite()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.11,
+            Owned = 10_000
+        };
+
+        double.IsFinite(biz.Revenue).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Business_AffordableCount_InfiniteCash_StaysSafe()
+    {
+        var biz = new Business
+        {
+            Id = "t",
+            Name = "T",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.07,
+        };
+
+        // Non-finite cash must produce 0, not loop forever.
+        biz.AffordableCount(double.PositiveInfinity).ShouldBe(0);
+        biz.AffordableCount(double.NaN).ShouldBe(0);
     }
 
     private void SetCash(double amount) => SetCashOn(_engine, amount);
@@ -5326,7 +5889,7 @@ SIZE: .92 KB
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
-SIZE: .94 KB
+SIZE: 6.05 KB
 ================================================================================
 
 using MyAdventure.Core.Services;
@@ -5357,8 +5920,124 @@ public class NumberFormatterTests
     [InlineData(50000, "50.00 K")]
     [InlineData(2_000_000, "2.00 M")]
     public void Format_LargePercentageValues_ShouldUseAbbreviations(double input, string expected) =>
-    NumberFormatter.Format(input).ShouldBe(expected);
+        NumberFormatter.Format(input).ShouldBe(expected);
 
+    // -----------------------------------------------------------------
+    // Defect-1 coverage: non-finite values must never crash the UI or
+    // produce garbage like "Infinity D". These are exactly the values
+    // that previously surfaced in the wild as "infinity D infinity
+    // angels + infinity D% Next +NaN" and caused the Export crash.
+    // -----------------------------------------------------------------
+    [Fact]
+    public void Format_PositiveInfinity_ShouldReturnInfinityGlyph() =>
+        NumberFormatter.Format(double.PositiveInfinity).ShouldBe("\u221E");
+
+    [Fact]
+    public void Format_NegativeInfinity_ShouldReturnNegativeInfinityGlyph() =>
+        NumberFormatter.Format(double.NegativeInfinity).ShouldBe("-\u221E");
+
+    [Fact]
+    public void Format_NaN_ShouldReturnQuestionMark() =>
+        NumberFormatter.Format(double.NaN).ShouldBe("?");
+
+    // -----------------------------------------------------------------
+    // Above the suffix table (1e36+), we fall through to scientific
+    // notation with Unicode superscript exponents — so even truly
+    // enormous values still produce a short, readable string.
+    // -----------------------------------------------------------------
+    [Fact]
+    public void Format_AtSuffixCap_ShouldStillUseSuffix()
+    {
+        // Just below the scientific threshold (1e36) — should still
+        // produce a "D" (Decillion) suffix, not scientific notation.
+        var result = NumberFormatter.Format(5e35);
+        result.ShouldEndWith(" D");
+    }
+
+    [Fact]
+    public void Format_PastSuffixCap_ShouldUseScientificNotation()
+    {
+        // 7.53e40 — well past the suffix table.
+        var result = NumberFormatter.Format(7.53e40);
+        // Should contain "× 10" and a superscript exponent.
+        result.ShouldContain("\u00D7 10");
+        // Mantissa "7.53" should be present.
+        result.ShouldContain("7.53");
+    }
+
+    [Theory]
+    [InlineData(1e40, "10\u2074\u2070")]  // 10⁴⁰
+    [InlineData(1e100, "10\u00B9\u2070\u2070")]  // 10¹⁰⁰
+    public void Format_VeryLarge_ShouldUseSuperscriptExponent(double input, string expectedExponent) =>
+        NumberFormatter.Format(input).ShouldContain(expectedExponent);
+
+    [Fact]
+    public void Format_HandlesTheUsersActualBugInput()
+    {
+        // The exact failure mode the user reported: a 40+ digit number
+        // that previously rendered as a wall of digits in the UI. With
+        // the new formatter it becomes a compact scientific-notation
+        // string. The mantissa's exact digits depend on IEEE 754
+        // rounding of the >15-digit input, so the test asserts shape
+        // (short, contains " × 10", contains 10⁴² superscript) rather
+        // than an exact mantissa.
+        var input = 3409258023457023457230495723957904395823045d;
+        var result = NumberFormatter.Format(input);
+
+        result.Length.ShouldBeLessThan(20);
+        result.ShouldContain("\u00D7 10");
+        // 10⁴² — the magnitude of the input, regardless of mantissa rounding.
+        result.ShouldContain("10\u2074\u00B2");
+        result.ShouldNotContain("Infinity");
+        result.ShouldNotContain("NaN");
+    }
+
+    // -----------------------------------------------------------------
+    // Superscript helper: standalone tests so the rendering of the
+    // exponent is decoupled from the rest of the formatter.
+    // -----------------------------------------------------------------
+    [Theory]
+    [InlineData(0, "\u2070")]                // 0  → ⁰
+    [InlineData(1, "\u00B9")]                // 1  → ¹
+    [InlineData(2, "\u00B2")]                // 2  → ²
+    [InlineData(3, "\u00B3")]                // 3  → ³
+    [InlineData(9, "\u2079")]                // 9  → ⁹
+    [InlineData(10, "\u00B9\u2070")]         // 10 → ¹⁰
+    [InlineData(40, "\u2074\u2070")]         // 40 → ⁴⁰
+    [InlineData(123, "\u00B9\u00B2\u00B3")]  // 123 → ¹²³
+    public void ToSuperscript_ShouldRenderDigits(int input, string expected) =>
+        NumberFormatter.ToSuperscript(input).ShouldBe(expected);
+
+    [Fact]
+    public void ToSuperscript_Negative_ShouldIncludeMinusSign()
+    {
+        // -3 → ⁻³
+        NumberFormatter.ToSuperscript(-3).ShouldBe("\u207B\u00B3");
+    }
+
+    // -----------------------------------------------------------------
+    // FormatScientific direct tests — for callers that want scientific
+    // notation regardless of magnitude.
+    // -----------------------------------------------------------------
+    [Fact]
+    public void FormatScientific_ZeroShouldBeZero() =>
+        NumberFormatter.FormatScientific(0).ShouldBe("0");
+
+    [Fact]
+    public void FormatScientific_Infinity_ShouldReturnGlyph() =>
+        NumberFormatter.FormatScientific(double.PositiveInfinity).ShouldBe("\u221E");
+
+    [Fact]
+    public void FormatScientific_NaN_ShouldReturnQuestionMark() =>
+        NumberFormatter.FormatScientific(double.NaN).ShouldBe("?");
+
+    [Fact]
+    public void FormatScientific_KnownValue_ShouldMatchExpected()
+    {
+        // 7.53e40 → "7.53 × 10⁴⁰"
+        var result = NumberFormatter.FormatScientific(7.53e40);
+        result.ShouldBe($"7.53 \u00D7 10\u2074\u2070");
+    }
 }
 
 
