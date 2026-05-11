@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Mon May 11 10:27:36 AM EDT 2026
+Generated: Mon May 11 10:34:43 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -45,7 +45,8 @@ DIRECTORY STRUCTURE:
 │               ├── 015.txt
 │               ├── 016.txt
 │               ├── 017.txt
-│               └── 018.txt
+│               ├── 018.txt
+│               └── 019.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -593,7 +594,7 @@ SIZE: 5.36 KB
            * Android lifetime is now IActivityApplicationLifetime with a
              MainViewFactory (Func<Control>) instead of ISingleViewApplicationLifetime
              with a single MainView reference. -->
-    <AvaloniaVersion>12.0.2</AvaloniaVersion>
+    <AvaloniaVersion>12.0.3</AvaloniaVersion>
     <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
     <EfCoreVersion>10.0.7</EfCoreVersion>
     <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->

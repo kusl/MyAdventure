@@ -6398,3 +6398,203 @@ Line 196 (`engine.AngelBonus.ShouldBe(FiftyAngelBonus)`) deliberately stays exac
 
 
 
+00
+27
+Need to update our nuget packages 
+```
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+Project `MyAdventure.Android` has the following updates to its packages
+   [net10.0-android36.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > Avalonia.Android            12.0.2      12.0.2     12.0.3
+   > Avalonia.Fonts.Inter        12.0.2      12.0.2     12.0.3
+   > Avalonia.Themes.Fluent      12.0.2      12.0.2     12.0.3
+
+The given project `MyAdventure.Core` has no updates given the current sources.
+Project `MyAdventure.Desktop` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > Avalonia.Desktop            12.0.2      12.0.2     12.0.3
+   > Avalonia.Fonts.Inter        12.0.2      12.0.2     12.0.3
+   > Avalonia.Themes.Fluent      12.0.2      12.0.2     12.0.3
+
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package             Requested   Resolved   Latest
+   > Avalonia                    12.0.2      12.0.2     12.0.3
+   > Avalonia.Themes.Fluent      12.0.2      12.0.2     12.0.3
+
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+```
+
+```xml /home/kushal/src/dotnet/MyAdventure/Directory.Packages.props 
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <!-- Avalonia 12 is the current stable major. Notable migration notes
+         that are baked into this codebase:
+           * Avalonia.Diagnostics has been removed from the framework. The
+             official replacement, AvaloniaUI.DiagnosticsSupport, only opens
+             the Dev Tools UI when paired with an Avalonia Plus / Pro
+             subscription (the Community tier is free for non-commercial use
+             only). This project's policy is "no NuGet that requires payment
+             for any use, ever" — free-for-non-commercial does not qualify —
+             so the package is intentionally not referenced anywhere. Use the
+             FOSS VS Code or Rider extensions for design-time previewing.
+           * On Android, AvaloniaMainActivity<TApp> has been split: the
+             activity now derives from the non-generic AvaloniaMainActivity,
+             and a new [Application] AvaloniaAndroidApplication<App> handles
+             AppBuilder customization. This is reflected in
+             src/MyAdventure.Android/{MainActivity.cs,AndroidApp.cs}.
+           * Android lifetime is now IActivityApplicationLifetime with a
+             MainViewFactory (Func<Control>) instead of ISingleViewApplicationLifetime
+             with a single MainView reference. -->
+    <AvaloniaVersion>12.0.2</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <!-- Instrumentation.Runtime versions independently of the rest of OTel -->
+    <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
+    <XunitVersion>2.9.3</XunitVersion>
+    <TestSdkVersion>18.5.1</TestSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia - MIT License">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM - MIT License">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="EntityFramework - MIT License">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Configuration and DI - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+  </ItemGroup>
+</Project>
+```
+
+I can see you already have MyAdventure built and just need to update the Avalonia packages from 12.0.2 → 12.0.3. Let me do that.The change is trivial — just one line in `Directory.Packages.props`. Here's the updated file:
+
+```xml
+<AvaloniaVersion>12.0.3</AvaloniaVersion>
+```
+
+That's the entire change. Because all seven Avalonia packages (`Avalonia`, `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`, `Avalonia.Android`, `Avalonia.Headless`, `Avalonia.Headless.XUnit`) all pin to `$(AvaloniaVersion)`, changing that one property updates everything atomically. This is exactly why central package management with MSBuild variables pays off.
+
+Run it:
+
+```bash
+# In ~/src/dotnet/MyAdventure
+sed -i 's/<AvaloniaVersion>12\.0\.2<\/AvaloniaVersion>/<AvaloniaVersion>12.0.3<\/AvaloniaVersion>/' Directory.Packages.props
+dotnet restore
+dotnet build
+dotnet test
+```
+
+Or edit `Directory.Packages.props` directly if you prefer. Either way, one line, zero risk of missing a package.
+
+02
+27
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -21,7 +21,7 @@
            * Android lifetime is now IActivityApplicationLifetime with a
              MainViewFactory (Func<Control>) instead of ISingleViewApplicationLifetime
              with a single MainView reference. -->
-    <AvaloniaVersion>12.0.2</AvaloniaVersion>
+    <AvaloniaVersion>12.0.3</AvaloniaVersion>
     <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
     <EfCoreVersion>10.0.7</EfCoreVersion>
     <!-- 1.15.3 patches GHSA-g94r-2vxg-569j (moderate severity) in OpenTelemetry.Api -->
