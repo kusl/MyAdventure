@@ -4,8 +4,8 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
     <AvaloniaVersion>12.0.3</AvaloniaVersion>
-    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
-    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <MicrosoftExtensionsVersion>10.0.8</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.8</EfCoreVersion>
     <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
     <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
     <XunitVersion>2.9.3</XunitVersion>
@@ -60,6 +60,6 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
   </ItemGroup>
 </Project>

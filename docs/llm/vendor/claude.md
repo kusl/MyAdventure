@@ -8598,3 +8598,304 @@ The original userMemories note said "Avalonia 12.0.1" but your dump shows 12.0.3
 
 
 
+32
+42
+
+Now lets update the nuget packages 
+
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                    Requested    Resolved
+   > Avalonia                           12.0.3       12.0.3  
+   > Avalonia.Android                   12.0.3       12.0.3  
+   > Avalonia.Fonts.Inter               12.0.3       12.0.3  
+   > Avalonia.Themes.Fluent             12.0.3       12.0.3  
+   > Microsoft.NET.ILLink.Tasks   (A)   [10.0.7, )   10.0.7  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.7      10.0.7  
+   > OpenTelemetry.Api                 1.15.3      1.15.3  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package             Requested   Resolved
+   > Avalonia                    12.0.3      12.0.3  
+   > Avalonia.Desktop            12.0.3      12.0.3  
+   > Avalonia.Fonts.Inter        12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent      12.0.3      12.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.7      10.0.7  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration                           10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration.Json                      10.0.7      10.0.7  
+   > Microsoft.Extensions.DependencyInjection                     10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging                                 10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging.Console                         10.0.7      10.0.7  
+   > OpenTelemetry                                                1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.Console                               1.15.3      1.15.3  
+   > OpenTelemetry.Extensions.Hosting                             1.15.3      1.15.3  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.1      1.15.1  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent                        12.0.3      12.0.3  
+   > CommunityToolkit.Mvvm                         8.4.2       8.4.2   
+   > Microsoft.Extensions.DependencyInjection      10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging                  10.0.7      10.0.7  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             10.0.0      10.0.0  
+   > Microsoft.NET.Test.Sdk         18.5.1      18.5.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          10.0.0      10.0.0  
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.7      10.0.7  
+   > Microsoft.EntityFrameworkCore.Sqlite        10.0.7      10.0.7  
+   > Microsoft.NET.Test.Sdk                      18.5.1      18.5.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             10.0.0      10.0.0  
+   > Microsoft.NET.Test.Sdk         18.5.1      18.5.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.868s
+user	0m1.981s
+sys	0m0.464s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved   Latest
+   > Microsoft.Extensions.Logging      10.0.7      10.0.7     10.0.8
+
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved   Latest
+   > Microsoft.EntityFrameworkCore.Design                         10.0.7      10.0.7     10.0.8
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration                           10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration.Json                      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.DependencyInjection                     10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging                                 10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging.Console                         10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Microsoft.Extensions.DependencyInjection      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging                  10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.Core.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package         Requested   Resolved   Latest
+   > coverlet.collector      10.0.0      10.0.0     10.0.1
+
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved   Latest
+   > coverlet.collector                          10.0.0      10.0.0     10.0.1
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.7      10.0.7     10.0.8
+   > Microsoft.EntityFrameworkCore.Sqlite        10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.UI.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package         Requested   Resolved   Latest
+   > coverlet.collector      10.0.0      10.0.0     10.0.1
+
+
+
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <AvaloniaVersion>12.0.3</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
+    <XunitVersion>2.9.3</XunitVersion>
+    <TestSdkVersion>18.5.1</TestSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia - MIT License">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM - MIT License">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="EntityFramework - MIT License">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Configuration and DI - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+  </ItemGroup>
+</Project>
+
+```
+
+please give me the full file 
+
+I'll search the project knowledge first to understand the current state of the `Directory.Packages.props` file and any related conventions.Now I have a clear picture of the current `Directory.Packages.props` file. The task is to bump the packages with available updates: `Microsoft.Extensions.*` and EF Core from `10.0.7` → `10.0.8`, and `coverlet.collector` from `10.0.0` → `10.0.1`. Everything else stays at current.
+
+Here's the full updated file:
+
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <AvaloniaVersion>12.0.3</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.8</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.8</EfCoreVersion>
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
+    <XunitVersion>2.9.3</XunitVersion>
+    <TestSdkVersion>18.5.1</TestSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia - MIT License">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM - MIT License">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="EntityFramework - MIT License">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Configuration and DI - MIT License">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Logging and OpenTelemetry - Apache-2.0 License">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+  </ItemGroup>
+</Project>
+```
+
+Three changes:
+
+- `MicrosoftExtensionsVersion`: `10.0.7` → `10.0.8` (covers all the `Microsoft.Extensions.*` and `Microsoft.Extensions.Logging.*` packages in one shot, thanks to the MSBuild variable)
+- `EfCoreVersion`: `10.0.7` → `10.0.8` (covers all four EF Core packages)
+- `coverlet.collector`: `10.0.0` → `10.0.1` (test projects)
+
+Everything else stays put — Avalonia, OpenTelemetry, xUnit, Test SDK, CommunityToolkit.Mvvm, Shouldly, NSubstitute, Bogus all reported "no updates available."
+
+After updating, you'll also want to bump the `MyAdventure.Android` project's auto-referenced `Microsoft.NET.ILLink.Tasks` — that one updates via the .NET SDK rather than a `<PackageVersion>` entry, so no change needed here.
+
+Quick sanity checklist after the change:
+1. `dotnet restore` — should pull the new versions cleanly.
+2. `dotnet build` — confirms no API breakage in the patch-level bumps.
+3. `dotnet test` — particularly the integration tests that exercise EF Core Sqlite, since both the runtime and design packages moved together.
+
+If anything breaks, it'll almost certainly be EF Core (patch releases occasionally tighten validation); the `Microsoft.Extensions.*` bumps in patch versions are nearly always safe.
+
