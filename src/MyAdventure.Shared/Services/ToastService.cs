@@ -3,28 +3,33 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MyAdventure.Shared.Services;
 
-/// <summary>
-/// Simple toast notification service. Toasts auto-dismiss after a configurable duration.
-/// Thread-safe for UI use via Avalonia's dispatcher.
-/// </summary>
-public partial class ToastService : ObservableObject
+public partial class ToastItem(string message, DateTime expiresAt) : ObservableObject
 {
-    private static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
+    public string Message { get; } = message;
+    public DateTime ExpiresAt { get; } = expiresAt;
+}
 
+/// <summary>
+/// Auto-dismissing toast notifications. Views bind to <see cref="ActiveToasts"/>
+/// and call <see cref="CleanupExpired"/> from their tick loop to drop
+/// toasts whose lifetime has elapsed.
+/// </summary>
+public class ToastService
+{
     public ObservableCollection<ToastItem> ActiveToasts { get; } = [];
 
-    /// <summary>Show a toast that auto-dismisses after ~3 seconds.</summary>
-    public void Show(string message, TimeSpan? duration = null)
+    /// <summary>
+    /// Show a toast with a default lifetime of 3 seconds. Caller can
+    /// override the lifetime — passing <see cref="TimeSpan.Zero"/> makes
+    /// the toast eligible for immediate cleanup (used by tests).
+    /// </summary>
+    public void Show(string message, TimeSpan? lifetime = null)
     {
-        var toast = new ToastItem(message);
-        ActiveToasts.Add(toast);
-
-        // Schedule removal. We use Task.Delay since DispatcherTimer is view-level.
-        // The UI tick loop in GameViewModel will clean up expired toasts.
-        toast.ExpiresAt = DateTime.UtcNow + (duration ?? DefaultDuration);
+        var life = lifetime ?? TimeSpan.FromSeconds(3);
+        ActiveToasts.Add(new ToastItem(message, DateTime.UtcNow + life));
     }
 
-    /// <summary>Remove expired toasts. Called from the game tick loop.</summary>
+    /// <summary>Remove any toast whose expiry time has passed.</summary>
     public void CleanupExpired()
     {
         var now = DateTime.UtcNow;
@@ -34,9 +39,4 @@ public partial class ToastService : ObservableObject
                 ActiveToasts.RemoveAt(i);
         }
     }
-}
-
-public record ToastItem(string Message)
-{
-    public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddSeconds(3);
 }

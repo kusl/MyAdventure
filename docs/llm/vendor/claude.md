@@ -7798,3 +7798,403 @@ Let me write the Desktop MainWindow first:Now the rest of the Desktop project (A
 
 
 
+Good — looks like a previous version exists. Let me check it and the other test files:I have existing test files. Let me check if they're already updated for BigDouble or use the old API:All existing test files already use BigDouble. Let me check them to make sure they're compatible with the API I wrote:Looks compatible with my API. Let me check the others:Good, these existing tests are compatible with my API. Let me check Milestone tests and the BigDoubleTests to make sure they're complete:Good, comprehensive existing tests. Now let me check the integration and UI tests and what other test files exist:Those directories don't exist yet. Let me also check the GameEngineTests:OK, I need to write GameEngineTests, all integration tests, all UI tests, and all test csprojs. Let me also do a final sanity-check on my BigDoubleTests file (since I see it was an earlier version) and verify it has all the cases I want. The existing one looks comprehensive (435 lines), so I'll trust it.
+
+Let me create the test project files and remaining tests now:Now let me write the comprehensive GameEngineTests. This needs to cover the full existing test suite, lifted to BigDouble:Wait, that's 838 lines — much longer than the heredoc I wrote. Let me check:OK the line count is just because of how wc counted my literal `\n` escapes — the file is actually well-formed. But wait, my heredoc was less than 600 lines. Let me check if a previous version was concatenated:Single class declaration, 7 usings, single namespace. The file is well-formed; it's just larger than I estimated. Good.
+
+Now let me write the Integration tests:Now I need to also add an integration test for the schema migration (since that's new and critical). Let me also test the full DI initialization path with a legacy schema:Now the UI tests:Now the GameViewModelLifecycleTests:Now let me also verify my BigDouble file is complete and check the existing BigDoubleTests for any incompatibilities. Let me re-look at the BigDouble file to spot any issues:OK looks good. Let me also look at the existing BigDoubleTests to identify any test cases that might fail against my implementation:Good — the tests look comprehensive and compatible. Now let me trace through one suspicious thing in my BigDouble: the test on line 245 says `2.0.Pow(10).ToDouble().ShouldBe(1024.0, tolerance: 1e-9)`. Let me verify:
+
+`2^10`: absLog = log10(2) ≈ 0.30103. resultLog = 0.30103 × 10 = 3.0103. newExp = 3, fractional = 0.0103. newMantissa = 10^0.0103 ≈ 1.024. Result = 1.024 × 10^3 = 1024 ✓
+
+And `1.11^10000`: absLog = log10(1.11) ≈ 0.04532. resultLog = 0.04532 × 10000 = 453.2. newExp = 453, fractional = 0.2. So Exponent = 453. But the test says it should be between 400-500. ✓ (453 is in [400, 500])
+
+`1.07^10000`: log10(1.07) ≈ 0.02938. resultLog = 293.8. newExp = 293, fractional = 0.8. Test expects 293 exactly. ✓
+
+Good, all checks out.
+
+Now let me also verify the existing BigDoubleTests file matches what's needed against the test on line 287 — `Log10_OfTenToTheHundred_IsHundred`. `BigDouble(1.0, 100).Log10()` — my code: `Math.Log10(1.0) + 100 = 0 + 100 = 100`. ✓
+
+Let me also look at the file listings now to check I have all files and the structure is right:I see there's a `BigDoubleSchemaMigrator.cs` from a prior session. Let me check it:This file is from a stale earlier attempt — but I already inlined the migration logic into `DependencyInjection.cs`. Two files doing the same thing is wrong. Let me delete it since DI is now self-contained:Wait, there was a stray literal `{Data,Repositories}` directory? Let me check:Good — it was just bash's `ls` printing the literal expansion. The directories Data and Repositories are correct.
+
+Now let me check my GameEngine for one issue — I should verify the `ReadBigDouble` JSON method handles both v1 and v2 formats correctly. Looking at my code, v1 stored numbers as JSON numbers (`"cash": 12345.67`), v2 stores them as JSON strings (`"cash": "1.5e200"`). My `ReadBigDouble` checks `ValueKind` and handles both. Good.
+
+But wait — I see a potential issue. In my GameEngine, `ExportToString` writes the cash as a string ("cash" → string). But the legacy code wrote it as a double. Looking at my legacy import test in GameEngineTests, I have:
+
+```
+"cash": 12345.67,
+```
+
+That's a JSON number. My `ReadBigDouble`:
+- `JsonValueKind.Number` → `new BigDouble(el.GetDouble())` ✓
+
+For v2 it's:
+```
+"cash": "1.5e200"
+```
+
+That's a string. My `ReadBigDouble`:
+- `JsonValueKind.String` → `BigDouble.TryParse(...)` ✓
+
+Good.
+
+Now let me look at one subtle issue with the BusinessViewModel test. The `OnAffordableCount` calculation when `Owned >= 1000` needs to work. The `Business.AffordableCount` method handles base cost edge cases — but what about when owned ≥ 1000 and the costs are astronomical? Let me re-examine:
+
+For Business at Owned=1000, BaseCost=10, CostMultiplier=1.01, cash=1e50:
+- c0 = NextCost = 10 × 1.01^1000 ≈ 209424
+- threshold = 1 + 1e50 × 0.01 / 209424 ≈ 1 + 4.77e42 ≈ 4.77e42
+- logThreshold = log10(4.77e42) ≈ 42.68
+- n = floor(42.68 / log10(1.01)) = floor(42.68 / 0.00432) = floor(9879.6) ≈ 9879
+
+So 9879 affordable units. Test expects > 0, which is fine.
+
+But wait — there's a subtle problem with my Business.AffordableCount when cash is large enough that `threshold` itself goes to BigDouble territory. Let me trace `Log10()`:
+- `threshold = BigDouble.One + cash * new BigDouble(r - 1.0) / c0`
+
+If cash = 1e50, then `cash * new BigDouble(r-1)` = 1e50 * 0.01 = 1e48 (BigDouble). Then `/ c0`: 1e48 / 209424 ≈ 4.77e42 (BigDouble). Then `+ BigDouble.One`: adds 1 to 4.77e42, but since gap > 17 the small value gets absorbed, result stays 4.77e42 (BigDouble at exponent 42).
+
+`threshold.Log10()`: `Math.Log10(4.77) + 42 = 0.679 + 42 = 42.679` ✓ double.
+
+`logThreshold / Math.Log10(r)` = 42.679 / 0.00432 ≈ 9879. ✓
+
+Good.
+
+Now there's one more concern. Looking back at my Business, `AffordableCount` works with BigDouble cash — but my BusinessViewModel test `Refresh_AtHugeCash_CostTextRemainsCompact` sets Owned=5000 and CostMultiplier=1.07. NextCost = 4 × 1.07^5000. log10 = log10(4) + 5000 × log10(1.07) = 0.602 + 5000 × 0.02938 = 0.602 + 146.9 = 147.5. So NextCost ≈ 10^147.5 ≈ 3.16e147. That's exponent ~147, well within BigDouble range. NumberFormatter.Format produces scientific notation since 147 >= 36. Length should be ~15-18 chars (e.g. "3.16 × 10¹⁴⁷"). ✓
+
+OK, looking good. Let me now do one more critical sanity check — the file count and make sure I've got everything from the original project:Original had 68, I have 64. Let me see what's missing:So I'm missing: `.gitattributes`, `.github/dependabot.yml`, `.github/workflows/build-and-release.yml`, `.gitignore`, `LICENSE`, `README.md`, `docs/KEYSTORE.md`. These are project hygiene/CI files that the user already has — they don't need to change for this bug fix. I'll leave them alone.
+
+I've added: `BigDouble.cs`, `BigDoubleTests.cs`, `SchemaMigrationTests.cs`. ✓
+
+Now let me do final sanity checks on a few specific concerns. First, the BigDouble equality test on line 110-112: `var b = -a; (a + b).IsZero.ShouldBeTrue();` — for a = `(5.0, 100)`, `-a = (-5.0, 100)`. Adding: same exponent, shiftedSmall = -5, sum = 5 + (-5) = 0. Construct BigDouble(0, 100). My normalize returns (0, 0). Then `IsZero` → true ✓.
+
+Now line 312-316 test: `Compare_NegativeIsLessThanPositive: new BigDouble(-1.0, 100).ShouldBeLessThan(new BigDouble(1.0, 0))`. My CompareTo: a.IsZero false, other.IsZero false. s = -1, os = +1. s != os → s.CompareTo(os) = -1.CompareTo(1) = -1. So a < other. ✓
+
+Now let me verify one more edge of my Business.AffordableCount: when called with NaN cash:
+- `cash.IsNaN || cash.Sign <= 0` → IsNaN is true → return 0 ✓
+
+And when called with PositiveInfinity:
+- `cash.IsNaN || cash.Sign <= 0` → IsNaN is false, Sign is +1 (PositiveInfinity has positive sign). NOT early return.
+- BaseCost > 0, CostMultiplier > 1 → fall through to main path.
+- `c0 = NextCost` — finite BigDouble.
+- `cash < c0` — `PositiveInfinity < c0`? CompareTo: a.IsInfinity (positive), other finite. Wait, let me check my CompareTo more carefully:
+
+```csharp
+if (IsNaN || other.IsNaN) return 0;
+if (IsZero && other.IsZero) return 0;
+if (IsZero) return -Math.Sign(other.Mantissa);
+if (other.IsZero) return Math.Sign(Mantissa);
+
+var s = Sign;
+var os = other.Sign;
+if (s != os) return s.CompareTo(os);
+
+var expCompare = Exponent.CompareTo(other.Exponent);
+if (expCompare != 0) return s > 0 ? expCompare : -expCompare;
+
+return Mantissa.CompareTo(other.Mantissa);
+```
+
+For a = PositiveInfinity (mantissa = +Inf, exp = 0), other = c0 (finite, e.g. mantissa=2, exp=10):
+- s = +1 (from sign of mantissa: Math.Sign(+Inf) = +1)
+- os = +1
+- expCompare = 0.CompareTo(10) = -1 (since +Inf has exp=0 in my sentinel representation!)
+- s > 0 → return -1
+
+So `PositiveInfinity < c0` returns true??? That's WRONG. The infinity should be greater than any finite number.
+
+This is a bug in my CompareTo — infinity is stored with exponent 0, but it should compare as if exponent is infinitely large.
+
+Let me think about this. Let me fix CompareTo to handle infinity:Let me fix CompareTo to handle infinity correctly. Infinity should compare as if it has the maximum-possible exponent — meaning `PositiveInfinity > any finite` and `NegativeInfinity < any finite`:Now let me also check Equals — for two `PositiveInfinity` values, my Equals: `Mantissa == double.PositiveInfinity, Exponent == 0`, both equal, so returns true. ✓
+
+Also need to think about my `Business.AffordableCount` — when cash is PositiveInfinity, the affordable count should be very large. My code path:
+- `cash.IsNaN || cash.Sign <= 0` — false (Sign=+1)
+- Falls into main path
+- `c0 = NextCost` — finite
+- `cash < c0` — false (with my fix, +Inf > c0)
+- `r > 1.0`, falls into geometric series
+- `threshold = 1 + cash × (r-1) / c0` — `cash × (r-1) = +Inf × 0.07 = +Inf`. `+Inf / c0 = +Inf`. `1 + +Inf` — what does my Addition do?
+
+Looking at my Addition operator:
+```csharp
+if (a.IsInfinity || b.IsInfinity)
+{
+    if (a.IsInfinity && b.IsInfinity && a.Sign != b.Sign) return NaN;
+    return a.IsInfinity ? a : b;
+}
+```
+
+So `1 + +Inf` returns `+Inf` ✓.
+
+Then `threshold.Log10()`. My Log10:
+```csharp
+if (IsNaN || Sign <= 0) return double.NaN;
+if (IsInfinity) return double.PositiveInfinity;
+```
+
+Returns +Inf. Then:
+- `if (!double.IsFinite(logThreshold) || logThreshold <= 0) return 0;`
+
+Wait, `!double.IsFinite(+Inf)` is true. So returns 0. That's wrong! Infinite cash should give MaxValue affordable, not 0.
+
+Let me fix this edge case. Actually for the purposes of the existing test `AffordableCount_HugeCash_ReturnsLargeFiniteCount`, cash is `BigDouble(1.0, 50)` which is finite, so the test works. But for true `PositiveInfinity` cash, returning 0 is wrong. Let me handle this:Now my test `Business_AffordableCount_NonFiniteCash_StaysSafe` says `AffordableCount(PositiveInfinity).ShouldBeGreaterThanOrEqualTo(0)` which 1_000_000_000 satisfies. ✓
+
+Let me also verify the existing GameEngineTests doesn't have anything that breaks. Looking at the existing one I wrote:
+
+```csharp
+[Fact]
+public void Business_AffordableCount_NonFiniteCash_StaysSafe()
+{
+    ...
+    biz.AffordableCount(BigDouble.PositiveInfinity).ShouldBeGreaterThanOrEqualTo(0);
+    biz.AffordableCount(BigDouble.NaN).ShouldBe(0);
+}
+```
+
+OK, both pass with my fix.
+
+Now let me also think about another issue. Looking at GameViewModelLifecycleTests, I use `(BigDouble)new BigDouble(angels)` — that should just be `new BigDouble(angels)` since it's already the right type. Let me check the test again:The cast `(BigDouble)new BigDouble(angels)` is redundant but harmless (it's an identity cast). Actually, `Invoke` takes `object?[]` so boxing happens regardless. The cast doesn't change anything but is harmless. Let me clean it up for clarity:Now let me also think about another subtle issue. My `BigDouble.Pow(int)` calls `Pow((double)power)`. For very small int values like 0, 1, that's fine. But for the test where `Pow(7)` etc. is called, it goes through the logarithmic path. For `(-2).Pow(3)`:
+- Sign = -1, power = 3 (as double)
+- `Sign < 0 && power != Math.Floor(power)` → `3 != 3` is false → don't return NaN
+- absLog = log10(2) = 0.301
+- resultLog = 0.301 × 3 = 0.903
+- newExp = 0, fractional = 0.903
+- newMantissa = 10^0.903 ≈ 8
+
+Wait, 0.903 → 10^0.903 ≈ 7.997 ≈ 8 ✓
+
+Then `if (sign < 0 && power % 2 != 0) newMantissa = -newMantissa;` → -8 ✓
+
+For `(-2).Pow(2)`:
+- sign = -1, power = 2
+- not floor mismatch
+- absLog = 0.301
+- resultLog = 0.602
+- newExp = 0, fractional = 0.602
+- newMantissa = 10^0.602 ≈ 4
+
+`if (sign < 0 && power % 2 != 0)` → `2 % 2 = 0` so condition false. mantissa stays +4. ✓
+
+OK, all good.
+
+Now one more concern. Let me verify the existing test `Pow_PastDoubleOverflow_StaysFinite`:
+
+```csharp
+var result = new BigDouble(1.11).Pow(10_000);
+result.IsFinite.ShouldBeTrue();
+result.Exponent.ShouldBeGreaterThan(400);
+result.Exponent.ShouldBeLessThan(500);
+```
+
+`1.11^10000`: log10(1.11) ≈ 0.0453. resultLog = 0.0453 × 10000 = 453. newExp = 453. ✓ between 400 and 500.
+
+Let me also verify that my `Pow` handles the case where `power == 1.0` early:
+
+```csharp
+if (power == 1.0) return this;
+```
+
+For `bd.Pow(1.0)`, returns bd unchanged. The test says `bd.Pow(1.0).ShouldBe(bd)`. ✓
+
+But wait — `bd.Pow(1)` (int overload) calls `Pow(1.0)`. ✓
+
+Now let me also verify there are no remaining issues with the AppLifecycleManager. Looking at it:Good. Now let me verify my `BigDouble`'s implicit conversions. The struct should easily accept double, int, long literals via implicit conversion. Let me ensure my Business uses BigDouble where expected:Revenue computation: `new BigDouble(BaseRevenue) * Owned * MilestoneMultiplier * PostMilestoneScaling`. The chain:
+1. `new BigDouble(BaseRevenue)` → BigDouble
+2. `* Owned` (int) → implicit conversion of Owned to BigDouble → multiplication → BigDouble
+3. `* MilestoneMultiplier` (double) → implicit conversion → BigDouble
+4. `* PostMilestoneScaling` (BigDouble) → BigDouble
+
+All BigDouble multiplications. ✓
+
+For the `Revenue` of an Owned=0 business, the multiplication chain evaluates to `BigDouble(BaseRevenue) * 0 * ... = 0`. So Revenue.IsZero is true. ✓
+
+Now let me also check the GameEngine carefully for any potential issues:Looks good. Let me also look at one critical concern — when `EarningsCounter.Add(earned.ToDouble(), ...)` is called for a huge BigDouble, `ToDouble()` saturates to `double.MaxValue`. The Counter<double> should accept this without crashing.
+
+Now let me also verify the GameEngine doesn't have any stale references — let me view AngelBonus:Looks good. Now let me check the `BigDouble(1.0, MaxAngelBonusExponent, normalize: false)` call. My constructor when `normalize=false`:
+
+```csharp
+if (!normalize)
+{
+    Mantissa = mantissa;
+    Exponent = exponent;
+    return;
+}
+```
+
+So we get `(1.0, 1e15)` directly. That's a valid normalized form (mantissa in [1, 10)). ✓
+
+Now let me also look at the existing `Pow_PastDoubleOverflow_StaysFinite` test for `1.11^10000`. My code computes:
+- absLog = log10(1.11) ≈ 0.04532
+- resultLog = 0.04532 × 10000 = 453.2
+
+Then:
+- `if (resultLog > long.MaxValue) return ... PositiveInfinity;` — 453.2 < long.MaxValue → no
+- `newExp = floor(453.2) = 453`
+- `fractional = 0.2`
+- `newMantissa = 10^0.2 ≈ 1.585`
+- Result = (1.585, 453)
+
+`result.Exponent.ShouldBeGreaterThan(400)` → 453 > 400 ✓
+`result.Exponent.ShouldBeLessThan(500)` → 453 < 500 ✓
+
+Good. Now let me make sure my Sign property handles the IsNaN case:
+
+```csharp
+public int Sign => IsNaN ? 0 : Math.Sign(Mantissa);
+```
+
+For NaN: returns 0 ✓
+For +Inf: Math.Sign(+Inf) = +1 ✓
+For -Inf: Math.Sign(-Inf) = -1 ✓
+For 0: Math.Sign(0) = 0 ✓
+
+Now let me also verify one more existing test from my GameEngineTests. The `Tick_NoAngels_ShouldEarnExactlyBaseRevenue` test:
+
+```csharp
+[Fact]
+public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
+{
+    ...
+    (_engine.Cash - cashBefore).ToDouble().ShouldBe(lemonade.Revenue.ToDouble(), tolerance: 1e-9);
+    _engine.AngelBonus.ToDouble().ShouldBe(1.0);
+}
+```
+
+With no angels (AngelInvestors=0), my AngelBonus returns BigDouble.One. `ToDouble()` returns 1.0. ✓
+
+Now one more issue to think about — the test for legacy v1 import:
+
+```csharp
+[Fact]
+public async Task ImportFromString_LegacyV1Format_ShouldStillWork()
+```
+
+Legacy JSON has numeric values. My `ReadBigDouble` handles `JsonValueKind.Number` by calling `el.GetDouble()`. For `"angels": 50.0`, this gives 50.0 as double, then `new BigDouble(50.0)`. AngelInvestors becomes BigDouble(50.0) = (5.0, 1). `ToDouble()` = 50.0. ✓
+
+Now let me also check what the user's actual save would decode to. Their export was:
+```
+eyJ2IjoxLCJjYXNoIjoxRSsyMDAsImxpZmV0aW1lIjoxRSsyMDAsImFuZ2VscyI6MTAwMDAwMDAwMCwicHJlc3RpZ2UiOjYsImJ1c2luZXNzZXMiOnsibGVtb25hZGUiOjExMDAsIm5ld3NwYXBlciI6MTAwMCwiY2Fyd2FzaCI6MTAwMCwicGl6emEiOjEwMDAsImRvbnV0IjoxMDAwLCJzaHJpbXAiOjIyNzB9LCJtYW5hZ2VycyI6eyJsZW1vbmFkZSI6dHJ1ZSwibmV3c3BhcGVyIjp0cnVlLCJjYXJ3YXNoIjp0cnVlLCJwaXp6YSI6dHJ1ZSwiZG9udXQiOnRydWUsInNocmltcCI6dHJ1ZX19
+```
+
+Decoded:
+```json
+{"v":1,"cash":1E+200,"lifetime":1E+200,"angels":1000000000,"prestige":6,"businesses":{"lemonade":1100,"newspaper":1000,"carwash":1000,"pizza":1000,"donut":1000,"shrimp":2270},"managers":{"lemonade":true,"newspaper":true,"carwash":true,"pizza":true,"donut":true,"shrimp":true}}
+```
+
+So `cash: 1E+200` (JSON number). My ReadBigDouble handles `JsonValueKind.Number` → `new BigDouble(el.GetDouble())`. `el.GetDouble()` returns 1e200 (representable as double). Then `new BigDouble(1e200)` = (1.0, 200). ✓
+
+After import: Cash = (1.0, 200), AngelInvestors = (1.0, 9), etc. Now the user can continue playing and watch the values grow past 1e200. ✓
+
+Now let me also check `AffordableCount` at owned=1100 (shrimp from user save):
+
+Shrimp at owned=2270, BaseCost=1,244,160, CostMultiplier=1.11. NextCost = 1244160 × 1.11^2270. log10 = log10(1244160) + 2270 × log10(1.11) = 6.095 + 2270 × 0.04532 = 6.095 + 102.88 = 108.97. So NextCost ≈ 10^108.97.
+
+If cash = 1e200, cash/c0 = 10^(200-108.97) = 10^91. threshold = 1 + 10^91 × 0.11 / 1 ≈ 1.1e90. log10 ≈ 90.04. n = 90.04 / 0.04532 ≈ 1987. So AffordableCount returns ~1987.
+
+So when the user clicks "BUY MAX" on shrimp (no milestones since 2270 > 1000), they'll buy 1987 more shrimp. ✓
+
+Now let me also verify the JSON output of `ExportToString`. My code:
+```csharp
+["cash"] = SanitizeMoney(Cash).ToCanonicalString(),
+```
+
+So cash is a string "1e200" in the JSON. Good. But there's a potential issue with `BigDouble(1e200)` — `ToCanonicalString` produces what?
+
+For BigDouble(1.0, 200): not NaN, not Infinity, not Zero. `Mantissa.ToString("R")` = "1". Result = "1e200". ✓
+
+Now let me also verify my Mantissa string for a value like `BigDouble(0.5)`. After normalize: (5.0, -1). `ToCanonicalString`: "5e-1". `Parse("5e-1")`: eIdx > 0, mantissaPart = "5", exponentPart = "-1". Parse exponent as long → -1. Parse mantissa as double → 5.0. Return `new BigDouble(5.0, -1)` (normalize=true). Normalize finds 5.0 already in [1, 10), returns (5.0, -1). ✓
+
+Now I notice one important thing. The original GameEngineTests has a reflection-based property setter:
+
+```csharp
+var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+```
+
+This requires the property to have a private setter. Let me check my GameEngine:Good — `private set` on Cash, LifetimeEarnings, AngelInvestors. Reflection with `GetSetMethod(true)` (true means include non-public) will find them. ✓
+
+Now let me make a fresh listing of all files in my output and confirm there's nothing missing:All files in place. Now let me bundle everything together. The user asked me to "deliver all the files" — I should give them the complete files. Given the volume, the right way is to package them as a single archive they can download:All 64 files packaged. Now let me also create a SUMMARY.md inside the tarball describing what's in the package and how to use it:Good (the cp error is harmless — same file).
+
+Now let me do one final sanity check on a couple of critical files I haven't viewed end-to-end. Let me look at my full BigDouble file to ensure no syntax issues:Closes properly at the struct level. Good.
+
+Let me also verify the GameEngine ends cleanly:Good. Now let me also verify a few subtle things by viewing a small portion of the trickier files:Final state: `/mnt/user-data/outputs/myadventure-bigdouble-migration.tar.gz` (64KB)
+
+Let me re-package now that SUMMARY.md is in place and present the deliverable:65 files (64 project files + SUMMARY.md). Let me verify the critical files are intact:Everything is in place. Let me present:# Done — full delivery
+
+The tarball contains 65 files (64 project files + SUMMARY.md) — every file your project needs for the BigDouble migration.
+
+## To apply
+
+```bash
+cd ~/src/dotnet/MyAdventure
+tar xzf myadventure-bigdouble-migration.tar.gz --strip-components=1
+time dotnet clean
+time dotnet restore
+time dotnet build
+time dotnet test
+```
+
+The first boot will run a one-time in-place SQLite ALTER TABLE migration on your existing save — your 1e200 cash and 1e9 angels get carried across to the new TEXT columns where they can finally grow.
+
+## What changed against your four asks
+
+**"Stuck at 1e200"** — gone. `Cash`, `LifetimeEarnings`, `AngelInvestors`, `AngelBonus`, `NextCost`, `Revenue`, and `PostMilestoneScaling` are all `BigDouble` now. The `1e200` / `1e90` / `1e9` clamps are removed. The only remaining cap is on the `AngelBonus` *exponent* (10^15) to keep the BigDouble itself finite under absurdly hand-edited saves.
+
+**"Buy max button shouldn't disappear at 1000 owned"** — the bulk-buy button stays put. Below the cap it reads `BUY N→threshold`; at/past 1000 owned it switches to `BUY MAX (N)` where N is the affordable count from a closed-form geometric-series solver (O(1), no more 10,000-iteration loop).
+
+**"1.00 × 10²⁰⁰ is too big"** — the cash row is now wrapped in a `Viewbox` with `StretchDirection="DownOnly"`. It keeps its natural size when there's room, and shrinks to fit on narrow displays. Same treatment for the revenue/cost rows inside each business card. Numbers past 10³⁶ render as `7.53 × 10⁴⁰` with Unicode superscript, which extends naturally to any `long` exponent.
+
+**"Prestige button should be right aligned"** — fixed on both Desktop and Android by putting it in a right-aligned column with `HorizontalAlignment="Right"` on the button itself and its caption.
+
+## Honest caveats
+
+- **No `dotnet` in this sandbox**, so I couldn't actually compile or run the tests. I traced every test against the implementation by hand (the math, the operator overloads, the format outputs). If something fails to build, the most likely place is a using/namespace mismatch I missed — share the error and I'll fix it.
+- The schema migration uses `ALTER TABLE DROP COLUMN`, which needs SQLite 3.35+. EF Core 10 ships with a much newer version, so this is fine — but if you somehow targeted an older one it would fall over.
+- I didn't touch `.gitattributes`, `.gitignore`, `.github/`, `LICENSE`, `README.md`, or `docs/KEYSTORE.md` — they were already correct and don't need to change for this fix.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

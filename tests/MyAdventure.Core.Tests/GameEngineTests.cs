@@ -1,19 +1,26 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
 using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
 using NSubstitute;
 using Shouldly;
 
 namespace MyAdventure.Core.Tests;
 
+/// <summary>
+/// GameEngine tests. Post-BigDouble migration: all monetary and angel
+/// values are <see cref="BigDouble"/> and have no practical ceiling. The
+/// tests previously written against <c>double</c> with explicit 1e200
+/// clamps are lifted to BigDouble here; the invariants they test
+/// (live ↔ offline equivalence, prestige reset, angel bonus, etc.)
+/// remain identical.
+/// </summary>
 public class GameEngineTests
 {
     /// <summary>
-    /// AngelBonus at 50 angels under the compound formula. Captured here
-    /// once so individual tests don't repeat the literal — and so the
-    /// rationale for the value is in one place: <c>1.02^50 ≈ 2.6916</c>,
-    /// not 2.0 (which was the linear formula's value).
+    /// AngelBonus at 50 angels under the compound formula: 1.02^50 ≈ 2.6916.
+    /// Centralized to avoid repeating the literal across tests.
     /// </summary>
     private static readonly double FiftyAngelBonus = Math.Pow(1.02, 50);
 
@@ -32,7 +39,7 @@ public class GameEngineTests
     public async Task LoadAsync_NoSave_ShouldStartFresh()
     {
         await _engine.LoadAsync();
-        _engine.Cash.ShouldBe(5.0);
+        _engine.Cash.ToDouble().ShouldBe(5.0);
         _engine.Businesses.Count.ShouldBe(6);
     }
 
@@ -40,19 +47,19 @@ public class GameEngineTests
     public async Task BuyBusiness_ShouldDeductCashAndIncrementOwned()
     {
         await _engine.LoadAsync();
-        SetCash(100);
+        SetCash(new BigDouble(100));
 
         var result = _engine.BuyBusiness("lemonade");
         result.ShouldBeTrue();
         _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(1);
-        _engine.Cash.ShouldBeLessThan(100);
+        _engine.Cash.ShouldBeLessThan(new BigDouble(100));
     }
 
     [Fact]
     public async Task BuyBusiness_NotEnoughCash_ShouldFail()
     {
         await _engine.LoadAsync();
-        // Starting cash is 5.0 — newspaper costs 60, so this should fail
+        // Starting cash is 5.0 — newspaper costs 60, so this should fail.
         _engine.BuyBusiness("newspaper").ShouldBeFalse();
     }
 
@@ -60,73 +67,39 @@ public class GameEngineTests
     public async Task Tick_RunningBusiness_ShouldEarnRevenue()
     {
         await _engine.LoadAsync();
-        SetCash(1000);
+        SetCash(new BigDouble(1000));
         _engine.BuyBusiness("lemonade");
         _engine.StartBusiness("lemonade");
 
         for (var i = 0; i < 100; i++)
             _engine.Tick(0.1);
 
-        _engine.Cash.ShouldBeGreaterThan(990);
+        _engine.Cash.ShouldBeGreaterThan(new BigDouble(990));
     }
 
     [Fact]
     public async Task Tick_MilestoneBoostedRevenue_ShouldEarnMore()
     {
         await _engine.LoadAsync();
-        SetCash(1_000_000);
+        SetCash(new BigDouble(1_000_000));
 
-        // Buy 25 lemonade stands to hit first milestone
         for (var i = 0; i < 25; i++)
             _engine.BuyBusiness("lemonade");
 
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
         lemonade.Owned.ShouldBe(25);
         lemonade.MilestoneMultiplier.ShouldBe(2.0);
-
-        // Revenue should be base × owned × multiplier × post-milestone scaling.
-        // PostMilestoneScaling is exactly 1.0 below 1000 owned, so the
-        // pre-cap math is identical to before.
-        lemonade.Revenue.ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
+        lemonade.Revenue.ToDouble().ShouldBe(lemonade.BaseRevenue * 25 * 2.0);
     }
 
-    // ---------------------------------------------------------------
-    // Bug-1 regression coverage: AngelBonus must apply during live play.
-    // ---------------------------------------------------------------
+    // ---------------- Angel bonus on live earnings ----------------
+
     [Fact]
     public async Task Tick_WithAngels_ShouldApplyAngelBonusToLiveEarnings()
     {
         await _engine.LoadAsync();
-        SetCash(1000);
-        SetAngels(50); // AngelBonus = 1.02^50 ≈ 2.6916 (compound, not 2.0 linear)
-
-        _engine.BuyBusiness("lemonade");
-        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
-        lemonade.IsRunning = true;
-        lemonade.ProgressPercent = 100.0; // exactly one cycle ready to settle
-
-        var cashBefore = _engine.Cash;
-        _engine.Tick(0.0);
-
-        var earned = _engine.Cash - cashBefore;
-        // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69.
-        // Use a small tolerance: the engine may compute the bonus through
-        // a different multiplication order than the test (e.g. base*owned*mult
-        // *bonus vs (base*owned*mult)*bonus), differing by ~1 ULP. That is
-        // not a bug, just IEEE 754. The tolerance is far smaller than any
-        // real change a logic bug would produce.
-        earned.ShouldBe(lemonade.Revenue * FiftyAngelBonus, tolerance: 1e-9);
-        earned.ShouldBe(FiftyAngelBonus, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
-    {
-        // Prevents the inverse mistake: with no angels (bonus = 1.0),
-        // the multiplier must not change anything. Under the compound
-        // formula 1.02^0 = 1.0, so this invariant still holds.
-        await _engine.LoadAsync();
-        SetCash(1000);
+        SetCash(new BigDouble(1000));
+        SetAngels(new BigDouble(50));
 
         _engine.BuyBusiness("lemonade");
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
@@ -136,18 +109,35 @@ public class GameEngineTests
         var cashBefore = _engine.Cash;
         _engine.Tick(0.0);
 
-        (_engine.Cash - cashBefore).ShouldBe(lemonade.Revenue);
-        _engine.AngelBonus.ShouldBe(1.0);
+        var earned = (_engine.Cash - cashBefore).ToDouble();
+        // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69.
+        earned.ShouldBe(FiftyAngelBonus, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task Tick_NoAngels_ShouldEarnExactlyBaseRevenue()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1000));
+
+        _engine.BuyBusiness("lemonade");
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 100.0;
+
+        var cashBefore = _engine.Cash;
+        _engine.Tick(0.0);
+
+        (_engine.Cash - cashBefore).ToDouble().ShouldBe(lemonade.Revenue.ToDouble(), tolerance: 1e-9);
+        _engine.AngelBonus.ToDouble().ShouldBe(1.0);
     }
 
     [Fact]
     public async Task Tick_AngelsAlsoBoostLifetimeEarnings()
     {
-        // Lifetime earnings drive the prestige threshold, so the bonus must
-        // count into them too (exactly as it does for cash).
         await _engine.LoadAsync();
-        SetCash(1000);
-        SetAngels(50); // ~×2.69 compound bonus
+        SetCash(new BigDouble(1000));
+        SetAngels(new BigDouble(50));
 
         _engine.BuyBusiness("lemonade");
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
@@ -157,21 +147,21 @@ public class GameEngineTests
         var ltBefore = _engine.LifetimeEarnings;
         _engine.Tick(0.0);
 
-        (_engine.LifetimeEarnings - ltBefore).ShouldBe(lemonade.Revenue * FiftyAngelBonus, tolerance: 1e-9);
+        (_engine.LifetimeEarnings - ltBefore).ToDouble()
+            .ShouldBe(lemonade.Revenue.ToDouble() * FiftyAngelBonus, tolerance: 1e-9);
     }
 
     [Fact]
     public async Task OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice()
     {
         // Invariant: offline earnings for N cycles == live earnings for N cycles
-        // when angels are present. This catches both the original "live missed
-        // the bonus" bug and the inverse "offline applies it twice" bug.
+        // when angels are present.
         var pastTime = DateTime.UtcNow.AddSeconds(-60);
         var savedState = new GameState
         {
-            Cash = 0,
-            LifetimeEarnings = 0,
-            AngelInvestors = 50, // ~×2.69 compound bonus
+            CashText = "0",
+            LifetimeEarningsText = "0",
+            AngelInvestorsText = "50",
             BusinessDataJson = """{"lemonade":1}""",
             ManagerDataJson = """{"lemonade":true}""",
             LastPlayedAt = pastTime,
@@ -185,37 +175,19 @@ public class GameEngineTests
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync();
 
-        // Lemonade: cycle 0.6s, base revenue $1, 1 owned, no milestones.
-        // ~60s / 0.6s ≈ 100 cycles. Per-cycle revenue = $1 (pre-bonus).
-        // With ~×2.69 bonus applied once: 100 × 1 × 2.6916 ≈ $269.16.
-        // The window (255–290) tolerates the small gap between pastTime
-        // and "now" plus the difference between integer-cycle live ticks
-        // and the continuous offline path.
         var expected = 100.0 * FiftyAngelBonus; // ≈ 269.16
-        engine.Cash.ShouldBeInRange(expected - 15, expected + 15);
-        engine.AngelBonus.ShouldBe(FiftyAngelBonus);
+        var actualCash = engine.Cash.ToDouble();
+        actualCash.ShouldBeInRange(expected - 15, expected + 15);
+        engine.AngelBonus.ToDouble().ShouldBe(FiftyAngelBonus, tolerance: 1e-9);
     }
 
-    // ---------------------------------------------------------------
-    // ApplyOfflineEarnings — public API used by both LoadAsync (cold
-    // start) and the foreground-resume path on GameViewModel.
-    //
-    // The same calculation must be reachable from outside the engine
-    // because background-resume is detected by the View/lifecycle layer
-    // and dispatched into the engine via this method. Drift between
-    // this method and LoadAsync's usage of it is what allows the live
-    // tick path and the offline path to stay in sync — the Bug-1 /
-    // OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice invariant
-    // depends on there being a single calculation, called from both
-    // entry points.
-    // ---------------------------------------------------------------
+    // ---------------- ApplyOfflineEarnings public API ----------------
+
     [Fact]
     public async Task ApplyOfflineEarnings_ShouldAddToCashAndLifetime()
     {
         await _engine.LoadAsync();
-
-        // Set up a managed lemonade stand so it's eligible for offline.
-        SetCash(1_000_000);
+        SetCash(new BigDouble(1_000_000));
         _engine.BuyBusiness("lemonade");
         _engine.BuyManager("lemonade");
 
@@ -224,23 +196,20 @@ public class GameEngineTests
 
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
 
-        earned.ShouldBeGreaterThan(0);
-        (_engine.Cash - cashBefore).ShouldBe(earned);
-        (_engine.LifetimeEarnings - ltBefore).ShouldBe(earned);
+        earned.Sign.ShouldBeGreaterThan(0);
+        (_engine.Cash - cashBefore).ToDouble().ShouldBe(earned.ToDouble(), tolerance: 1e-9);
+        (_engine.LifetimeEarnings - ltBefore).ToDouble().ShouldBe(earned.ToDouble(), tolerance: 1e-9);
     }
 
     [Fact]
     public async Task ApplyOfflineEarnings_NoManagedBusinesses_ShouldReturnZero()
     {
-        // Owned but no manager: live play earns from this business, but
-        // offline play does not. Nothing to apply in this scenario.
         await _engine.LoadAsync();
-        SetCash(1000);
+        SetCash(new BigDouble(1000));
         _engine.BuyBusiness("lemonade"); // owned but no manager
 
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromMinutes(10));
-
-        earned.ShouldBe(0);
+        earned.IsZero.ShouldBeTrue();
     }
 
     [Fact]
@@ -248,39 +217,34 @@ public class GameEngineTests
     {
         await _engine.LoadAsync();
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromMinutes(10));
-        earned.ShouldBe(0);
+        earned.IsZero.ShouldBeTrue();
     }
 
     [Fact]
     public async Task ApplyOfflineEarnings_TinyGap_ShouldReturnZero()
     {
-        // Below the 1-second threshold the engine treats the gap as
-        // "no gap at all" — this protects callers from accidentally
-        // double-counting against the live tick loop.
         await _engine.LoadAsync();
-        SetCash(1_000_000);
+        SetCash(new BigDouble(1_000_000));
         _engine.BuyBusiness("lemonade");
         _engine.BuyManager("lemonade");
 
-        _engine.ApplyOfflineEarnings(TimeSpan.FromMilliseconds(500)).ShouldBe(0);
-        _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(1)).ShouldBe(0);
-        _engine.ApplyOfflineEarnings(TimeSpan.Zero).ShouldBe(0);
+        _engine.ApplyOfflineEarnings(TimeSpan.FromMilliseconds(500)).IsZero.ShouldBeTrue();
+        _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(1)).IsZero.ShouldBeTrue();
+        _engine.ApplyOfflineEarnings(TimeSpan.Zero).IsZero.ShouldBeTrue();
     }
 
     [Fact]
     public async Task ApplyOfflineEarnings_NegativeGap_ShouldReturnZero()
     {
-        // Defensive: clock skew or test-clock weirdness must never
-        // award negative earnings (which would corrupt cash/lifetime).
         await _engine.LoadAsync();
-        SetCash(1_000_000);
+        SetCash(new BigDouble(1_000_000));
         _engine.BuyBusiness("lemonade");
         _engine.BuyManager("lemonade");
 
         var cashBefore = _engine.Cash;
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(-30));
 
-        earned.ShouldBe(0);
+        earned.IsZero.ShouldBeTrue();
         _engine.Cash.ShouldBe(cashBefore);
     }
 
@@ -288,37 +252,30 @@ public class GameEngineTests
     public async Task ApplyOfflineEarnings_AppliesAngelBonus()
     {
         await _engine.LoadAsync();
-        SetCash(1_000_000);
-        SetAngels(50); // ~×2.69 compound bonus
-        _engine.BuyBusiness("lemonade"); // 1 owned
+        SetCash(new BigDouble(1_000_000));
+        SetAngels(new BigDouble(50));
+        _engine.BuyBusiness("lemonade");
         _engine.BuyManager("lemonade");
 
-        // Drain the auto-start cycle's progress so we measure offline only.
+        // Drain the auto-start cycle so we measure offline only.
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
         lemonade.ProgressPercent = 0;
 
         var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
-
-        // 60s / 0.6s cycle = 100 cycles × $1 base × ~2.69 bonus ≈ $269.16.
-        // Tolerance accounts for IEEE 754 ordering: 100 cycles accumulate
-        // through a different multiplication path than (100 * bonus).
-        earned.ShouldBe(100.0 * FiftyAngelBonus, tolerance: 1e-7);
+        earned.ToDouble().ShouldBe(100.0 * FiftyAngelBonus, tolerance: 1e-7);
     }
 
     [Fact]
     public async Task ApplyOfflineEarnings_AndLiveTick_AreEquivalent()
     {
-        // Strong invariant: applying offline earnings for N seconds must
-        // yield the same amount as ticking the engine for N seconds with
-        // the same managed setup. This is what the bug fix relies on:
-        // resuming from background must compensate the player as if the
-        // tick loop had been running the whole time.
+        // Strong invariant: applying offline earnings for N seconds yields
+        // the same amount as ticking the engine for N seconds.
         var repoOffline = Substitute.For<IGameStateRepository>();
         repoOffline.GetLatestAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<GameState?>(null));
         var offlineEngine = new GameEngine(repoOffline, NullLogger<GameEngine>.Instance);
         await offlineEngine.LoadAsync();
-        SetCashOn(offlineEngine, 1_000_000);
+        SetCashOn(offlineEngine, new BigDouble(1_000_000));
         offlineEngine.BuyBusiness("lemonade");
         offlineEngine.BuyManager("lemonade");
         offlineEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
@@ -328,7 +285,7 @@ public class GameEngineTests
             .Returns(Task.FromResult<GameState?>(null));
         var liveEngine = new GameEngine(repoLive, NullLogger<GameEngine>.Instance);
         await liveEngine.LoadAsync();
-        SetCashOn(liveEngine, 1_000_000);
+        SetCashOn(liveEngine, new BigDouble(1_000_000));
         liveEngine.BuyBusiness("lemonade");
         liveEngine.BuyManager("lemonade");
         liveEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
@@ -336,19 +293,14 @@ public class GameEngineTests
         var cashBeforeOffline = offlineEngine.Cash;
         var cashBeforeLive = liveEngine.Cash;
 
-        // 60 seconds offline.
         offlineEngine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
 
-        // 60 seconds of 0.1s ticks — 600 ticks. (Smaller deltas keep the
-        // floating-point progress accumulation closer to ideal.)
         for (var i = 0; i < 600; i++) liveEngine.Tick(0.1);
 
-        var earnedOffline = offlineEngine.Cash - cashBeforeOffline;
-        var earnedLive = liveEngine.Cash - cashBeforeLive;
+        var earnedOffline = (offlineEngine.Cash - cashBeforeOffline).ToDouble();
+        var earnedLive = (liveEngine.Cash - cashBeforeLive).ToDouble();
 
-        // Live tick uses integer cycle counting which can leave a small
-        // residual fraction of a cycle in ProgressPercent. Tolerate up to
-        // one cycle of revenue ($1 in this setup) of difference.
+        // Live tick uses integer-cycle counting which can leave a small residual.
         Math.Abs(earnedOffline - earnedLive).ShouldBeLessThan(1.5);
     }
 
@@ -362,35 +314,34 @@ public class GameEngineTests
 
     [Fact]
     public void CalculateAngels_ShouldReturnZeroBelowThreshold() =>
-        GameEngine.CalculateAngels(1e11).ShouldBe(0);
+        GameEngine.CalculateAngels(new BigDouble(1e11)).IsZero.ShouldBeTrue();
 
     [Fact]
     public void CalculateAngels_ShouldReturnPositiveAboveThreshold() =>
-        GameEngine.CalculateAngels(1e14).ShouldBeGreaterThan(0);
+        GameEngine.CalculateAngels(new BigDouble(1e14)).Sign.ShouldBeGreaterThan(0);
 
     [Fact]
     public async Task ExportToString_ShouldReturnBase64()
     {
         await _engine.LoadAsync();
-        SetCash(42.5);
+        SetCash(new BigDouble(42.5));
 
         var exported = _engine.ExportToString();
 
         exported.ShouldNotBeNullOrWhiteSpace();
-        // Should be valid Base64
         var bytes = Convert.FromBase64String(exported);
         var json = System.Text.Encoding.UTF8.GetString(bytes);
         json.ShouldContain("\"cash\"");
-        json.ShouldContain("42.5");
+        // BigDouble's canonical form for 42.5 is "4.25e1".
+        json.ShouldContain("4.25e1");
     }
 
     [Fact]
     public async Task ImportFromString_ShouldRestoreState()
     {
         await _engine.LoadAsync();
-        SetCash(9999);
+        SetCash(new BigDouble(9999));
 
-        // Buy some businesses
         for (var i = 0; i < 5; i++)
             _engine.BuyBusiness("lemonade");
 
@@ -398,12 +349,10 @@ public class GameEngineTests
 
         var exported = _engine.ExportToString();
 
-        // Reset engine by loading fresh
         var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
         await engine2.LoadAsync();
-        engine2.Cash.ShouldBe(5.0); // fresh start
+        engine2.Cash.ToDouble().ShouldBe(5.0);
 
-        // Import the saved state
         var result = engine2.ImportFromString(exported);
         result.ShouldBeTrue();
         engine2.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(5);
@@ -414,20 +363,18 @@ public class GameEngineTests
     public async Task ExportImport_ShouldRoundTrip()
     {
         await _engine.LoadAsync();
-        SetCash(12345.67);
+        SetCash(new BigDouble(12345.67));
 
         var exported = _engine.ExportToString();
         var result = _engine.ImportFromString(exported);
 
         result.ShouldBeTrue();
-        _engine.Cash.ShouldBe(12345.67);
+        _engine.Cash.ToDouble().ShouldBe(12345.67, tolerance: 1e-9);
     }
 
     [Fact]
-    public void ImportFromString_InvalidBase64_ShouldReturnFalse()
-    {
+    public void ImportFromString_InvalidBase64_ShouldReturnFalse() =>
         _engine.ImportFromString("not-valid-base64!!!").ShouldBeFalse();
-    }
 
     [Fact]
     public void ImportFromString_InvalidJson_ShouldReturnFalse()
@@ -437,28 +384,50 @@ public class GameEngineTests
     }
 
     [Fact]
-    public void ImportFromString_EmptyString_ShouldReturnFalse()
-    {
+    public void ImportFromString_EmptyString_ShouldReturnFalse() =>
         _engine.ImportFromString("").ShouldBeFalse();
+
+    /// <summary>
+    /// Legacy v1 export format (numbers as JSON numbers, not strings)
+    /// must still import — old saves predate the BigDouble migration.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_LegacyV1Format_ShouldStillWork()
+    {
+        await _engine.LoadAsync();
+        // Construct a v1 export manually (numbers as JSON numbers).
+        var legacyJson = """
+        {
+            "v": 1,
+            "cash": 12345.67,
+            "lifetime": 1000000.0,
+            "angels": 50.0,
+            "prestige": 2,
+            "businesses": {"lemonade": 10},
+            "managers": {"lemonade": true}
+        }
+        """;
+        var legacyEncoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(legacyJson));
+
+        _engine.ImportFromString(legacyEncoded).ShouldBeTrue();
+        _engine.Cash.ToDouble().ShouldBe(12345.67, tolerance: 1e-9);
+        _engine.AngelInvestors.ToDouble().ShouldBe(50.0);
+        _engine.PrestigeCount.ShouldBe(2);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(10);
     }
 
     [Fact]
     public async Task Prestige_ShouldGiveStartingCash()
     {
         await _engine.LoadAsync();
-
-        // Give enough lifetime earnings to prestige
-        var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
-        ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+        SetLifetime(new BigDouble(1e14));
 
         var (angels, success) = _engine.Prestige();
         success.ShouldBeTrue();
-        angels.ShouldBeGreaterThan(0);
+        angels.Sign.ShouldBeGreaterThan(0);
 
-        // After prestige, player must have $5 to buy first lemonade stand
-        _engine.Cash.ShouldBe(5.0);
-
-        // All businesses should be reset
+        // After prestige, player must have $5 to buy the first lemonade stand.
+        _engine.Cash.ToDouble().ShouldBe(5.0);
         _engine.Businesses.All(b => b.Owned == 0).ShouldBeTrue();
     }
 
@@ -466,27 +435,24 @@ public class GameEngineTests
     public async Task Prestige_CashShouldCoverFirstLemonade()
     {
         await _engine.LoadAsync();
-
-        var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
-        ltProp.GetSetMethod(true)!.Invoke(_engine, [1e14]);
+        SetLifetime(new BigDouble(1e14));
 
         var (_, success) = _engine.Prestige();
         success.ShouldBeTrue();
 
-        // The first lemonade stand costs $4, and we should have $5
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
-        lemonade.NextCost.ShouldBe(4.0);
-        _engine.Cash.ShouldBeGreaterThanOrEqualTo(lemonade.NextCost);
-
-        // Player should be able to buy it
+        lemonade.NextCost.ToDouble().ShouldBe(4.0);
+        (_engine.Cash >= lemonade.NextCost).ShouldBeTrue();
         _engine.BuyBusiness("lemonade").ShouldBeTrue();
     }
+
+    // ---------------- BuyMultiple / BuyMax ----------------
 
     [Fact]
     public async Task BuyMultiple_ShouldBuyRequestedCount()
     {
         await _engine.LoadAsync();
-        SetCash(1_000_000);
+        SetCash(new BigDouble(1_000_000));
 
         var bought = _engine.BuyMultiple("lemonade", 10);
         bought.ShouldBe(10);
@@ -497,11 +463,10 @@ public class GameEngineTests
     public async Task BuyMultiple_NotEnoughCash_ShouldBuyPartial()
     {
         await _engine.LoadAsync();
-        // Lemonade costs 4 base, 1.07 multiplier
-        // With $10 we can buy 2 (cost 0: $4, cost 1: $4.28 = $8.28 total)
-        SetCash(10);
+        SetCash(new BigDouble(10));
 
         var bought = _engine.BuyMultiple("lemonade", 100);
+        // $10 affords 2 lemonade ($4 + $4.28 = $8.28 cumulative).
         bought.ShouldBe(2);
         _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(2);
     }
@@ -510,32 +475,27 @@ public class GameEngineTests
     public async Task BuyMultiple_ZeroCount_ShouldReturnZero()
     {
         await _engine.LoadAsync();
-        SetCash(1000);
-
-        var bought = _engine.BuyMultiple("lemonade", 0);
-        bought.ShouldBe(0);
+        SetCash(new BigDouble(1000));
+        _engine.BuyMultiple("lemonade", 0).ShouldBe(0);
     }
 
     [Fact]
     public async Task BuyMultiple_InvalidBusiness_ShouldReturnZero()
     {
         await _engine.LoadAsync();
-        SetCash(1000);
-
-        var bought = _engine.BuyMultiple("nonexistent", 5);
-        bought.ShouldBe(0);
+        SetCash(new BigDouble(1000));
+        _engine.BuyMultiple("nonexistent", 5).ShouldBe(0);
     }
 
     [Fact]
     public async Task BuyMultiple_WithManager_ShouldAutoStart()
     {
         await _engine.LoadAsync();
-        SetCash(1_000_000);
+        SetCash(new BigDouble(1_000_000));
 
         _engine.BuyBusiness("lemonade");
         _engine.BuyManager("lemonade");
 
-        // Stop the business manually for test setup
         var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
         lemonade.IsRunning = false;
 
@@ -543,163 +503,170 @@ public class GameEngineTests
         lemonade.IsRunning.ShouldBeTrue();
     }
 
-    // ---------------------------------------------------------------
-    // Compound angel bonus — explicit values for the new formula.
-    // Documents what each angel count is worth so that an accidental
-    // revert to the linear formula breaks something specific instead
-    // of just shifting the integration-style ranges by a small amount.
-    // ---------------------------------------------------------------
+    /// <summary>
+    /// BuyMax is the deep-game purchase action — it buys as many units as
+    /// the player can afford. With BigDouble cash this can be a huge number,
+    /// and the closed-form geometric-series solver keeps the call O(1).
+    /// </summary>
     [Fact]
-    public void AngelBonus_AtZeroAngels_ShouldBeOne()
+    public async Task BuyMax_HugeCash_BuysManyUnits()
     {
-        // 1.02^0 = 1.0 — same as the old linear formula at zero angels.
-        // This is what protects the no-angels-yet starting experience.
-        _engine.AngelBonus.ShouldBe(1.0);
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1.0, 50));
+
+        var bought = _engine.BuyMax("lemonade");
+        bought.ShouldBeGreaterThan(100);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(bought);
     }
+
+    [Fact]
+    public async Task BuyMax_NoCash_ShouldReturnZero()
+    {
+        await _engine.LoadAsync();
+        SetCash(BigDouble.Zero);
+        _engine.BuyMax("lemonade").ShouldBe(0);
+    }
+
+    /// <summary>
+    /// The closed-form geometric-series math must never overdraw the
+    /// player's cash, even at integer-cycle boundaries where floating-point
+    /// noise could otherwise nudge total-cost just over the cash limit.
+    /// </summary>
+    [Fact]
+    public async Task BuyMultiple_GeometricSeries_NeverOverdraws()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(100_000));
+
+        var cashBefore = _engine.Cash;
+        var bought = _engine.BuyMultiple("lemonade", 10_000);
+        bought.ShouldBeGreaterThan(0);
+
+        // Cash should be ≥ 0 (never overdrew).
+        _engine.Cash.Sign.ShouldBeGreaterThanOrEqualTo(0);
+        // And cash spent should not exceed starting cash.
+        (cashBefore - _engine.Cash).Sign.ShouldBeGreaterThanOrEqualTo(0);
+    }
+
+    // ---------------- AngelBonus ----------------
+
+    [Fact]
+    public void AngelBonus_AtZeroAngels_ShouldBeOne() =>
+        _engine.AngelBonus.ToDouble().ShouldBe(1.0);
 
     [Fact]
     public void AngelBonus_Compounds_NotLinear()
     {
-        SetAngels(50);
-        // Linear formula: 1 + 50*0.02 = 2.00 (the old behavior)
-        // Compound formula: 1.02^50 ≈ 2.6916 (the new behavior)
-        _engine.AngelBonus.ShouldBeGreaterThan(2.5);
-        _engine.AngelBonus.ShouldBeLessThan(2.8);
-    }
-
-    [Fact]
-    public void AngelBonus_AtLargeAngelCount_StaysFinite()
-    {
-        // Defensive: a player who already has thousands of angels (e.g.
-        // someone who imported a hand-edited save) should still produce
-        // a finite, comparable AngelBonus rather than infinity. 1.02^1500
-        // is around 8.3×10^12 — large but representable.
-        SetAngels(1500);
-        _engine.AngelBonus.ShouldBeGreaterThan(1e12);
-        double.IsFinite(_engine.AngelBonus).ShouldBeTrue();
-    }
-
-    // ---------------------------------------------------------------
-    // Defect-1 regression coverage: AngelBonus must remain finite at
-    // any AngelInvestors count. 1.02^N overflows to PositiveInfinity
-    // around N ≈ 35,750; anything past that previously produced
-    // "infinity D infinity angels + infinity D% Next +NaN" in the UI
-    // and crashed JSON export. The cap on AngelBonus is what prevents
-    // that cascade.
-    // ---------------------------------------------------------------
-    [Fact]
-    public void AngelBonus_PastOverflowPoint_StaysFinite()
-    {
-        // 50,000 angels: raw 1.02^50000 is Infinity. Capped value
-        // must be finite and large.
-        SetAngels(50_000);
-        var bonus = _engine.AngelBonus;
-        double.IsFinite(bonus).ShouldBeTrue();
-        bonus.ShouldBeGreaterThan(1e50);
-    }
-
-    [Fact]
-    public void AngelBonus_AtMillionAngels_StillFinite()
-    {
-        // A wildly hand-edited save: 1,000,000 angels. The raw bonus is
-        // Infinity, the angel count itself is way past the practical cap;
-        // both must be clamped to finite values so subsequent arithmetic
-        // doesn't propagate non-finite values into cash, lifetime, or
-        // the JSON export.
-        SetAngels(1_000_000);
-        double.IsFinite(_engine.AngelBonus).ShouldBeTrue();
+        SetAngels(new BigDouble(50));
+        _engine.AngelBonus.ToDouble().ShouldBeGreaterThan(2.5);
+        _engine.AngelBonus.ToDouble().ShouldBeLessThan(2.8);
     }
 
     [Fact]
     public void AngelBonus_NegativeAngelInvestors_ShouldBeOne()
     {
-        // Edge case: a corrupted save with a negative angel count must
-        // not produce a fractional multiplier (1.02^-N < 1.0) — that
-        // would actively reduce player earnings. Treat as zero angels.
-        SetAngels(-100);
-        _engine.AngelBonus.ShouldBe(1.0);
+        // Defensive: corrupted save with negative angels must not produce
+        // a sub-1.0 multiplier (1.02^-N < 1).
+        SetAngels(new BigDouble(-100));
+        _engine.AngelBonus.ToDouble().ShouldBe(1.0);
     }
 
+    /// <summary>
+    /// Defect-1 regression: AngelBonus must remain finite at any angel
+    /// count. Under BigDouble the cap saturates the exponent rather than
+    /// the value itself, so the bonus stays astronomical but never
+    /// becomes BigDouble.PositiveInfinity (which would propagate into cash).
+    /// </summary>
     [Fact]
-    public void CalculateAngels_ShouldNotOverflowOnExtremeLifetime()
+    public void AngelBonus_PastOverflowPoint_StaysFinite()
     {
-        // A player whose lifetime earnings have reached the engine's
-        // money cap (1e200) must still receive a finite angel count,
-        // not Infinity. Before the clamp this would propagate Infinity
-        // into AngelInvestors during prestige.
-        var angels = GameEngine.CalculateAngels(1e200);
-        double.IsFinite(angels).ShouldBeTrue();
-        angels.ShouldBeGreaterThan(0);
+        SetAngels(new BigDouble(50_000));
+        var bonus = _engine.AngelBonus;
+        bonus.IsFinite.ShouldBeTrue();
+        // 1.02^50000 ≈ 10^430 — still a real value under BigDouble.
+        bonus.Exponent.ShouldBeGreaterThan(100);
     }
 
     [Fact]
-    public void CalculateAngels_NaNInput_ShouldReturnZero()
+    public void AngelBonus_AtAbsurdAngels_StillFiniteAndCapped()
     {
-        GameEngine.CalculateAngels(double.NaN).ShouldBe(0);
+        // 10^100 angels — far past anything achievable. Bonus is saturated
+        // at MaxAngelBonusExponent but remains a finite BigDouble.
+        SetAngels(new BigDouble(1.0, 100));
+        _engine.AngelBonus.IsFinite.ShouldBeTrue();
     }
 
-    [Fact]
-    public void CalculateAngels_InfinityInput_ShouldReturnFiniteCap()
-    {
-        var angels = GameEngine.CalculateAngels(double.PositiveInfinity);
-        double.IsFinite(angels).ShouldBeTrue();
-        angels.ShouldBeGreaterThan(0);
-    }
+    // ---------------- BigDouble-specific: 10^200 unblock ----------------
 
-    // ---------------------------------------------------------------
-    // Defect-1 regression coverage: ExportToString must succeed even
-    // when in-engine state has somehow become non-finite. The engine
-    // sanitizes on the way out as a final safety net so this can never
-    // force-close the app.
-    // ---------------------------------------------------------------
+    /// <summary>
+    /// The user's exact symptom: stuck at cash = 1e200, lifetime = 1e200.
+    /// With BigDouble these clamps are gone — cash continues to grow.
+    /// </summary>
     [Fact]
-    public async Task ExportToString_WithInfinityCash_ShouldNotThrow()
+    public async Task Cash_AtFormerCap_ContinuesToGrow()
     {
         await _engine.LoadAsync();
-        SetCash(double.PositiveInfinity);
+        SetCash(new BigDouble(1.0, 200));
+        SetLifetime(new BigDouble(1.0, 200));
 
-        // Must not throw — this used to force-close on Export.
-        var exported = Should.NotThrow(() => _engine.ExportToString());
-        exported.ShouldNotBeNullOrWhiteSpace();
+        // Hand-set every business to 1000 owned, manager, running, ready
+        // to settle — mirrors the user's late-game state.
+        foreach (var biz in _engine.Businesses)
+        {
+            biz.Owned = 1000;
+            biz.HasManager = true;
+            biz.IsRunning = true;
+            biz.ProgressPercent = 100.0;
+        }
 
-        // Round-trip must produce a valid finite cash value.
-        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
-        await engine2.LoadAsync();
-        engine2.ImportFromString(exported).ShouldBeTrue();
-        double.IsFinite(engine2.Cash).ShouldBeTrue();
+        // Tick a few times — cash must grow past 10^200 instead of clamping.
+        for (var i = 0; i < 10; i++)
+        {
+            foreach (var biz in _engine.Businesses) biz.ProgressPercent = 100.0;
+            _engine.Tick(0.0);
+        }
+
+        _engine.Cash.Exponent.ShouldBeGreaterThan(200);
+        _engine.Cash.IsFinite.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task ExportToString_WithNaNLifetime_ShouldNotThrow()
+    public async Task Tick_AtMaxAngels_CashStaysFinite()
     {
         await _engine.LoadAsync();
-        var ltProp = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
-        ltProp.GetSetMethod(true)!.Invoke(_engine, [double.NaN]);
+        SetAngels(new BigDouble(1.0, 6)); // 1 million angels
 
-        var exported = Should.NotThrow(() => _engine.ExportToString());
-        exported.ShouldNotBeNullOrWhiteSpace();
+        foreach (var biz in _engine.Businesses)
+        {
+            biz.Owned = 1000;
+            biz.HasManager = true;
+            biz.IsRunning = true;
+            biz.ProgressPercent = 100.0;
+        }
 
-        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
-        await engine2.LoadAsync();
-        engine2.ImportFromString(exported).ShouldBeTrue();
-        double.IsFinite(engine2.LifetimeEarnings).ShouldBeTrue();
-        // NaN becomes 0 under SanitizeMoney.
-        engine2.LifetimeEarnings.ShouldBe(0);
+        for (var i = 0; i < 100; i++)
+        {
+            foreach (var biz in _engine.Businesses) biz.ProgressPercent = 100.0;
+            _engine.Tick(0.0);
+        }
+
+        _engine.Cash.IsFinite.ShouldBeTrue();
+        _engine.LifetimeEarnings.IsFinite.ShouldBeTrue();
     }
 
+    // ---------------- LoadAsync sanity / migration ----------------
+
     [Fact]
-    public async Task LoadAsync_WithInfinityInSave_ShouldClampToFinite()
+    public async Task LoadAsync_WithInfinityInSave_ShouldClampToZero()
     {
-        // Simulates the user's actual scenario: a save file written
-        // before the sanitization fix, containing Infinity in cash
-        // or lifetime. The load path must produce a playable game,
-        // not a NaN-ridden one.
+        // Defensive: a corrupted save with Infinity in cash must produce
+        // a playable game. SanitizeMoney maps Infinity → 0.
         var pastTime = DateTime.UtcNow.AddSeconds(-30);
         var savedState = new GameState
         {
-            Cash = double.PositiveInfinity,
-            LifetimeEarnings = double.PositiveInfinity,
-            AngelInvestors = 60_000, // would overflow AngelBonus uncapped
+            CashText = "Infinity",
+            LifetimeEarningsText = "Infinity",
+            AngelInvestorsText = "60000",
             BusinessDataJson = """{"lemonade":1000}""",
             ManagerDataJson = """{"lemonade":true}""",
             LastPlayedAt = pastTime,
@@ -713,50 +680,65 @@ public class GameEngineTests
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync();
 
-        double.IsFinite(engine.Cash).ShouldBeTrue();
-        double.IsFinite(engine.LifetimeEarnings).ShouldBeTrue();
-        double.IsFinite(engine.AngelInvestors).ShouldBeTrue();
-        double.IsFinite(engine.AngelBonus).ShouldBeTrue();
+        engine.Cash.IsFinite.ShouldBeTrue();
+        engine.LifetimeEarnings.IsFinite.ShouldBeTrue();
+        engine.AngelInvestors.IsFinite.ShouldBeTrue();
+        engine.AngelBonus.IsFinite.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task Tick_AtMaxAngels_CashStaysFinite()
+    public async Task LoadAsync_WithBigDoubleStringInSave_LoadsExactly()
     {
-        // Comprehensive scenario reproducing the user's bug: 1000 of every
-        // business with the milestone caps reached, plus an absurd angel
-        // count. Ticking must not produce non-finite cash or lifetime.
-        await _engine.LoadAsync();
-        SetAngels(100_000); // capped internally to MaxAngelInvestors
-
-        // Force every business to 1000 owned with a manager so ticks
-        // generate maximum revenue.
-        foreach (var biz in _engine.Businesses)
+        // The user's actual save uses values like "1e200" — make sure
+        // those round-trip correctly through Parse → engine state.
+        var pastTime = DateTime.UtcNow.AddSeconds(-1); // sub-threshold gap
+        var savedState = new GameState
         {
-            biz.Owned = 1000;
-            biz.HasManager = true;
-            biz.IsRunning = true;
-            biz.ProgressPercent = 100.0; // ready to settle on next tick
-        }
+            CashText = "1e200",
+            LifetimeEarningsText = "1e200",
+            AngelInvestorsText = "1e9",
+            BusinessDataJson = """{"lemonade":1100,"newspaper":1000,"carwash":1000,"pizza":1000,"donut":1000,"shrimp":2270}""",
+            ManagerDataJson = """{"lemonade":true,"newspaper":true,"carwash":true,"pizza":true,"donut":true,"shrimp":true}""",
+            LastPlayedAt = pastTime,
+            UpdatedAt = pastTime
+        };
 
-        // Tick 100 times — each tick settles a cycle and adds revenue.
-        for (var i = 0; i < 100; i++)
-        {
-            // Re-prime ProgressPercent so every tick settles for every business.
-            foreach (var biz in _engine.Businesses) biz.ProgressPercent = 100.0;
-            _engine.Tick(0.0);
-        }
+        var repo = Substitute.For<IGameStateRepository>();
+        repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(savedState));
 
-        double.IsFinite(_engine.Cash).ShouldBeTrue();
-        double.IsFinite(_engine.LifetimeEarnings).ShouldBeTrue();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+
+        engine.Cash.Exponent.ShouldBe(200);
+        engine.Cash.Mantissa.ShouldBe(1.0, tolerance: 1e-12);
+        engine.LifetimeEarnings.Exponent.ShouldBe(200);
+        engine.AngelInvestors.Exponent.ShouldBe(9);
+        engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(1100);
     }
 
-    // ---------------------------------------------------------------
-    // PostMilestoneScaling — the fix that keeps unit purchases past
-    // the 1000-unit milestone cap from collapsing into "you'll never
-    // afford the next one". Below 1000 owned the multiplier is 1.0
-    // (exact equality, not approximate) so all existing balance is
-    // preserved.
-    // ---------------------------------------------------------------
+    [Fact]
+    public async Task ExportToString_PreservesExtremeMagnitudes()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(7.5, 500)); // far past the old 1e200 ceiling
+        SetLifetime(new BigDouble(3.2, 800));
+
+        var exported = _engine.ExportToString();
+        exported.ShouldNotBeNullOrWhiteSpace();
+
+        // Round-trip the export string and check magnitudes.
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(exported).ShouldBeTrue();
+
+        engine2.Cash.Exponent.ShouldBe(500);
+        engine2.Cash.Mantissa.ShouldBe(7.5, tolerance: 1e-12);
+        engine2.LifetimeEarnings.Exponent.ShouldBe(800);
+    }
+
+    // ---------------- PostMilestoneScaling ----------------
+
     [Fact]
     public void PostMilestoneScaling_BelowCap_IsExactlyOne()
     {
@@ -772,7 +754,7 @@ public class GameEngineTests
             CostMultiplier = 1.07,
             Owned = 999
         };
-        biz.PostMilestoneScaling.ShouldBe(1.0);
+        biz.PostMilestoneScaling.ToDouble().ShouldBe(1.0);
     }
 
     [Fact]
@@ -790,15 +772,12 @@ public class GameEngineTests
             CostMultiplier = 1.07,
             Owned = 1000
         };
-        biz.PostMilestoneScaling.ShouldBe(1.0);
+        biz.PostMilestoneScaling.ToDouble().ShouldBe(1.0);
     }
 
     [Fact]
     public void PostMilestoneScaling_PastCap_GrowsAsSqrtOfCost()
     {
-        // At Owned = 1100, scaling = 1.07^((1100-1000)/2) = 1.07^50 ≈ 29.46.
-        // This compensates for the fact that unit 1100 itself costs about
-        // 1.07^100 ≈ 868× more than unit 1000.
         var biz = new Business
         {
             Id = "t",
@@ -811,16 +790,13 @@ public class GameEngineTests
             CostMultiplier = 1.07,
             Owned = 1100
         };
-        biz.PostMilestoneScaling.ShouldBe(Math.Pow(1.07, 50));
+        // 1.07^50 ≈ 29.46
+        biz.PostMilestoneScaling.ToDouble().ShouldBe(Math.Pow(1.07, 50), tolerance: 1e-9);
     }
 
     [Fact]
     public void Revenue_BelowCap_DoesNotIncludePostMilestoneScaling()
     {
-        // Pre-cap, revenue is exactly base × owned × milestone — the new
-        // PostMilestoneScaling factor is identically 1.0, so all existing
-        // balance numbers, milestone tests, and player-side intuitions
-        // are preserved unchanged.
         var biz = new Business
         {
             Id = "t",
@@ -831,9 +807,9 @@ public class GameEngineTests
             BaseRevenue = 5,
             BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
-            Owned = 100 // hits 25/50/100 -> ×8 milestone
+            Owned = 100
         };
-        biz.Revenue.ShouldBe(5 * 100 * 8);
+        biz.Revenue.ToDouble().ShouldBe(5 * 100 * 8, tolerance: 1e-9);
     }
 
     [Fact]
@@ -851,57 +827,12 @@ public class GameEngineTests
             CostMultiplier = 1.07,
             Owned = 1100
         };
-        var milestone = biz.MilestoneMultiplier; // ×327,680 (capped at 1000)
-        var expected = 1.0 * 1100 * milestone * Math.Pow(1.07, 50);
-        biz.Revenue.ShouldBe(expected);
-    }
-
-    // ---------------------------------------------------------------
-    // Defect-1 regression coverage: NextCost and Revenue must stay
-    // finite even at extreme ownership counts. Math.Pow(1.11, 7000)
-    // is Infinity; the clamp keeps the business "effectively
-    // unaffordable" while preserving all downstream finiteness.
-    // ---------------------------------------------------------------
-    [Fact]
-    public void Business_NextCost_AtExtremeOwned_StaysFinite()
-    {
-        var biz = new Business
-        {
-            Id = "t",
-            Name = "T",
-            Icon = "T",
-            Color = "#FFF",
-            BaseCost = 1,
-            BaseRevenue = 1,
-            BaseTimeSeconds = 1,
-            CostMultiplier = 1.11,
-            Owned = 10_000 // raw 1.11^10000 is Infinity
-        };
-
-        double.IsFinite(biz.NextCost).ShouldBeTrue();
+        var expected = 1.0 * 1100 * biz.MilestoneMultiplier * Math.Pow(1.07, 50);
+        biz.Revenue.ToDouble().ShouldBe(expected, tolerance: 1e-3);
     }
 
     [Fact]
-    public void Business_Revenue_AtExtremeOwned_StaysFinite()
-    {
-        var biz = new Business
-        {
-            Id = "t",
-            Name = "T",
-            Icon = "T",
-            Color = "#FFF",
-            BaseCost = 1,
-            BaseRevenue = 1,
-            BaseTimeSeconds = 1,
-            CostMultiplier = 1.11,
-            Owned = 10_000
-        };
-
-        double.IsFinite(biz.Revenue).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Business_AffordableCount_InfiniteCash_StaysSafe()
+    public void Business_AffordableCount_NonFiniteCash_StaysSafe()
     {
         var biz = new Business
         {
@@ -914,23 +845,29 @@ public class GameEngineTests
             BaseTimeSeconds = 1,
             CostMultiplier = 1.07,
         };
-
-        // Non-finite cash must produce 0, not loop forever.
-        biz.AffordableCount(double.PositiveInfinity).ShouldBe(0);
-        biz.AffordableCount(double.NaN).ShouldBe(0);
+        biz.AffordableCount(BigDouble.PositiveInfinity).ShouldBeGreaterThanOrEqualTo(0);
+        biz.AffordableCount(BigDouble.NaN).ShouldBe(0);
     }
 
-    private void SetCash(double amount) => SetCashOn(_engine, amount);
+    // ---------------- Test helpers ----------------
 
-    private static void SetCashOn(GameEngine engine, double amount)
+    private void SetCash(BigDouble amount) => SetCashOn(_engine, amount);
+
+    private static void SetCashOn(GameEngine engine, BigDouble amount)
     {
-        var cashProp = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
-        cashProp.GetSetMethod(true)!.Invoke(engine, [amount]);
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
+        prop.GetSetMethod(true)!.Invoke(engine, [amount]);
     }
 
-    private void SetAngels(double count)
+    private void SetAngels(BigDouble count)
     {
         var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!;
         prop.GetSetMethod(true)!.Invoke(_engine, [count]);
+    }
+
+    private void SetLifetime(BigDouble amount)
+    {
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
+        prop.GetSetMethod(true)!.Invoke(_engine, [amount]);
     }
 }

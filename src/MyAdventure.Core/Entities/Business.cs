@@ -1,125 +1,96 @@
+using MyAdventure.Core.Numerics;
+
 namespace MyAdventure.Core.Entities;
 
 /// <summary>
-/// Represents a business the player can own in the idle game.
-/// Each business earns revenue over a cycle time.
-/// Revenue is boosted by milestone multipliers and post-milestone
-/// scaling (which keeps unit purchases worthwhile after the
-/// milestone table caps out at 1000 owned).
+/// Represents a business the player can own in the idle game. Each
+/// business earns revenue over a cycle time; revenue is boosted by
+/// milestone multipliers and post-milestone scaling (which keeps unit
+/// purchases worthwhile after the milestone table caps out at 1000 owned).
+///
+/// <para>
+/// <b>BigDouble migration note:</b> historically <see cref="NextCost"/>,
+/// <see cref="Revenue"/>, and all monetary properties on this entity were
+/// <see cref="double"/> values clamped at <c>1e200</c> — a hard ceiling
+/// that produced the "game gets stuck at 10²⁰⁰" symptom once a determined
+/// player saturated cash. They are now <see cref="BigDouble"/>, which has
+/// no practical ceiling and lets growth continue forever.
+/// </para>
+/// <para>
+/// Definitional inputs (<see cref="BaseCost"/>, <see cref="BaseRevenue"/>,
+/// <see cref="BaseTimeSeconds"/>, <see cref="CostMultiplier"/>) stay as
+/// <see cref="double"/> because the static balance table only contains
+/// small values; this keeps <see cref="BusinessDefinitions"/> readable.
+/// The arithmetic that produces unbounded values lifts to <c>BigDouble</c>
+/// at the boundary.
+/// </para>
 /// </summary>
 public record Business
 {
-    /// <summary>
-    /// Hard cap on any double value derived inside this entity (cost,
-    /// revenue, scaling). Chosen well below <see cref="double.MaxValue"/>
-    /// (~1.8e308) so that one or two further multiplications downstream
-    /// can't push the value to <see cref="double.PositiveInfinity"/>.
-    /// <para>
-    /// Caps here are belt-and-braces with the engine-level
-    /// <c>SanitizeMoney</c>: even if a derived value momentarily exceeds
-    /// the cap, the engine clamps before persisting it.
-    /// </para>
-    /// </summary>
-    private const double MaxFiniteValue = 1e200;
-
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Icon { get; init; }
     public required string Color { get; init; }
+
+    /// <summary>Definitional base cost of the first unit. Stays a double because the balance table is bounded.</summary>
     public required double BaseCost { get; init; }
+
+    /// <summary>Definitional base revenue per cycle for a single unit owned.</summary>
     public required double BaseRevenue { get; init; }
+
+    /// <summary>Cycle duration in seconds.</summary>
     public required double BaseTimeSeconds { get; init; }
+
+    /// <summary>Geometric scaling factor on cost per additional unit (e.g. 1.07).</summary>
     public required double CostMultiplier { get; init; }
+
     public int Owned { get; set; }
     public bool HasManager { get; set; }
     public double ProgressPercent { get; set; }
     public bool IsRunning { get; set; }
 
     /// <summary>
-    /// Cost to buy the next unit of this business.
-    /// <para>
-    /// At very high <see cref="Owned"/> values <c>Math.Pow(CostMultiplier, Owned)</c>
-    /// can overflow to <see cref="double.PositiveInfinity"/> (e.g. <c>1.11^7000</c>
-    /// exceeds <see cref="double.MaxValue"/>). The clamp keeps the cost
-    /// finite so callers like <c>BuyBusiness</c> can compare against
-    /// <c>Cash</c> without producing NaN. Past the clamp the business is
-    /// effectively unaffordable, which is the desired behavior anyway.
-    /// </para>
+    /// Cost to buy the next unit of this business. Computed as
+    /// <c>BaseCost × CostMultiplier^Owned</c> using <see cref="BigDouble.Pow(double)"/>
+    /// so that even astronomical ownership counts produce a finite,
+    /// representable value (the prior <c>Math.Pow</c>-based formulation
+    /// overflowed to <see cref="double.PositiveInfinity"/> around
+    /// <c>1.11^7000</c> and forced an artificial clamp).
     /// </summary>
-    public double NextCost
-    {
-        get
-        {
-            var raw = BaseCost * Math.Pow(CostMultiplier, Owned);
-            if (!double.IsFinite(raw)) return MaxFiniteValue;
-            return Math.Min(raw, MaxFiniteValue);
-        }
-    }
+    public BigDouble NextCost =>
+        new BigDouble(BaseCost) * new BigDouble(CostMultiplier).Pow(Owned);
 
     /// <summary>
     /// Revenue per cycle with current units owned, including the
     /// compounded milestone multiplier and post-milestone scaling.
-    /// <para>
-    /// Below 1000 owned, <see cref="PostMilestoneScaling"/> is exactly
-    /// 1.0 — early/mid-game players see no behavior change. Past the
-    /// 1000-unit milestone cap, scaling kicks in to compensate for the
-    /// continuing exponential cost growth (see the property summary
-    /// for the full rationale).
-    /// </para>
-    /// <para>
-    /// Clamped to <see cref="MaxFiniteValue"/> so an extreme combination
-    /// of milestone multiplier, owned count and post-milestone scaling
-    /// can't return Infinity. Without this, a multiplication by the
-    /// AngelBonus downstream could turn finite cash into Infinity and
-    /// cascade into the JSON-export crash.
-    /// </para>
+    /// <see cref="PostMilestoneScaling"/> is exactly 1.0 below 1000
+    /// owned, so the early-game balance is unchanged.
     /// </summary>
-    public double Revenue
-    {
-        get
-        {
-            var raw = BaseRevenue * Owned * MilestoneMultiplier * PostMilestoneScaling;
-            if (!double.IsFinite(raw)) return MaxFiniteValue;
-            return Math.Min(raw, MaxFiniteValue);
-        }
-    }
+    public BigDouble Revenue =>
+        new BigDouble(BaseRevenue) * Owned * MilestoneMultiplier * PostMilestoneScaling;
 
-    /// <summary>Current combined milestone multiplier.</summary>
+    /// <summary>Compounded milestone multiplier (×2 / ×4 / ×5 stacks based on ownership thresholds).</summary>
     public double MilestoneMultiplier => Milestone.CalculateMultiplier(Owned);
 
     /// <summary>
     /// Past the 1000-unit milestone cap, each additional unit costs
-    /// <c>CostMultiplier^N</c> more than the unit before it, but
-    /// previously contributed the same revenue per unit as unit 1000.
-    /// That is the geometry that produces a "stuck" mid-game where
-    /// the next unit costs trillions and pays back in centuries.
+    /// <c>CostMultiplier^N</c> more than the unit before it but contributes
+    /// the same revenue per unit. To stop the mid-game from stalling, we
+    /// multiply revenue by <c>CostMultiplier^((Owned - 1000) / 2)</c> past
+    /// the cap — the square root of cost growth means unit 1001's
+    /// cost-to-payback ratio matches unit 1000's, keeping purchases
+    /// efficient indefinitely.
     /// <para>
-    /// The fix: past 1000, multiply revenue by
-    /// <c>CostMultiplier^((Owned - 1000) / 2)</c>. The square root of
-    /// cost growth means the cost-to-payback ratio of unit 1001 is
-    /// roughly the same as unit 1000 — buying past the cap stays
-    /// efficient instead of decaying exponentially.
-    /// </para>
-    /// <para>
-    /// Below 1000, this is exactly 1.0 — early/mid-game progression
-    /// (and all balance tests written against pre-cap units) are
-    /// unaffected. Save compatibility is preserved because nothing
-    /// here is persisted; it's a function of <see cref="Owned"/>.
-    /// </para>
-    /// <para>
-    /// Clamped against overflow for the same reason as <see cref="Revenue"/>:
-    /// keeping every derived value finite is what guarantees the rest
-    /// of the engine doesn't have to handle Infinity inputs.
+    /// Below 1000, this is exactly 1.0 — early/mid-game balance and
+    /// every pre-cap test are unaffected.
     /// </para>
     /// </summary>
-    public double PostMilestoneScaling
+    public BigDouble PostMilestoneScaling
     {
         get
         {
-            if (Owned <= 1000) return 1.0;
-            var raw = Math.Pow(CostMultiplier, (Owned - 1000) / 2.0);
-            if (!double.IsFinite(raw)) return MaxFiniteValue;
-            return Math.Min(raw, MaxFiniteValue);
+            if (Owned <= 1000) return BigDouble.One;
+            return new BigDouble(CostMultiplier).Pow((Owned - 1000) / 2.0);
         }
     }
 
@@ -127,27 +98,82 @@ public record Business
     public double CycleTimeSeconds => BaseTimeSeconds;
 
     /// <summary>Revenue per second when running.</summary>
-    public double RevenuePerSecond => CycleTimeSeconds > 0 ? Revenue / CycleTimeSeconds : 0;
+    public BigDouble RevenuePerSecond =>
+        CycleTimeSeconds > 0 ? Revenue / new BigDouble(CycleTimeSeconds) : BigDouble.Zero;
 
     /// <summary>
-    /// How many units the player can buy with a given cash amount (greedy, one at a time).
+    /// How many units the player can buy with a given cash amount, using the
+    /// geometric-series closed form rather than a brute-force loop.
+    /// <para>
+    /// For a geometric purchase sequence with first cost
+    /// <c>c₀ = BaseCost × CostMultiplier^Owned</c> and ratio
+    /// <c>r = CostMultiplier</c>, the cumulative cost of <c>n</c> purchases is
+    /// <c>c₀ × (rⁿ - 1) / (r - 1)</c>. Solving the inequality
+    /// <c>c₀ × (rⁿ - 1) / (r - 1) ≤ cash</c> for the largest integer
+    /// <c>n</c> gives the affordable count.
+    /// </para>
+    /// <para>
+    /// The closed form is what makes "buy max" practical even when the
+    /// affordable count is, say, 50,000 — the previous loop-with-safety-cap
+    /// terminated at 10,000 purchases (and would take milliseconds even
+    /// then). The closed form is O(1) regardless of how many units the
+    /// player can afford.
+    /// </para>
     /// </summary>
-    public int AffordableCount(double cash)
+    public int AffordableCount(BigDouble cash)
     {
-        if (!double.IsFinite(cash) || cash <= 0) return 0;
-        var count = 0;
-        var simOwned = Owned;
-        var remaining = cash;
-        while (true)
+        if (cash.IsNaN || cash.Sign <= 0) return 0;
+        // Infinite cash: return the practical cap. This shouldn't appear
+        // in normal gameplay (the engine sanitizes Infinity → 0 on every
+        // monetary path), but a defensive answer beats returning 0 from
+        // the log-based formula below, which would interpret +∞ → log10(+∞) → +∞
+        // → !IsFinite → return 0.
+        if (cash.IsInfinity) return 1_000_000_000;
+
+        if (BaseCost <= 0 || CostMultiplier <= 1.0)
         {
-            var cost = BaseCost * Math.Pow(CostMultiplier, simOwned);
-            if (!double.IsFinite(cost) || remaining < cost) break;
-            remaining -= cost;
-            simOwned++;
-            count++;
-            // Safety cap to avoid infinite loops with tiny multipliers
-            if (count > 10_000) break;
+            // Defensive: a non-positive base cost or a non-increasing
+            // multiplier would make the analytic formula misbehave. The
+            // production balance table never hits these cases, but tests
+            // exercising "free" or unusual businesses can.
+            if (BaseCost <= 0) return int.MaxValue / 2;
+
+            // CostMultiplier == 1.0: every unit costs the same as the
+            // first, so affordable count is plain floor(cash / NextCost).
+            var perUnit = NextCost;
+            if (perUnit.IsZero) return int.MaxValue / 2;
+            var rawCount = cash / perUnit;
+            var asDouble = rawCount.ToDouble();
+            return double.IsFinite(asDouble) && asDouble > 0
+                ? (int)Math.Min(asDouble, int.MaxValue / 2)
+                : 0;
         }
-        return count;
+
+        // First-unit cost at the current owned count.
+        var c0 = NextCost;
+        if (c0.IsZero) return int.MaxValue / 2;
+        if (cash < c0) return 0;
+
+        // Maximum n satisfying c0 × (r^n - 1) / (r - 1) ≤ cash, i.e.
+        //   r^n ≤ 1 + cash × (r - 1) / c0
+        //   n   ≤ log_r(1 + cash × (r - 1) / c0)
+        // We compute the right-hand side as a double — even very large
+        // affordable counts are well within double's precision because
+        // it's a log.
+        var r = CostMultiplier;
+        var threshold = BigDouble.One + cash * new BigDouble(r - 1.0) / c0;
+
+        // Convert to a double for the final log; log10 of a BigDouble
+        // is always representable as a double (it's just an exponent + a tiny mantissa log).
+        var logThreshold = threshold.Log10();
+        if (!double.IsFinite(logThreshold) || logThreshold <= 0) return 0;
+
+        var n = Math.Floor(logThreshold / Math.Log10(r));
+
+        // Cap at a sensible int range. 1e9 affordable units is already
+        // far past any reasonable purchase batch.
+        if (n <= 0) return 0;
+        if (n > 1_000_000_000) return 1_000_000_000;
+        return (int)n;
     }
 }

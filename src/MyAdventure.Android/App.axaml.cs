@@ -37,25 +37,18 @@ public partial class App : Avalonia.Application
 
             await DependencyInjection.InitializeDatabaseAsync(Services);
 
-            // Avalonia 12: Android uses IActivityApplicationLifetime with a
-            // MainViewFactory (a Func<Control>) instead of ISingleViewApplicationLifetime
-            // with a single MainView reference. Android can recreate the activity
-            // multiple times during the app's lifetime — the factory is invoked
-            // for each fresh activity, producing a fresh view + fresh ViewModel
-            // that re-loads from the database.
+            // Avalonia 12: Android uses IActivityApplicationLifetime with
+            // a MainViewFactory. The factory is invoked for each fresh
+            // activity, producing a fresh view + fresh ViewModel that
+            // re-loads from the database.
             if (ApplicationLifetime is IActivityApplicationLifetime activityLifetime)
             {
                 activityLifetime.MainViewFactory = () =>
                 {
                     var vm = Services!.GetRequiredService<GameViewModel>();
 
-                    // Wire the cross-platform suspend/resume signal. We
-                    // call this inside the factory because each activity
-                    // recreation produces a fresh VM, and AppLifecycleManager
-                    // holds a single static "current target" reference —
-                    // each Attach replaces the previous target so old VMs
-                    // stop receiving events. See AppLifecycleManager for
-                    // the full rationale.
+                    // Replace any previous AppLifecycleManager target so
+                    // old VMs stop receiving events.
                     AppLifecycleManager.Attach(vm);
 
                     return new MainView { DataContext = vm };
@@ -63,9 +56,7 @@ public partial class App : Avalonia.Application
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
             {
-                // Fallback for any non-Android single-view platforms (browser, iOS)
-                // in case this same App class is ever reused there. Android will
-                // never hit this branch in v12.
+                // Fallback for any non-Android single-view platforms.
                 var vm = Services.GetRequiredService<GameViewModel>();
                 singleView.MainView = new MainView { DataContext = vm };
                 AppLifecycleManager.Attach(vm);

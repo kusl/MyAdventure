@@ -4,27 +4,25 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <Product>MyAdventure</Product>
-    <Description>Adventure Capitalist clone built with Avalonia UI</Description>
+    <ApplicationIcon>Assets/avalonia-logo.ico</ApplicationIcon>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <ProjectReference Include="..\MyAdventure.Shared\MyAdventure.Shared.csproj" />
     <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
     <ProjectReference Include="..\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
+    <ProjectReference Include="..\MyAdventure.Shared\MyAdventure.Shared.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
+    <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
-    <!-- Avalonia.Diagnostics removed in Avalonia 12. The replacement
-         (AvaloniaUI.DiagnosticsSupport) is gated on a paid Avalonia Plus / Pro
-         subscription to actually open the Dev Tools UI. The Community tier is
-         free for non-commercial use only — and this project's policy is to
-         avoid any package whose use is conditional on payment, full stop.
-         For design-time previewing, use the FOSS Avalonia VS Code or Rider
-         extensions, both of which still work without a subscription. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

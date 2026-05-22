@@ -1,16 +1,35 @@
-using System.Text;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MyAdventure.Core.Entities;
 using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Numerics;
 
 namespace MyAdventure.Core.Services;
 
 /// <summary>
 /// Core game engine. Processes ticks, manages businesses, handles prestige.
 /// Fully testable with injected dependencies.
+///
+/// <para>
+/// <b>BigDouble migration:</b> all monetary and progression quantities
+/// (<see cref="Cash"/>, <see cref="LifetimeEarnings"/>,
+/// <see cref="AngelInvestors"/>, <see cref="AngelBonus"/>) are now
+/// <see cref="BigDouble"/>. The prior <c>double</c>-based implementation
+/// had to clamp these values at <c>1e200</c> to avoid overflowing IEEE 754
+/// to <see cref="double.PositiveInfinity"/>; that clamp is the cause of
+/// the "game gets stuck at 10²⁰⁰" symptom and is GONE under <c>BigDouble</c>,
+/// which has effectively no ceiling.
+/// </para>
+/// <para>
+/// The only remaining clamp is <see cref="MaxAngelBonusExponent"/>, a
+/// saturation cap on the exponential <c>1.02^N</c> bonus formula at
+/// astronomical angel counts. It's set far past any practically reachable
+/// value, but exists so that downstream multiplications can never produce
+/// non-finite BigDoubles even under absurdly hand-edited saves.
+/// </para>
 /// </summary>
 public class GameEngine(
     IGameStateRepository repository,
@@ -34,53 +53,37 @@ public class GameEngine(
     /// <summary>
     /// Per-angel revenue multiplier base. Each angel multiplies revenue by
     /// this value, compounded — so 50 angels = 1.02^50 ≈ ×2.69, not ×2.00.
-    /// <para>
-    /// The compound formulation is what restores prestige as a meaningful
-    /// progression mechanic deep into the game: under the previous linear
-    /// "+2% per angel" formula a player with 700+ angels was getting only
-    /// a ×15 multiplier, and one more prestige (gaining ~140 angels)
-    /// would only edge that up to ×17 — not enough to motivate a reset.
-    /// Compounded, the same prestige goes from ×4.4M to ×68M, which is
-    /// the "press the button" moment idle games are built around.
-    /// </para>
+    /// Preserving the formula keeps existing balance tests valid; the
+    /// switch to BigDouble simply lifts its ceiling.
     /// </summary>
     private const double AngelMultiplierPerAngel = 1.02;
 
     /// <summary>
-    /// Hard cap on <see cref="AngelBonus"/>. <c>1.02^N</c> overflows IEEE 754
-    /// doubles around N ≈ 35,750 angels, producing <see cref="double.PositiveInfinity"/>.
-    /// Once any multiplier is Infinity, every downstream calculation
-    /// (cash, lifetime earnings, percent display, JSON export) either
-    /// becomes Infinity, NaN, or throws — the exact failure mode that
-    /// produced "infinity D infinity angels + infinity D% Next +NaN" in
-    /// the wild. Capping the bonus keeps every downstream value finite
-    /// without taking anything away from the player: a ×10⁹⁰ multiplier
-    /// is still effectively unbounded for game purposes.
+    /// Saturation cap on the AngelBonus exponent. <c>1.02^N</c> with N
+    /// in the practical-game range (up to billions of angels) keeps the
+    /// bonus's BigDouble exponent under ~10^7; at truly absurd angel
+    /// counts (1e95+) the exponent would naturally overflow a long. We
+    /// clamp it here to a finite-but-still-astronomical value so the
+    /// bonus never becomes <c>BigDouble.PositiveInfinity</c> and cascade
+    /// into infinite cash on a single tick. A 10^(10^15) multiplier is
+    /// already a level of bonus no real player will ever notice the cap on.
     /// </summary>
-    private const double MaxAngelBonus = 1e90;
+    private const long MaxAngelBonusExponent = 1_000_000_000_000_000L; // 10^15
 
     /// <summary>
-    /// Hard cap on any monetary quantity (<see cref="Cash"/>,
-    /// <see cref="LifetimeEarnings"/>) to keep arithmetic finite. Chosen
-    /// well below <see cref="double.MaxValue"/> (~1.8e308) so even a few
-    /// further multiplications can't push the value to Infinity.
+    /// Lifetime-earnings threshold below which no angels are awarded
+    /// (drives the prestige unlock).
     /// </summary>
-    private const double MaxMoney = 1e200;
+    private static readonly BigDouble PrestigeMinLifetime = new(1e12);
 
-    /// <summary>
-    /// Hard cap on <see cref="AngelInvestors"/>. Past this point, the
-    /// <see cref="AngelBonus"/> is already at <see cref="MaxAngelBonus"/>,
-    /// so further angels have no in-game effect anyway. Capping keeps
-    /// the stored value sensible and round-trippable through saves and
-    /// exports.
-    /// </summary>
-    private const double MaxAngelInvestors = 1e9;
+    /// <summary>Divisor inside <see cref="CalculateAngels"/>.</summary>
+    private static readonly BigDouble AngelLifetimeDivisor = new(1e13);
 
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
-    public double Cash { get; private set; }
-    public double LifetimeEarnings { get; private set; }
-    public double AngelInvestors { get; private set; }
+    public BigDouble Cash { get; private set; }
+    public BigDouble LifetimeEarnings { get; private set; }
+    public BigDouble AngelInvestors { get; private set; }
     public int PrestigeCount { get; private set; }
     public IReadOnlyList<Business> Businesses { get; private set; } = BusinessDefinitions.CreateDefaults();
 
@@ -91,38 +94,35 @@ public class GameEngine(
         var state = await repository.GetLatestAsync(ct);
         if (state is null)
         {
-            Cash = 5.0;
-            logger.LogInformation("No saved game found, starting fresh with ${Cash:F2}", Cash);
+            Cash = new BigDouble(5.0);
+            logger.LogInformation("No saved game found, starting fresh with $5.00");
             return;
         }
 
-        // Sanitize anything loaded from disk. Older saves predating the
-        // overflow fix may contain Infinity / NaN serialized as raw
-        // doubles in SQLite. Loading those values unchecked would
-        // immediately re-corrupt the in-memory state. The clamp also
-        // protects against hand-edited save files (which we explicitly
-        // permit) that set Cash or AngelInvestors to a wildly large value.
-        Cash = SanitizeMoney(state.Cash);
-        LifetimeEarnings = SanitizeMoney(state.LifetimeEarnings);
-        AngelInvestors = SanitizeAngels(state.AngelInvestors);
+        // Parse the canonical BigDouble strings. Sanitize defensively:
+        // a corrupted save (or a hand-edited one with garbage in the
+        // numeric columns) must produce a playable game, not a NaN-ridden one.
+        Cash = SanitizeMoney(BigDouble.Parse(state.CashText));
+        LifetimeEarnings = SanitizeMoney(BigDouble.Parse(state.LifetimeEarningsText));
+        AngelInvestors = SanitizeAngels(BigDouble.Parse(state.AngelInvestorsText));
         PrestigeCount = state.PrestigeCount;
 
         ApplyBusinessData(state.BusinessDataJson);
         ApplyManagerData(state.ManagerDataJson);
 
         // Apply offline earnings via the shared public method. The same
-        // calculation now also serves the foreground-resume path
+        // calculation also serves the foreground-resume path
         // (GameViewModel.OnResumed -> ApplyOfflineEarnings). Keeping a
         // single entry point ensures cold-load and resume can never drift.
         var elapsed = _time.GetUtcNow().UtcDateTime - state.LastPlayedAt;
         var earned = ApplyOfflineEarnings(elapsed);
-        if (earned > 0)
+        if (earned.Sign > 0)
         {
-            logger.LogInformation("Applied offline earnings on load: {Earnings:F2} for {Seconds:F0}s away",
-                earned, elapsed.TotalSeconds);
+            logger.LogInformation("Applied offline earnings on load: {Earnings} for {Seconds:F0}s away",
+                earned.ToCanonicalString(), elapsed.TotalSeconds);
         }
 
-        activity?.SetTag("cash", Cash);
+        activity?.SetTag("cash", Cash.ToCanonicalString());
         activity?.SetTag("businesses_owned", Businesses.Count(b => b.Owned > 0));
     }
 
@@ -132,16 +132,16 @@ public class GameEngine(
         using var activity = ActivitySource.StartActivity("SaveGame");
         var state = new GameState
         {
-            Cash = SanitizeMoney(Cash),
-            LifetimeEarnings = SanitizeMoney(LifetimeEarnings),
-            AngelInvestors = SanitizeAngels(AngelInvestors),
+            CashText = SanitizeMoney(Cash).ToCanonicalString(),
+            LifetimeEarningsText = SanitizeMoney(LifetimeEarnings).ToCanonicalString(),
+            AngelInvestorsText = SanitizeAngels(AngelInvestors).ToCanonicalString(),
             PrestigeCount = PrestigeCount,
             BusinessDataJson = SerializeBusinessData(),
             ManagerDataJson = SerializeManagerData(),
             LastPlayedAt = _time.GetUtcNow().UtcDateTime
         };
         await repository.SaveAsync(state, ct);
-        logger.LogDebug("Game saved. Cash: {Cash:F2}", state.Cash);
+        logger.LogDebug("Game saved. Cash: {Cash}", state.CashText);
     }
 
     /// <summary>Process one game tick (called ~60fps from UI timer).</summary>
@@ -151,7 +151,7 @@ public class GameEngine(
         TickCounter.Add(1);
 
         // Snapshot the angel multiplier once per tick so all businesses
-        // settle their cycles against the same value, and so the call to
+        // settle their cycles against the same value and so the call to
         // AngelBonus is paid once instead of per-business.
         var angelBonus = AngelBonus;
 
@@ -171,7 +171,11 @@ public class GameEngine(
                 var earned = biz.Revenue * cycles * angelBonus;
                 Cash = SanitizeMoney(Cash + earned);
                 LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
-                EarningsCounter.Add(earned, new KeyValuePair<string, object?>("business", biz.Id));
+
+                // OpenTelemetry counter requires a double — saturating
+                // earnings to double.MaxValue at large magnitudes is fine
+                // for telemetry purposes (it's only used for graphing).
+                EarningsCounter.Add(earned.ToDouble(), new KeyValuePair<string, object?>("business", biz.Id));
                 biz.ProgressPercent %= 100.0;
 
                 // Auto-restart if has manager
@@ -203,13 +207,11 @@ public class GameEngine(
         if (biz is null) return false;
 
         var cost = biz.NextCost;
-        // If cost itself has gone non-finite due to extreme ownership counts,
-        // refuse the buy rather than corrupting Cash via subtraction.
-        if (!double.IsFinite(cost) || Cash < cost) return false;
+        if (cost.IsNaN || Cash < cost) return false;
 
         Cash = SanitizeMoney(Cash - cost);
         biz.Owned++;
-        logger.LogInformation("Bought {Business} #{Count} for {Cost:F2}", biz.Name, biz.Owned, cost);
+        logger.LogInformation("Bought {Business} #{Count} for {Cost}", biz.Name, biz.Owned, cost.ToCanonicalString());
 
         // Auto-start if has manager
         if (biz.HasManager && !biz.IsRunning)
@@ -222,38 +224,88 @@ public class GameEngine(
     }
 
     /// <summary>
-    /// Buy multiple units of a business at once.
-    /// Returns the number of units actually purchased.
+    /// Buy multiple units of a business at once using the geometric-series
+    /// closed-form total cost. Returns the number of units actually purchased.
+    /// <para>
+    /// Compared to the prior loop-based implementation:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>O(1) regardless of <paramref name="count"/>, so "buy max" of
+    ///         50,000 units takes the same time as buying 5.</item>
+    ///   <item>Correctly handles very large counts that the prior 10,000-unit
+    ///         safety loop would silently cap at.</item>
+    ///   <item>Uses <see cref="Business.AffordableCount(BigDouble)"/> to make
+    ///         "buy as many as you can afford" trivial — the buy-max path
+    ///         passes <see cref="int.MaxValue"/>.</item>
+    /// </list>
     /// </summary>
     public int BuyMultiple(string businessId, int count)
     {
         var biz = Businesses.FirstOrDefault(b => b.Id == businessId);
         if (biz is null || count <= 0) return 0;
 
-        var bought = 0;
-        for (var i = 0; i < count; i++)
+        // Cap by affordability so the call can never overspend.
+        var affordable = biz.AffordableCount(Cash);
+        var toBuy = Math.Min(count, affordable);
+        if (toBuy <= 0) return 0;
+
+        // Cumulative geometric cost: c₀ × (rⁿ - 1) / (r - 1).
+        // r and (r - 1) are doubles in the balance table; the result is BigDouble.
+        var r = biz.CostMultiplier;
+        BigDouble totalCost;
+        if (r == 1.0)
         {
-            var cost = biz.NextCost;
-            if (!double.IsFinite(cost) || Cash < cost) break;
-            Cash = SanitizeMoney(Cash - cost);
-            biz.Owned++;
-            bought++;
+            // Degenerate: every unit costs the same.
+            totalCost = biz.NextCost * toBuy;
+        }
+        else
+        {
+            var rPowN = new BigDouble(r).Pow(toBuy);
+            totalCost = biz.NextCost * (rPowN - BigDouble.One) / new BigDouble(r - 1.0);
         }
 
-        if (bought > 0)
+        // Defensive: if the geometric-series math somehow produced a
+        // larger total than cash (e.g. rounding pushed the boundary), back
+        // off by one. This protects the player from a transient overdraft
+        // due to floating-point noise.
+        while (toBuy > 0 && Cash < totalCost)
         {
-            logger.LogInformation("Bulk bought {Count} of {Business} (now {Total})", bought, biz.Name, biz.Owned);
-
-            // Auto-start if has manager
-            if (biz.HasManager && !biz.IsRunning)
+            toBuy--;
+            if (toBuy == 0) { totalCost = BigDouble.Zero; break; }
+            if (r == 1.0)
             {
-                biz.IsRunning = true;
-                biz.ProgressPercent = 0;
+                totalCost = biz.NextCost * toBuy;
+            }
+            else
+            {
+                var rPowN = new BigDouble(r).Pow(toBuy);
+                totalCost = biz.NextCost * (rPowN - BigDouble.One) / new BigDouble(r - 1.0);
             }
         }
 
-        return bought;
+        if (toBuy <= 0) return 0;
+
+        Cash = SanitizeMoney(Cash - totalCost);
+        biz.Owned += toBuy;
+        logger.LogInformation("Bulk bought {Count} of {Business} for {Cost} (now {Total})",
+            toBuy, biz.Name, totalCost.ToCanonicalString(), biz.Owned);
+
+        // Auto-start if has manager
+        if (biz.HasManager && !biz.IsRunning)
+        {
+            biz.IsRunning = true;
+            biz.ProgressPercent = 0;
+        }
+
+        return toBuy;
     }
+
+    /// <summary>
+    /// Buy as many units of a business as the player can afford right now.
+    /// Equivalent to <see cref="BuyMultiple"/> with <see cref="int.MaxValue"/>
+    /// but reads more clearly at the call site.
+    /// </summary>
+    public int BuyMax(string businessId) => BuyMultiple(businessId, int.MaxValue);
 
     /// <summary>Buy a manager for a business. Cost = 1000x base cost.</summary>
     public bool BuyManager(string businessId)
@@ -261,7 +313,7 @@ public class GameEngine(
         var biz = Businesses.FirstOrDefault(b => b.Id == businessId);
         if (biz is null || biz.HasManager) return false;
 
-        var cost = biz.BaseCost * 1000;
+        var cost = new BigDouble(biz.BaseCost * 1000);
         if (Cash < cost) return false;
 
         Cash = SanitizeMoney(Cash - cost);
@@ -278,163 +330,149 @@ public class GameEngine(
     }
 
     /// <summary>Prestige: reset businesses, gain angel investors.</summary>
-    public (double angels, bool success) Prestige()
+    public (BigDouble angels, bool success) Prestige()
     {
         var newAngels = CalculateAngels(LifetimeEarnings) - AngelInvestors;
-        if (newAngels < 1)
+        if (newAngels < BigDouble.One)
         {
-            logger.LogInformation("Prestige rejected: not enough new angels ({Angels:F2})", newAngels);
-            return (0, false);
+            logger.LogInformation("Prestige rejected: not enough new angels ({Angels})",
+                newAngels.ToCanonicalString());
+            return (BigDouble.Zero, false);
         }
 
         AngelInvestors = SanitizeAngels(AngelInvestors + newAngels);
         PrestigeCount++;
-        Cash = 5.0;
+        Cash = new BigDouble(5.0);
         // LifetimeEarnings is intentionally not reset — keeping it across
         // prestiges is what provides the incentive to prestige again.
 
         // Reset businesses
-        var defaults = BusinessDefinitions.CreateDefaults();
-        Businesses = defaults;
+        Businesses = BusinessDefinitions.CreateDefaults();
 
-        logger.LogInformation("Prestige #{Count}! Gained {Angels:F0} angels", PrestigeCount, newAngels);
+        logger.LogInformation("Prestige #{Count}! Gained {Angels} angels",
+            PrestigeCount, newAngels.ToCanonicalString());
         return (newAngels, true);
     }
 
     /// <summary>
-    /// Compounded angel-investor revenue multiplier:
-    /// <c>min(1.02 ^ AngelInvestors, MaxAngelBonus)</c>. Every angel adds
-    /// 2% on top of the previous angel's contribution rather than 2% of
-    /// base revenue, capped at <see cref="MaxAngelBonus"/> to prevent
-    /// IEEE 754 overflow at ~35,750 angels.
-    /// <para>
-    /// 50 angels = ×2.69. 200 angels = ×52.5. 1000 angels = ×4.0×10^8.
-    /// At the cap, the bonus is still <c>1e90</c> — effectively unbounded
-    /// for game purposes — but it can never become <see cref="double.PositiveInfinity"/>,
-    /// which is what allows every downstream multiplication, percentage
-    /// computation, and JSON export to remain finite and safe.
-    /// </para>
-    /// <para>
-    /// Save compatibility: the formula is computed from
-    /// <see cref="AngelInvestors"/>, which is unchanged on disk. Old
-    /// saves load and immediately benefit from the compound multiplier
-    /// without any migration step; saves that happen to contain a wildly
-    /// large angel count are clamped on load by <see cref="SanitizeAngels"/>.
-    /// </para>
+    /// Compounded angel-investor revenue multiplier: <c>1.02^AngelInvestors</c>.
+    /// Computed as a <see cref="BigDouble"/> via the
+    /// <see cref="BigDouble.Pow(double)"/> logarithmic identity so even
+    /// astronomical angel counts produce a representable result. Capped at
+    /// <see cref="MaxAngelBonusExponent"/> to prevent the exponent itself
+    /// from overflowing <see cref="long"/> at truly absurd angel counts —
+    /// without that cap, a hand-edited save with 10^100 angels would
+    /// produce <see cref="BigDouble.PositiveInfinity"/> and propagate into
+    /// every monetary calculation.
     /// </summary>
-    public double AngelBonus
+    public BigDouble AngelBonus
     {
         get
         {
-            if (!double.IsFinite(AngelInvestors) || AngelInvestors <= 0) return 1.0;
-            var raw = Math.Pow(AngelMultiplierPerAngel, AngelInvestors);
-            if (!double.IsFinite(raw) || raw > MaxAngelBonus) return MaxAngelBonus;
+            if (AngelInvestors.IsNaN || AngelInvestors.Sign <= 0) return BigDouble.One;
+
+            // Take the angel count to a double for the Pow call. The
+            // exponent-as-double can lose precision at extreme counts, but
+            // any precision loss happens far past where the bonus is
+            // already a 1e15-magnitude multiplier — the player notices
+            // nothing.
+            var angelsAsDouble = AngelInvestors.ToDouble();
+            if (!double.IsFinite(angelsAsDouble) || angelsAsDouble <= 0)
+            {
+                // Truly enormous angel count: we know the bonus is at or
+                // past the cap, return the cap directly.
+                return new BigDouble(1.0, MaxAngelBonusExponent, normalize: false);
+            }
+
+            var raw = new BigDouble(AngelMultiplierPerAngel).Pow(angelsAsDouble);
+            if (raw.IsNaN || raw.IsInfinity || raw.Exponent > MaxAngelBonusExponent)
+            {
+                return new BigDouble(1.0, MaxAngelBonusExponent, normalize: false);
+            }
             return raw;
         }
     }
 
     /// <summary>
     /// Compute how many angels the player's lifetime earnings are
-    /// currently worth. Returns the cumulative count, not the delta —
-    /// callers subtract <see cref="AngelInvestors"/> to get the
-    /// available-to-claim count.
+    /// currently worth. Returns the cumulative count (callers subtract
+    /// <see cref="AngelInvestors"/> to get the available-to-claim count).
     /// <para>
-    /// Defensive against non-finite or absurdly large inputs: returns 0
-    /// for NaN/negative input and clamps the result so that
-    /// <see cref="Math.Sqrt"/> of a finite-but-huge input doesn't propagate
-    /// through to <see cref="AngelInvestors"/> as Infinity.
+    /// Formula: <c>150 × √(LifetimeEarnings / 10¹³)</c>, floored. Returns
+    /// zero below the <see cref="PrestigeMinLifetime"/> threshold (1e12).
     /// </para>
     /// </summary>
-    public static double CalculateAngels(double lifetimeEarnings)
+    public static BigDouble CalculateAngels(BigDouble lifetimeEarnings)
     {
-        if (double.IsNaN(lifetimeEarnings) || lifetimeEarnings < 1e12) return 0;
-        if (!double.IsFinite(lifetimeEarnings)) return MaxAngelInvestors;
-        var raw = Math.Floor(150 * Math.Sqrt(lifetimeEarnings / 1e13));
-        if (!double.IsFinite(raw)) return MaxAngelInvestors;
-        return Math.Min(raw, MaxAngelInvestors);
+        if (lifetimeEarnings.IsNaN || lifetimeEarnings.Sign < 0) return BigDouble.Zero;
+        if (lifetimeEarnings.IsInfinity)
+        {
+            // Defensive: an infinite lifetime is a corrupted-save signal.
+            // Return zero rather than propagating infinity into angel count.
+            return BigDouble.Zero;
+        }
+        if (lifetimeEarnings < PrestigeMinLifetime) return BigDouble.Zero;
+
+        var raw = new BigDouble(150.0) * (lifetimeEarnings / AngelLifetimeDivisor).Sqrt();
+        return raw.Floor();
     }
 
     /// <summary>
-    /// Apply offline earnings for a given elapsed time span and return
-    /// how much was earned. This is the single public entry point used by
-    /// both <see cref="LoadAsync"/> (cold start) and the foreground-resume
-    /// path on the ViewModel layer. Keeping a single calculation reachable
-    /// from both call sites is what allows live ticks and offline payouts
-    /// to remain provably equivalent.
-    ///
-    /// <para>
-    /// Behavior:
-    /// <list type="bullet">
-    ///   <item>Returns 0 if <paramref name="elapsed"/> is at or below the
-    ///         <see cref="MinimumOfflineGapSeconds"/> threshold — protects
-    ///         against being called with a near-zero or negative span,
-    ///         which would otherwise generate a tiny double-count next to
-    ///         the live tick loop.</item>
-    ///   <item>Returns 0 if no business currently has a manager and at
-    ///         least one unit owned. Manager-less businesses require an
-    ///         active player click to run — the offline path deliberately
-    ///         excludes them.</item>
-    ///   <item>Adds the result to both <see cref="Cash"/> and
-    ///         <see cref="LifetimeEarnings"/>. Lifetime earnings drives
-    ///         prestige progression, so offline earnings must count there
-    ///         identically to live earnings.</item>
-    ///   <item>The <see cref="AngelBonus"/> is applied <i>once</i> at the
-    ///         end of the calculation — never per-cycle inside the loop —
-    ///         to mirror the live <see cref="Tick"/> path. Drift between
-    ///         the two is guarded by an invariant test.</item>
-    /// </list>
-    /// </para>
+    /// Apply offline earnings for a given elapsed time span and return how
+    /// much was earned. This is the single public entry point used by both
+    /// <see cref="LoadAsync"/> (cold start) and the foreground-resume path
+    /// on the ViewModel layer.
     /// </summary>
-    /// <param name="elapsed">Wall-clock duration the player was away.</param>
-    /// <returns>The amount earned (already added to Cash and LifetimeEarnings).</returns>
-    public double ApplyOfflineEarnings(TimeSpan elapsed)
+    public BigDouble ApplyOfflineEarnings(TimeSpan elapsed)
     {
-        if (elapsed.TotalSeconds <= MinimumOfflineGapSeconds) return 0;
+        if (elapsed.TotalSeconds <= MinimumOfflineGapSeconds) return BigDouble.Zero;
 
         var earned = CalculateOfflineEarnings(elapsed);
-        if (earned <= 0) return 0;
+        if (earned.Sign <= 0) return BigDouble.Zero;
 
         Cash = SanitizeMoney(Cash + earned);
         LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
 
-        EarningsCounter.Add(earned, new KeyValuePair<string, object?>("source", "offline"));
+        EarningsCounter.Add(earned.ToDouble(), new KeyValuePair<string, object?>("source", "offline"));
         return earned;
     }
 
-    private double CalculateOfflineEarnings(TimeSpan elapsed)
+    private BigDouble CalculateOfflineEarnings(TimeSpan elapsed)
     {
-        double total = 0;
+        var total = BigDouble.Zero;
         foreach (var biz in Businesses.Where(b => b.HasManager && b.Owned > 0))
         {
-            var cycles = elapsed.TotalSeconds / biz.CycleTimeSeconds;
+            var cycles = new BigDouble(elapsed.TotalSeconds / biz.CycleTimeSeconds);
             total += biz.Revenue * cycles;
         }
-        // AngelBonus is applied once here at the end of the offline path,
-        // matching the per-cycle application inside Tick(). Do not multiply
-        // biz.Revenue by AngelBonus inside the loop — that would
-        // double-apply when paired with this final multiplication.
+        // AngelBonus applied once at the end, matching Tick's per-cycle path
+        // (which multiplies the per-tick earned amount by the snapshot bonus).
         return total * AngelBonus;
     }
 
     /// <summary>
-    /// Clamp a monetary value to a finite, sensible range. NaN becomes 0;
-    /// Infinity becomes <see cref="MaxMoney"/>; negative becomes 0.
+    /// Sanitize a monetary value. NaN → 0. Negative → 0. The
+    /// double-precision-era <c>1e200</c> ceiling is GONE under BigDouble.
+    /// Infinity is mapped to zero defensively (it shouldn't appear except
+    /// from a corrupted save — clamping rather than propagating is the
+    /// only safe choice).
     /// </summary>
-    private static double SanitizeMoney(double value)
+    private static BigDouble SanitizeMoney(BigDouble value)
     {
-        if (double.IsNaN(value)) return 0;
-        if (value < 0) return 0;
-        if (value > MaxMoney) return MaxMoney;
+        if (value.IsNaN) return BigDouble.Zero;
+        if (value.IsInfinity) return BigDouble.Zero;
+        if (value.Sign < 0) return BigDouble.Zero;
         return value;
     }
 
     /// <summary>
-    /// Clamp an angel count to a finite, sensible range. See <see cref="MaxAngelInvestors"/>.
+    /// Sanitize an angel count. No ceiling under BigDouble — the
+    /// AngelBonus computation has its own saturation cap that protects
+    /// downstream arithmetic regardless of angel count.
     /// </summary>
-    private static double SanitizeAngels(double value)
+    private static BigDouble SanitizeAngels(BigDouble value)
     {
-        if (double.IsNaN(value) || value < 0) return 0;
-        if (value > MaxAngelInvestors) return MaxAngelInvestors;
+        if (value.IsNaN || value.IsInfinity || value.Sign < 0) return BigDouble.Zero;
         return value;
     }
 
@@ -482,30 +520,25 @@ public class GameEngine(
     private string SerializeManagerData() =>
         JsonSerializer.Serialize(Businesses.ToDictionary(b => b.Id, b => b.HasManager));
 
-
     /// <summary>
     /// Export full game state as a Base64-encoded JSON string.
     /// Players can freely edit the decoded JSON — we encourage tinkering.
     /// <para>
-    /// All numeric values are sanitized through <see cref="SanitizeMoney"/>
-    /// / <see cref="SanitizeAngels"/> before serialization. This is the
-    /// final defense against any non-finite value ever leaving the
-    /// process: <see cref="JsonSerializer"/> with default options throws
-    /// <see cref="ArgumentException"/> on Infinity/NaN, which previously
-    /// force-closed the app when the user pressed Export. The engine's
-    /// own state is already clamped on load and after every tick, but
-    /// running the sanitizer one more time on the way out makes Export
-    /// safe even if some upstream invariant gets violated.
+    /// Numeric values are serialized as canonical BigDouble strings
+    /// (e.g. <c>"1.5e200"</c>) so even astronomical amounts round-trip
+    /// without precision loss. This is also what <see cref="GameState"/>
+    /// stores in SQLite, so an exported string is essentially a portable
+    /// dump of the persisted columns.
     /// </para>
     /// </summary>
     public string ExportToString()
     {
         var data = new Dictionary<string, object>
         {
-            ["v"] = 1,
-            ["cash"] = SanitizeMoney(Cash),
-            ["lifetime"] = SanitizeMoney(LifetimeEarnings),
-            ["angels"] = SanitizeAngels(AngelInvestors),
+            ["v"] = 2, // bumped from 1 to signal BigDouble-string format
+            ["cash"] = SanitizeMoney(Cash).ToCanonicalString(),
+            ["lifetime"] = SanitizeMoney(LifetimeEarnings).ToCanonicalString(),
+            ["angels"] = SanitizeAngels(AngelInvestors).ToCanonicalString(),
             ["prestige"] = PrestigeCount,
             ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
             ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
@@ -515,8 +548,10 @@ public class GameEngine(
     }
 
     /// <summary>
-    /// Import game state from a Base64-encoded JSON string.
-    /// Returns true on success, false if the string is invalid.
+    /// Import game state from a Base64-encoded JSON string. Accepts both
+    /// the current v2 format (numbers as canonical BigDouble strings) and
+    /// the legacy v1 format (numbers as native JSON doubles), so old
+    /// saves from before the BigDouble migration still load.
     /// </summary>
     public bool ImportFromString(string encoded)
     {
@@ -527,12 +562,9 @@ public class GameEngine(
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
             if (data is null) return false;
 
-            // Read raw values, then sanitize. A hand-edited save that
-            // pokes Infinity into the JSON would otherwise propagate
-            // straight into engine state and resurrect the original bug.
-            Cash = SanitizeMoney(data.TryGetValue("cash", out var cashEl) ? cashEl.GetDouble() : 0);
-            LifetimeEarnings = SanitizeMoney(data.TryGetValue("lifetime", out var ltEl) ? ltEl.GetDouble() : 0);
-            AngelInvestors = SanitizeAngels(data.TryGetValue("angels", out var angEl) ? angEl.GetDouble() : 0);
+            Cash = SanitizeMoney(ReadBigDouble(data, "cash"));
+            LifetimeEarnings = SanitizeMoney(ReadBigDouble(data, "lifetime"));
+            AngelInvestors = SanitizeAngels(ReadBigDouble(data, "angels"));
             PrestigeCount = data.TryGetValue("prestige", out var prEl) ? prEl.GetInt32() : 0;
 
             Businesses = BusinessDefinitions.CreateDefaults();
@@ -556,7 +588,8 @@ public class GameEngine(
                     }
             }
 
-            logger.LogInformation("Imported game state. Cash: {Cash:F2}, Angels: {Angels:F0}", Cash, AngelInvestors);
+            logger.LogInformation("Imported game state. Cash: {Cash}, Angels: {Angels}",
+                Cash.ToCanonicalString(), AngelInvestors.ToCanonicalString());
             return true;
         }
         catch (Exception ex)
@@ -564,5 +597,22 @@ public class GameEngine(
             logger.LogWarning(ex, "Failed to import game state");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Read a numeric field from a JSON dictionary as a <see cref="BigDouble"/>,
+    /// transparently handling both string (v2 format) and number (legacy v1)
+    /// representations.
+    /// </summary>
+    private static BigDouble ReadBigDouble(Dictionary<string, JsonElement> data, string key)
+    {
+        if (!data.TryGetValue(key, out var el)) return BigDouble.Zero;
+
+        return el.ValueKind switch
+        {
+            JsonValueKind.String => BigDouble.TryParse(el.GetString(), out var parsed) ? parsed : BigDouble.Zero,
+            JsonValueKind.Number => new BigDouble(el.GetDouble()),
+            _ => BigDouble.Zero,
+        };
     }
 }

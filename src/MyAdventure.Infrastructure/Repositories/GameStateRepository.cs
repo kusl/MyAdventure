@@ -29,9 +29,12 @@ public class GameStateRepository(
         }
         else
         {
-            existing.Cash = state.Cash;
-            existing.LifetimeEarnings = state.LifetimeEarnings;
-            existing.AngelInvestors = state.AngelInvestors;
+            // Copy the BigDouble-string columns + the prestige counter +
+            // the JSON dictionaries. The id and CreatedAt are intentionally
+            // not touched so identity stays stable across saves.
+            existing.CashText = state.CashText;
+            existing.LifetimeEarningsText = state.LifetimeEarningsText;
+            existing.AngelInvestorsText = state.AngelInvestorsText;
             existing.PrestigeCount = state.PrestigeCount;
             existing.BusinessDataJson = state.BusinessDataJson;
             existing.ManagerDataJson = state.ManagerDataJson;

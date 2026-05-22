@@ -4,6 +4,7 @@ using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
 using MyAdventure.Shared.Services;
 
@@ -11,6 +12,15 @@ namespace MyAdventure.Shared.ViewModels;
 
 /// <summary>
 /// Main game ViewModel. Drives the game loop and exposes all state for binding.
+///
+/// <para>
+/// <b>BigDouble migration:</b> the engine's cash, lifetime earnings,
+/// angel investors and angel bonus are now <see cref="BigDouble"/>.
+/// This ViewModel still exposes string text properties for binding —
+/// the View doesn't care what underlying numeric type produced the
+/// displayed glyph, only that it's short and readable, which is what
+/// <see cref="NumberFormatter.Format(BigDouble)"/> guarantees.
+/// </para>
 /// </summary>
 public partial class GameViewModel : ViewModelBase
 {
@@ -115,23 +125,16 @@ public partial class GameViewModel : ViewModelBase
     /// gap on resume, and triggers an immediate save so the persisted
     /// <c>LastPlayedAt</c> is as fresh as possible in case the OS later
     /// kills the process without ever resuming us.
-    ///
-    /// <para>
-    /// Idempotent: calling twice in a row simply re-stamps the timestamp,
-    /// which is fine — the only thing that matters is that
-    /// <see cref="OnResumed"/> sees a value to subtract from "now."
-    /// </para>
     /// </summary>
     public void OnSuspended()
     {
         _suspendedAt = _time.GetUtcNow().UtcDateTime;
         _logger.LogInformation("App suspended at {SuspendedAt:o}", _suspendedAt);
 
-        // Fire-and-forget save: the OS gives us limited time after going to
-        // background, and we already use the same fire-and-forget pattern
-        // in OnTick's auto-save. If the save loses to the suspend, the
-        // cold-load offline-earnings path will still pick up the gap from
-        // the last successful auto-save.
+        // Fire-and-forget save (the OS gives us limited time after going to
+        // background). If the save loses to the suspend, the cold-load
+        // offline-earnings path still picks up the gap from the last
+        // successful auto-save.
         _ = SaveAsync();
     }
 
@@ -141,30 +144,21 @@ public partial class GameViewModel : ViewModelBase
     /// Computes the time gap since <see cref="OnSuspended"/>, applies
     /// offline earnings for that gap, resets the tick timestamp so the
     /// next tick computes a small natural delta, and shows the player a
-    /// "while you were away" toast. Then forces a UI refresh.
-    ///
-    /// <para>
-    /// <b>Guard against double-counting:</b> if <see cref="_suspendedAt"/>
-    /// is <c>null</c> we skip the gap calculation entirely. Cold start
-    /// already runs <see cref="GameEngine.LoadAsync"/>, which has its own
-    /// offline-earnings path, and we must not run both.
-    /// </para>
+    /// "while you were away" toast.
     /// </summary>
     public void OnResumed()
     {
         // Snapshot _suspendedAt and clear it BEFORE doing anything else,
         // so a re-entrant call (rare, but observed on some platforms that
-        // fire duplicate Activated events) can't double-pay. The cold-start
-        // guard then degenerates to "is the snapshot null?".
+        // fire duplicate Activated events) can't double-pay.
         var suspended = _suspendedAt;
         _suspendedAt = null;
 
         if (suspended is null)
         {
-            // No prior OnSuspended in this process lifetime — this is
-            // either cold start or a spurious activation event. Either
-            // way: nothing to compensate for, just resync _lastTick so
-            // the next tick is sane.
+            // No prior OnSuspended in this process lifetime — cold start
+            // or a spurious activation event. Either way: nothing to
+            // compensate for, just resync _lastTick so the next tick is sane.
             _lastTick = _time.GetUtcNow().UtcDateTime;
             return;
         }
@@ -176,14 +170,13 @@ public partial class GameViewModel : ViewModelBase
 
         // Reset _lastTick AFTER applying offline earnings: otherwise the
         // first post-resume tick would still see a multi-minute delta
-        // (clamped to 1s) on top of what we just applied — a small but
-        // unnecessary double-count.
+        // (clamped to 1s) on top of what we just applied.
         _lastTick = now;
 
-        if (earned > 0)
+        if (earned.Sign > 0)
         {
-            _logger.LogInformation("Applied resume earnings: {Earned:F2} for {Seconds:F0}s suspended",
-                earned, elapsed.TotalSeconds);
+            _logger.LogInformation("Applied resume earnings: {Earned} for {Seconds:F0}s suspended",
+                earned.ToCanonicalString(), elapsed.TotalSeconds);
             _toasts.Show($"While you were away, you earned ${NumberFormatter.Format(earned)}!");
         }
         else
@@ -198,11 +191,6 @@ public partial class GameViewModel : ViewModelBase
     [RelayCommand]
     private void Export()
     {
-        // Wrap in try-catch as a final safety net. The engine itself now
-        // sanitizes non-finite values before JSON serialization, so this
-        // catch should never fire — but if a future change somehow
-        // re-introduces a non-finite-in-state bug, the player gets a
-        // toast instead of a force-close.
         try
         {
             TransferText = _engine.ExportToString();
@@ -297,11 +285,10 @@ public partial class GameViewModel : ViewModelBase
             return;
         }
 
-        var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
         var (angels, success) = _engine.Prestige();
         if (!success) return;
 
-        _logger.LogInformation("Prestige! Gained {Angels:F0} angels", angels);
+        _logger.LogInformation("Prestige! Gained {Angels} angels", angels.ToCanonicalString());
 
         Businesses.Clear();
         foreach (var biz in _engine.Businesses)
@@ -330,24 +317,19 @@ public partial class GameViewModel : ViewModelBase
         CashText = $"${NumberFormatter.Format(_engine.Cash)}";
         AngelText = NumberFormatter.Format(_engine.AngelInvestors);
 
-        // Display the angel bonus as a multiplier ("×N") rather than a
-        // percentage. The previous "+(bonus-1)*100%" formulation broke
-        // visually past ~50 angels (showing "+200,000%" was already
-        // illegible) and broke arithmetically past ~35,750 angels, where
-        // the subtraction Infinity - 1 produces NaN and propagates into
-        // the UI as "+NaN%". A multiplier reads the same at every scale:
-        // ×2.69, ×52, ×1.00 K, all the way up to "×∞" only if the engine
-        // ever lets the bonus go non-finite (it doesn't — see the cap on
-        // GameEngine.AngelBonus).
+        // Display the angel bonus as a "×N" multiplier — uniform behavior
+        // at every scale, including the BigDouble exponent range where a
+        // percentage display ("+infinity%") would be illegible.
         AngelBonusText = $"\u00D7{NumberFormatter.Format(_engine.AngelBonus)}";
 
         PrestigeCount = _engine.PrestigeCount;
 
         var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
-        CanPrestige = potentialAngels >= 1;
-        NextAngelText = NumberFormatter.Format(Math.Max(0, potentialAngels));
+        CanPrestige = potentialAngels >= BigDouble.One;
+        NextAngelText = potentialAngels.Sign > 0
+            ? NumberFormatter.Format(potentialAngels)
+            : "0";
 
-        // Prestige explanation that auto-updates
         if (CanPrestige)
         {
             PrestigeExplanation = $"Reset all businesses. Gain {NextAngelText} angels (+2% revenue each).";
@@ -357,26 +339,19 @@ public partial class GameViewModel : ViewModelBase
             PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
         }
 
-        // Snapshot AngelBonus once and pass to every business so all cards
-        // display consistent post-bonus revenue figures within a single tick.
+        // Snapshot AngelBonus once per refresh so every BusinessViewModel
+        // sees the same value in a single frame.
         var angelBonus = _engine.AngelBonus;
+        var cash = _engine.Cash;
         foreach (var bvm in Businesses)
-            bvm.Refresh(_engine.Cash, angelBonus);
+            bvm.Refresh(cash, angelBonus);
     }
 
     /// <summary>
-    /// Get the clipboard from the active top-level.
-    /// Works on desktop, Android, iOS, and browser uniformly: the active
-    /// View registers itself with <see cref="AppRoot.CurrentVisual"/> when
-    /// it attaches to the visual tree, and we ask it for its TopLevel.
-    /// <para>
-    /// This pattern replaces the per-platform application-lifetime branching
-    /// that was needed in Avalonia 11. In v12 Android no longer exposes a
-    /// live <c>MainView</c> via <see cref="Avalonia.Controls.ApplicationLifetimes.IActivityApplicationLifetime"/>
-    /// (only a factory), so the View-publishes-itself approach is the only
-    /// clean cross-platform solution that doesn't reach into platform-specific
-    /// types like <c>AndroidActivatableLifetime.CurrentMainActivity</c>.
-    /// </para>
+    /// Get the clipboard from the active top-level. Works on desktop,
+    /// Android, iOS, and browser uniformly: the active View registers
+    /// itself with <see cref="AppRoot.CurrentVisual"/> when it attaches
+    /// to the visual tree, and we ask it for its TopLevel.
     /// </summary>
     private static IClipboard? GetClipboard()
     {

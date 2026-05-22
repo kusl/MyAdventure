@@ -1,65 +1,58 @@
 using System.Globalization;
 using System.Text;
+using MyAdventure.Core.Numerics;
 
 namespace MyAdventure.Core.Services;
 
 /// <summary>
-/// Formats large numbers into readable abbreviated strings.
+/// Formats numbers — both <see cref="double"/> and <see cref="BigDouble"/> —
+/// into readable abbreviated strings.
 /// <para>
-/// Below 1000: two decimal places, e.g. <c>999.99</c>.
-/// </para>
-/// <para>
-/// Between 1000 and 1e36: metric-style suffix (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D),
+/// Below 1000: two decimal places (<c>999.99</c>).
+/// 1000 to 1e36: metric suffix (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D),
 /// e.g. <c>1234</c> → <c>"1.23 K"</c>, <c>1.5e12</c> → <c>"1.50 T"</c>.
+/// At or above 1e36 (and for any <c>BigDouble</c> whose exponent is past
+/// the suffix table): scientific notation with Unicode superscript exponents,
+/// e.g. <c>7.53 × 10⁴⁰</c>. Keeps very large values short and readable
+/// without inventing exotic suffixes.
 /// </para>
 /// <para>
-/// At or above 1e36 (where the suffix table runs out): scientific notation
-/// with Unicode superscript exponents, e.g. <c>7.53e40</c> → <c>"7.53 × 10⁴⁰"</c>.
-/// This keeps very large values readable without inventing new suffixes
-/// that nobody recognizes.
+/// The <see cref="BigDouble"/> overload is what allows the UI to display
+/// progression deep into the post-double range (10⁵⁰⁰, 10¹⁰⁰⁰, …) with
+/// the same conventions, instead of saturating at the prior 10²⁰⁰ ceiling.
 /// </para>
 /// <para>
 /// Non-finite values are handled defensively so they can never propagate
 /// crashes or gibberish through the UI:
-/// <list type="bullet">
-///   <item><c>double.PositiveInfinity</c> → <c>"∞"</c></item>
-///   <item><c>double.NegativeInfinity</c> → <c>"-∞"</c></item>
-///   <item><c>double.NaN</c> → <c>"?"</c></item>
-/// </list>
-/// The point of the NaN/Infinity branches is not that we expect to see
-/// them — the game engine clamps its own state to keep values finite —
-/// but that if a corrupted save or an arithmetic edge case ever produces
-/// one, we render a glyph instead of dumping the literal string "Infinity"
-/// into the UI or crashing a downstream JSON serializer that doesn't accept
-/// non-finite doubles.
 /// </para>
+/// <list type="bullet">
+///   <item><c>+∞</c> → <c>"∞"</c></item>
+///   <item><c>-∞</c> → <c>"-∞"</c></item>
+///   <item><c>NaN</c> → <c>"?"</c></item>
+/// </list>
 /// </summary>
 public static class NumberFormatter
 {
     /// <summary>
     /// Suffix table, ordered highest-to-lowest so the first matching
-    /// threshold wins. Caps at 1e33 (Decillion); values at or above
-    /// <see cref="ScientificThreshold"/> are formatted with
-    /// <see cref="FormatScientific"/> instead.
+    /// threshold wins. Caps at 1e33 (Decillion); values past
+    /// <see cref="ScientificThreshold"/> fall through to scientific notation.
     /// </summary>
-    private static readonly (double threshold, string suffix)[] Suffixes =
+    private static readonly (long exponent, string suffix)[] Suffixes =
     [
-        (1e33, "D"), (1e30, "N"), (1e27, "O"), (1e24, "Sp"),
-        (1e21, "Sx"), (1e18, "Qi"), (1e15, "Qa"), (1e12, "T"),
-        (1e9, "B"), (1e6, "M"), (1e3, "K")
+        (33, "D"), (30, "N"), (27, "O"), (24, "Sp"),
+        (21, "Sx"), (18, "Qi"), (15, "Qa"), (12, "T"),
+        (9, "B"), (6, "M"), (3, "K")
     ];
 
     /// <summary>
-    /// Threshold at which we switch from suffix notation to scientific
-    /// notation. Picked as 1000 × 1e33 = 1e36 so the last suffix bucket
-    /// "D" tops out cleanly at "999.99 D" instead of overflowing into
-    /// "1000.00 D" or worse.
+    /// Threshold at which we switch from suffix notation to scientific notation.
+    /// Picked as 10³⁶ so the last suffix bucket "D" tops out cleanly at
+    /// "999.99 D" instead of overflowing into "1000.00 D".
     /// </summary>
-    private const double ScientificThreshold = 1e36;
+    private const long ScientificThresholdExponent = 36;
 
-    // Unicode superscript digits 0-9 (U+2070, U+00B9, U+00B2, U+00B3, U+2074..U+2079).
-    // Rendering with these means callers don't need a rich-text layout
-    // to display "10⁴⁰".
+    // Unicode superscript digits 0-9.
     private static readonly char[] SuperscriptDigits =
     [
         '\u2070', // ⁰
@@ -82,44 +75,64 @@ public static class NumberFormatter
     /// </summary>
     public static string Format(double value)
     {
-        // Defensive: non-finite values must never leak through the UI or
-        // into JSON. Glyph stand-ins are returned instead.
         if (double.IsNaN(value)) return "?";
-        if (double.IsPositiveInfinity(value)) return "\u221E";  // ∞
-        if (double.IsNegativeInfinity(value)) return "-\u221E"; // -∞
+        if (double.IsPositiveInfinity(value)) return "\u221E";
+        if (double.IsNegativeInfinity(value)) return "-\u221E";
 
         if (value < 0) return $"-{Format(-value)}";
         if (value < 1000) return value.ToString("F2", CultureInfo.InvariantCulture);
 
-        // Past the highest named suffix, switch to scientific notation
-        // rather than emitting "1000000.00 D" or inventing new suffixes
-        // that aren't widely recognized.
-        if (value >= ScientificThreshold) return FormatScientific(value);
-
-        foreach (var (threshold, suffix) in Suffixes)
-        {
-            if (value >= threshold)
-            {
-                var scaled = (value / threshold).ToString("F2", CultureInfo.InvariantCulture);
-                return $"{scaled} {suffix}";
-            }
-        }
-
-        // Defensive fallback — unreachable in practice because the suffix
-        // table covers all of [1000, ScientificThreshold). Kept so the
-        // method has a guaranteed return on every code path.
-        return value.ToString("F2", CultureInfo.InvariantCulture);
+        // Defer to the BigDouble path so suffix selection and scientific-
+        // notation rendering are implemented once.
+        return Format(new BigDouble(value));
     }
 
     /// <summary>
-    /// Format a value using scientific notation with Unicode superscript
-    /// exponents. The mantissa is rendered with two decimals; the exponent
-    /// becomes superscript digits so the result reads naturally
-    /// (e.g. <c>"7.53 × 10⁴⁰"</c>) without needing rich-text layout.
-    /// <para>
-    /// Public so it can be unit-tested in isolation, and so callers that
-    /// want scientific notation regardless of magnitude can opt in.
-    /// </para>
+    /// Render a <see cref="BigDouble"/> using the same rules as the
+    /// <see cref="Format(double)"/> overload. Values past the suffix table
+    /// fall through to scientific notation regardless of how large.
+    /// </summary>
+    public static string Format(BigDouble value)
+    {
+        if (value.IsNaN) return "?";
+        if (value.IsInfinity) return value.Sign < 0 ? "-\u221E" : "\u221E";
+        if (value.IsZero) return "0.00";
+        if (value.Sign < 0) return $"-{Format(value.Abs())}";
+
+        // Small values: defer to the double formatter for the "999.99" rendering.
+        if (value < new BigDouble(1000))
+        {
+            var asDouble = value.ToDouble();
+            return asDouble.ToString("F2", CultureInfo.InvariantCulture);
+        }
+
+        // Past the suffix table → scientific notation.
+        if (value.Exponent >= ScientificThresholdExponent)
+        {
+            return FormatScientific(value);
+        }
+
+        // Find the largest suffix whose exponent is at or below the value's.
+        foreach (var (exponent, suffix) in Suffixes)
+        {
+            if (value.Exponent >= exponent)
+            {
+                // Shift the mantissa by (value.Exponent - exponent) so the
+                // displayed number is in [1, 1000). E.g. 12.3 K means
+                // mantissa was 1.23 with value.Exponent = 4 and suffix.exponent = 3.
+                var shift = value.Exponent - exponent;
+                var scaled = value.Mantissa * Math.Pow(10, shift);
+                return $"{scaled.ToString("F2", CultureInfo.InvariantCulture)} {suffix}";
+            }
+        }
+
+        // Defensive fallback — unreachable because the smallest suffix is
+        // at exponent 3 and we already short-circuited values < 1000.
+        return value.ToDouble().ToString("F2", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Format a double using scientific notation with Unicode superscript exponents.
     /// </summary>
     public static string FormatScientific(double value)
     {
@@ -132,9 +145,6 @@ public static class NumberFormatter
         var exponent = (int)Math.Floor(Math.Log10(value));
         var mantissa = value / Math.Pow(10, exponent);
 
-        // Floating-point rounding can push the mantissa to exactly 10.0
-        // (e.g. for 9.9999999...e40). Bump the exponent in that case so
-        // the displayed mantissa stays in [1, 10).
         if (mantissa >= 10.0)
         {
             mantissa /= 10.0;
@@ -146,16 +156,36 @@ public static class NumberFormatter
     }
 
     /// <summary>
-    /// Convert an integer to its Unicode superscript representation.
-    /// e.g. <c>40</c> → <c>"⁴⁰"</c>, <c>-3</c> → <c>"⁻³"</c>.
+    /// Format a <see cref="BigDouble"/> using scientific notation with
+    /// Unicode superscript exponents.
     /// </summary>
-    public static string ToSuperscript(int n)
+    public static string FormatScientific(BigDouble value)
+    {
+        if (value.IsNaN) return "?";
+        if (value.IsInfinity) return value.Sign < 0 ? "-\u221E" : "\u221E";
+        if (value.IsZero) return "0";
+        if (value.Sign < 0) return $"-{FormatScientific(value.Abs())}";
+
+        var mantissaText = value.Mantissa.ToString("F2", CultureInfo.InvariantCulture);
+        return $"{mantissaText} \u00D7 10{ToSuperscript(value.Exponent)}";
+    }
+
+    /// <summary>
+    /// Convert an int to its Unicode superscript representation.
+    /// </summary>
+    public static string ToSuperscript(int n) => ToSuperscript((long)n);
+
+    /// <summary>
+    /// Convert a long to its Unicode superscript representation.
+    /// Used by the BigDouble formatter where the exponent is a long.
+    /// </summary>
+    public static string ToSuperscript(long n)
     {
         if (n == 0) return SuperscriptDigits[0].ToString();
 
         var negative = n < 0;
-        // Use long to safely negate int.MinValue without overflow.
-        var abs = negative ? -(long)n : n;
+        // Use unsigned negation to safely handle long.MinValue.
+        var abs = negative ? (ulong)(-(n + 1)) + 1UL : (ulong)n;
         var digits = new Stack<char>();
         while (abs > 0)
         {

@@ -20,18 +20,16 @@ public partial class MainWindow : Window
 
         // Publish ourselves as the active top-level so platform services
         // (clipboard, etc.) can find us via AppRoot.CurrentVisual without
-        // needing to walk the application lifetime. See AppRoot's XML doc
-        // for why this static-handshake pattern beats per-platform branching.
+        // needing to walk the application lifetime.
         AppRoot.CurrentVisual = this;
 
         if (DataContext is GameViewModel vm)
         {
             await vm.InitializeAsync();
 
-            // Avalonia 12 note: DispatcherTimer now uses the *current*
-            // dispatcher at construction rather than the UI thread by
-            // default. OnOpened runs on the UI thread, so we get the UI
-            // dispatcher here, which is what we want.
+            // Avalonia 12: DispatcherTimer binds to the current dispatcher
+            // at construction. OnOpened runs on the UI thread, so we get
+            // the UI dispatcher here, which is what we want.
             _gameTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(16) // ~60fps
@@ -48,8 +46,6 @@ public partial class MainWindow : Window
         if (DataContext is GameViewModel vm)
             await vm.SaveAsync();
 
-        // Only clear AppRoot if it's still pointing at us; if a future
-        // multi-window setup has already swapped it, leave it alone.
         if (ReferenceEquals(AppRoot.CurrentVisual, this))
             AppRoot.CurrentVisual = null;
 

@@ -1,14 +1,38 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyAdventure.Core.Entities;
+using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
 using MyAdventure.Shared.Services;
 
 namespace MyAdventure.Shared.ViewModels;
 
 /// <summary>
-/// ViewModel wrapping a single Business for data binding.
-/// Includes expanded detail properties for adaptive display.
+/// ViewModel wrapping a single Business for data binding. Includes
+/// expanded detail properties for adaptive display.
+///
+/// <para>
+/// <b>BigDouble note:</b> the <see cref="Refresh"/> method takes
+/// <see cref="BigDouble"/> for both cash and the angel bonus, mirroring
+/// the engine's new types. Display text properties stay
+/// <see cref="string"/>; formatting happens once here so the views can
+/// bind directly without conversion overhead per frame.
+/// </para>
+///
+/// <para>
+/// <b>"Buy Max" support:</b> the second action button used to be the
+/// "Buy N→milestone" button and disappeared once all milestones were
+/// reached at 1000 owned — leaving the player with no bulk-purchase
+/// option past that point. It is now always present:
+/// </para>
+/// <list type="bullet">
+///   <item>While a next milestone exists, it reads
+///         <c>"BUY N→threshold"</c> and buys exactly the units needed to
+///         reach it.</item>
+///   <item>Once all milestones are reached, it reads
+///         <c>"BUY MAX (N)"</c> and buys as many units as the player can
+///         currently afford.</item>
+/// </list>
 /// </summary>
 public partial class BusinessViewModel(
     Business model,
@@ -44,9 +68,20 @@ public partial class BusinessViewModel(
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
 
-    // --- Buy-to-milestone ---
-    [ObservableProperty] private bool _canBuyToNextMilestone;
-    [ObservableProperty] private string _buyToNextMilestoneText = "";
+    // --- Bulk buy button ---
+    /// <summary>
+    /// True if at least one unit can be afforded toward the next bulk
+    /// purchase (either next milestone, or "buy max" if no milestones remain).
+    /// Wired to the bulk-buy button's <c>Opacity</c> via the BoolToOpacity
+    /// converter so unaffordable buttons dim rather than vanishing.
+    /// </summary>
+    [ObservableProperty] private bool _canBulkBuy;
+
+    /// <summary>
+    /// Label shown on the bulk-buy button. "BUY N→threshold" while a
+    /// milestone is reachable; "BUY MAX (N)" once all milestones are reached.
+    /// </summary>
+    [ObservableProperty] private string _bulkBuyText = "";
 
     [RelayCommand]
     private void ClickBusiness()
@@ -90,33 +125,51 @@ public partial class BusinessViewModel(
 
         if (!engine.BuyManager(model.Id))
         {
-            var mgrCost = model.BaseCost * 1000;
+            var mgrCost = new BigDouble(model.BaseCost * 1000);
             var need = mgrCost - engine.Cash;
             toasts.Show($"Need ${NumberFormatter.Format(need)} more for {model.Name} manager");
         }
     }
 
+    /// <summary>
+    /// Bulk purchase action. While a milestone is still reachable, buys
+    /// exactly the units needed to reach it (or as many as the player
+    /// can afford if not all are affordable). Once all milestones are
+    /// reached, buys as many units as the player can currently afford —
+    /// the "buy max" behavior the player needs deep into the game.
+    /// </summary>
     [RelayCommand]
-    private void BuyToNextMilestone()
+    private void BulkBuy()
     {
         var next = Milestone.NextMilestone(model.Owned);
         if (next is null)
         {
-            toasts.Show($"{model.Name} has reached all milestones!");
+            // No more milestones → "Buy Max" mode.
+            var affordable = model.AffordableCount(engine.Cash);
+            if (affordable <= 0)
+            {
+                toasts.Show($"Can't afford any more {model.Name} right now");
+                return;
+            }
+            var bought = engine.BuyMax(model.Id);
+            if (bought > 0)
+            {
+                toasts.Show($"Bought {bought} more {model.Name} (now {model.Owned})");
+            }
             return;
         }
 
         var needed = next.Threshold - model.Owned;
         if (needed <= 0) return;
 
-        var bought = engine.BuyMultiple(model.Id, needed);
-        if (bought == 0)
+        var purchased = engine.BuyMultiple(model.Id, needed);
+        if (purchased == 0)
         {
             toasts.Show($"Can't afford any more {model.Name} right now");
         }
-        else if (bought < needed)
+        else if (purchased < needed)
         {
-            toasts.Show($"Bought {bought} {model.Name} — need {needed - bought} more for milestone");
+            toasts.Show($"Bought {purchased} {model.Name} — need {needed - purchased} more for milestone");
         }
         else
         {
@@ -134,25 +187,25 @@ public partial class BusinessViewModel(
     /// <see cref="RevenuePerSecondText"/> so the UI shows what the player will
     /// actually earn — not the pre-bonus base values.
     /// </param>
-    public void Refresh(double cash, double angelBonus)
+    public void Refresh(BigDouble cash, BigDouble angelBonus)
     {
         Owned = model.Owned;
         ProgressPercent = model.ProgressPercent;
         IsRunning = model.IsRunning;
         HasManager = model.HasManager;
         CostText = NumberFormatter.Format(model.NextCost);
-        // Display the post-angel revenue. Owned == 0 still shows "—" because
-        // there's no business to earn from yet.
+
+        // Owned == 0 still shows "—" because there's no business to earn from yet.
         RevenueText = model.Owned > 0
             ? NumberFormatter.Format(model.Revenue * angelBonus)
             : "—";
-        ManagerCostText = NumberFormatter.Format(model.BaseCost * 1000);
+        var managerCost = new BigDouble(model.BaseCost * 1000);
+        ManagerCostText = NumberFormatter.Format(managerCost);
         CanAfford = cash >= model.NextCost;
-        CanAffordManager = !model.HasManager && cash >= model.BaseCost * 1000;
+        CanAffordManager = !model.HasManager && cash >= managerCost;
 
         // Extended details
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
-        // Same angel adjustment applies to the per-second figure.
         RevenuePerSecondText = model.Owned > 0
             ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
             : "—";
@@ -171,17 +224,20 @@ public partial class BusinessViewModel(
             NextMilestoneText = $"{UnitsToNextMilestone} more → {next.Threshold}";
             NextMilestoneRewardText = next.Label;
 
-            // Can we afford at least 1 unit toward the milestone?
-            CanBuyToNextMilestone = cash >= model.NextCost && UnitsToNextMilestone > 0;
-            BuyToNextMilestoneText = $"BUY {UnitsToNextMilestone}→{next.Threshold}";
+            // Milestone-mode label and affordability for the bulk-buy button.
+            CanBulkBuy = cash >= model.NextCost && UnitsToNextMilestone > 0;
+            BulkBuyText = $"BUY {UnitsToNextMilestone}→{next.Threshold}";
         }
         else
         {
             UnitsToNextMilestone = 0;
             NextMilestoneText = "All milestones reached!";
             NextMilestoneRewardText = "";
-            CanBuyToNextMilestone = false;
-            BuyToNextMilestoneText = "";
+
+            // Buy-max mode: the button STAYS visible. Affordable count
+            // drives both the label ("BUY MAX (N)") and the enable state.
+            CanBulkBuy = AffordableCount > 0;
+            BulkBuyText = AffordableCount > 0 ? $"BUY MAX ({AffordableCount})" : "BUY MAX";
         }
     }
 

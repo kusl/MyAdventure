@@ -26,21 +26,18 @@ public class MilestoneTests
     [Fact]
     public void CalculateMultiplier_At50_ShouldBe4()
     {
-        // 25 milestone (×2) × 50 milestone (×2) = ×4
         Milestone.CalculateMultiplier(50).ShouldBe(4.0);
     }
 
     [Fact]
     public void CalculateMultiplier_At100_ShouldBe8()
     {
-        // ×2 × ×2 × ×2 = ×8
         Milestone.CalculateMultiplier(100).ShouldBe(8.0);
     }
 
     [Fact]
     public void CalculateMultiplier_At1000_ShouldBeMax()
     {
-        // All milestones: 2^6 × 4^5 × 5 = 64 × 1024 × 5 = 327680
         var result = Milestone.CalculateMultiplier(1000);
         result.ShouldBe(64 * 1024 * 5.0);
     }

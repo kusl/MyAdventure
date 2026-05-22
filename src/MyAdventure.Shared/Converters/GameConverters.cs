@@ -41,7 +41,7 @@ public class WidthThresholdConverter : IValueConverter
         {
             return width >= threshold;
         }
-        return true; // default to showing
+        return true;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

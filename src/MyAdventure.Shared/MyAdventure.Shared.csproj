@@ -16,10 +16,8 @@
     <AvaloniaResource Include="Resources\i18n\*.json" />
   </ItemGroup>
 
-  <!-- Grant the UI test project access to internal members so it can
-       reach the AppLifecycleManager.ResetForTesting() seam. Production
-       callers cannot use ResetForTesting (it's internal); the tests
-       need it to keep the manager's static state isolated between cases. -->
+  <!-- Grant the UI test project access to internals so it can reach
+       AppLifecycleManager.ResetForTesting(). -->
   <ItemGroup>
     <InternalsVisibleTo Include="MyAdventure.UI.Tests" />
   </ItemGroup>

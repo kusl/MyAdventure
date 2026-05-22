@@ -11,9 +11,12 @@ namespace MyAdventure.Desktop;
 
 public partial class App : Avalonia.Application
 {
-    private IServiceProvider? _services;
+    public static IServiceProvider? Services { get; private set; }
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 
     public override async void OnFrameworkInitializationCompleted()
     {
@@ -22,21 +25,14 @@ public partial class App : Avalonia.Application
         services.AddSingleton<ToastService>();
         services.AddTransient<GameEngine>();
         services.AddTransient<GameViewModel>();
-        _services = services.BuildServiceProvider();
+        Services = services.BuildServiceProvider();
 
-        await DependencyInjection.InitializeDatabaseAsync(_services);
+        await DependencyInjection.InitializeDatabaseAsync(Services);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var vm = _services.GetRequiredService<GameViewModel>();
+            var vm = Services.GetRequiredService<GameViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = vm };
-
-            // Wire the cross-platform suspend/resume signal. On desktop
-            // this fires on hibernate/sleep transitions; on Android the
-            // same call wires the activity background/foreground events.
-            // One shared implementation, no per-platform lifecycle code
-            // in the Views — see AppLifecycleManager for the full
-            // rationale on why this lives in Shared.
             AppLifecycleManager.Attach(vm);
         }
 
