@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Fri May 22 05:37:50 PM EDT 2026
+Generated: Fri May 22 05:43:23 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -55,7 +55,8 @@ DIRECTORY STRUCTURE:
 │               ├── 023.txt
 │               ├── 024.txt
 │               ├── 025.txt
-│               └── 026.txt
+│               ├── 026.txt
+│               └── 027.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -1232,7 +1233,7 @@ SIZE: .10 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/AndroidApp.cs
-SIZE: .73 KB
+SIZE: 1.77 KB
 ================================================================================
 
 using Android.App;
@@ -1244,10 +1245,27 @@ namespace MyAdventure.Android;
 
 /// <summary>
 /// Android Application class. Required by Avalonia 12 — AppBuilder
-/// customization (like WithInterFont) now lives here, on a class deriving
-/// from AvaloniaAndroidApplication&lt;TApp&gt; with the [Application] attribute.
+/// customization (such as <c>WithInterFont()</c>) was previously hooked
+/// onto <c>AvaloniaMainActivity{TApp}</c>'s <c>CustomizeAppBuilder</c>,
+/// but in v12 that generic activity type no longer exists and those virtual
+/// methods are no longer called by the framework. All AppBuilder configuration
+/// now lives here, on a class deriving from
+/// <see cref="AvaloniaAndroidApplication{TApp}"/> and decorated with
+/// <see cref="ApplicationAttribute"/>. <c>MainActivity</c> is now empty
+/// and inherits from the non-generic <see cref="AvaloniaMainActivity"/>.
+///
+/// IMPORTANT: do NOT set <c>[Application(Name = "...")]</c> to the package
+/// name (e.g. "com.myadventure.app"). That attribute value is the
+/// fully-qualified Java class name for the generated Application subclass.
+/// Setting it equal to the package name causes a javac collision:
+///     class 'app' clashes with package of same name
+///     package 'com.myadventure.app' clashes with class of same name
+/// because R.java lives in com.myadventure.app, and a class also named
+/// com.myadventure.app cannot coexist. Leave Name unset (the build
+/// generates a synthetic, collision-free Java name) or use a distinct
+/// class name like "com.myadventure.app.MyAdventureApp".
 /// </summary>
-[Application(Name = "com.myadventure.app")]
+[Application]
 public class AndroidApp : AvaloniaAndroidApplication<App>
 {
     protected AndroidApp(IntPtr javaReference, JniHandleOwnership transfer)
@@ -1263,15 +1281,21 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
 ================================================================================
 FILE: src/MyAdventure.Android/AndroidManifest.xml
-SIZE: .53 KB
+SIZE: .83 KB
 ================================================================================
 
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.myadventure.app">
-    <application 
-        android:allowBackup="true" 
-        android:icon="@drawable/icon" 
+<!--
+  Do not add a `package="..."` attribute on <manifest>. In modern .NET for
+  Android (net6.0-android+) the package identity is set by the
+  <ApplicationId> MSBuild property in the .csproj, which is the single
+  canonical source of truth. Setting it here in addition can cause
+  javac collisions between the generated Application class and R.java.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/MyTheme.NoActionBar">
