@@ -9272,3 +9272,62 @@ The suggestion to add `Name = "com.myadventure.app"` came from a mental model wh
 
 42
 42
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+42
+42
+
+I still have this error 
+some errors occurred 
+Downloaded package ID does not match existing app ID - com.myadventure.app [MyAdventure]
+Do I need to uninstall and reinstall this app on android? 
+
+Yes — you need to uninstall first, then reinstall.
+
+## What's happening
+
+Android identifies installed apps by their package ID (`applicationId`). The version on your phone was installed when the project's `<ApplicationId>` was `com.kusl.myadventure`. You've since changed it to `com.myadventure.app`. Android treats these as two completely different apps — and it won't let you "upgrade" one to the other because, from its perspective, you're trying to install a stranger's app on top of yours. It refuses with exactly the error you're seeing.
+
+This is a security feature, not a bug. If Android allowed package ID swaps via upgrade, malware could hijack an installed app's data by impersonating it with a matching signature.
+
+## What to do
+
+Uninstall the old one, then install the new APK:
+
+```
+adb uninstall com.kusl.myadventure
+```
+
+Or, on the phone itself: Settings → Apps → MyAdventure → Uninstall. Then install the new APK normally.
+
+**Heads up: this wipes the app's data.** Your SQLite save file at `/data/data/com.kusl.myadventure/...` goes with it. If you have a save you care about, use the in-app export (the base64 JSON string) to copy it out *before* uninstalling, then paste it back into the new install via import.
+
+## Going forward
+
+Now that you've picked `com.myadventure.app` as the package ID, lock it in and don't change it again — every change forces an uninstall/reinstall and data loss for any users who've installed it. Same applies if you later publish to F-Droid or similar; the package ID is effectively a permanent identity.
+
+One other thing worth checking while you're here: the keystore. If your signed CI APK is now signed with a different key than the one originally on your phone (separate issue from the package ID, but same general "Android won't let you swap identities" theme), you'll hit a *different* error after uninstall on the *next* update. As long as `ANDROID_KEYSTORE_BASE64` in your repo secrets stays stable, you're fine — just don't regenerate the keystore.
