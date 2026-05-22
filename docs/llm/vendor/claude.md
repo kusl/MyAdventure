@@ -8198,3 +8198,8 @@ The first boot will run a one-time in-place SQLite ALTER TABLE migration on your
 
 
 
+59
+34
+
+I have incorporated your changes and have some errors.
+Please review 
