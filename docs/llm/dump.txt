@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Fri May 22 04:38:57 PM EDT 2026
+Generated: Fri May 22 04:46:35 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -52,7 +52,9 @@ DIRECTORY STRUCTURE:
 │               ├── 020.txt
 │               ├── 021.txt
 │               ├── 022.txt
-│               └── 023.txt
+│               ├── 023.txt
+│               ├── 024.txt
+│               └── 025.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -587,8 +589,8 @@ SIZE: 3.93 KB
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
     <AvaloniaVersion>12.0.3</AvaloniaVersion>
-    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
-    <EfCoreVersion>10.0.7</EfCoreVersion>
+    <MicrosoftExtensionsVersion>10.0.8</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.8</EfCoreVersion>
     <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
     <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
     <XunitVersion>2.9.3</XunitVersion>
@@ -643,7 +645,7 @@ SIZE: 3.93 KB
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
   </ItemGroup>
 </Project>
 
