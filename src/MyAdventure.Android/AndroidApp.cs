@@ -10,7 +10,7 @@ namespace MyAdventure.Android;
 /// customization (like WithInterFont) now lives here, on a class deriving
 /// from AvaloniaAndroidApplication&lt;TApp&gt; with the [Application] attribute.
 /// </summary>
-[Application]
+[Application(Name = "com.myadventure.app")]
 public class AndroidApp : AvaloniaAndroidApplication<App>
 {
     protected AndroidApp(IntPtr javaReference, JniHandleOwnership transfer)

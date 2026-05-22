@@ -8899,3 +8899,173 @@ Quick sanity checklist after the change:
 
 If anything breaks, it'll almost certainly be EF Core (patch releases occasionally tighten validation); the `Microsoft.Extensions.*` bumps in patch versions are nearly always safe.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+35
+42
+
+I downloaded the new release APK from github releases as usual using obtainium and got the following message: 
+some errors occurred. 
+Downloaded package ID does not match existing app ID - com.myadventure.app [MyAdventure]
+Please thoroughly review the `dump.txt` and identify the root cause 
+
+Let me find the Android-specific configuration files — the `AndroidManifest.xml` and the `.csproj`.Now let me check the CI workflow to see what `ApplicationId` or package ID is used there (and in the `AndroidApp.cs` `[Application]` attribute):Now let me check the CI workflow, specifically how the APK is signed and released — looking for any `ApplicationId` override or different package name used at release time:I have a complete picture. Let me now check if there's a `Directory.Build.props` that might override `ApplicationId`:The root cause is clear. Here's the diagnosis:
+
+---
+
+## Root Cause: `[Application]` attribute without `Name` parameter
+
+The Obtainium error — *"Downloaded package ID does not match existing app ID `com.myadventure.app`"* — means the APK being installed has a **different package name** than the one Obtainium previously recorded. This is a classic Android package identity mismatch.
+
+There are two sources of truth for the Android package name in this project, and they are **out of sync**:
+
+**1. `MyAdventure.Android.csproj` (explicit)**
+```xml
+<ApplicationId>com.myadventure.app</ApplicationId>
+```
+
+**2. `AndroidApp.cs` (implicit — this is the bug)**
+```csharp
+[Application]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+```
+
+The `[Application]` attribute **without a `Name` parameter** tells the Android toolchain to derive the package name from the .NET namespace — `MyAdventure.Android` — which gets mangled to **`myadventure.android`** (all lowercase, dots from namespace segments). When the .NET Android build tooling generates the final `AndroidManifest.xml`, it uses whichever source wins during manifest merging. In some builds/SDK versions, the `[Application]` attribute's implicit name **overrides** the `<ApplicationId>` in the csproj, producing an APK with package `myadventure.android` instead of `com.myadventure.app`.
+
+The previous APK Obtainium installed had one package ID; the new build produced the other. Hence the mismatch.
+
+**Secondary contributing factor:** `AndroidManifest.xml` has no `package=` attribute at all, so there's no third source anchoring the ID. The two competing sources (csproj vs. `[Application]`) are left to race.
+
+---
+
+## Fix
+
+Add an explicit `Name` to the `[Application]` attribute so all three sources agree:
+
+**`src/MyAdventure.Android/AndroidApp.cs`** — change:
+```csharp
+[Application]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+```
+to:
+```csharp
+[Application(Name = "com.myadventure.app")]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+```
+
+And add `package=` to `AndroidManifest.xml` to make it the canonical source and eliminate the ambiguity entirely:
+
+**`src/MyAdventure.Android/AndroidManifest.xml`**:
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.myadventure.app">
+```
+
+With all three sources (`[Application(Name=...)]`, `<ApplicationId>`, and `package=` in the manifest) explicitly set to `com.myadventure.app`, the build is deterministic regardless of SDK version or toolchain ordering. Obtainium will get a consistent package ID on every release.
+
+---
+
+**Why this wasn't caught in CI:** The build passes fine — it's a packaging identity issue, not a compilation error. The mismatch only surfaces when Android tries to install the new APK over the old one and checks package IDs.
+
+37
+42
+
+38
+42
