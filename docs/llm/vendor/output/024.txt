@@ -1,0 +1,1053 @@
+kushal@fedora:~/Videos/dl$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+
+Build succeeded in 1.1s
+
+real	0m1.393s
+user	0m1.129s
+sys	0m0.380s
+Restore complete (1.4s)
+
+Build succeeded in 1.6s
+
+real	0m1.750s
+user	0m1.824s
+sys	0m0.332s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (2.6s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.6s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.6s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (1.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Desktop net10.0 failed with 1 error(s) (0.4s)
+    CSC : error CS7065: Error building Win32 resources -- Icon stream is not in the expected format.
+  MyAdventure.UI.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android failed with 2 error(s) (7.2s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/obj/Debug/net10.0-android/AndroidManifest.xml(9,3): java error AMM0000: 
+      
+      	uses-sdk:minSdkVersion 21 cannot be smaller than version 23 declared in library /home/kushal/src/d
+      otnet/MyAdventure/src/MyAdventure.Android/obj/Debug/net10.0-android/lp/69/jl/AndroidManifest.xml as
+       the library might be using APIs not available in 21
+      	Suggestion: use a compatible library with a minSdk of at most 21,
+      		or increase this project's minSdk version to at least 23,
+      		or use tools:overrideLibrary="androidx.lifecycle.runtime" to force usage (may lead to runtime fai
+      lures)
+      Directory 'obj/Debug/net10.0-android/lp/69' is from 'androidx.lifecycle.lifecycle-runtime-android.a
+      ar'.
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Common.targets(1689,3): error XAAMM0000: 
+      /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/obj/Debug/net10.0-android/AndroidManife
+      st.xml:9:3-72 Error:
+      	uses-sdk:minSdkVersion 21 cannot be smaller than version 23 declared in library /home/kushal/src/d
+      otnet/MyAdventure/src/MyAdventure.Android/obj/Debug/net10.0-android/lp/69/jl/AndroidManifest.xml as
+       the library might be using APIs not available in 21
+      	Suggestion: use a compatible library with a minSdk of at most 21,
+      		or increase this project's minSdk version to at least 23,
+      		or use tools:overrideLibrary="androidx.lifecycle.runtime" to force usage (may lead to runtime fai
+      lures)
+
+Build failed with 3 error(s) in 12.4s
+
+real	0m12.620s
+user	0m10.572s
+sys	0m2.030s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.12]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.09]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.16]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.11]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.33]     MyAdventure.Core.Tests.GameEngineTests.Cash_AtFormerCap_ContinuesToGrow [FAIL]
+[xUnit.net 00:00:00.33]       Shouldly.ShouldAssertException : _engine.Cash.Exponent
+[xUnit.net 00:00:00.33]           should be greater than
+[xUnit.net 00:00:00.33]       200L
+[xUnit.net 00:00:00.33]           but was
+[xUnit.net 00:00:00.33]       200L
+[xUnit.net 00:00:00.33]       Stack Trace:
+[xUnit.net 00:00:00.33]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(629,0): at MyAdventure.Core.Tests.GameEngineTests.Cash_AtFormerCap_ContinuesToGrow()
+[xUnit.net 00:00:00.33]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.33]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.33]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.33]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.33]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.33]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.33]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.33]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.33]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.33]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.26]   Finished:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.37]     MyAdventure.Core.Tests.GameEngineTests.LoadAsync_WithBigDoubleStringInSave_LoadsExactly [FAIL]
+[xUnit.net 00:00:00.37]       Shouldly.ShouldAssertException : engine.Cash.Exponent
+[xUnit.net 00:00:00.37]           should be
+[xUnit.net 00:00:00.37]       200L
+[xUnit.net 00:00:00.37]           but was
+[xUnit.net 00:00:00.37]       8600213L
+[xUnit.net 00:00:00.37]       Stack Trace:
+[xUnit.net 00:00:00.37]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(713,0): at MyAdventure.Core.Tests.GameEngineTests.LoadAsync_WithBigDoubleStringInSave_LoadsExactly()
+[xUnit.net 00:00:00.37]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.37]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.37]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.37]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.37]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.37]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.37]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.37]            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+[xUnit.net 00:00:00.37]            at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+[xUnit.net 00:00:00.37]            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:00:00.38]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (0.8s)
+  MyAdventure.Core.Tests test net10.0 failed with 2 error(s) (1.0s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(629): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.Cash_AtFormerCap_ContinuesToGrow (23ms): Error Message: Shou
+      ldly.ShouldAssertException : _engine.Cash.Exponent
+          should be greater than
+      200L
+          but was
+      200L
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.Cash_AtFormerCap_ContinuesToGrow() in /home/kushal/src
+      /dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 629
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task
+      , ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task
+      , ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task
+      , ConfigureAwaitOptions options)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs(713): error TESTERROR: 
+      MyAdventure.Core.Tests.GameEngineTests.LoadAsync_WithBigDoubleStringInSave_LoadsExactly (1ms): Erro
+      r Message: Shouldly.ShouldAssertException : engine.Cash.Exponent
+          should be
+      200L
+          but was
+      8600213L
+      Stack Trace:
+         at MyAdventure.Core.Tests.GameEngineTests.LoadAsync_WithBigDoubleStringInSave_LoadsExactly() in 
+      /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/GameEngineTests.cs:line 713
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task
+      , ConfigureAwaitOptions options)
+      --- End of stack trace from previous location ---
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task
+      , ConfigureAwaitOptions options)
+         at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+         at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+         at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task
+      , ConfigureAwaitOptions options)
+LogRecord.Timestamp:               2026-05-22T16:06:28.3773177Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 2
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.4623211Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 1
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: CREATE TABLE "GameStates" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+    "CashText" TEXT NOT NULL DEFAULT '0',
+    "LifetimeEarningsText" TEXT NOT NULL DEFAULT '0',
+    "AngelInvestorsText" TEXT NOT NULL DEFAULT '0',
+    "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+    "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+    "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+    "LastPlayedAt" TEXT NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NOT NULL
+);
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.4924416Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.5426698Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Migrating GameStates table to BigDouble TEXT schema
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.5446933Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    BigDouble migration complete
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): BigDouble migration complete
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.5451987Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.5483413Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T16:06:28.5498667Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: CREATE TABLE "GameStates" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+    "CashText" TEXT NOT NULL DEFAULT '0',
+    "LifetimeEarningsText" TEXT NOT NULL DEFAULT '0',
+    "AngelInvestorsText" TEXT NOT NULL DEFAULT '0',
+    "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+    "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+    "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+    "LastPlayedAt" TEXT NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NOT NULL
+);
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: 80a76ca0-b758-4b18-af31-96351fe7206a
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:00.71]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.4s)
+
+Test summary: total: 216, failed: 2, succeeded: 214, skipped: 0, duration: 1.4s
+Build failed with 2 error(s) in 2.3s
+
+real	0m2.445s
+user	0m1.705s
+sys	0m0.436s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                    Requested    Resolved
+   > Avalonia                           12.0.3       12.0.3  
+   > Avalonia.Android                   12.0.3       12.0.3  
+   > Avalonia.Fonts.Inter               12.0.3       12.0.3  
+   > Avalonia.Themes.Fluent             12.0.3       12.0.3  
+   > Microsoft.NET.ILLink.Tasks   (A)   [10.0.7, )   10.0.7  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.7      10.0.7  
+   > OpenTelemetry.Api                 1.15.3      1.15.3  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package             Requested   Resolved
+   > Avalonia                    12.0.3      12.0.3  
+   > Avalonia.Desktop            12.0.3      12.0.3  
+   > Avalonia.Fonts.Inter        12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent      12.0.3      12.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.7      10.0.7  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration                           10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration.Json                      10.0.7      10.0.7  
+   > Microsoft.Extensions.DependencyInjection                     10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging                                 10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging.Console                         10.0.7      10.0.7  
+   > OpenTelemetry                                                1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.Console                               1.15.3      1.15.3  
+   > OpenTelemetry.Extensions.Hosting                             1.15.3      1.15.3  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.1      1.15.1  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent                        12.0.3      12.0.3  
+   > CommunityToolkit.Mvvm                         8.4.2       8.4.2   
+   > Microsoft.Extensions.DependencyInjection      10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging                  10.0.7      10.0.7  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             10.0.0      10.0.0  
+   > Microsoft.NET.Test.Sdk         18.5.1      18.5.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          10.0.0      10.0.0  
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.7      10.0.7  
+   > Microsoft.EntityFrameworkCore.Sqlite        10.0.7      10.0.7  
+   > Microsoft.NET.Test.Sdk                      18.5.1      18.5.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             10.0.0      10.0.0  
+   > Microsoft.NET.Test.Sdk         18.5.1      18.5.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.963s
+user	0m1.983s
+sys	0m0.507s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved   Latest
+   > Microsoft.Extensions.Logging      10.0.7      10.0.7     10.0.8
+
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved   Latest
+   > Microsoft.EntityFrameworkCore.Design                         10.0.7      10.0.7     10.0.8
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration                           10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration.Json                      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.DependencyInjection                     10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging                                 10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging.Console                         10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Microsoft.Extensions.DependencyInjection      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging                  10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.Core.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package         Requested   Resolved   Latest
+   > coverlet.collector      10.0.0      10.0.0     10.0.1
+
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved   Latest
+   > coverlet.collector                          10.0.0      10.0.0     10.0.1
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.7      10.0.7     10.0.8
+   > Microsoft.EntityFrameworkCore.Sqlite        10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.UI.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package         Requested   Resolved   Latest
+   > coverlet.collector      10.0.0      10.0.0     10.0.1
+
+
+real	0m4.175s
+user	0m3.520s
+sys	0m0.620s
+
+real	0m9.149s
+user	0m15.886s
+sys	0m1.291s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: SUMMARY.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: src/MyAdventure.Android/AndroidApp.cs
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Numerics/BigDouble.cs
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+Processed: src/MyAdventure.Shared/Services/AppRoot.cs
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BigDoubleTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.Integration.Tests/SchemaMigrationTests.cs
+Processed: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.767s
+user	0m0.401s
+sys	0m0.498s
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
+
+Build succeeded in 1.0s
+
+real	0m1.171s
+user	0m1.021s
+sys	0m0.297s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+real	0m0.831s
+user	0m0.951s
+sys	0m0.198s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (2.3s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.5s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (1.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (1.2s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded (23.8s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+
+Build succeeded in 28.6s
+
+real	0m28.747s
+user	2m5.143s
+sys	0m4.174s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.13]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.16]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.12]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.36]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.27]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (0.9s)
+  MyAdventure.UI.Tests test net10.0 succeeded (0.8s)
+LogRecord.Timestamp:               2026-05-22T20:28:20.5960920Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 2
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.6818259Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 1
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: CREATE TABLE "GameStates" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+    "CashText" TEXT NOT NULL DEFAULT '0',
+    "LifetimeEarningsText" TEXT NOT NULL DEFAULT '0',
+    "AngelInvestorsText" TEXT NOT NULL DEFAULT '0',
+    "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+    "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+    "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+    "LastPlayedAt" TEXT NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NOT NULL
+);
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.7112072Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.7623431Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Migrating GameStates table to BigDouble TEXT schema
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.7643713Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    BigDouble migration complete
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): BigDouble migration complete
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.7648620Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.7674133Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-22T20:28:20.7688449Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+    commandText: CREATE TABLE "GameStates" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+    "CashText" TEXT NOT NULL DEFAULT '0',
+    "LifetimeEarningsText" TEXT NOT NULL DEFAULT '0',
+    "AngelInvestorsText" TEXT NOT NULL DEFAULT '0',
+    "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+    "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+    "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+    "LastPlayedAt" TEXT NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NOT NULL
+);
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+Resource associated with LogRecord:
+service.name: MyAdventure
+service.namespace: 1.0.0
+service.instance.id: af35ee87-2a74-453b-87c9-7371a035b594
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:00.71]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.4s)
+
+Test summary: total: 216, failed: 0, succeeded: 216, skipped: 0, duration: 1.4s
+Build succeeded in 2.3s
+
+real	0m2.427s
+user	0m1.837s
+sys	0m0.408s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                    Requested    Resolved
+   > Avalonia                           12.0.3       12.0.3  
+   > Avalonia.Android                   12.0.3       12.0.3  
+   > Avalonia.Fonts.Inter               12.0.3       12.0.3  
+   > Avalonia.Themes.Fluent             12.0.3       12.0.3  
+   > Microsoft.NET.ILLink.Tasks   (A)   [10.0.7, )   10.0.7  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.7      10.0.7  
+   > OpenTelemetry.Api                 1.15.3      1.15.3  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package             Requested   Resolved
+   > Avalonia                    12.0.3      12.0.3  
+   > Avalonia.Desktop            12.0.3      12.0.3  
+   > Avalonia.Fonts.Inter        12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent      12.0.3      12.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.7      10.0.7  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration                           10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.7      10.0.7  
+   > Microsoft.Extensions.Configuration.Json                      10.0.7      10.0.7  
+   > Microsoft.Extensions.DependencyInjection                     10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging                                 10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging.Console                         10.0.7      10.0.7  
+   > OpenTelemetry                                                1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.Console                               1.15.3      1.15.3  
+   > OpenTelemetry.Extensions.Hosting                             1.15.3      1.15.3  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.1      1.15.1  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent                        12.0.3      12.0.3  
+   > CommunityToolkit.Mvvm                         8.4.2       8.4.2   
+   > Microsoft.Extensions.DependencyInjection      10.0.7      10.0.7  
+   > Microsoft.Extensions.Logging                  10.0.7      10.0.7  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             10.0.0      10.0.0  
+   > Microsoft.NET.Test.Sdk         18.5.1      18.5.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved
+   > coverlet.collector                          10.0.0      10.0.0  
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.7      10.0.7  
+   > Microsoft.EntityFrameworkCore.Sqlite        10.0.7      10.0.7  
+   > Microsoft.NET.Test.Sdk                      18.5.1      18.5.1  
+   > Shouldly                                    4.3.0       4.3.0   
+   > xunit                                       2.9.3       2.9.3   
+   > xunit.runner.visualstudio                   3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             10.0.0      10.0.0  
+   > Microsoft.NET.Test.Sdk         18.5.1      18.5.1  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m1.856s
+user	0m1.950s
+sys	0m0.464s
+Restore complete (0.5s)
+
+Build succeeded in 0.6s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+Project `MyAdventure.Core` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved   Latest
+   > Microsoft.Extensions.Logging      10.0.7      10.0.7     10.0.8
+
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+Project `MyAdventure.Infrastructure` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved   Latest
+   > Microsoft.EntityFrameworkCore.Design                         10.0.7      10.0.7     10.0.8
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration                           10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Configuration.Json                      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.DependencyInjection                     10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging                                 10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging.Console                         10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.Shared` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved   Latest
+   > Microsoft.Extensions.DependencyInjection      10.0.7      10.0.7     10.0.8
+   > Microsoft.Extensions.Logging                  10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.Core.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package         Requested   Resolved   Latest
+   > coverlet.collector      10.0.0      10.0.0     10.0.1
+
+Project `MyAdventure.Integration.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                             Requested   Resolved   Latest
+   > coverlet.collector                          10.0.0      10.0.0     10.0.1
+   > Microsoft.EntityFrameworkCore.InMemory      10.0.7      10.0.7     10.0.8
+   > Microsoft.EntityFrameworkCore.Sqlite        10.0.7      10.0.7     10.0.8
+
+Project `MyAdventure.UI.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package         Requested   Resolved   Latest
+   > coverlet.collector      10.0.0      10.0.0     10.0.1
+
+
+real	0m3.884s
+user	0m3.385s
+sys	0m0.580s
+
+real	0m9.034s
+user	0m16.591s
+sys	0m1.265s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: SUMMARY.md
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: src/MyAdventure.Android/AndroidApp.cs
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Numerics/BigDouble.cs
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+Processed: src/MyAdventure.Shared/Services/AppRoot.cs
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BigDoubleTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.Integration.Tests/SchemaMigrationTests.cs
+Processed: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.737s
+user	0m0.434s
+sys	0m0.447s
+kushal@fedora:~/src/dotnet/MyAdventure$ 
