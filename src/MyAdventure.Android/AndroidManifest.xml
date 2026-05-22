@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.myadventure.app">
-    <application 
-        android:allowBackup="true" 
-        android:icon="@drawable/icon" 
+<!--
+  Do not add a `package="..."` attribute on <manifest>. In modern .NET for
+  Android (net6.0-android+) the package identity is set by the
+  <ApplicationId> MSBuild property in the .csproj, which is the single
+  canonical source of truth. Setting it here in addition can cause
+  javac collisions between the generated Application class and R.java.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/MyTheme.NoActionBar">

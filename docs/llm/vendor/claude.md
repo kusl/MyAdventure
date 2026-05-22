@@ -9069,3 +9069,206 @@ With all three sources (`[Application(Name=...)]`, `<ApplicationId>`, and `packa
 
 38
 42
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+38
+42
+
+I made the changes as you said 
+
+Add an explicit `Name` to the `[Application]` attribute so all three sources agree:
+
+**`src/MyAdventure.Android/AndroidApp.cs`** — change:
+```csharp
+[Application]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+```
+to:
+```csharp
+[Application(Name = "com.myadventure.app")]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+```
+
+And add `package=` to `AndroidManifest.xml` to make it the canonical source and eliminate the ambiguity entirely:
+
+**`src/MyAdventure.Android/AndroidManifest.xml`**:
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.myadventure.app">
+```
+
+but now I get an error 
+
+  MyAdventure.Android net10.0-android failed with 3 error(s) (8.6s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+    obj/Debug/net10.0-android/android/src/com/myadventure/app.java(4,8): javac error JAVAC0000: 
+       error: class app clashes with package of same name
+      public class app
+      
+    obj/Debug/net10.0-android/android/src/com/myadventure/app/R.java(8,1): javac error JAVAC0000: 
+       error: package com.myadventure.app clashes with class of same name
+      package com.myadventure.app;
+      
+    /home/kushal/.dotnet/packs/Microsoft.Android.Sdk.Linux/36.1.2/tools/Xamarin.Android.Javac.targets(161,5): error XAJVC0000: 
+      obj/Debug/net10.0-android/android/src/com/myadventure/app.java:4: error: class app clashes with pac
+      kage of same name
+      public class app
+             ^
+      obj/Debug/net10.0-android/android/src/com/myadventure/app/R.java:8: error: package com.myadventure.
+      app clashes with class of same name
+      package com.myadventure.app;
+      ^
+      Note: Some input files use or override a deprecated API.
+      Note: Recompile with -Xlint:deprecation for details.
+      Note: Some input files use unchecked or unsafe operations.
+      Note: Recompile with -Xlint:unchecked for details.
+      2 errors
+
+I'll search the project knowledge first to understand the current state of the code and the specific files involved.Now I have a clear picture. Let me also check the current state of the Android csproj and manifest:I have everything I need to diagnose this. Let me trace this carefully.
+
+## The root cause
+
+You have **three sources** all trying to declare the package identity, and the combination is creating a name collision in the generated Java code:
+
+1. **`MyAdventure.Android.csproj`** → `<ApplicationId>com.myadventure.app</ApplicationId>`
+2. **`[Application(Name = "com.myadventure.app")]`** on `AndroidApp`
+3. **`<manifest ... package="com.myadventure.app">`** in `AndroidManifest.xml`
+
+The `[Application(Name = "...")]` attribute does **not** set the package name. It tells the Android manifest merger "the Java class that represents the `<application>` element is at this fully-qualified path." So you told the build:
+
+> "There is a Java class named `com.myadventure.app` (just `app` in the `com.myadventure` package)."
+
+But you *also* told the build (via `<ApplicationId>` and the `package=` attribute):
+
+> "The package for this entire app — including the generated `R.java` — is `com.myadventure.app`."
+
+So `obj/.../com/myadventure/app.java` declares `public class app` in package `com.myadventure`, while `obj/.../com/myadventure/app/R.java` declares `package com.myadventure.app;` — and `javac` sees the symbol `com.myadventure.app` referring to both a class and a package. That's exactly the error.
+
+## The fix
+
+The previous suggestion (`Name = "com.myadventure.app"`) was wrong. The `Name` value on `[Application]` must be a Java class name, not the package name. Two ways to fix this cleanly — I recommend option A.
+
+### Option A (recommended): drop the `Name` entirely and drop the `package=` from the manifest
+
+`<ApplicationId>` in the csproj is the canonical, single source of truth in modern .NET for Android. The Xamarin/.NET Android build injects it into the manifest at merge time. You don't need `package=` in `AndroidManifest.xml` at all — and the docs actually warn against it for net6.0-android+ projects because it causes exactly this kind of conflict.
+
+For `[Application]`, omit `Name` and let the build generate a synthetic Java class for it (something like `crc64...AndroidApp` in a sub-namespace, which won't collide with anything).
+
+### Option B: give the Application class a distinct Java name
+
+If you want a stable, readable Java class name, use something that *isn't* the package itself:
+
+```csharp
+[Application(Name = "com.myadventure.app.MyAdventureApp")]
+```
+
+This gives you class `MyAdventureApp` in package `com.myadventure.app` — no collision with the auto-generated `R.java`.
+
+Either way, **remove `package=` from `AndroidManifest.xml`**. It's redundant with `<ApplicationId>` and is the part most likely to be making the conflict visible in your specific build.
+
+## The two files to change
+
+**`src/MyAdventure.Android/AndroidApp.cs`**
+
+```csharp
+using Android.App;
+using Android.Runtime;
+using Avalonia;
+using Avalonia.Android;
+
+namespace MyAdventure.Android;
+
+/// <summary>
+/// Android Application class. Required by Avalonia 12 — AppBuilder
+/// customization (such as <c>WithInterFont()</c>) was previously hooked
+/// onto <c>AvaloniaMainActivity{TApp}</c>'s <c>CustomizeAppBuilder</c>,
+/// but in v12 that generic activity type no longer exists and those virtual
+/// methods are no longer called by the framework. All AppBuilder configuration
+/// now lives here, on a class deriving from
+/// <see cref="AvaloniaAndroidApplication{TApp}"/> and decorated with
+/// <see cref="ApplicationAttribute"/>. <c>MainActivity</c> is now empty
+/// and inherits from the non-generic <see cref="AvaloniaMainActivity"/>.
+///
+/// IMPORTANT: do NOT set <c>[Application(Name = "...")]</c> to the package
+/// name (e.g. "com.myadventure.app"). That attribute value is the
+/// fully-qualified Java class name for the generated Application subclass.
+/// Setting it equal to the package name causes a javac collision:
+///     class 'app' clashes with package of same name
+///     package 'com.myadventure.app' clashes with class of same name
+/// because R.java lives in com.myadventure.app, and a class also named
+/// com.myadventure.app cannot coexist. Leave Name unset (the build
+/// generates a synthetic, collision-free Java name) or use a distinct
+/// class name like "com.myadventure.app.MyAdventureApp".
+/// </summary>
+[Application]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+{
+    protected AndroidApp(IntPtr javaReference, JniHandleOwnership transfer)
+        : base(javaReference, transfer)
+    {
+    }
+
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) =>
+        base.CustomizeAppBuilder(builder)
+            .WithInterFont();
+}
+```
+
+**`src/MyAdventure.Android/AndroidManifest.xml`**
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Do not add a `package="..."` attribute on <manifest>. In modern .NET for
+  Android (net6.0-android+) the package identity is set by the
+  <ApplicationId> MSBuild property in the .csproj, which is the single
+  canonical source of truth. Setting it here in addition can cause
+  javac collisions between the generated Application class and R.java.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/MyTheme.NoActionBar">
+    </application>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+```
+
+After both edits, run `dotnet clean` first (the stale `obj/Debug/net10.0-android/android/src/com/myadventure/app.java` will linger otherwise), then `dotnet build`. The javac errors should go away and you'll be left with a single canonical package name coming from `<ApplicationId>com.myadventure.app</ApplicationId>`.
+
+## Why the previous advice was wrong (briefly)
+
+The suggestion to add `Name = "com.myadventure.app"` came from a mental model where the `[Application]` attribute is the "package identity" knob. It isn't — it's the Java FQN for the generated Application subclass. The right knobs are `<ApplicationId>` (always) and optionally `Name` (only if you want to control the Application *class's* Java identity, and it must be a class name that lives *inside* the application package, not equal to it).
+
+42
+42
