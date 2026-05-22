@@ -7698,3 +7698,103 @@ I'll continue where I left off. Let me first check what's in the working directo
 
 
 
+I'll continue from where I left off. Let me first verify what I have, then write everything that remains.Good, I have the core files. Let me also check the project knowledge in case anything new is there:Good, confirms the original code I was working off. Now let me push through the remaining files. First, the Infrastructure migration handling — since I changed column names, existing databases will break. The cleanest approach: detect the old schema and migrate it on load, or just `EnsureDeleted+EnsureCreated` with a warning. I'll do a graceful migration in the DI initialization.
+
+Actually, a better approach: I'll add an `InitializeDatabaseAsync` that handles schema migration by checking if the old columns exist and translating them. For this learning project, that's appropriate.
+
+Let me first finish the Infrastructure layer:Good, already exists. Now the GameStateRepository — it uses the column renames so needs updating:Now `DependencyInjection.cs` — I need to add migration from the old schema to the new one. Since the user has existing saves with the old column names (`Cash`, `LifetimeEarnings`, `AngelInvestors` as REAL), I need to detect that and migrate:There's an older version of the DI file. Let me overwrite it with my complete version:Now the Infrastructure csproj needs `Microsoft.Data.Sqlite` (which is a transitive dep of EFCore.Sqlite but I'll keep it explicit):Good — it already exists exactly as I want it. `Microsoft.Data.Sqlite` is brought in transitively via `Microsoft.EntityFrameworkCore.Sqlite`, so no explicit reference needed.
+
+Now the Shared layer. First the `BusinessViewModel`:Now `GameViewModel`:Now let me copy over the unchanged Shared files (ViewModelBase, AppLifecycleManager, AppRoot, ToastService, Converters, csproj, en/es JSON):Now the Shared services and converters (mostly unchanged):Now the views. Critical pieces:
+1. **Cash text in a Viewbox** so it auto-shrinks to fit the available width — solves "1.00 × 10²⁰⁰ is too big"
+2. **Bulk-buy button always visible** (bound to `BulkBuyText` + `CanBulkBuy`)
+3. **Prestige button properly right-aligned**
+
+Let me write the Desktop MainWindow first:Now the rest of the Desktop project (App.axaml.cs, MainWindow.axaml.cs, Program.cs, etc.) — verbatim from original since they don't change:Now the Android view:Now the rest of the Android project files (verbatim from original):Now the root files (slnx, Directory.*, global.json):Now the tests. First, I need to write a comprehensive BigDouble test suite, then update the existing tests to work with BigDouble.
+
+100
+29
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
