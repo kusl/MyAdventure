@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Fri May 22 04:46:35 PM EDT 2026
+Generated: Fri May 22 05:37:50 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -54,7 +54,8 @@ DIRECTORY STRUCTURE:
 │               ├── 022.txt
 │               ├── 023.txt
 │               ├── 024.txt
-│               └── 025.txt
+│               ├── 025.txt
+│               └── 026.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -1231,7 +1232,7 @@ SIZE: .10 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/AndroidApp.cs
-SIZE: .70 KB
+SIZE: .73 KB
 ================================================================================
 
 using Android.App;
@@ -1246,7 +1247,7 @@ namespace MyAdventure.Android;
 /// customization (like WithInterFont) now lives here, on a class deriving
 /// from AvaloniaAndroidApplication&lt;TApp&gt; with the [Application] attribute.
 /// </summary>
-[Application]
+[Application(Name = "com.myadventure.app")]
 public class AndroidApp : AvaloniaAndroidApplication<App>
 {
     protected AndroidApp(IntPtr javaReference, JniHandleOwnership transfer)
@@ -1262,11 +1263,12 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
 ================================================================================
 FILE: src/MyAdventure.Android/AndroidManifest.xml
-SIZE: .49 KB
+SIZE: .53 KB
 ================================================================================
 
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.myadventure.app">
     <application 
         android:allowBackup="true" 
         android:icon="@drawable/icon" 
