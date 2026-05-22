@@ -4,7 +4,15 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <ApplicationIcon>Assets/avalonia-logo.ico</ApplicationIcon>
+    <!--
+      ApplicationIcon intentionally omitted. The legacy Assets/avalonia-logo.ico
+      file failed CSC validation under .NET 10 (CS7065: "Icon stream is not in
+      the expected format"). Builds run fine without an embedded Win32 icon —
+      the binary still launches, just without a custom icon in the Windows
+      taskbar. Add a fresh .ico via Visual Studio's icon editor or
+      `magick convert input.png -define icon:auto-resize=256,128,64,48,32,16 favicon.ico`
+      and re-add the <ApplicationIcon> line when ready.
+    -->
   </PropertyGroup>
 
   <ItemGroup>

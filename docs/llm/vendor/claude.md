@@ -8347,3 +8347,254 @@ Let me look at the full GameEngineTests first to make sure I have the right cont
 100
 39
 
+I'll read both files to understand what errors you're hitting.Both files are `.txt`, so straight `cat` is fine. Let me check sizes first:023.txt is small (33KB) — likely the error log. Let me read it first:Now I have a clear picture. Let me catalog the failures:
+
+**1. Desktop build error: `CS7065: Icon stream is not in the expected format`**
+The Desktop csproj references `Assets/avalonia-logo.ico` but the file doesn't exist (I never copied it). This is a real issue from my migration — the original project had this icon file, but it's binary and `export.sh` filters out `.ico` files so I never saw it.
+
+**2. Android build error: `minSdkVersion 21 cannot be smaller than version 23`**
+This is unrelated to my migration — it's a transitive dependency (`androidx.lifecycle.runtime`) that now requires API 23. The user's current Avalonia 12.0.3 setup pulls in this library.
+
+**3. Test failure: `Cash_AtFormerCap_ContinuesToGrow` — exponent stays at 200**
+This is genuinely my test bug. I'll need to look at my actual test logic.
+
+**4. Test failure: `LoadAsync_WithBigDoubleStringInSave_LoadsExactly` — exponent is 8600213 instead of 200**
+8,600,213 = ~10^6 × log10(1.02) × 1e9 × 60sec... wait, that's the offline-earnings bonus applied! With 1e9 angels and 1 second elapsed... actually let me trace: 1.02^1e9 → resultLog = 0.0086 × 1e9 = 8.6e6 ≈ 8,600,000. AngelBonus has exponent 8.6M. When offline earnings apply (even small elapsed), Cash = original + offline_earnings × angelBonus = small + huge_bonus_times_revenue. The huge bonus dominates. So the test is wrong because it doesn't account for offline earnings from a 1-second gap with 1e9 angels.
+
+Let me also note one positive: the schema migration **worked perfectly** (you can see "BigDouble migration complete" in the log). 214/216 tests pass.
+
+Let me grab the dump.txt to look at the actual code I delivered (so I can fix accurately):Now let me look at the failing test code and the relevant production code:Now let me trace through this. Cash = 10^200. We earn revenue. Lemonade business at owned=1000, no angels — revenue = 1 × 1000 × milestone(1000) × PostMilestoneScaling. Milestone at 1000 = 64 × 1024 × 5 = 327680. PostMilestoneScaling at 1000 owned = 1.0 (per my code, `if (Owned <= 1000) return 1.0`). So revenue = 1000 × 327680 = 3.28e8. Per cycle.
+
+That's `3.28e8` per cycle, summed over 10 cycles per business × 6 businesses. But the BIG ones (donut, shrimp) have base revenue 51840 and 622080 respectively. Let me think about shrimp at 1000 owned: 622080 × 1000 × 327680 = ~2.04e14. Over 10 ticks = 2.04e15. So total earned ≈ 1e16-ish.
+
+But cash is **1e200**. Adding 1e16 to 1e200 = 1e200 (gap > 17, smaller value absorbed!). That's the failure mode.
+
+In my BigDouble `+` operator:
+```csharp
+var gap = large.Exponent - small.Exponent;
+if (gap > 17) return large;
+```
+
+Cash (large, exp=200) + earned (small, exp=16) → gap = 184 > 17 → returns Cash unchanged. So Cash never grows past 1e200 in this test, but that's because the earnings are too small relative to Cash, NOT because of a clamp.
+
+So the test is just wrong — the assertion `Exponent > 200` requires earnings sized to overcome the magnitude gap. My test was naïve. I need to fix it by using a higher-revenue scenario OR by reducing the starting cash exponent.
+
+Let me look at the second failure now. `LoadAsync_WithBigDoubleStringInSave_LoadsExactly`:Confirmed. The test sets `pastTime = now - 1 second`. My `LoadAsync` runs offline earnings for that gap, and with 1e9 angels the bonus is so astronomical that even a 1-second gap with shrimp at 2270 owned produces earnings of ~10^8.6M, which utterly dominates the 1e200 starting cash. So Cash ends up with exponent 8,600,213 instead of staying at 200.
+
+Wait — but the comment says `// sub-threshold gap`. Let me check my `MinimumOfflineGapSeconds`:OK so the threshold is `<= 1.0`. The test uses `AddSeconds(-1)`, which produces an elapsed of approximately 1 second — but by the time `LoadAsync` is called, time has moved slightly forward, so elapsed could be `1.001` or so. That's `> 1.0`, so offline earnings DO apply.
+
+So the test is wrong. Two ways to fix it:
+
+**Option A**: Change the test to use `AddSeconds(-0.5)` (sub-threshold) so no offline earnings apply.
+**Option B**: Change the test to use 0 angels so the bonus doesn't dominate.
+
+Option A is more honest to what the test is trying to assert (that the LOAD itself reads the values correctly, independent of offline earnings). Let me do Option A.
+
+Now let me also think about whether the Cash_AtFormerCap test is actually testing the right thing. The user's bug was "stuck at 1e200" — the OLD code clamped at 1e200. My new code doesn't clamp. The test should prove that no clamping happens, but my test setup uses revenue that's far too small to overcome a 1e200 starting magnitude.
+
+A cleaner fix: start cash at a smaller value (e.g. 0) and verify it grows past 1e200 by using huge revenue. OR start at 1e200 and use very large revenue (high owned counts past 1000). OR — the cleanest — just verify that `Cash + Revenue > Cash`, not absolute exponent magnitude.
+
+Actually the test I wrote has a comment "Tick a few times — cash must grow past 10^200". The expectation was that with milestone scaling past 1000 owned, revenue would be huge. Let me check — the test sets `Owned = 1000` and PostMilestoneScaling kicks in only for Owned > 1000. So all 6 businesses have PostMilestoneScaling = 1.0. Revenue is just `base × 1000 × milestone(1000) = base × 1000 × 327680`. For shrimp (base 622080): 622080 × 1000 × 327680 ≈ 2.04e14. That's still far below 1e200.
+
+Let me use `Owned = 1500` so PostMilestoneScaling actually kicks in: `1.11^((1500-1000)/2) = 1.11^250 ≈ 2.3e10`. So shrimp revenue at 1500 owned = 622080 × 1500 × 327680 × 2.3e10 ≈ 7e24. Still nowhere near 1e200.
+
+Hmm. The real way to test "cash grows past 1e200" is to set cash to something smaller — say 1e10 — and prove it can reach 1e200+. OR set Owned much higher (say 5000) so PostMilestoneScaling does heavy lifting.
+
+Owned=5000: PostMilestoneScaling = 1.11^2000 ≈ 10^82. Revenue = 622080 × 5000 × 327680 × 10^82 ≈ 10^96. Per tick. Over 10 ticks = 10^97. Still not 10^200.
+
+What I really need is to test that cash grows AT ALL when at 1e200. So change the assertion:
+
+```csharp
+var cashBefore = _engine.Cash;
+... // tick
+_engine.Cash.ShouldBeGreaterThan(cashBefore);  // proves no clamp
+_engine.Cash.IsFinite.ShouldBeTrue();  // proves no infinity
+```
+
+But wait — even this won't pass! Because `1e200 + 1e16 = 1e200` in BigDouble too (gap > 17). The "growth" is below precision.
+
+To prove the clamp is gone, I need to either:
+- (a) Start at lower magnitude where added revenue is detectable
+- (b) Start at 1e200 with revenue large enough to actually move the value
+- (c) Verify directly that `_engine.Cash` is **never** clamped by checking magnitudes
+
+Let me do (a) — start cash at 1e15 with 1500 owned, prove it grows past 1e200 over enough ticks. Actually let me think again. At 1500 owned of shrimp, revenue per tick = ~7e24. After 100 ticks: 7e26 (still nowhere near 1e200). It would take exponentially more ticks to reach 1e200 with linear addition. So this approach isn't practical either.
+
+The cleanest test: use angels. With AngelBonus, revenue can be astronomical in one tick.
+
+Or even cleaner: skip the in-engine math entirely and just **directly** test `BigDouble` arithmetic past 1e200, since that's what proves no clamping. The original-purpose test (no engine-level clamp) can be replaced with two simpler ones:
+
+1. Set cash to 1e200, add a huge BigDouble, verify cash equals the sum (no clamping)
+2. Set lifetime to 1e200, the engine's `SanitizeMoney` should NOT clamp it back
+
+Let me look at SanitizeMoney:Good — SanitizeMoney doesn't clamp by magnitude (only nan/negative/infinity to 0). So setting cash to 1e200 won't lose precision. The fix is in the test.
+
+Now I have a complete picture. Let me write up exactly what to fix:
+
+**Fix 1: Icon file (Desktop build error)**
+The `MyAdventure.Desktop.csproj` references `<ApplicationIcon>Assets/avalonia-logo.ico</ApplicationIcon>` but the file is missing from my migration (export.sh filters `.ico`). The user has this file already in their working tree — it just got nuked when they overlaid my tarball. Two options:
+- (a) Remove the `<ApplicationIcon>` line from the csproj (game runs without an icon)
+- (b) Tell user to restore the icon from git
+
+I'll do (a) since it's the most robust fix and ICOs aren't essential for development.
+
+**Fix 2: Android minSdkVersion 21 → 23**
+This is a transitive dep issue — Avalonia 12 pulls in `androidx.lifecycle.runtime` which now requires API 23. The fix: bump `SupportedOSPlatformVersion` from 21 to 23 in `MyAdventure.Android.csproj`. This is independent of my migration (would have hit anyone updating from this version of androidx) — but my migration didn't help because I preserved the `21` value verbatim from the original csproj.
+
+**Fix 3: `Cash_AtFormerCap_ContinuesToGrow` test logic**
+The starting cash (1e200) dwarfs the per-tick revenue. Two options:
+- (a) Start cash at a smaller magnitude that revenue can move
+- (b) Replace the test with a direct BigDouble arithmetic check
+
+I'll do a hybrid: test that BigDouble cash + huge revenue produces correct sum (no clamp), test that cash at 1e200 is preserved through save/load (no clamp on persistence).
+
+**Fix 4: `LoadAsync_WithBigDoubleStringInSave_LoadsExactly` test logic**
+The 1-second elapsed gap is above the threshold, so offline earnings apply with the huge angel bonus, which dominates. Fix: use 0.5 seconds (sub-threshold) so we test pure load with no offline math.
+
+Let me also note one thing — the user's instructions said *"All existing tests must pass (no regressions)"* and *"Hard requirements for every change"*. These two test failures violate that. Fixing the tests is correct here because the tests were wrong (post-condition assertions didn't match the post-state).
+
+Let me check the relevant csproj files in the dump to fix them properly:Wait — the error says `Icon stream is not in the expected format`, not "icon not found". That suggests the file exists but is malformed (or empty). Let me think...
+
+Actually, when the user ran `tar xzf --strip-components=1`, only files in my tarball got overlaid. Files I didn't include (like `Assets/avalonia-logo.ico`) stayed as they were in the working tree. So the .ico file is still there — but maybe my tarball clobbered it somehow? No, tar only writes files it knows about.
+
+Actually wait — looking at the error more carefully: `Icon stream is not in the expected format`. This could mean either:
+1. The .ico file is corrupted
+2. The .ico file is actually a different format (e.g., PNG renamed)
+3. Avalonia 12 or .NET 10 has stricter icon validation
+
+Let me check if the original project's icon was valid. The original dump.txt's directory listing showed `src/MyAdventure.Desktop/Assets/avalonia-logo.ico` exists. Hmm.
+
+Actually, I just realized — the failure here might be that .NET 10's CSC compiler has stricter validation than .NET 9 did. This wouldn't be due to my migration. Or — possibly — when the user did `tar xzf --strip-components=1`, the Assets/avalonia-logo.ico file was deleted because tar's behavior depends on flags.
+
+Actually no, `tar xzf` doesn't delete files not in the archive. The .ico file should still be there.
+
+Let me check the user's original `commands.txt`. They run `dotnet clean` first, which is fine. Then build. So if the .ico was there pre-migration, it should still be there. Hmm.
+
+Actually — wait. The user said "I have incorporated your changes" — they may have manually picked files rather than tar-extracting. Or `tar` could have failed silently on the .ico due to permissions. Let me just **remove the icon dependency** as the safest fix — it's a development-only concern and easily reversible.
+
+OK, now let me also think about the Android issue more carefully. The minSdkVersion 21 → 23 change is small but it has implications:
+- Android 6.0 (API 23) is from 2015. Even ancient phones run this. 
+- Original Avalonia 12 docs may say 21, but the transitive androidx update bumped this.
+- The user's `userMemories` note says "Avalonia 12.0.1" but the dump shows 12.0.3 — they upgraded somewhere along the way. The androidx dep change could have come with that upgrade.
+
+This isn't truly my migration's fault, but it surfaced now. Fix: bump to 23.
+
+OK let me now write the fixes. Five files to deliver:
+
+1. `src/MyAdventure.Desktop/MyAdventure.Desktop.csproj` — remove ApplicationIcon line
+2. `src/MyAdventure.Android/MyAdventure.Android.csproj` — bump minSdk to 23
+3. `tests/MyAdventure.Core.Tests/GameEngineTests.cs` — fix two tests
+
+Let me look at the full GameEngineTests first to make sure I have the right context:Now I have what I need. Let me also verify by searching for what current Avalonia 12.0.3 recommends for Android minSdk:
+
+Now the GameEngineTests.cs. I need to see the entire current file to write a full replacement:I have the full picture now. Let me write the complete fixed GameEngineTests.cs. The only changes needed are to the two failing tests; everything else stays identical. Let me write it out, paying attention to **two specific fixes**:
+
+1. `Cash_AtFormerCap_ContinuesToGrow`: drop the absolute exponent assertion (which can't pass because per-tick revenue is too small relative to 1e200 to overcome the 17-digit precision gap). Instead, prove the engine never CLAMPS by directly testing that BigDouble cash + huge synthetic revenue produces the correct sum, and that the engine's `SanitizeMoney` doesn't reject 1e200+ values.
+
+2. `LoadAsync_WithBigDoubleStringInSave_LoadsExactly`: change the gap from `-1` second to `-0.5` second so it's below the `MinimumOfflineGapSeconds = 1.0` threshold and no offline earnings are applied. The test is about pure load behavior, not offline-earnings math.Good — 930 lines, 52 `[Fact]` tests, single class. Let me also double-check my Cash_AtFormerCap test by tracing through it mentally:
+
+1. `LoadAsync()` → cash = $5 (fresh state, no save)
+2. `SetCash(1e200)`, `SetLifetime(1e200)` 
+3. `SaveAsync()` → repo.SaveAsync called with GameState containing `CashText` (canonical form of 1e200, which is "1e200")
+4. Pull the saved GameState from NSubstitute's call history
+5. `BigDouble.Parse(savedState.CashText)` → (1.0, 200) ✓
+6. `_engine.Cash.Exponent.ShouldBe(200)` ✓ (in-memory not clamped)
+7. `_engine.Cash + new BigDouble(5.0, 200)` = (6.0, 200). `SetCash` stores it back. Exponent 200, Mantissa 6.0 ✓
+8. `_engine.Cash + new BigDouble(1.0, 201)` = (6e200 + 1e201) = (1.6e201). Exponent 201 ✓
+
+But wait — let me verify step 7 more carefully. BigDouble addition with same exponent: mantissa 1 + mantissa 5 = 6. Result: (6.0, 200). That's still normalized since 6.0 is in [1, 10). ✓
+
+And step 8: (6.0, 200) + (1.0, 201). My `+` operator:
+- a = (1.0, 201) (the larger one), b = (6.0, 200)
+- gap = 201 - 200 = 1
+- shift = 10^1 = 10
+- shiftedSmall = 6.0 / 10 = 0.6
+- sum = 1.0 + 0.6 = 1.6
+- result = new BigDouble(1.6, 201) — normalized: 1.6 in [1, 10), stays. ✓
+- Exponent = 201 ✓
+
+Good.
+
+Now let me also verify the GameEngine's SaveAsync — I need to confirm it calls `repository.SaveAsync` (not via mediator) so NSubstitute captures it:Line 2960: `await repository.SaveAsync(state, ct)`. So NSubstitute will capture this call. ✓
+
+Let me also verify that I'm reading args correctly. `repo.ReceivedCalls()` returns `IEnumerable<ICall>`, and `GetArguments()[0]` is the `GameState` argument. Let me verify the method signature matches: `Task SaveAsync(GameState state, CancellationToken ct)`. So args = [state, ct]. Args[0] = state. ✓
+
+But wait — there's a subtle issue. The cancellation token has a default value but it still appears in the args array. Args[0] is the first argument: `state`. ✓
+
+Let me also verify that `CashText` actually contains "1e200" (not "1.0e200" or something) after SaveAsync. My SanitizeMoney is called in SaveAsync:Good. `SanitizeMoney(BigDouble(1.0, 200))` — let me check SanitizeMoney:`SanitizeMoney(1e200)`: not NaN, not Infinity, Sign = +1, returns value unchanged. ✓
+
+`ToCanonicalString()` on (1.0, 200): mantissa=1.0, exponent=200. Per my BigDouble code:`Mantissa.ToString("R")` for 1.0 returns "1". `Exponent.ToString` for 200 returns "200". So canonical string = "1e200". `BigDouble.Parse("1e200")` would split on 'e', get mantissa "1" → 1.0, exponent "200" → 200, and return (1.0, 200). ✓
+
+Now let me also examine the `Parse` to confirm:Parse "1e200": eIdx = 1 (the 'e' is at index 1). mantissaPart = "1", exponentPart = "200". long.TryParse "200" → 200. double.TryParse "1" → 1.0. Returns `new BigDouble(1.0, 200)`. ✓
+
+Now let me also verify there's no issue with my use of `ReceivedCalls()` syntax. The NSubstitute API:`repo.ReceivedCalls().First(x => x.GetMethodInfo().Name == "SaveAsync").GetArguments()[0]` is the documented pattern. My code is essentially this:
+
+```csharp
+var savedCalls = _repo.ReceivedCalls()
+    .Where(c => c.GetMethodInfo().Name == nameof(IGameStateRepository.SaveAsync))
+    .ToList();
+savedCalls.Count.ShouldBeGreaterThan(0);
+var savedState = (GameState)savedCalls[^1].GetArguments()[0]!;
+```
+
+That's correct. The `[^1]` index grabs the most recent call.
+
+One subtlety from the search results — NSubstitute stores references, not snapshots. So if my code mutates the GameState after SaveAsync (it doesn't — `SaveAsync` allocates a new GameState each call), I'd see the latest state. But since each call creates a fresh GameState object, the captured reference is stable. ✓
+
+Now let me also verify the GameEngine creates a fresh GameState in SaveAsync:
+
+Looking at line 2950-2958 (already viewed): yes, `var state = new GameState { ... }` creates a fresh instance each call. ✓
+
+Good. Let me now package the three fixed files:Hmm — "ApplicationIcon" shows 2 matches in Desktop csproj. Let me check what's there:Both are inside the comment explaining why it's removed — not actual `<ApplicationIcon>` element. The actual `<ApplicationIcon>` tag was correctly removed. ✓# Fixes for the four errors
+
+Three files in the tarball, all complete replacements:
+
+## `src/MyAdventure.Desktop/MyAdventure.Desktop.csproj`
+
+**Removes `<ApplicationIcon>Assets/avalonia-logo.ico</ApplicationIcon>`.** The .ico file failed CSC validation under .NET 10 (`CS7065`). `export.sh` filters out `.ico` files, so I never had it in my tarball, and your existing one either got nuked or has always been malformed under .NET 10's stricter validation. Removing the line lets the build complete; the binary still launches, just without a Windows-taskbar icon. To restore: regenerate the .ico with ImageMagick (`magick convert input.png -define icon:auto-resize=256,128,64,48,32,16 favicon.ico`) and re-add the element. There's a comment in the csproj explaining this.
+
+## `src/MyAdventure.Android/MyAdventure.Android.csproj`
+
+**Bumps `<SupportedOSPlatformVersion>` from 21 → 23.** Avalonia 12 pulls in `androidx.lifecycle.runtime` transitively, and that library now requires minSdk 23. The Android manifest merger refuses to combine your minSdk=21 with the library's minSdk=23 — that's what the `uses-sdk:minSdkVersion 21 cannot be smaller than version 23` error is. Android 6.0 (API 23, 2015) is the floor every modern Android library targets; this is the unified fix and is independent of my BigDouble migration (would have hit you anyway when you next upgraded). No `tools:overrideLibrary` hack, no manifest divergence — just one number changed.
+
+## `tests/MyAdventure.Core.Tests/GameEngineTests.cs`
+
+Two test bugs (mine, not the engine's):
+
+**`Cash_AtFormerCap_ContinuesToGrow` → renamed to `Cash_AtFormerCap_IsNotClamped`, rewritten.** My old test set cash to 1e200 and ticked the engine, expecting Cash.Exponent > 200. But per-tick revenue at 1000 owned is around 10^14 — 186 orders of magnitude below 1e200 — so BigDouble's 17-digit precision gap absorbs every addition. That absorption is *correct* BigDouble behavior, not the bug we're testing. The new test asserts what we actually care about: that the engine doesn't clamp 1e200 on save (round-trip through `SanitizeMoney`), and that BigDouble cash + comparable-magnitude revenue produces correct sums that push the exponent up. Same intent, correct mechanism.
+
+**`LoadAsync_WithBigDoubleStringInSave_LoadsExactly` — gap changed from `AddSeconds(-1)` to `AddMilliseconds(-100)`.** `MinimumOfflineGapSeconds = 1.0`, with a `<=` check. `AddSeconds(-1)` produces an elapsed of ~1.001s by the time `LoadAsync` runs, *just over* threshold, so offline earnings fire. With 1e9 angels the angel bonus is ~10^8.6M, which utterly dominates 1e200 cash — that's where your `Exponent = 8600213` came from. 100ms is comfortably sub-threshold across any test-runner jitter (CI cold-start, GC pauses). The test is about pure load behavior; offline-earnings math has its own dedicated tests.
+
+Every other test in the file is preserved verbatim.
+
+## To apply
+
+```bash
+cd ~/src/dotnet/MyAdventure
+tar xzf myadventure-bigdouble-fixes.tar.gz --strip-components=1
+time dotnet build && time dotnet test
+```
+
+After this you should see Desktop + Android building and all 216 tests passing.
+
+## Honest note on the Android change
+
+The original userMemories note said "Avalonia 12.0.1" but your dump shows 12.0.3 — the androidx.lifecycle transitive update likely came with one of those minor bumps. If you ever need to support API 21/22 specifically, the alternative is `tools:overrideLibrary="androidx.lifecycle.runtime"` in your AndroidManifest, but that just suppresses the safety check — you'd still get runtime failures on those old devices when the library calls API-23-only methods. Bumping to 23 is the correct fix; the userMemories should be updated to reflect minSdk 23.
+
+32
+42
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

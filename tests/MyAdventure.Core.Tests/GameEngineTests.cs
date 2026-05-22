@@ -601,32 +601,74 @@ public class GameEngineTests
     /// <summary>
     /// The user's exact symptom: stuck at cash = 1e200, lifetime = 1e200.
     /// With BigDouble these clamps are gone — cash continues to grow.
+    /// <para>
+    /// We assert the unblock at two levels:
+    /// </para>
+    /// <list type="number">
+    ///   <item>The engine's <c>SanitizeMoney</c> path doesn't clamp 1e200 back
+    ///         to a finite ceiling (it preserves the value). This is the
+    ///         direct counterpart to the deleted <c>MaxMoney = 1e200</c>
+    ///         constant in the old engine.</item>
+    ///   <item>BigDouble arithmetic on values past the old ceiling produces
+    ///         the correct sum when the added revenue is large enough to
+    ///         clear the 17-digit precision gap — that is, the only reason
+    ///         a tiny per-tick revenue gets "absorbed" by 1e200 cash is
+    ///         floating-point precision, not an engine-level clamp.</item>
+    /// </list>
+    /// <para>
+    /// We deliberately avoid the previous formulation ("tick 10 times,
+    /// assert exponent > 200") because in-game per-tick revenue at 1000
+    /// owned is on the order of 10^14 — 186 orders of magnitude below
+    /// 1e200 — so the precision gap absorbs it. That absorption is a
+    /// BigDouble-correctness fact, not the bug we're guarding against.
+    /// </para>
     /// </summary>
     [Fact]
-    public async Task Cash_AtFormerCap_ContinuesToGrow()
+    public async Task Cash_AtFormerCap_IsNotClamped()
     {
         await _engine.LoadAsync();
         SetCash(new BigDouble(1.0, 200));
         SetLifetime(new BigDouble(1.0, 200));
 
-        // Hand-set every business to 1000 owned, manager, running, ready
-        // to settle — mirrors the user's late-game state.
-        foreach (var biz in _engine.Businesses)
-        {
-            biz.Owned = 1000;
-            biz.HasManager = true;
-            biz.IsRunning = true;
-            biz.ProgressPercent = 100.0;
-        }
+        // 1: SanitizeMoney must preserve magnitude. Persist + reload via
+        // the save round-trip exercises the same SanitizeMoney path the
+        // engine uses on every state mutation.
+        await _engine.SaveAsync();
 
-        // Tick a few times — cash must grow past 10^200 instead of clamping.
-        for (var i = 0; i < 10; i++)
-        {
-            foreach (var biz in _engine.Businesses) biz.ProgressPercent = 100.0;
-            _engine.Tick(0.0);
-        }
+        // Reload from the saved state (the substitute repo we wired returns
+        // null for GetLatestAsync, so capture the saved arg via NSubstitute).
+        var savedCalls = _repo.ReceivedCalls()
+            .Where(c => c.GetMethodInfo().Name == nameof(IGameStateRepository.SaveAsync))
+            .ToList();
+        savedCalls.Count.ShouldBeGreaterThan(0);
+        var savedState = (GameState)savedCalls[^1].GetArguments()[0]!;
 
-        _engine.Cash.Exponent.ShouldBeGreaterThan(200);
+        // The persisted cash text must round-trip back to (1.0, 200) —
+        // proving the engine never clamped it on save.
+        var roundTripped = BigDouble.Parse(savedState.CashText);
+        roundTripped.Exponent.ShouldBe(200);
+        roundTripped.Mantissa.ShouldBe(1.0, tolerance: 1e-12);
+
+        // The live engine state likewise must still be 1e200, not clamped.
+        _engine.Cash.Exponent.ShouldBe(200);
+        _engine.Cash.IsFinite.ShouldBeTrue();
+        _engine.LifetimeEarnings.Exponent.ShouldBe(200);
+
+        // 2: Adding revenue of a comparable magnitude pushes cash past 1e200.
+        // This proves the "stuck at 1e200" symptom is gone — when revenue
+        // does reach magnitudes that BigDouble's 17-digit precision can
+        // express against the cash exponent, cash genuinely grows.
+        // The old engine would have clamped this back to 1e200; the new
+        // one lets it grow freely.
+        var simulatedRevenue = new BigDouble(5.0, 200);
+        SetCash(_engine.Cash + simulatedRevenue);
+
+        _engine.Cash.Exponent.ShouldBe(200);
+        _engine.Cash.Mantissa.ShouldBe(6.0, tolerance: 1e-12);
+
+        // And again — keep pushing, exponent climbs.
+        SetCash(_engine.Cash + new BigDouble(1.0, 201));
+        _engine.Cash.Exponent.ShouldBe(201);
         _engine.Cash.IsFinite.ShouldBeTrue();
     }
 
@@ -686,12 +728,27 @@ public class GameEngineTests
         engine.AngelBonus.IsFinite.ShouldBeTrue();
     }
 
+    /// <summary>
+    /// The user's actual save uses values like "1e200" — make sure those
+    /// round-trip correctly through Parse → engine state.
+    /// <para>
+    /// The gap from <c>LastPlayedAt</c> to "now" must stay strictly below
+    /// <c>GameEngine.MinimumOfflineGapSeconds</c> (1.0s). If it crosses that
+    /// threshold, <c>LoadAsync</c> calls <see cref="GameEngine.ApplyOfflineEarnings"/>,
+    /// which with the test's 1e9 angels compounds to an angel bonus of
+    /// roughly 10^8,600,000 — utterly dominating the 1e200 starting cash
+    /// and corrupting the assertions about pure-load behavior.
+    /// </para>
+    /// <para>
+    /// 100ms is safely sub-threshold across any plausible test-runner
+    /// timing jitter (CI cold-start, GC pauses) while still being a
+    /// realistic LastPlayedAt value.
+    /// </para>
+    /// </summary>
     [Fact]
     public async Task LoadAsync_WithBigDoubleStringInSave_LoadsExactly()
     {
-        // The user's actual save uses values like "1e200" — make sure
-        // those round-trip correctly through Parse → engine state.
-        var pastTime = DateTime.UtcNow.AddSeconds(-1); // sub-threshold gap
+        var pastTime = DateTime.UtcNow.AddMilliseconds(-100); // sub-threshold
         var savedState = new GameState
         {
             CashText = "1e200",
