@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sat May 23 12:29:14 PM EDT 2026
+Generated: Sat May 23 07:56:53 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -61,7 +61,8 @@ DIRECTORY STRUCTURE:
 │               ├── 028.txt
 │               ├── 029.txt
 │               ├── 030.txt
-│               └── 031.txt
+│               ├── 031.txt
+│               └── 032.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -86,6 +87,7 @@ DIRECTORY STRUCTURE:
 │   │   ├── Entities
 │   │   │   ├── Business.cs
 │   │   │   ├── BusinessDefinitions.cs
+│   │   │   ├── CrossBusinessSpeedBonus.cs
 │   │   │   ├── EntityBase.cs
 │   │   │   ├── GameState.cs
 │   │   │   └── Milestone.cs
@@ -139,6 +141,7 @@ DIRECTORY STRUCTURE:
     │   ├── BigDoubleTests.cs
     │   ├── BusinessAffordableTests.cs
     │   ├── BusinessTests.cs
+    │   ├── CrossBusinessSpeedBonusTests.cs
     │   ├── GameEngineTests.cs
     │   ├── MilestoneTests.cs
     │   ├── MyAdventure.Core.Tests.csproj
@@ -2200,6 +2203,181 @@ public static class BusinessDefinitions
 
 
 ================================================================================
+FILE: src/MyAdventure.Core/Entities/CrossBusinessSpeedBonus.cs
+SIZE: 8.07 KB
+================================================================================
+
+using MyAdventure.Core.Numerics;
+
+namespace MyAdventure.Core.Entities;
+
+/// <summary>
+/// Cross-business speed bonus. When EVERY business simultaneously
+/// crosses a shared ownership threshold, every business gains another
+/// ×2 earnings-rate multiplier. This is Option B from the AdCap-parity
+/// scaling design and the second compounding axis on top of the
+/// per-business speed milestones in <see cref="SpeedMilestone"/>.
+///
+/// <para>
+/// <b>Why this exists.</b> Per-business speed milestones (Option A,
+/// <see cref="SpeedMilestone.Defaults"/>) cap at ×64 — six halvings on
+/// the 25/50/100/200/300/400 ladder. Without a second axis, the late
+/// game asymptotes to that ceiling and progression stalls. The
+/// cross-business layer adds a second ×64+ that compounds on top, and
+/// — critically — keeps compounding forever: every additional +100
+/// minimum-ownership boundary past 400 grants another ×2. There is no
+/// terminal threshold and no asymptote. The game continues forever.
+/// </para>
+///
+/// <para>
+/// <b>Why "minimum across all businesses" is the right input.</b> The
+/// AdCap rule is "all businesses simultaneously reach the same
+/// threshold". The minimum ownership count across the business roster
+/// IS that threshold — if the lowest-owned business has N, then by
+/// definition every business has at least N. This also creates the
+/// player-facing strategic incentive: balanced ownership is rewarded,
+/// hoarding one business is not. A player with 1000 lemonade stands
+/// and zero shrimp boats gets exactly zero cross-business bonus.
+/// </para>
+///
+/// <para>
+/// <b>Why this is a revenue multiplier, not a cycle-time divisor.</b>
+/// The user's mental model is "cycle time halves again" — visually
+/// identical to AdCap. Mathematically, halving cycle time and doubling
+/// revenue produce the same earnings-per-second. But cycle time lives
+/// in a <see cref="double"/> on <see cref="Business.CycleTimeSeconds"/>;
+/// halving it 1000+ times would underflow to exactly <c>0</c> in IEEE 754
+/// (below ~2^-1074), and the very next tick would divide by zero and
+/// crash. Folding the entire cross-business effect into a
+/// <see cref="BigDouble"/> revenue multiplier sidesteps this: revenue
+/// can grow without bound because <see cref="BigDouble"/> has no
+/// practical exponent ceiling. The player's earnings per second are
+/// exactly what they would be under the literal-halving rule; only the
+/// internal representation differs.
+/// </para>
+///
+/// <para>
+/// <b>Threshold ladder.</b> 25, 50, 100, 200, 300, 400, then every +100
+/// forever (500, 600, 700, 800, ...). The first six match Option A's
+/// per-business ladder one-for-one — so by the time a player has 400
+/// of every business they're sitting on a ×64 per-business stack AND
+/// a ×64 cross-business stack, totalling ×4096 earnings rate over
+/// baseline. Past 400, the cross-business ladder continues alone but
+/// never stops: at minimum-owned = 1000, the cross-business multiplier
+/// is ×4096; at 10,000, it's ×2¹⁰² ≈ 5×10³⁰; and so on.
+/// </para>
+///
+/// <para>
+/// <b>Numerical robustness.</b> <see cref="CalculateSpeedMultiplier"/>
+/// returns a <see cref="BigDouble"/>; the underlying <c>2^N</c>
+/// computation uses <see cref="BigDouble.Pow(double)"/> which is
+/// log-based and stays representable for any practically reachable N.
+/// At absurd N (e.g. 10¹⁸), <see cref="BigDouble.Pow(double)"/> itself
+/// saturates to <see cref="BigDouble.PositiveInfinity"/>; downstream
+/// code in <see cref="MyAdventure.Core.Services.GameEngine"/> sanitizes
+/// monetary values through <c>SanitizeMoney</c>, which maps
+/// non-finite values to safe defaults. There is no path by which a
+/// finite ownership count can produce a non-finite cash value.
+/// </para>
+/// </summary>
+public static class CrossBusinessSpeedBonus
+{
+    /// <summary>
+    /// How many cross-business bonus stacks the player has earned for a
+    /// given minimum ownership count across all businesses. The first
+    /// six thresholds match the per-business <see cref="SpeedMilestone"/>
+    /// ladder (25, 50, 100, 200, 300, 400) one-for-one; past 400, one
+    /// additional stack is granted per +100 owned, forever.
+    /// </summary>
+    /// <param name="minOwnedAcrossBusinesses">
+    /// The minimum <see cref="Business.Owned"/> count across the full
+    /// business roster. Negative inputs (corrupted save) are treated
+    /// as zero.
+    /// </param>
+    /// <returns>
+    /// The number of ×2 stacks granted (0 at minOwned &lt; 25; 1 at
+    /// 25–49; 2 at 50–99; …; 6 at 400–499; 7 at 500–599; …). Grows
+    /// linearly past 400 with one stack per +100 owned, forever.
+    /// </returns>
+    public static int BonusCount(int minOwnedAcrossBusinesses)
+    {
+        if (minOwnedAcrossBusinesses < 25) return 0;
+        if (minOwnedAcrossBusinesses < 50) return 1;
+        if (minOwnedAcrossBusinesses < 100) return 2;
+        if (minOwnedAcrossBusinesses < 200) return 3;
+        if (minOwnedAcrossBusinesses < 300) return 4;
+        if (minOwnedAcrossBusinesses < 400) return 5;
+        // Past 400: 6 base stacks plus one per full +100 owned.
+        // Integer division floors toward zero, which is exactly what
+        // we want — a player at 499 has the same 6 stacks as one at 400,
+        // and only crossing into 500 grants the 7th stack.
+        return 6 + (minOwnedAcrossBusinesses - 400) / 100;
+    }
+
+    /// <summary>
+    /// The cross-business earnings multiplier: <c>2^BonusCount</c>,
+    /// applied multiplicatively to every business's payout in both the
+    /// live-tick and offline-earnings paths.
+    /// <para>
+    /// Returns <see cref="BigDouble.One"/> when no stacks have been
+    /// earned (early game), guaranteeing exact-1.0 semantics for tests
+    /// that pin "no cross-business effect below 25 owned of every
+    /// business". Past that, climbs without bound.
+    /// </para>
+    /// </summary>
+    public static BigDouble CalculateSpeedMultiplier(int minOwnedAcrossBusinesses)
+    {
+        var count = BonusCount(minOwnedAcrossBusinesses);
+        if (count == 0) return BigDouble.One;
+
+        // BigDouble.Pow uses a log-based formulation (10^(power × log10(this))),
+        // so even huge exponents stay representable without iterative
+        // multiplication. At absurdly large counts it saturates to
+        // BigDouble.PositiveInfinity rather than wrapping; the engine's
+        // SanitizeMoney layer catches that defensively.
+        return new BigDouble(2.0).Pow(count);
+    }
+
+    /// <summary>
+    /// The next minimum-ownership threshold that would grant another
+    /// ×2 stack. Used by the UI to render a "next bonus at N" hint.
+    /// </summary>
+    /// <param name="minOwnedAcrossBusinesses">Current minimum ownership.</param>
+    /// <returns>
+    /// The next threshold (25, 50, 100, 200, 300, 400, then 500, 600, …).
+    /// There is no "null" return — the curve continues forever.
+    /// </returns>
+    public static int NextThreshold(int minOwnedAcrossBusinesses)
+    {
+        if (minOwnedAcrossBusinesses < 25) return 25;
+        if (minOwnedAcrossBusinesses < 50) return 50;
+        if (minOwnedAcrossBusinesses < 100) return 100;
+        if (minOwnedAcrossBusinesses < 200) return 200;
+        if (minOwnedAcrossBusinesses < 300) return 300;
+        if (minOwnedAcrossBusinesses < 400) return 400;
+        // Past 400: next +100 boundary. Integer division then × 100
+        // snaps to the next round 100. At 400 → 500; at 450 → 500;
+        // at 499 → 500; at 500 → 600.
+        return ((minOwnedAcrossBusinesses / 100) + 1) * 100;
+    }
+
+    /// <summary>
+    /// How many more units the player needs (of the lowest-owned
+    /// business) to reach the next cross-business threshold. Returned
+    /// as a non-negative int; zero only when the player is exactly at
+    /// a threshold boundary (in which case <see cref="NextThreshold"/>
+    /// already points to the boundary after that).
+    /// </summary>
+    public static int UnitsToNext(int minOwnedAcrossBusinesses)
+    {
+        var next = NextThreshold(minOwnedAcrossBusinesses);
+        var diff = next - minOwnedAcrossBusinesses;
+        return diff < 0 ? 0 : diff;
+    }
+}
+
+
+================================================================================
 FILE: src/MyAdventure.Core/Entities/EntityBase.cs
 SIZE: .24 KB
 ================================================================================
@@ -2271,7 +2449,7 @@ public record GameState : EntityBase
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Milestone.cs
-SIZE: 6.56 KB
+SIZE: 6.31 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -2346,55 +2524,50 @@ public record Milestone(int Threshold, double Multiplier, string Label)
 /// multiplicatively on earnings-per-second.
 ///
 /// <para>
-/// <b>Why this matters.</b> If cycle time is fixed forever, the player
-/// eventually hits a wall where each new unit of business takes
-/// exponentially more cash to buy but contributes the same earnings rate
-/// per cycle. Buying #1001 becomes pointless because cycles still happen
-/// at the same pace. Speed milestones break that wall by letting cycles
-/// fire faster as ownership grows, so cash compounds rather than
-/// stalls.
+/// <b>AdCap-parity ladder (updated from the original 4-threshold table).</b>
+/// The default table now has SIX thresholds — 25, 50, 100, 200, 300, 400
+/// — matching the per-business speed table in Adventure Capitalist
+/// exactly. Each halves cycle time, so the compound speed-up caps at
+/// ×64 per business (six halvings: 2⁶ = 64). The original table only
+/// had four (100/200/300/400 → ×16) and that was the user's reported
+/// gap from AdCap; this brings Option A to parity.
 /// </para>
 ///
 /// <para>
-/// <b>Why this isn't aggressive.</b> The default table has only four
-/// thresholds (100, 200, 300, 400), each halving cycle time. The total
-/// compound speed-up is therefore capped at ×16 — meaningful, but not
-/// game-breaking. By 400 owned the player already has revenue milestones
-/// at 25/50/100/200/300/400 worth a combined ×64 revenue multiplier; the
-/// extra ×16 speed brings earnings per second to a ×1024 boost over
-/// baseline, which keeps mid-game momentum without trivializing it.
+/// <b>The cap is intentional — for THIS axis.</b> Per-business speed
+/// stays at ×64 max because cycle time is stored in a <see cref="double"/>
+/// (<see cref="Business.CycleTimeSeconds"/>) and further halvings would
+/// quickly underflow when combined with a small base time. The
+/// second-axis cross-business bonus (<see cref="CrossBusinessSpeedBonus"/>)
+/// is what scales without bound — it's a <see cref="BigDouble"/>
+/// revenue multiplier and has no ceiling.
 /// </para>
 ///
 /// <para>
-/// <b>Why we don't put it on the existing <see cref="Milestone"/> record.</b>
-/// Keeping revenue and speed as separate axes lets each be balanced and
-/// tested independently — and keeps the existing milestone tests stable
-/// (no risk of accidentally regressing a ×2 revenue at 25 into a
-/// "×2 revenue + ×0.5 cycle time" change). A future patch can add an
-/// upgrades system that grants extra speed beyond the table without
-/// having to refactor the revenue side.
-/// </para>
-///
-/// <para>
-/// <b>Robustness against very fast cycles.</b> Cycle times will get
-/// small enough at the cap to be less than a single 60 Hz frame
-/// (≈16 ms). The game engine's tick loop is already written to handle
-/// that — it computes <c>cycles = (int)(ProgressPercent / 100.0)</c> on
-/// each tick and pays out for all of them at once, with the leftover
-/// fraction carried into the next tick via <c>ProgressPercent %= 100.0</c>.
-/// An invariant test pins this behavior so future refactors can't break it.
+/// <b>Robustness against very fast cycles.</b> At 400 owned of a 0.6 s
+/// base business (lemonade), the effective cycle drops to 9.375 ms —
+/// below a single 60 Hz frame (16 ms). The game engine's tick loop is
+/// already written to handle that: it computes
+/// <c>cycles = (int)(ProgressPercent / 100.0)</c> on each tick and pays
+/// out for all of them at once, with the leftover fraction carried into
+/// the next tick via <c>ProgressPercent %= 100.0</c>. The
+/// <c>SubFrameCycleTests</c> invariants pin this behavior so future
+/// refactors can't break it.
 /// </para>
 /// </summary>
 public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string Label)
 {
     /// <summary>
-    /// Default speed milestones — each halves cycle time. The thresholds
-    /// are spread between the major revenue milestones so progression
-    /// never feels stagnant for long, but the cap of 4 milestones keeps
-    /// the total speed-up bounded at ×16.
+    /// Default speed milestones — six thresholds matching the AdCap
+    /// per-business speed ladder (25, 50, 100, 200, 300, 400). Each
+    /// halves cycle time; compounded, they reach ×64 max per business.
+    /// The cross-business bonus in <see cref="CrossBusinessSpeedBonus"/>
+    /// stacks multiplicatively on top of this and is uncapped.
     /// </summary>
     public static IReadOnlyList<SpeedMilestone> Defaults { get; } =
     [
+        new(25, 0.5, "×2 Speed"),
+        new(50, 0.5, "×2 Speed"),
         new(100, 0.5, "×2 Speed"),
         new(200, 0.5, "×2 Speed"),
         new(300, 0.5, "×2 Speed"),
@@ -2422,7 +2595,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
 
     /// <summary>
     /// Convenience: cumulative speed multiplier (the reciprocal of the
-    /// cycle-time multiplier). Useful for UI display ("×4 Speed").
+    /// cycle-time multiplier). Useful for UI display ("×64 Speed").
     /// </summary>
     public static double CalculateSpeedMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
@@ -3013,11 +3186,12 @@ public readonly struct BigDouble : IEquatable<BigDouble>, IComparable<BigDouble>
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 25.10 KB
+SIZE: 31.21 KB
 ================================================================================
 
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -3034,7 +3208,7 @@ namespace MyAdventure.Core.Services;
 /// <para>
 /// <b>BigDouble migration:</b> all monetary and progression quantities
 /// (<see cref="Cash"/>, <see cref="LifetimeEarnings"/>,
-/// <see cref="AngelInvestors"/>, <see cref="AngelBonus"/>) are now
+/// <see cref="AngelInvestors"/>, <see cref="AngelBonus"/>) are
 /// <see cref="BigDouble"/>. The prior <c>double</c>-based implementation
 /// had to clamp these values at <c>1e200</c> to avoid overflowing IEEE 754
 /// to <see cref="double.PositiveInfinity"/>; that clamp is the cause of
@@ -3047,6 +3221,23 @@ namespace MyAdventure.Core.Services;
 /// astronomical angel counts. It's set far past any practically reachable
 /// value, but exists so that downstream multiplications can never produce
 /// non-finite BigDoubles even under absurdly hand-edited saves.
+/// </para>
+/// <para>
+/// <b>Cross-business speed bonus (Option B).</b> A second earnings-rate
+/// multiplier — see <see cref="CrossBusinessSpeedMultiplier"/> and
+/// <see cref="CrossBusinessSpeedBonus"/> — compounds on top of the
+/// per-business speed milestones in <see cref="SpeedMilestone"/>. It
+/// triggers when EVERY business simultaneously crosses a shared
+/// ownership threshold (25, 50, 100, 200, 300, 400, then every +100
+/// forever) and is uncapped: at minimum-owned = 1000 it's already ×4096,
+/// at 10,000 it's ×2¹⁰², and the curve continues without ceiling. It is
+/// folded into the earnings calculation in <see cref="Tick"/> and
+/// <see cref="CalculateOfflineEarnings"/> as a revenue multiplier (NOT
+/// a cycle-time divisor) because halving a <see cref="double"/> cycle
+/// time hundreds of times would underflow to exactly zero in IEEE 754;
+/// folding into <see cref="BigDouble"/> revenue keeps the math
+/// representable forever. The earnings rate is mathematically identical
+/// either way.
 /// </para>
 /// </summary>
 public class GameEngine(
@@ -3168,10 +3359,19 @@ public class GameEngine(
         var sw = Stopwatch.StartNew();
         TickCounter.Add(1);
 
-        // Snapshot the angel multiplier once per tick so all businesses
-        // settle their cycles against the same value and so the call to
-        // AngelBonus is paid once instead of per-business.
+        // Snapshot ALL earnings multipliers once per tick so every business
+        // settles cycles against the same value. AngelBonus and
+        // CrossBusinessSpeedMultiplier are O(n) / O(small) reads but each
+        // would otherwise be paid n_businesses times per tick.
+        //
+        // The product order matters for BigDouble precision at extremes:
+        // angelBonus can be up to 10^(10^15) and crossBusiness can be
+        // arbitrarily large; multiplying them first concentrates the
+        // exponent into a single BigDouble before the per-cycle multiply,
+        // which is the cheapest way to keep the per-cycle math sub-microsecond.
         var angelBonus = AngelBonus;
+        var crossBusiness = CrossBusinessSpeedMultiplier;
+        var totalBonus = angelBonus * crossBusiness;
 
         foreach (var biz in Businesses)
         {
@@ -3182,11 +3382,11 @@ public class GameEngine(
             if (biz.ProgressPercent >= 100.0)
             {
                 var cycles = (int)(biz.ProgressPercent / 100.0);
-                // Angel bonus applies to live earnings just like it does to
-                // offline earnings — see CalculateOfflineEarnings(), which
-                // multiplies by AngelBonus once at the end. These two paths
-                // must stay in sync; an invariant test guards this.
-                var earned = biz.Revenue * cycles * angelBonus;
+                // BOTH bonuses applied to live earnings just like they are
+                // to offline earnings — see CalculateOfflineEarnings, which
+                // multiplies by totalBonus once at the end. Keeping the
+                // two paths symmetric is what the invariant tests pin.
+                var earned = biz.Revenue * cycles * totalBonus;
                 Cash = SanitizeMoney(Cash + earned);
                 LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
 
@@ -3412,6 +3612,72 @@ public class GameEngine(
     }
 
     /// <summary>
+    /// Cross-business earnings multiplier. Triggers when EVERY business
+    /// simultaneously crosses one of the shared ownership thresholds
+    /// (25, 50, 100, 200, 300, 400, then every +100 forever). Each
+    /// threshold doubles the multiplier; the curve has no cap.
+    ///
+    /// <para>
+    /// <b>Applied as a revenue multiplier, not a cycle-time divisor.</b>
+    /// The user's mental model is "all-business halves cycle time
+    /// again", and the earnings rate this produces is mathematically
+    /// identical to that — but cycle time lives in a <see cref="double"/>
+    /// on <see cref="Business.CycleTimeSeconds"/>, and halving a double
+    /// hundreds of times underflows to exactly zero. Folding the entire
+    /// bonus into a <see cref="BigDouble"/> revenue multiplier sidesteps
+    /// that completely: revenue can grow without bound because
+    /// <see cref="BigDouble"/> has no practical exponent ceiling.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>"All businesses" means literally all six.</b> A player with
+    /// 1000 lemonade stands and zero shrimp boats gets exactly zero
+    /// cross-business bonus — the minimum across the roster is 0.
+    /// This is what the user's design called out as the strategic
+    /// incentive shift: balanced ownership is rewarded; hoarding is not.
+    /// </para>
+    ///
+    /// <para>
+    /// Returns <see cref="BigDouble.One"/> when no thresholds are
+    /// crossed (early game), so the per-cycle multiply collapses to a
+    /// no-op for any business roster that hasn't reached 25-of-each.
+    /// </para>
+    /// </summary>
+    public BigDouble CrossBusinessSpeedMultiplier
+    {
+        get
+        {
+            if (Businesses.Count == 0) return BigDouble.One;
+            var minOwned = int.MaxValue;
+            foreach (var biz in Businesses)
+            {
+                if (biz.Owned < minOwned) minOwned = biz.Owned;
+            }
+            if (minOwned < 0) minOwned = 0; // defensive: corrupted save
+            return CrossBusinessSpeedBonus.CalculateSpeedMultiplier(minOwned);
+        }
+    }
+
+    /// <summary>
+    /// The minimum ownership count across all businesses — the input to
+    /// the cross-business bonus. Exposed for the UI's "next threshold"
+    /// hint so the player can see which business is gating progression.
+    /// </summary>
+    public int MinOwnedAcrossBusinesses
+    {
+        get
+        {
+            if (Businesses.Count == 0) return 0;
+            var minOwned = int.MaxValue;
+            foreach (var biz in Businesses)
+            {
+                if (biz.Owned < minOwned) minOwned = biz.Owned;
+            }
+            return minOwned < 0 ? 0 : minOwned;
+        }
+    }
+
+    /// <summary>
     /// Compute how many angels the player's lifetime earnings are
     /// currently worth. Returns the cumulative count (callers subtract
     /// <see cref="AngelInvestors"/> to get the available-to-claim count).
@@ -3463,9 +3729,13 @@ public class GameEngine(
             var cycles = new BigDouble(elapsed.TotalSeconds / biz.CycleTimeSeconds);
             total += biz.Revenue * cycles;
         }
-        // AngelBonus applied once at the end, matching Tick's per-cycle path
-        // (which multiplies the per-tick earned amount by the snapshot bonus).
-        return total * AngelBonus;
+        // BOTH AngelBonus and CrossBusinessSpeedMultiplier applied once
+        // at the end, matching Tick's per-cycle path (which multiplies
+        // the per-tick earned amount by the snapshot totalBonus). The
+        // invariant test OfflineEarnings_ShouldApplyCrossBonusOnce_NotTwice
+        // guards this — drift between the two paths is a silent earnings
+        // bug that would only surface at extreme scaling.
+        return total * AngelBonus * CrossBusinessSpeedMultiplier;
     }
 
     /// <summary>
@@ -3548,6 +3818,17 @@ public class GameEngine(
     /// stores in SQLite, so an exported string is essentially a portable
     /// dump of the persisted columns.
     /// </para>
+    /// <para>
+    /// <b>Timestamp field.</b> The export includes a <c>timestamp</c> field
+    /// (ISO 8601 UTC, e.g. <c>"2026-05-23T14:30:00.0000000Z"</c>) recorded
+    /// at the moment the export is generated. It is NOT validated on
+    /// import — its sole purpose is debugging: if a player reports a bug
+    /// with two exported saves, the timestamps let us (and the player)
+    /// see which save is newer and reason about expected progression.
+    /// Example: two saves five days apart with identical cash but
+    /// managers enabled would indicate an offline-earnings defect, since
+    /// the newer one should have more cash.
+    /// </para>
     /// </summary>
     public string ExportToString()
     {
@@ -3559,7 +3840,12 @@ public class GameEngine(
             ["angels"] = SanitizeAngels(AngelInvestors).ToCanonicalString(),
             ["prestige"] = PrestigeCount,
             ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
-            ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
+            ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager),
+            // ISO 8601 round-trippable UTC timestamp. The "o" format
+            // specifier produces a sortable, lexicographic-friendly
+            // string ("2026-05-23T14:30:00.1234567Z") — diffing two
+            // exports lets us tell at a glance which is newer.
+            ["timestamp"] = _time.GetUtcNow().UtcDateTime.ToString("o", CultureInfo.InvariantCulture)
         };
         var json = JsonSerializer.Serialize(data);
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
@@ -3570,6 +3856,12 @@ public class GameEngine(
     /// the current v2 format (numbers as canonical BigDouble strings) and
     /// the legacy v1 format (numbers as native JSON doubles), so old
     /// saves from before the BigDouble migration still load.
+    /// <para>
+    /// The <c>timestamp</c> field added in the cross-business-bonus
+    /// patch is read but NOT validated — its only purpose is debugging
+    /// (see <see cref="ExportToString"/>). Exports without a timestamp
+    /// (e.g. saves from before this version) still import fine.
+    /// </para>
     /// </summary>
     public bool ImportFromString(string encoded)
     {
@@ -3605,6 +3897,11 @@ public class GameEngine(
                         if (has && biz.Owned > 0) biz.IsRunning = true;
                     }
             }
+
+            // The "timestamp" field is intentionally ignored. We don't
+            // validate it (no anti-cheat) and don't expose it on the
+            // engine — its purpose is purely diagnostic, viewable by
+            // decoding the export string offline.
 
             logger.LogInformation("Imported game state. Cash: {Cash}, Angels: {Angels}",
                 Cash.ToCanonicalString(), AngelInvestors.ToCanonicalString());
@@ -5100,7 +5397,7 @@ public class ToastService
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-SIZE: 11.54 KB
+SIZE: 13.74 KB
 ================================================================================
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -5117,11 +5414,22 @@ namespace MyAdventure.Shared.ViewModels;
 /// expanded detail properties for adaptive display.
 ///
 /// <para>
-/// <b>BigDouble note:</b> the <see cref="Refresh"/> method takes
-/// <see cref="BigDouble"/> for both cash and the angel bonus, mirroring
-/// the engine's new types. Display text properties stay
-/// <see cref="string"/>; formatting happens once here so the views can
-/// bind directly without conversion overhead per frame.
+/// <b>BigDouble note:</b> the <see cref="Refresh(BigDouble, BigDouble)"/>
+/// method takes <see cref="BigDouble"/> for both cash and the angel
+/// bonus, mirroring the engine's new types. Display text properties
+/// stay <see cref="string"/>; formatting happens once here so the views
+/// can bind directly without conversion overhead per frame.
+/// </para>
+///
+/// <para>
+/// <b>Cross-business bonus note:</b> the
+/// <see cref="Refresh(BigDouble, BigDouble, BigDouble)"/> overload
+/// takes a third parameter — the cross-business earnings multiplier
+/// from <see cref="GameEngine.CrossBusinessSpeedMultiplier"/> — and
+/// applies it to the displayed per-cycle revenue and revenue per
+/// second so the UI shows what the player will actually earn. The
+/// two-argument overload forwards with <see cref="BigDouble.One"/>
+/// so existing call sites and tests are unaffected.
 /// </para>
 ///
 /// <para>
@@ -5140,11 +5448,13 @@ namespace MyAdventure.Shared.ViewModels;
 /// </list>
 ///
 /// <para>
-/// <b>Speed milestone display:</b> separate properties expose the speed
-/// multiplier (e.g. "×4 Speed") and the next speed milestone so the UI
-/// can show how cycle time is improving alongside revenue. This is
-/// orthogonal to the revenue milestone display — both are visible in
-/// the detail panel.
+/// <b>Speed milestone display:</b> separate properties expose the
+/// per-business speed multiplier (e.g. "×64 Speed") and the next speed
+/// milestone so the UI can show how cycle time is improving alongside
+/// revenue. This is orthogonal to the revenue milestone display — both
+/// are visible in the detail panel. The cross-business bonus is shown
+/// at the global level (<see cref="GameViewModel"/>) since it applies
+/// uniformly to every business.
 /// </para>
 /// </summary>
 public partial class BusinessViewModel(
@@ -5181,11 +5491,11 @@ public partial class BusinessViewModel(
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
 
-    // --- Speed milestone properties ---
-    /// <summary>Compounded speed multiplier (e.g. 4.0 for ×4 Speed). 1.0 below the first speed threshold.</summary>
+    // --- Speed milestone properties (per-business) ---
+    /// <summary>Compounded per-business speed multiplier (e.g. 64.0 for ×64 Speed). 1.0 below the first speed threshold.</summary>
     [ObservableProperty] private double _speedMultiplier = 1.0;
 
-    /// <summary>Human-readable text for the speed multiplier (e.g. "×4 Speed"). Hidden when 1.0 via <see cref="HasSpeedBonus"/>.</summary>
+    /// <summary>Human-readable text for the speed multiplier (e.g. "×64 Speed"). Hidden when 1.0 via <see cref="HasSpeedBonus"/>.</summary>
     [ObservableProperty] private string _speedMultiplierText = "×1 Speed";
 
     /// <summary>True when speed multiplier exceeds 1.0 — drives visibility so the row doesn't clutter early-game cards.</summary>
@@ -5307,16 +5617,35 @@ public partial class BusinessViewModel(
     }
 
     /// <summary>
-    /// Refresh all bindable properties from the model.
+    /// Refresh all bindable properties from the model, applying ONLY the
+    /// angel bonus to revenue displays. Equivalent to calling the
+    /// three-argument overload with <see cref="BigDouble.One"/> as the
+    /// cross-business multiplier — preserved for backward compatibility
+    /// with the existing test suite (which predates the cross-business
+    /// bonus feature) and any external callers.
+    /// </summary>
+    public void Refresh(BigDouble cash, BigDouble angelBonus) =>
+        Refresh(cash, angelBonus, BigDouble.One);
+
+    /// <summary>
+    /// Refresh all bindable properties from the model, applying both the
+    /// angel bonus and the cross-business multiplier to revenue displays.
     /// </summary>
     /// <param name="cash">Current player cash, used for affordability flags.</param>
     /// <param name="angelBonus">
     /// The current angel multiplier from <see cref="GameEngine.AngelBonus"/>
     /// (e.g. 2.0 for +100%). Applied to <see cref="RevenueText"/> and
-    /// <see cref="RevenuePerSecondText"/> so the UI shows what the player will
-    /// actually earn — not the pre-bonus base values.
+    /// <see cref="RevenuePerSecondText"/> so the UI shows what the player
+    /// will actually earn — not the pre-bonus base values.
     /// </param>
-    public void Refresh(BigDouble cash, BigDouble angelBonus)
+    /// <param name="crossBusinessSpeed">
+    /// The current cross-business earnings multiplier from
+    /// <see cref="GameEngine.CrossBusinessSpeedMultiplier"/>. Applied to
+    /// the same displayed revenue values so the UI matches the engine's
+    /// actual per-tick payout. Pass <see cref="BigDouble.One"/> when not
+    /// applicable.
+    /// </param>
+    public void Refresh(BigDouble cash, BigDouble angelBonus, BigDouble crossBusinessSpeed)
     {
         Owned = model.Owned;
         ProgressPercent = model.ProgressPercent;
@@ -5324,21 +5653,28 @@ public partial class BusinessViewModel(
         HasManager = model.HasManager;
         CostText = NumberFormatter.Format(model.NextCost);
 
+        // Pre-compute the combined multiplier once per Refresh. Both
+        // values are BigDouble, so the product stays representable at
+        // any scale.
+        var totalEarningsBonus = angelBonus * crossBusinessSpeed;
+
         // Owned == 0 still shows "—" because there's no business to earn from yet.
         RevenueText = model.Owned > 0
-            ? NumberFormatter.Format(model.Revenue * angelBonus)
+            ? NumberFormatter.Format(model.Revenue * totalEarningsBonus)
             : "—";
         var managerCost = new BigDouble(model.BaseCost * 1000);
         ManagerCostText = NumberFormatter.Format(managerCost);
         CanAfford = cash >= model.NextCost;
         CanAffordManager = !model.HasManager && cash >= managerCost;
 
-        // Extended details — cycle time now reflects speed milestones via
-        // Business.CycleTimeSeconds, so the displayed time naturally shrinks
-        // (e.g. "0.6s" → "300ms" → "150ms") as speed thresholds are crossed.
+        // Extended details — cycle time reflects the per-business speed
+        // milestones via Business.CycleTimeSeconds. The cross-business
+        // bonus is NOT folded into cycle time (it's a revenue multiplier),
+        // so the displayed cycle time honestly reports how often a single
+        // cycle of this business fires.
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
         RevenuePerSecondText = model.Owned > 0
-            ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
+            ? $"${NumberFormatter.Format(model.RevenuePerSecond * totalEarningsBonus)}/s"
             : "—";
 
         AffordableCount = model.AffordableCount(cash);
@@ -5347,8 +5683,10 @@ public partial class BusinessViewModel(
         MilestoneMultiplier = model.MilestoneMultiplier;
         MilestoneMultiplierText = $"×{MilestoneMultiplier:G4}";
 
-        // Speed multiplier display. Hidden when 1.0 to keep early-game
-        // cards uncluttered (HasSpeedBonus is the visibility flag).
+        // Speed multiplier display (per-business only). Hidden when 1.0
+        // to keep early-game cards uncluttered (HasSpeedBonus is the
+        // visibility flag). The cross-business bonus is displayed
+        // globally on GameViewModel rather than per-card.
         SpeedMultiplier = model.SpeedMultiplier;
         SpeedMultiplierText = $"×{SpeedMultiplier:G4} Speed";
         HasSpeedBonus = SpeedMultiplier > 1.0;
@@ -6498,8 +6836,181 @@ public class BusinessTests
 
 
 ================================================================================
+FILE: tests/MyAdventure.Core.Tests/CrossBusinessSpeedBonusTests.cs
+SIZE: 6.22 KB
+================================================================================
+
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Numerics;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+/// <summary>
+/// Pins the cross-business speed bonus curve (Option B). This is the
+/// second compounding earnings axis on top of the per-business speed
+/// milestones in <see cref="SpeedMilestone"/>:
+/// <list type="bullet">
+///   <item>The first six thresholds (25, 50, 100, 200, 300, 400) match
+///         the per-business speed ladder one-for-one.</item>
+///   <item>Past 400, one additional ×2 stack is granted per +100 owned,
+///         <b>forever</b> — there is no terminal threshold. Progression
+///         continues at every scale.</item>
+///   <item>The multiplier is a <see cref="BigDouble"/> revenue multiplier
+///         rather than a cycle-time divisor; this is what lets it grow
+///         without bound (cycle time in <see cref="double"/> would
+///         underflow long before BigDouble runs out of exponent).</item>
+/// </list>
+/// </summary>
+public class CrossBusinessSpeedBonusTests
+{
+    // ---------------- BonusCount: the integer ladder ----------------
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 0)]
+    [InlineData(24, 0)]
+    [InlineData(25, 1)]
+    [InlineData(49, 1)]
+    [InlineData(50, 2)]
+    [InlineData(99, 2)]
+    [InlineData(100, 3)]
+    [InlineData(199, 3)]
+    [InlineData(200, 4)]
+    [InlineData(299, 4)]
+    [InlineData(300, 5)]
+    [InlineData(399, 5)]
+    [InlineData(400, 6)]
+    [InlineData(499, 6)]
+    [InlineData(500, 7)]
+    [InlineData(600, 8)]
+    [InlineData(700, 9)]
+    [InlineData(1000, 12)]
+    [InlineData(10_000, 102)]
+    public void BonusCount_MatchesLadder(int minOwned, int expectedCount) =>
+        CrossBusinessSpeedBonus.BonusCount(minOwned).ShouldBe(expectedCount);
+
+    [Fact]
+    public void BonusCount_NegativeInput_TreatsAsZero()
+    {
+        // Defensive against corrupted saves — a negative Owned count
+        // shouldn't crash the cross-business calculation.
+        CrossBusinessSpeedBonus.BonusCount(-1).ShouldBe(0);
+        CrossBusinessSpeedBonus.BonusCount(-1000).ShouldBe(0);
+    }
+
+    // ---------------- CalculateSpeedMultiplier: 2^count ----------------
+
+    [Fact]
+    public void CalculateSpeedMultiplier_BelowFirstThreshold_IsExactlyOne()
+    {
+        // BigDouble.One must round-trip exactly so the "no cross bonus"
+        // case produces a true multiplicative identity in downstream
+        // arithmetic (no precision loss propagating through the per-tick
+        // earnings multiply).
+        CrossBusinessSpeedBonus.CalculateSpeedMultiplier(0).ShouldBe(BigDouble.One);
+        CrossBusinessSpeedBonus.CalculateSpeedMultiplier(24).ShouldBe(BigDouble.One);
+    }
+
+    [Theory]
+    [InlineData(25, 2.0)]
+    [InlineData(50, 4.0)]
+    [InlineData(100, 8.0)]
+    [InlineData(200, 16.0)]
+    [InlineData(300, 32.0)]
+    [InlineData(400, 64.0)]
+    [InlineData(500, 128.0)]
+    [InlineData(600, 256.0)]
+    [InlineData(700, 512.0)]
+    [InlineData(800, 1024.0)]
+    [InlineData(1000, 4096.0)]
+    public void CalculateSpeedMultiplier_AtThresholds_IsPow2OfCount(int minOwned, double expected)
+    {
+        var mult = CrossBusinessSpeedBonus.CalculateSpeedMultiplier(minOwned);
+        mult.ToDouble().ShouldBe(expected, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void CalculateSpeedMultiplier_AtAbsurdScale_StaysFiniteOrSafelySaturates()
+    {
+        // At minOwned = 1,000,000 the bonus is 2^10006 — astronomical
+        // but well within BigDouble's exponent range (~10^308 base × any
+        // exponent power). The result must be either a finite BigDouble
+        // OR a saturated PositiveInfinity that SanitizeMoney will catch
+        // downstream. NaN or negative would be a serious bug.
+        var mult = CrossBusinessSpeedBonus.CalculateSpeedMultiplier(1_000_000);
+        mult.IsNaN.ShouldBeFalse();
+        mult.Sign.ShouldBe(1);
+    }
+
+    [Fact]
+    public void CalculateSpeedMultiplier_ContinuesPast400_DoublesEveryHundred()
+    {
+        // The defining property of Option B: progression doesn't stall at 400.
+        // 500 must be exactly 2× of 400. 600 must be exactly 2× of 500. And so on.
+        var at400 = CrossBusinessSpeedBonus.CalculateSpeedMultiplier(400).ToDouble();
+        var at500 = CrossBusinessSpeedBonus.CalculateSpeedMultiplier(500).ToDouble();
+        var at600 = CrossBusinessSpeedBonus.CalculateSpeedMultiplier(600).ToDouble();
+        var at700 = CrossBusinessSpeedBonus.CalculateSpeedMultiplier(700).ToDouble();
+
+        (at500 / at400).ShouldBe(2.0, tolerance: 1e-9);
+        (at600 / at500).ShouldBe(2.0, tolerance: 1e-9);
+        (at700 / at600).ShouldBe(2.0, tolerance: 1e-9);
+    }
+
+    // ---------------- NextThreshold ----------------
+
+    [Theory]
+    [InlineData(0, 25)]
+    [InlineData(24, 25)]
+    [InlineData(25, 50)]
+    [InlineData(49, 50)]
+    [InlineData(50, 100)]
+    [InlineData(99, 100)]
+    [InlineData(100, 200)]
+    [InlineData(199, 200)]
+    [InlineData(200, 300)]
+    [InlineData(300, 400)]
+    [InlineData(400, 500)]
+    [InlineData(450, 500)]
+    [InlineData(499, 500)]
+    [InlineData(500, 600)]
+    [InlineData(900, 1000)]
+    [InlineData(1000, 1100)]
+    public void NextThreshold_MatchesLadder(int minOwned, int expectedNext) =>
+        CrossBusinessSpeedBonus.NextThreshold(minOwned).ShouldBe(expectedNext);
+
+    // ---------------- UnitsToNext ----------------
+
+    [Theory]
+    [InlineData(0, 25)]
+    [InlineData(15, 10)]
+    [InlineData(25, 25)]   // at 25, next is 50, so 25 more units needed
+    [InlineData(45, 5)]
+    [InlineData(100, 100)] // at 100, next is 200, so 100 more
+    [InlineData(150, 50)]
+    [InlineData(400, 100)]
+    [InlineData(450, 50)]
+    [InlineData(499, 1)]
+    [InlineData(500, 100)]
+    public void UnitsToNext_MatchesGapToNextThreshold(int minOwned, int expectedUnits) =>
+        CrossBusinessSpeedBonus.UnitsToNext(minOwned).ShouldBe(expectedUnits);
+
+    [Fact]
+    public void UnitsToNext_NeverNegative()
+    {
+        // Defensive: with negative input the calculation could in theory
+        // go negative; the contract guarantees non-negative.
+        CrossBusinessSpeedBonus.UnitsToNext(-50).ShouldBeGreaterThanOrEqualTo(0);
+        CrossBusinessSpeedBonus.UnitsToNext(0).ShouldBeGreaterThanOrEqualTo(0);
+        CrossBusinessSpeedBonus.UnitsToNext(int.MaxValue - 1000).ShouldBeGreaterThanOrEqualTo(0);
+    }
+}
+
+
+================================================================================
 FILE: tests/MyAdventure.Core.Tests/GameEngineTests.cs
-SIZE: 31.98 KB
+SIZE: 47.90 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -6519,6 +7030,18 @@ namespace MyAdventure.Core.Tests;
 /// clamps are lifted to BigDouble here; the invariants they test
 /// (live ↔ offline equivalence, prestige reset, angel bonus, etc.)
 /// remain identical.
+///
+/// <para>
+/// <b>Cross-business bonus interaction:</b> the cross-business
+/// multiplier (Option B) collapses to <see cref="BigDouble.One"/>
+/// whenever the minimum ownership across the roster is below 25 — and
+/// most tests in this file own only the lemonade stand (or test
+/// behaviors orthogonal to ownership). Those tests need no changes:
+/// crossBonus = 1.0 in their state, so adding the second multiplier in
+/// the engine's tick/offline paths is mathematically a no-op for them.
+/// New tests at the bottom of this file exercise the cross-business
+/// bonus directly.
+/// </para>
 /// </summary>
 public class GameEngineTests
 {
@@ -6615,6 +7138,7 @@ public class GameEngineTests
 
         var earned = (_engine.Cash - cashBefore).ToDouble();
         // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69.
+        // Cross-business bonus is 1.0 (only lemonade owned, rest at 0).
         earned.ShouldBe(FiftyAngelBonus, tolerance: 1e-9);
     }
 
@@ -7410,6 +7934,376 @@ public class GameEngineTests
         biz.AffordableCount(BigDouble.NaN).ShouldBe(0);
     }
 
+    // ====================================================================
+    //
+    //   Cross-business speed bonus (Option B) — engine-level integration
+    //
+    // ====================================================================
+
+    /// <summary>
+    /// With no businesses owned, the cross-business multiplier collapses
+    /// to BigDouble.One — a hard precondition for early-game balance. If
+    /// this ever returned a value other than 1.0, every existing
+    /// single-business test in this file would silently start failing
+    /// with off-by-2x earnings.
+    /// </summary>
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_NoBusinessesOwned_ReturnsOne()
+    {
+        await _engine.LoadAsync();
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(0);
+        _engine.CrossBusinessSpeedMultiplier.ShouldBe(BigDouble.One);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_OneBusinessAtZero_ReturnsOne()
+    {
+        // Even with most businesses owned heavily, ONE business at zero
+        // pins the minimum to 0 — the strategic incentive described in
+        // the CrossBusinessSpeedBonus design doc. This test pins that
+        // behavior so a future "average instead of min" refactor would
+        // immediately break the suite.
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 1000;
+        _engine.Businesses.First(b => b.Id == "shrimp").Owned = 0;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(0);
+        _engine.CrossBusinessSpeedMultiplier.ShouldBe(BigDouble.One);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AllBizAt25_ReturnsTwo()
+    {
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 25;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(25);
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(2.0, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AllBizAt400_Returns64()
+    {
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 400;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(400);
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(64.0, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AllBizAt1000_Returns4096()
+    {
+        // Defining test for Option B's "uncapped" property: past 400 the
+        // ladder keeps doubling. 1000 owned of every business → 12 stacks
+        // → 4096×. If a future refactor accidentally caps at 6 (the 400
+        // boundary), this test catches it.
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 1000;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(1000);
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(4096.0, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task MinOwnedAcrossBusinesses_TracksLowestBusiness()
+    {
+        await _engine.LoadAsync();
+        var businesses = _engine.Businesses.ToList();
+        businesses[0].Owned = 100;
+        businesses[1].Owned = 17; // the minimum
+        businesses[2].Owned = 200;
+        businesses[3].Owned = 50;
+        businesses[4].Owned = 75;
+        businesses[5].Owned = 1000;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(17);
+    }
+
+    /// <summary>
+    /// Invariant: the cross-business multiplier must be applied exactly
+    /// ONCE in offline-earnings (not twice via per-business scope and
+    /// total-scope, and not zero times). This mirrors the
+    /// <c>OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice</c> test
+    /// for the angel bonus — adding a second multiplicative axis without
+    /// drift-checking would be a silent earnings bug at extreme scale.
+    /// </summary>
+    [Fact]
+    public async Task OfflineEarnings_ShouldApplyCrossBonusOnce_NotTwice()
+    {
+        // Set up: all six businesses owned at 25 → cross-bonus = 2.0.
+        // Use a single business as the only earner so we can compute
+        // the expected offline earnings analytically.
+        await _engine.LoadAsync();
+        SetCash(BigDouble.Zero);
+
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 25;
+
+        // Only one earns (manager + running). The other five contribute
+        // to the cross-bonus minimum but produce no offline earnings.
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.HasManager = true;
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 0;
+        foreach (var biz in _engine.Businesses.Where(b => b.Id != "lemonade"))
+        {
+            biz.HasManager = false; // no offline earnings from these
+            biz.IsRunning = false;
+        }
+
+        // Sanity: cross-bonus exactly 2.0 here.
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(2.0, tolerance: 1e-9);
+
+        // Expected: 60 seconds / lemonade.CycleTimeSeconds × Revenue × crossBonus.
+        // The CycleTimeSeconds already reflects per-business speed mults
+        // (lemonade at 25 owned: 0.6 × 0.5 = 0.3s); we just need to factor
+        // in the cross-business multiplier separately.
+        var revenuePerSec = lemonade.RevenuePerSecond.ToDouble(); // pre-cross-bonus
+        var expectedSeconds = 60.0;
+        var expected = revenuePerSec * expectedSeconds * 2.0; // × cross bonus
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // If applied twice the actual would be 4.0× rather than 2.0×.
+        // If applied zero times the actual would equal expected/2.
+        // The tolerance is wide because revenue × cycles per second is
+        // already approximate; we only care about the multiplier factor.
+        var actual = earned.ToDouble();
+        actual.ShouldBe(expected, tolerance: expected * 0.01);
+    }
+
+    /// <summary>
+    /// Strong invariant: offline ↔ live equivalence must hold even when
+    /// the cross-business bonus is engaged. The angel bonus version of
+    /// this invariant is the existing
+    /// <c>ApplyOfflineEarnings_AndLiveTick_AreEquivalent</c>; this test
+    /// repeats it with cross-bonus also active to ensure both
+    /// multipliers compose identically in both paths.
+    /// </summary>
+    [Fact]
+    public async Task ApplyOfflineEarnings_AndLiveTick_AreEquivalent_WithCrossBonus()
+    {
+        // Helper to spin up an engine with all-six businesses at 50 owned
+        // (cross-bonus = 4.0) and lemonade as the only earner.
+        async Task<GameEngine> MakeAsync()
+        {
+            var repo = Substitute.For<IGameStateRepository>();
+            repo.GetLatestAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<GameState?>(null));
+            var eng = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+            await eng.LoadAsync();
+            SetCashOn(eng, new BigDouble(1_000_000));
+            foreach (var biz in eng.Businesses)
+                biz.Owned = 50;
+            var lemonade = eng.Businesses.First(b => b.Id == "lemonade");
+            lemonade.HasManager = true;
+            lemonade.IsRunning = true;
+            lemonade.ProgressPercent = 0;
+            foreach (var biz in eng.Businesses.Where(b => b.Id != "lemonade"))
+            {
+                biz.HasManager = false;
+                biz.IsRunning = false;
+            }
+            return eng;
+        }
+
+        var offlineEngine = await MakeAsync();
+        var liveEngine = await MakeAsync();
+
+        // Both engines should report identical cross-bonus.
+        offlineEngine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(4.0, tolerance: 1e-9);
+        liveEngine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(4.0, tolerance: 1e-9);
+
+        var cashBeforeOffline = offlineEngine.Cash;
+        var cashBeforeLive = liveEngine.Cash;
+
+        offlineEngine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // Tick the live engine for the same duration in 100ms increments.
+        for (var i = 0; i < 600; i++) liveEngine.Tick(0.1);
+
+        var earnedOffline = (offlineEngine.Cash - cashBeforeOffline).ToDouble();
+        var earnedLive = (liveEngine.Cash - cashBeforeLive).ToDouble();
+
+        // Both paths must converge. The live tick uses integer-cycle
+        // counting so a small residual is normal; offline is fractional
+        // and exact. The relative difference should be tiny — sub-1% of
+        // the offline value is generous slack here.
+        var relDiff = Math.Abs(earnedOffline - earnedLive) / Math.Max(1.0, earnedOffline);
+        relDiff.ShouldBeLessThan(0.01);
+    }
+
+    /// <summary>
+    /// Export must include the timestamp field for diagnostic purposes.
+    /// The timestamp is written but NOT validated on import — it lets us
+    /// (and the player) tell which of two exported saves is newer when
+    /// diagnosing reported bugs. See <see cref="GameEngine.ExportToString"/>
+    /// XML docs for the full rationale.
+    /// </summary>
+    [Fact]
+    public async Task ExportToString_IncludesTimestamp()
+    {
+        await _engine.LoadAsync();
+        var exported = _engine.ExportToString();
+        var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(exported));
+
+        // The timestamp field is present and ISO-8601-shaped.
+        json.ShouldContain("\"timestamp\"");
+
+        // Pull the timestamp value out and parse it to be sure it's a
+        // valid round-trippable UTC instant.
+        var doc = System.Text.Json.JsonDocument.Parse(json);
+        var stampStr = doc.RootElement.GetProperty("timestamp").GetString();
+        stampStr.ShouldNotBeNullOrWhiteSpace();
+        var parsed = DateTime.Parse(stampStr!,
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+        // Within a minute of "now" — a wide tolerance for slow CI runners.
+        (DateTime.UtcNow - parsed.ToUniversalTime()).Duration().TotalMinutes
+            .ShouldBeLessThan(1.0);
+    }
+
+    /// <summary>
+    /// Two exports taken a moment apart must have distinct timestamps
+    /// (forward-progressing). This pins the diagnostic property: if both
+    /// exports always carried the same timestamp the field would be
+    /// useless for diffing saves.
+    /// </summary>
+    [Fact]
+    public async Task ExportToString_TimestampAdvances_BetweenExports()
+    {
+        await _engine.LoadAsync();
+        var first = _engine.ExportToString();
+        // A small real-time delay to guarantee a tick of the system clock.
+        // 50ms is well above DateTime.UtcNow's resolution on every platform
+        // the project supports.
+        await Task.Delay(50);
+        var second = _engine.ExportToString();
+
+        string TimestampOf(string b64)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            return doc.RootElement.GetProperty("timestamp").GetString()!;
+        }
+
+        var t1 = DateTime.Parse(TimestampOf(first),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+        var t2 = DateTime.Parse(TimestampOf(second),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+
+        (t2 >= t1).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Import must IGNORE the timestamp field — we don't validate it and
+    /// we don't expose it on the engine. The point of this test is to
+    /// pin the "no anti-cheat" stance: a forged or stripped timestamp
+    /// must not cause an otherwise-valid export to fail to import.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_IgnoresTimestamp()
+    {
+        await _engine.LoadAsync();
+        // Build an export with a deliberately bogus timestamp value.
+        var json = """
+        {
+            "v": 2,
+            "cash": "1.23e3",
+            "lifetime": "0e0",
+            "angels": "0e0",
+            "prestige": 0,
+            "businesses": {"lemonade": 3},
+            "managers": {"lemonade": false},
+            "timestamp": "this-is-not-a-date-at-all"
+        }
+        """;
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+
+        // Import succeeds despite the malformed timestamp because we
+        // deliberately don't parse or validate it.
+        _engine.ImportFromString(encoded).ShouldBeTrue();
+        _engine.Cash.ToDouble().ShouldBe(1230.0, tolerance: 1e-9);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(3);
+    }
+
+    /// <summary>
+    /// Exports from before the timestamp field was introduced must still
+    /// import — the field is purely additive. This is the same pattern
+    /// as the v1 legacy support: never break compatibility with older
+    /// exports.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_NoTimestamp_StillImports()
+    {
+        await _engine.LoadAsync();
+        // Pre-timestamp v2 export shape (no "timestamp" field).
+        var json = """
+        {
+            "v": 2,
+            "cash": "5e2",
+            "lifetime": "5e2",
+            "angels": "0e0",
+            "prestige": 0,
+            "businesses": {"lemonade": 5},
+            "managers": {"lemonade": true}
+        }
+        """;
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+
+        _engine.ImportFromString(encoded).ShouldBeTrue();
+        _engine.Cash.ToDouble().ShouldBe(500.0, tolerance: 1e-9);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(5);
+        _engine.Businesses.First(b => b.Id == "lemonade").HasManager.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Round-trip test for the timestamp specifically: export → import →
+    /// export, and confirm the second export has its OWN timestamp (not
+    /// a carried-over copy of the first one). This pins the
+    /// "non-persistent" property of the timestamp — it always reflects
+    /// the moment of export, not the moment of the imported save.
+    /// </summary>
+    [Fact]
+    public async Task ImportThenExport_TimestampReflectsNewExportTime_NotImportedOne()
+    {
+        await _engine.LoadAsync();
+        var first = _engine.ExportToString();
+        await Task.Delay(50);
+
+        // Import into a fresh engine; export again.
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(first).ShouldBeTrue();
+
+        var second = engine2.ExportToString();
+
+        string TimestampOf(string b64)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            return doc.RootElement.GetProperty("timestamp").GetString()!;
+        }
+
+        var t1 = DateTime.Parse(TimestampOf(first),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+        var t2 = DateTime.Parse(TimestampOf(second),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+
+        // The second export's timestamp must be strictly later than the
+        // first's — proving the imported timestamp wasn't carried forward.
+        (t2 > t1).ShouldBeTrue();
+    }
+
     // ---------------- Test helpers ----------------
 
     private void SetCash(BigDouble amount) => SetCashOn(_engine, amount);
@@ -7956,7 +8850,7 @@ public class SpeedMilestoneTests
 
 ================================================================================
 FILE: tests/MyAdventure.Core.Tests/SubFrameCycleTests.cs
-SIZE: 8.15 KB
+SIZE: 9.83 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -7983,6 +8877,17 @@ namespace MyAdventure.Core.Tests;
 /// they manufacture an artificially short cycle time by setting
 /// <c>BaseTimeSeconds</c> small. That keeps the invariant tested
 /// even if the speed-milestone curve is rebalanced in the future.
+/// </para>
+///
+/// <para>
+/// <b>Cross-business bonus note.</b> Each of these tests adds one
+/// custom business to the engine's roster but leaves the other six
+/// default businesses at zero owned. The minimum across the roster is
+/// therefore 0, so the cross-business multiplier
+/// (<see cref="GameEngine.CrossBusinessSpeedMultiplier"/>) collapses to
+/// <see cref="BigDouble.One"/> and doesn't affect any expected
+/// earnings here. The cross-business bonus has dedicated tests in
+/// <c>CrossBusinessSpeedBonusTests</c> and <c>GameEngineTests</c>.
 /// </para>
 ///
 /// <para>
@@ -8096,9 +9001,20 @@ public class SubFrameCycleTests
 
     /// <summary>
     /// Composing this with the speed-milestone feature: at 400 owned,
-    /// cycle time is 1/16th of base. With a 0.6 s base (lemonade) the
-    /// effective cycle becomes 37.5 ms. A 1 s tick must then pay for
-    /// ~26 cycles, not 1.
+    /// cycle time is 1/64th of base under the new AdCap-parity ladder
+    /// (six halvings: 25/50/100/200/300/400). With a 0.6 s base
+    /// (lemonade) the effective cycle becomes 9.375 ms. A 1 s tick must
+    /// then pay for ~106 cycles, not 1.
+    ///
+    /// <para>
+    /// Under the OLD four-threshold table this test expected ~26 cycles
+    /// (cycle time 37.5 ms, ×16 speed). The numbers below are updated
+    /// for the new six-threshold ×64 ceiling. Revenue per cycle is
+    /// unchanged — the revenue milestone table has always had six ×2
+    /// thresholds at 25/50/100/200/300/400, so 400 × 64 = $25,600/cycle
+    /// remains the same; only the cycle COUNT per second has 4×'d
+    /// because the speed table caught up to the revenue table.
+    /// </para>
     ///
     /// <para>
     /// Starting cash here is <see cref="BigDouble.Zero"/> — earlier I
@@ -8127,29 +9043,38 @@ public class SubFrameCycleTests
             BaseRevenue = 1.0,
             BaseTimeSeconds = 0.6, // lemonade-like
             CostMultiplier = 1.07,
-            Owned = 400, // hits all 4 speed milestones: cycle becomes 0.6 / 16 = 0.0375 s
+            Owned = 400, // hits all 6 speed milestones: cycle becomes 0.6 / 64 = 0.009375 s
             IsRunning = true,
             HasManager = true,
             ProgressPercent = 0,
         };
         // Sanity: CycleTimeSeconds applies the speed multiplier
-        biz.CycleTimeSeconds.ShouldBe(0.0375, tolerance: 1e-12);
-        biz.SpeedMultiplier.ShouldBe(16.0);
+        biz.CycleTimeSeconds.ShouldBe(0.009375, tolerance: 1e-12);
+        biz.SpeedMultiplier.ShouldBe(64.0);
 
         SetBusinesses(engine, new List<Business>(engine.Businesses) { biz });
+
+        // Cross-business bonus is 1.0 here because the other six default
+        // businesses are owned=0. Verify that as a precondition so a
+        // future regression that miscomputes minOwned would surface
+        // here rather than silently inflating the expected earnings.
+        engine.MinOwnedAcrossBusinesses.ShouldBe(0);
+        engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(1.0);
 
         var cashBefore = engine.Cash;
         engine.Tick(1.0);
 
-        // 1.0 s / 0.0375 s/cycle ≈ 26.66 cycles → integer floor = 26.
-        // Revenue per cycle = 400 owned × $1 base × ×64 milestone (all 6 revenue
-        // milestones at 25/50/100/200/300/400 = 2^6 = 64) = $25,600 / cycle.
+        // 1.0 s / 0.009375 s/cycle ≈ 106.67 cycles → integer floor = 106.
+        // Revenue per cycle = 400 owned × $1 base × ×64 milestone (all 6
+        // revenue milestones at 25/50/100/200/300/400 = 2^6 = 64) = $25,600 / cycle.
         var revenuePerCycle = biz.Revenue.ToDouble();
         revenuePerCycle.ShouldBe(400 * 64, tolerance: 1e-9);
 
         var earned = (engine.Cash - cashBefore).ToDouble();
-        // 26 cycles × $25,600/cycle = $665,600. Allow ±1 cycle for residual.
-        earned.ShouldBeInRange(25 * revenuePerCycle, 27 * revenuePerCycle);
+        // 106 cycles × $25,600/cycle ≈ $2,713,600. Allow ±1 cycle slack
+        // for the integer-truncation residual carried in ProgressPercent
+        // (so the acceptable range is 105 to 107 cycles inclusive).
+        earned.ShouldBeInRange(105 * revenuePerCycle, 107 * revenuePerCycle);
     }
 
     // ---------------- Helpers ----------------
@@ -8552,7 +9477,7 @@ public class AppLifecycleManagerTests
 
 ================================================================================
 FILE: tests/MyAdventure.UI.Tests/BusinessViewModelSpeedTests.cs
-SIZE: 4.31 KB
+SIZE: 8.38 KB
 ================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -8579,7 +9504,9 @@ namespace MyAdventure.UI.Tests;
 /// These properties drive an adaptive UI: the speed row is hidden
 /// while the player is below the first speed threshold (so early-game
 /// cards stay simple), and only the relevant progress message is shown
-/// once speed scaling is active.
+/// once speed scaling is active. The first speed threshold is now 25
+/// (AdCap-parity update from the previous 100); tests below have been
+/// adjusted for the new ladder of 25/50/100/200/300/400 → ×64 max.
 /// </para>
 /// </summary>
 public class BusinessViewModelSpeedTests
@@ -8589,7 +9516,10 @@ public class BusinessViewModelSpeedTests
     [Fact]
     public void Refresh_BelowFirstSpeedThreshold_HidesSpeedRow()
     {
-        var biz = MakeBusiness(owned: 50);
+        // Owned 24 is now strictly below the first speed threshold (25);
+        // the old test used 50, which under the new six-threshold ladder
+        // is itself a speed milestone, so the bound moved down.
+        var biz = MakeBusiness(owned: 24);
         var (vm, _) = MakeVm(biz);
 
         vm.Refresh(new BigDouble(1_000_000), NoAngels);
@@ -8597,14 +9527,14 @@ public class BusinessViewModelSpeedTests
         vm.SpeedMultiplier.ShouldBe(1.0);
         vm.HasSpeedBonus.ShouldBeFalse();
         vm.HasNextSpeedMilestone.ShouldBeTrue();
-        vm.NextSpeedMilestoneText.ShouldContain("100");
+        vm.NextSpeedMilestoneText.ShouldContain("25");
         vm.NextSpeedMilestoneText.ShouldContain("Speed");
     }
 
     [Fact]
-    public void Refresh_At100_ShowsTwoSpeed()
+    public void Refresh_At25_ShowsTwoSpeed()
     {
-        var biz = MakeBusiness(owned: 100);
+        var biz = MakeBusiness(owned: 25);
         var (vm, _) = MakeVm(biz);
 
         vm.Refresh(new BigDouble(1_000_000), NoAngels);
@@ -8613,28 +9543,49 @@ public class BusinessViewModelSpeedTests
         vm.HasSpeedBonus.ShouldBeTrue();
         vm.SpeedMultiplierText.ShouldBe("×2 Speed");
         vm.HasNextSpeedMilestone.ShouldBeTrue();
+        vm.NextSpeedMilestoneText.ShouldContain("50");
+    }
+
+    [Fact]
+    public void Refresh_At100_ShowsEightSpeed()
+    {
+        // At 100 owned, three speed milestones have fired (25, 50, 100)
+        // — so the compounded multiplier is 2^3 = 8. Under the old
+        // four-threshold table this was 2× (only 100 had fired); the new
+        // ladder produces a 4× larger multiplier at this same ownership.
+        var biz = MakeBusiness(owned: 100);
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(new BigDouble(1_000_000), NoAngels);
+
+        vm.SpeedMultiplier.ShouldBe(8.0);
+        vm.HasSpeedBonus.ShouldBeTrue();
+        vm.SpeedMultiplierText.ShouldBe("×8 Speed");
+        vm.HasNextSpeedMilestone.ShouldBeTrue();
         vm.NextSpeedMilestoneText.ShouldContain("200");
     }
 
     [Fact]
     public void Refresh_At400_ShowsMaxSpeedAndNoNext()
     {
+        // All six speed milestones fire by 400 owned: 2^6 = 64.
         var biz = MakeBusiness(owned: 400);
         var (vm, _) = MakeVm(biz);
 
         vm.Refresh(new BigDouble(1.0, 50), NoAngels);
 
-        vm.SpeedMultiplier.ShouldBe(16.0);
+        vm.SpeedMultiplier.ShouldBe(64.0);
         vm.HasSpeedBonus.ShouldBeTrue();
-        vm.SpeedMultiplierText.ShouldBe("×16 Speed");
+        vm.SpeedMultiplierText.ShouldBe("×64 Speed");
         vm.HasNextSpeedMilestone.ShouldBeFalse();
         vm.NextSpeedMilestoneText.ShouldBe("");
     }
 
     /// <summary>
     /// The displayed cycle time must reflect the speed milestone, not
-    /// the base time — the player should see "300ms" once they hit 100
-    /// owned of a 0.6 s base business.
+    /// the base time — at 100 owned of a 0.6 s base business with the
+    /// new ladder, three milestones fire (×8 speed), so the effective
+    /// cycle is 0.6 / 8 = 0.075 s → "75ms".
     /// </summary>
     [Fact]
     public void Refresh_CycleTimeText_ReflectsSpeedMultiplier()
@@ -8645,15 +9596,24 @@ public class BusinessViewModelSpeedTests
 
         vm.Refresh(new BigDouble(1_000_000), NoAngels);
 
-        // 0.6s × 0.5 = 0.3s → "300ms" via the sub-1s formatter branch.
-        vm.CycleTimeText.ShouldBe("300ms");
+        // 0.6s × 0.125 = 0.075s → "75ms" via the sub-1s formatter branch.
+        vm.CycleTimeText.ShouldBe("75ms");
     }
 
     /// <summary>
     /// Revenue per second must compound revenue and speed milestones —
     /// this is the core promise of the speed system. At 100 owned with
-    /// $1 base revenue and 1.0 s base cycle, EPS = 100 × ×8 revenue
-    /// milestone × ×2 speed = $1600/s.
+    /// $1 base revenue and 1.0 s base cycle, EPS = (100 × $1 × ×8 revenue
+    /// milestone) ÷ (1.0 × 0.125 speed multiplier) = $800 / 0.125s
+    /// = $6400/s, formatted as "$6.40 K/s" by NumberFormatter's
+    /// thousands-rule.
+    ///
+    /// <para>
+    /// This is 4× higher than the prior expected value of "$1.60 K/s"
+    /// because the speed ladder has been buffed: the old test ran
+    /// against the four-threshold table (×2 at 100); the new six-
+    /// threshold table fires three speed milestones by 100 (×8).
+    /// </para>
     /// </summary>
     [Fact]
     public void Refresh_RevenuePerSecondText_CompoundsRevenueAndSpeed()
@@ -8664,7 +9624,62 @@ public class BusinessViewModelSpeedTests
 
         vm.Refresh(new BigDouble(1_000_000), NoAngels);
 
-        vm.RevenuePerSecondText.ShouldBe("$1.60 K/s");
+        vm.RevenuePerSecondText.ShouldBe("$6.40 K/s");
+    }
+
+    /// <summary>
+    /// New: when a cross-business multiplier is passed to the 3-arg
+    /// Refresh overload, both the per-cycle revenue and the per-second
+    /// rate displayed must scale by it. The per-business speed cycle
+    /// time is NOT multiplied — cross-business is a revenue multiplier,
+    /// not a cycle-time divisor (see <see cref="CrossBusinessSpeedBonus"/>
+    /// XML docs for the numerical-stability rationale).
+    /// </summary>
+    [Fact]
+    public void Refresh_WithCrossBusinessMultiplier_ScalesRevenueDisplay()
+    {
+        var biz = MakeBusiness(owned: 100);
+        biz = biz with { BaseRevenue = 1.0, BaseTimeSeconds = 1.0, CostMultiplier = 1.01 };
+        var (vm, _) = MakeVm(biz);
+
+        // Pass a ×2 cross-business multiplier. Compared to the
+        // no-cross-bonus case ($6.40 K/s), revenue per second should now
+        // display $12.80 K/s.
+        vm.Refresh(new BigDouble(1_000_000), NoAngels, new BigDouble(2.0));
+
+        vm.RevenuePerSecondText.ShouldBe("$12.80 K/s");
+
+        // Cycle time displayed is UNCHANGED by the cross-business
+        // multiplier — the per-business cycle is still 0.125s (1.0 × 0.125
+        // from speed milestones alone).
+        vm.CycleTimeText.ShouldBe("125ms");
+    }
+
+    /// <summary>
+    /// The two-argument <c>Refresh(cash, angelBonus)</c> overload must
+    /// behave exactly as if called with <c>crossBusinessSpeed = BigDouble.One</c>.
+    /// This pins backward compatibility — existing test sites and any
+    /// external callers that haven't been migrated to the 3-arg form
+    /// must continue producing identical output.
+    /// </summary>
+    [Fact]
+    public void Refresh_TwoArgOverload_EquivalentToThreeArgWithOne()
+    {
+        var biz1 = MakeBusiness(owned: 100);
+        biz1 = biz1 with { BaseRevenue = 1.0, BaseTimeSeconds = 1.0, CostMultiplier = 1.01 };
+        var (vm1, _) = MakeVm(biz1);
+
+        var biz2 = MakeBusiness(owned: 100);
+        biz2 = biz2 with { BaseRevenue = 1.0, BaseTimeSeconds = 1.0, CostMultiplier = 1.01 };
+        var (vm2, _) = MakeVm(biz2);
+
+        vm1.Refresh(new BigDouble(1_000_000), NoAngels);
+        vm2.Refresh(new BigDouble(1_000_000), NoAngels, BigDouble.One);
+
+        vm2.RevenuePerSecondText.ShouldBe(vm1.RevenuePerSecondText);
+        vm2.RevenueText.ShouldBe(vm1.RevenueText);
+        vm2.CycleTimeText.ShouldBe(vm1.CycleTimeText);
+        vm2.SpeedMultiplier.ShouldBe(vm1.SpeedMultiplier);
     }
 
     private static Business MakeBusiness(int owned = 0) => new()
