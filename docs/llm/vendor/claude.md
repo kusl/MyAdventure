@@ -10001,10 +10001,6 @@ All three SubFrameCycleTests should now pass.
 18
 57
 
-Here's a clean brief:
-
----
-
 **AdCap speed scaling comparison**
 
 AdVenture Capitalist applies speed scaling on two independent axes that both compound:
@@ -10022,6 +10018,12 @@ Two options to close the gap:
 
 Option B is the more interesting design change.
 
----
-
-That should be unambiguous for either a human dev or an LLM to act on.
+actually lets implement BOTH A AND B and instead of capping B at any point, lets keep giving this bonus forever. 
+We need to make sure that the game can actually handle these massive numbers to please review everything again. 
+Also, lets add a timestamp in the export we generate. we don't need to do anything with it. 
+we don't validate it but adding a timestamp helps with debugging in case there are two saves and we want to diff between them
+lets say there are two saves and five days have passed but nothing else has changed. 
+that would indicate a defect because the newer save should have more cash assuming we have managers 
+please be very careful about this scaling 
+we want the game to be easy but we don't want to hit a ceiling ever 
+the game must go on forever 
