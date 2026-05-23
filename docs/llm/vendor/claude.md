@@ -10027,3 +10027,74 @@ that would indicate a defect because the newer save should have more cash assumi
 please be very careful about this scaling 
 we want the game to be easy but we don't want to hit a ceiling ever 
 the game must go on forever 
+
+please return FULL files for ALL files that need to change 
+
+Let me check a few more files before I plan the complete change set.I have a clear picture. Let me set up my workspace and plan my approach.Before I write anything, here's my approach summary:
+
+**The design problem.** Option B as written ("cycle time halves again") creates a numerical wall — at minimum-owned of ~108,000, `2^-N` underflows `double` to zero, and the engine starts dividing by zero. I'm folding the cross-business bonus into a **revenue multiplier** (as `BigDouble`) instead of a cycle-time divisor. This is mathematically identical for earnings rate, but stays representable forever — the user said "the game must go on forever" and this is the only way the math actually does.
+
+**Per-business stays as cycle-time halving** (max ×64 = 6 halvings, comfortable in `double`). **Cross-business is the revenue multiplier** (uncapped, `BigDouble`-backed). Thresholds: 25/50/100/200/300/400, then every +100 forever — so at min-owned across all businesses = 500 you get ×128, at 1000 you get ×4096, and it never stops.
+
+Let me write the files.
+
+100
+64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
