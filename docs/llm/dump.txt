@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Fri May 22 08:10:26 PM EDT 2026
+Generated: Fri May 22 08:18:29 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -57,7 +57,8 @@ DIRECTORY STRUCTURE:
 │               ├── 025.txt
 │               ├── 026.txt
 │               ├── 027.txt
-│               └── 028.txt
+│               ├── 028.txt
+│               └── 029.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -138,13 +139,16 @@ DIRECTORY STRUCTURE:
     │   ├── GameEngineTests.cs
     │   ├── MilestoneTests.cs
     │   ├── MyAdventure.Core.Tests.csproj
-    │   └── NumberFormatterTests.cs
+    │   ├── NumberFormatterTests.cs
+    │   ├── SpeedMilestoneTests.cs
+    │   └── SubFrameCycleTests.cs
     ├── MyAdventure.Integration.Tests
     │   ├── GameStateRepositoryTests.cs
     │   ├── MyAdventure.Integration.Tests.csproj
     │   └── SchemaMigrationTests.cs
     └── MyAdventure.UI.Tests
         ├── AppLifecycleManagerTests.cs
+        ├── BusinessViewModelSpeedTests.cs
         ├── BusinessViewModelTests.cs
         ├── GameViewModelLifecycleTests.cs
         ├── MyAdventure.UI.Tests.csproj
@@ -7670,6 +7674,380 @@ public class NumberFormatterTests
 
 
 ================================================================================
+FILE: tests/MyAdventure.Core.Tests/SpeedMilestoneTests.cs
+SIZE: 5.16 KB
+================================================================================
+
+using MyAdventure.Core.Entities;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+/// <summary>
+/// Speed milestones halve cycle time at 100/200/300/400 ownership.
+/// These tests pin both the curve and the compounding behavior, plus
+/// the invariant that early-game (owned &lt; 100) sees no change from
+/// before this feature existed.
+/// </summary>
+public class SpeedMilestoneTests
+{
+    [Fact]
+    public void CycleTimeMultiplier_ZeroOwned_IsExactlyOne() =>
+        SpeedMilestone.CalculateCycleTimeMultiplier(0).ShouldBe(1.0);
+
+    [Fact]
+    public void CycleTimeMultiplier_Below100_IsExactlyOne()
+    {
+        // Critical invariant: no speed scaling kicks in below the first
+        // threshold, so every existing test that uses owned < 100 keeps
+        // its assumed cycle time.
+        SpeedMilestone.CalculateCycleTimeMultiplier(99).ShouldBe(1.0);
+        SpeedMilestone.CalculateCycleTimeMultiplier(50).ShouldBe(1.0);
+        SpeedMilestone.CalculateCycleTimeMultiplier(25).ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void CycleTimeMultiplier_At100_IsHalf() =>
+        SpeedMilestone.CalculateCycleTimeMultiplier(100).ShouldBe(0.5);
+
+    [Fact]
+    public void CycleTimeMultiplier_At200_IsQuarter() =>
+        SpeedMilestone.CalculateCycleTimeMultiplier(200).ShouldBe(0.25);
+
+    [Fact]
+    public void CycleTimeMultiplier_At300_IsEighth() =>
+        SpeedMilestone.CalculateCycleTimeMultiplier(300).ShouldBe(0.125);
+
+    [Fact]
+    public void CycleTimeMultiplier_At400_IsSixteenth() =>
+        SpeedMilestone.CalculateCycleTimeMultiplier(400).ShouldBe(0.0625);
+
+    [Fact]
+    public void CycleTimeMultiplier_At1000_StaysSixteenth()
+    {
+        // The default table caps at 4 speed milestones (400). Past 400 the
+        // multiplier doesn't shrink further — adding more thresholds is a
+        // future-balance decision, deliberately not done here to keep the
+        // compound speed-up bounded at ×16.
+        SpeedMilestone.CalculateCycleTimeMultiplier(1000).ShouldBe(0.0625);
+        SpeedMilestone.CalculateCycleTimeMultiplier(10_000).ShouldBe(0.0625);
+    }
+
+    [Fact]
+    public void SpeedMultiplier_IsReciprocalOfCycleTimeMultiplier()
+    {
+        SpeedMilestone.CalculateSpeedMultiplier(0).ShouldBe(1.0);
+        SpeedMilestone.CalculateSpeedMultiplier(100).ShouldBe(2.0);
+        SpeedMilestone.CalculateSpeedMultiplier(200).ShouldBe(4.0);
+        SpeedMilestone.CalculateSpeedMultiplier(300).ShouldBe(8.0);
+        SpeedMilestone.CalculateSpeedMultiplier(400).ShouldBe(16.0);
+    }
+
+    [Fact]
+    public void NextSpeedMilestone_At0_IsHundred()
+    {
+        var next = SpeedMilestone.NextSpeedMilestone(0);
+        next.ShouldNotBeNull();
+        next.Threshold.ShouldBe(100);
+    }
+
+    [Fact]
+    public void NextSpeedMilestone_At100_IsTwoHundred()
+    {
+        var next = SpeedMilestone.NextSpeedMilestone(100);
+        next.ShouldNotBeNull();
+        next.Threshold.ShouldBe(200);
+    }
+
+    [Fact]
+    public void NextSpeedMilestone_At400_IsNull() =>
+        SpeedMilestone.NextSpeedMilestone(400).ShouldBeNull();
+
+    [Fact]
+    public void NextSpeedMilestone_Past400_IsNull() =>
+        SpeedMilestone.NextSpeedMilestone(5000).ShouldBeNull();
+
+    // ---------------- Business integration ----------------
+
+    [Fact]
+    public void Business_CycleTime_Below100_EqualsBaseTime()
+    {
+        var biz = MakeBiz(owned: 50, baseTime: 0.6);
+        biz.CycleTimeSeconds.ShouldBe(0.6);
+    }
+
+    [Fact]
+    public void Business_CycleTime_At100_IsHalfBaseTime()
+    {
+        var biz = MakeBiz(owned: 100, baseTime: 0.6);
+        biz.CycleTimeSeconds.ShouldBe(0.3);
+    }
+
+    [Fact]
+    public void Business_CycleTime_At400_IsSixteenthBaseTime()
+    {
+        var biz = MakeBiz(owned: 400, baseTime: 0.6);
+        // 0.6 / 16 = 0.0375
+        biz.CycleTimeSeconds.ShouldBe(0.0375, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void Business_SpeedMultiplier_TracksOwnership()
+    {
+        MakeBiz(owned: 0).SpeedMultiplier.ShouldBe(1.0);
+        MakeBiz(owned: 99).SpeedMultiplier.ShouldBe(1.0);
+        MakeBiz(owned: 100).SpeedMultiplier.ShouldBe(2.0);
+        MakeBiz(owned: 200).SpeedMultiplier.ShouldBe(4.0);
+        MakeBiz(owned: 400).SpeedMultiplier.ShouldBe(16.0);
+    }
+
+    /// <summary>
+    /// The whole point of the speed-milestone feature: revenue per second
+    /// gets a multiplicative boost beyond what the revenue milestones
+    /// alone provide. At 100 owned, the revenue milestone is ×8 (25, 50,
+    /// 100 all firing); the speed milestone adds another ×2 on top,
+    /// giving ×16 EPS over baseline.
+    /// </summary>
+    [Fact]
+    public void Business_RevenuePerSecond_CompoundsRevenueAndSpeedAt100()
+    {
+        var biz = MakeBiz(owned: 100, baseTime: 1.0);
+        // Revenue: 100 owned × $1 × ×8 milestone = $800/cycle
+        // CycleTime: 1.0s × 0.5 = 0.5s
+        // EPS: $800 / 0.5s = $1600/s
+        biz.RevenuePerSecond.ToDouble().ShouldBe(1600.0, tolerance: 1e-9);
+    }
+
+    private static Business MakeBiz(int owned, double baseTime = 1.0) => new()
+    {
+        Id = "test",
+        Name = "Test",
+        Icon = "T",
+        Color = "#FFF",
+        BaseCost = 100,
+        BaseRevenue = 1,
+        BaseTimeSeconds = baseTime,
+        CostMultiplier = 1.07,
+        Owned = owned
+    };
+}
+
+
+================================================================================
+FILE: tests/MyAdventure.Core.Tests/SubFrameCycleTests.cs
+SIZE: 8.15 KB
+================================================================================
+
+using Microsoft.Extensions.Logging.Abstractions;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Numerics;
+using MyAdventure.Core.Services;
+using NSubstitute;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+/// <summary>
+/// Pins the "multiple cycles per frame" invariant the tick loop relies
+/// on. Once a business's effective cycle time drops below a single
+/// frame (≈16 ms at 60 Hz), one tick must be able to award credit for
+/// many full cycles plus carry the residual into the next tick. If
+/// the loop ever regresses to "one cycle per tick max", the late-game
+/// progression silently breaks — the player keeps speeding things up
+/// but stops getting paid for the extra cycles.
+///
+/// <para>
+/// These tests don't depend on the speed-milestone feature directly —
+/// they manufacture an artificially short cycle time by setting
+/// <c>BaseTimeSeconds</c> small. That keeps the invariant tested
+/// even if the speed-milestone curve is rebalanced in the future.
+/// </para>
+///
+/// <para>
+/// <b>Precision-gap caveat (learned the hard way):</b> these tests
+/// measure earnings by diffing <c>engine.Cash</c> before and after a
+/// tick. <see cref="BigDouble"/>'s mantissa has ~17 digits of precision,
+/// so if starting cash is set far above per-tick earnings (e.g. 10^300
+/// vs $665K earnings), the addition is absorbed into the precision gap
+/// and the diff comes out as zero. Starting cash must therefore stay
+/// within ~15 orders of magnitude of the per-tick earnings being
+/// measured. We deliberately start near zero in these tests and rely
+/// on the engine's <c>SanitizeMoney</c> to never produce negative cash.
+/// </para>
+/// </summary>
+public class SubFrameCycleTests
+{
+    private static readonly IGameStateRepository Repo = MakeRepo();
+
+    private static IGameStateRepository MakeRepo()
+    {
+        var r = Substitute.For<IGameStateRepository>();
+        r.GetLatestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<GameState?>(null));
+        return r;
+    }
+
+    /// <summary>
+    /// The invariant: a single 1-second tick over a 1-ms cycle time
+    /// must pay out for ~1000 cycles, not just 1. The doc warned that
+    /// a naïve "if progress &gt;= 100 then award one cycle" loop would
+    /// drop the extra 999. The current engine correctly takes
+    /// <c>cycles = (int)(progress / 100)</c> and pays for all of them.
+    /// </summary>
+    [Fact]
+    public async Task Tick_FastCycleTime_AwardsManyCyclesInOneFrame()
+    {
+        var engine = new GameEngine(Repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+        SetCash(engine, BigDouble.Zero);
+
+        // Replace the lemonade stand with a 1-ms-cycle variant via reflection
+        // on the Businesses list, then buy 1 unit so it can earn.
+        var fastBiz = new Business
+        {
+            Id = "fast",
+            Name = "Fast Test",
+            Icon = "⚡",
+            Color = "#000",
+            BaseCost = 1,
+            BaseRevenue = 1.0,
+            BaseTimeSeconds = 0.001, // 1 ms per cycle
+            CostMultiplier = 1.07,
+            Owned = 1,
+            IsRunning = true,
+            HasManager = true,
+            ProgressPercent = 0,
+        };
+        var bizList = new List<Business>(engine.Businesses) { fastBiz };
+        SetBusinesses(engine, bizList);
+
+        var cashBefore = engine.Cash;
+        engine.Tick(1.0); // one big tick — simulates a resume or slow frame
+
+        var earned = (engine.Cash - cashBefore).ToDouble();
+        // 1 s / 1 ms = 1000 cycles. Each cycle pays $1 (1 owned × $1 base).
+        // Allow ±1 cycle slack for the integer-truncation residual that
+        // gets carried into ProgressPercent.
+        earned.ShouldBeInRange(999.0, 1001.0);
+    }
+
+    /// <summary>
+    /// The residual carry: after multi-cycle award, the leftover
+    /// fraction must persist into <c>ProgressPercent</c> so subsequent
+    /// ticks count it. If the engine clamps progress to 0 after award
+    /// (rather than <c>%= 100.0</c>), cycle drift accumulates over time.
+    /// </summary>
+    [Fact]
+    public async Task Tick_PartialCycleRemainder_CarriesIntoNextTick()
+    {
+        var engine = new GameEngine(Repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+        SetCash(engine, BigDouble.Zero);
+
+        var biz = new Business
+        {
+            Id = "carrytest",
+            Name = "Carry Test",
+            Icon = "🌀",
+            Color = "#000",
+            BaseCost = 1,
+            BaseRevenue = 1.0,
+            // 1.5 cycles per tick — leaves a clean 50% residual.
+            BaseTimeSeconds = 1.0,
+            CostMultiplier = 1.07,
+            Owned = 1,
+            IsRunning = true,
+            HasManager = true,
+            ProgressPercent = 0,
+        };
+        SetBusinesses(engine, new List<Business>(engine.Businesses) { biz });
+
+        // Tick 1.5 s on a 1.0 s cycle — 1 cycle paid, 50% residual carried.
+        engine.Tick(1.5);
+        biz.ProgressPercent.ShouldBe(50.0, tolerance: 1e-9);
+
+        // Another 0.5 s tick should now complete the second cycle exactly.
+        var cashAfterFirstTick = engine.Cash;
+        engine.Tick(0.5);
+        (engine.Cash - cashAfterFirstTick).ToDouble().ShouldBe(1.0, tolerance: 1e-9);
+        biz.ProgressPercent.ShouldBe(0.0, tolerance: 1e-9);
+    }
+
+    /// <summary>
+    /// Composing this with the speed-milestone feature: at 400 owned,
+    /// cycle time is 1/16th of base. With a 0.6 s base (lemonade) the
+    /// effective cycle becomes 37.5 ms. A 1 s tick must then pay for
+    /// ~26 cycles, not 1.
+    ///
+    /// <para>
+    /// Starting cash here is <see cref="BigDouble.Zero"/> — earlier I
+    /// set it to 10^300 thinking "lots of cash so the engine can't get
+    /// confused", but that's exactly the precision-gap trap described
+    /// in the class summary: <c>(1e300 + 665600) - 1e300</c> rounds
+    /// back to zero in BigDouble's 17-digit mantissa, so the diff
+    /// measures nothing. With cash starting at 0 the earned amount
+    /// sits in its own precision range and is observable.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Tick_AtSpeedMilestone400_AwardsExpectedCyclesPerSecond()
+    {
+        var engine = new GameEngine(Repo, NullLogger<GameEngine>.Instance);
+        await engine.LoadAsync();
+        SetCash(engine, BigDouble.Zero);
+
+        var biz = new Business
+        {
+            Id = "speed400",
+            Name = "Speed 400",
+            Icon = "🏎️",
+            Color = "#000",
+            BaseCost = 1,
+            BaseRevenue = 1.0,
+            BaseTimeSeconds = 0.6, // lemonade-like
+            CostMultiplier = 1.07,
+            Owned = 400, // hits all 4 speed milestones: cycle becomes 0.6 / 16 = 0.0375 s
+            IsRunning = true,
+            HasManager = true,
+            ProgressPercent = 0,
+        };
+        // Sanity: CycleTimeSeconds applies the speed multiplier
+        biz.CycleTimeSeconds.ShouldBe(0.0375, tolerance: 1e-12);
+        biz.SpeedMultiplier.ShouldBe(16.0);
+
+        SetBusinesses(engine, new List<Business>(engine.Businesses) { biz });
+
+        var cashBefore = engine.Cash;
+        engine.Tick(1.0);
+
+        // 1.0 s / 0.0375 s/cycle ≈ 26.66 cycles → integer floor = 26.
+        // Revenue per cycle = 400 owned × $1 base × ×64 milestone (all 6 revenue
+        // milestones at 25/50/100/200/300/400 = 2^6 = 64) = $25,600 / cycle.
+        var revenuePerCycle = biz.Revenue.ToDouble();
+        revenuePerCycle.ShouldBe(400 * 64, tolerance: 1e-9);
+
+        var earned = (engine.Cash - cashBefore).ToDouble();
+        // 26 cycles × $25,600/cycle = $665,600. Allow ±1 cycle for residual.
+        earned.ShouldBeInRange(25 * revenuePerCycle, 27 * revenuePerCycle);
+    }
+
+    // ---------------- Helpers ----------------
+
+    private static void SetCash(GameEngine engine, BigDouble amount)
+    {
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
+        prop.GetSetMethod(true)!.Invoke(engine, [amount]);
+    }
+
+    private static void SetBusinesses(GameEngine engine, IReadOnlyList<Business> businesses)
+    {
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Businesses))!;
+        prop.GetSetMethod(true)!.Invoke(engine, [businesses]);
+    }
+}
+
+
+================================================================================
 FILE: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
 SIZE: 3.01 KB
 ================================================================================
@@ -8047,6 +8425,147 @@ public class AppLifecycleManagerTests
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
         var toasts = new ToastService();
         return new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts);
+    }
+}
+
+
+================================================================================
+FILE: tests/MyAdventure.UI.Tests/BusinessViewModelSpeedTests.cs
+SIZE: 4.31 KB
+================================================================================
+
+using Microsoft.Extensions.Logging.Abstractions;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Numerics;
+using MyAdventure.Core.Services;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+using NSubstitute;
+using Shouldly;
+
+namespace MyAdventure.UI.Tests;
+
+/// <summary>
+/// Speed-milestone-related properties on <see cref="BusinessViewModel"/>:
+/// <see cref="BusinessViewModel.SpeedMultiplier"/>,
+/// <see cref="BusinessViewModel.SpeedMultiplierText"/>,
+/// <see cref="BusinessViewModel.HasSpeedBonus"/>,
+/// <see cref="BusinessViewModel.HasNextSpeedMilestone"/>, and
+/// <see cref="BusinessViewModel.NextSpeedMilestoneText"/>.
+///
+/// <para>
+/// These properties drive an adaptive UI: the speed row is hidden
+/// while the player is below the first speed threshold (so early-game
+/// cards stay simple), and only the relevant progress message is shown
+/// once speed scaling is active.
+/// </para>
+/// </summary>
+public class BusinessViewModelSpeedTests
+{
+    private static readonly BigDouble NoAngels = BigDouble.One;
+
+    [Fact]
+    public void Refresh_BelowFirstSpeedThreshold_HidesSpeedRow()
+    {
+        var biz = MakeBusiness(owned: 50);
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(new BigDouble(1_000_000), NoAngels);
+
+        vm.SpeedMultiplier.ShouldBe(1.0);
+        vm.HasSpeedBonus.ShouldBeFalse();
+        vm.HasNextSpeedMilestone.ShouldBeTrue();
+        vm.NextSpeedMilestoneText.ShouldContain("100");
+        vm.NextSpeedMilestoneText.ShouldContain("Speed");
+    }
+
+    [Fact]
+    public void Refresh_At100_ShowsTwoSpeed()
+    {
+        var biz = MakeBusiness(owned: 100);
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(new BigDouble(1_000_000), NoAngels);
+
+        vm.SpeedMultiplier.ShouldBe(2.0);
+        vm.HasSpeedBonus.ShouldBeTrue();
+        vm.SpeedMultiplierText.ShouldBe("×2 Speed");
+        vm.HasNextSpeedMilestone.ShouldBeTrue();
+        vm.NextSpeedMilestoneText.ShouldContain("200");
+    }
+
+    [Fact]
+    public void Refresh_At400_ShowsMaxSpeedAndNoNext()
+    {
+        var biz = MakeBusiness(owned: 400);
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(new BigDouble(1.0, 50), NoAngels);
+
+        vm.SpeedMultiplier.ShouldBe(16.0);
+        vm.HasSpeedBonus.ShouldBeTrue();
+        vm.SpeedMultiplierText.ShouldBe("×16 Speed");
+        vm.HasNextSpeedMilestone.ShouldBeFalse();
+        vm.NextSpeedMilestoneText.ShouldBe("");
+    }
+
+    /// <summary>
+    /// The displayed cycle time must reflect the speed milestone, not
+    /// the base time — the player should see "300ms" once they hit 100
+    /// owned of a 0.6 s base business.
+    /// </summary>
+    [Fact]
+    public void Refresh_CycleTimeText_ReflectsSpeedMultiplier()
+    {
+        var biz = MakeBusiness(owned: 100);
+        biz = biz with { BaseTimeSeconds = 0.6 };
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(new BigDouble(1_000_000), NoAngels);
+
+        // 0.6s × 0.5 = 0.3s → "300ms" via the sub-1s formatter branch.
+        vm.CycleTimeText.ShouldBe("300ms");
+    }
+
+    /// <summary>
+    /// Revenue per second must compound revenue and speed milestones —
+    /// this is the core promise of the speed system. At 100 owned with
+    /// $1 base revenue and 1.0 s base cycle, EPS = 100 × ×8 revenue
+    /// milestone × ×2 speed = $1600/s.
+    /// </summary>
+    [Fact]
+    public void Refresh_RevenuePerSecondText_CompoundsRevenueAndSpeed()
+    {
+        var biz = MakeBusiness(owned: 100);
+        biz = biz with { BaseRevenue = 1.0, BaseTimeSeconds = 1.0, CostMultiplier = 1.01 };
+        var (vm, _) = MakeVm(biz);
+
+        vm.Refresh(new BigDouble(1_000_000), NoAngels);
+
+        vm.RevenuePerSecondText.ShouldBe("$1.60 K/s");
+    }
+
+    private static Business MakeBusiness(int owned = 0) => new()
+    {
+        Id = "test",
+        Name = "Test",
+        Icon = "T",
+        Color = "#FFF",
+        BaseCost = 1,
+        BaseRevenue = 10,
+        BaseTimeSeconds = 1,
+        CostMultiplier = 1.01,
+        Owned = owned
+    };
+
+    private static (BusinessViewModel vm, GameEngine engine) MakeVm(Business biz)
+    {
+        var repo = Substitute.For<IGameStateRepository>();
+        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+        var toasts = new ToastService();
+        var vm = new BusinessViewModel(biz, engine, toasts);
+        return (vm, engine);
     }
 }
 
