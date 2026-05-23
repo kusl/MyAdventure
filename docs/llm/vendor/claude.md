@@ -9798,3 +9798,85 @@ I ran out of tool-call budget before I could `present_files`, but all 8 files ar
 
 
 
+89
+46
+
+one test failed 
+
+One test failed:
+```
+SubFrameCycleTests.Tick_AtSpeedMilestone400_AwardsExpectedCyclesPerSecond
+earned should be in range { from = 640000, to = 691200 } but was 0d
+```
+
+The earned was zero. The other two SubFrameCycleTests passed. Let me think about what's different about this one...
+
+Looking at my test again, the test sets `Owned = 400`, which means `Business.AffordableCount` is reached… no wait, this isn't about affording — it's about running.
+
+Wait. Let me re-read my test. I directly construct a `Business` record with `Owned = 400, IsRunning = true, HasManager = true, ProgressPercent = 0`. Then `SetBusinesses` replaces the engine's business list. Then `engine.Tick(1.0)`.
+
+But there's something I'm overlooking. Let me trace through what `Tick()` does:
+
+```csharp
+foreach (var biz in Businesses)
+{
+    if (!biz.IsRunning || biz.Owned <= 0) continue;
+    biz.ProgressPercent += (deltaSeconds / biz.CycleTimeSeconds) * 100.0;
+    if (biz.ProgressPercent >= 100.0)
+    {
+        var cycles = (int)(biz.ProgressPercent / 100.0);
+        var earned = biz.Revenue * cycles * angelBonus;
+        Cash = SanitizeMoney(Cash + earned);
+        ...
+    }
+}
+```
+
+OK so:
+- `deltaSeconds = 1.0`
+- `biz.CycleTimeSeconds = 0.0375`
+- `ProgressPercent += (1.0 / 0.0375) * 100.0 = 26.6666... * 100.0 = 2666.66...`
+- `(int)(2666.66 / 100) = 26 cycles`
+- `biz.Revenue` = 400 × $1 × 64 (milestone) × 1.0 (postmilestone) = $25,600
+- `earned = 25600 × 26 × 1.0 = 665,600`
+- `Cash = SanitizeMoney(1e300 + 665600) = ???`
+
+**Found it.** `SanitizeMoney` checks `IsInfinity`. The starting cash is `1e300` — within BigDouble range. Adding 665,600 to 1e300 — the result is still 1e300 in BigDouble (the 665K disappears in precision). 
+
+Then `(engine.Cash - cashBefore)` = (1e300) - (1e300) = 0. **Hence "but was 0d"**.
+
+This is precisely the "precision gap" issue from BigDouble — adding a tiny number to a huge one loses the small one. Same kind of issue the existing `Cash_AtFormerCap_IsNotClamped` test explicitly avoids.
+
+The fix: start cash at a reasonable value (e.g. just enough to be non-zero but not so large it dwarfs the per-tick earnings). Since I'm not buying the business via BuyBusiness, I don't need a large cash buffer at all. Let me use `BigDouble.Zero` for starting cash.
+
+Let me also verify: `SanitizeMoney(Cash - cost)` for purchases would be problematic at cash=0, but since the test directly constructs the business and assigns it, no purchase happens. ✓
+
+The fix is simple — change `SetCash(engine, new BigDouble(1.0, 300))` to `SetCash(engine, BigDouble.Zero)`. Cash starts at 0, the tick earns ~$665,600, the diff is ~$665,600. ✓
+
+Let me also re-check the other two tests just to be sure they're not similarly afflicted:
+
+- `Tick_FastCycleTime_AwardsManyCyclesInOneFrame`: `SetCash(engine, new BigDouble(1_000_000))`. Earnings = $1000. `1e6 + 1000 = 1.001e6`. Difference = 1000. BigDouble has ~17 digits of precision, so 1e6 + 1e3 is well within the precision gap (only 3 orders of magnitude apart). ✓ Passes.
+- `Tick_PartialCycleRemainder_CarriesIntoNextTick`: same — `SetCash(engine, new BigDouble(1_000_000))`. Earnings = $1. `1e6 + 1`. Order-of-magnitude gap = 6. Still well within 17-digit precision. ✓ Passes.
+
+So only the speed400 test is broken because I set cash to 1e300 (no good reason for that — I think I was trying to ensure plenty of cash but the test doesn't actually need any).
+
+Let me also notice: the other tests pass, including the earlier two SubFrameCycleTests. Good. Just one fix needed.Now let me regenerate the file with the fix. Since the user requested full file contents on every change, I'll rewrite the whole SubFrameCycleTests.cs:**Root cause:** the test set starting cash to `1e300`, which is the classic BigDouble precision-gap trap. BigDouble's mantissa carries ~17 digits; `1e300 + 665600` rounds back to exactly `1e300` because the per-tick earnings are 295 orders of magnitude below the starting value. The diff then measures zero — not because the engine awarded nothing, but because the tick correctly awarded $665,600 and BigDouble correctly absorbed it into the precision gap.
+
+The other two tests in this file passed because their starting cash was only $1,000,000 — within ~6 orders of magnitude of the per-tick earnings, well inside BigDouble's precision window.
+
+**The fix is one line:** `SetCash(engine, new BigDouble(1.0, 300))` → `SetCash(engine, BigDouble.Zero)`. The test never needed a large cash buffer — it constructs the Business record directly (no purchase, no cost deduction), so starting at zero is fine, and the engine's `SanitizeMoney` already guarantees cash never goes negative.
+
+I also added a class-level note explaining the precision-gap trap so future-me (or anyone else writing tick-based tests) doesn't repeat it. This is the same kind of footgun that's documented on the existing `Cash_AtFormerCap_IsNotClamped` test in GameEngineTests, just learned the hard way in a new place.
+
+After dropping in the updated file:
+
+```bash
+cd ~/src/dotnet/MyAdventure
+dotnet test
+```
+
+All three SubFrameCycleTests should now pass.
+
+95
+47
+

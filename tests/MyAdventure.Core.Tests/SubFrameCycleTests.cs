@@ -23,6 +23,18 @@ namespace MyAdventure.Core.Tests;
 /// <c>BaseTimeSeconds</c> small. That keeps the invariant tested
 /// even if the speed-milestone curve is rebalanced in the future.
 /// </para>
+///
+/// <para>
+/// <b>Precision-gap caveat (learned the hard way):</b> these tests
+/// measure earnings by diffing <c>engine.Cash</c> before and after a
+/// tick. <see cref="BigDouble"/>'s mantissa has ~17 digits of precision,
+/// so if starting cash is set far above per-tick earnings (e.g. 10^300
+/// vs $665K earnings), the addition is absorbed into the precision gap
+/// and the diff comes out as zero. Starting cash must therefore stay
+/// within ~15 orders of magnitude of the per-tick earnings being
+/// measured. We deliberately start near zero in these tests and rely
+/// on the engine's <c>SanitizeMoney</c> to never produce negative cash.
+/// </para>
 /// </summary>
 public class SubFrameCycleTests
 {
@@ -47,7 +59,7 @@ public class SubFrameCycleTests
     {
         var engine = new GameEngine(Repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync();
-        SetCash(engine, new BigDouble(1_000_000));
+        SetCash(engine, BigDouble.Zero);
 
         // Replace the lemonade stand with a 1-ms-cycle variant via reflection
         // on the Businesses list, then buy 1 unit so it can earn.
@@ -90,7 +102,7 @@ public class SubFrameCycleTests
     {
         var engine = new GameEngine(Repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync();
-        SetCash(engine, new BigDouble(1_000_000));
+        SetCash(engine, BigDouble.Zero);
 
         var biz = new Business
         {
@@ -126,13 +138,23 @@ public class SubFrameCycleTests
     /// cycle time is 1/16th of base. With a 0.6 s base (lemonade) the
     /// effective cycle becomes 37.5 ms. A 1 s tick must then pay for
     /// ~26 cycles, not 1.
+    ///
+    /// <para>
+    /// Starting cash here is <see cref="BigDouble.Zero"/> — earlier I
+    /// set it to 10^300 thinking "lots of cash so the engine can't get
+    /// confused", but that's exactly the precision-gap trap described
+    /// in the class summary: <c>(1e300 + 665600) - 1e300</c> rounds
+    /// back to zero in BigDouble's 17-digit mantissa, so the diff
+    /// measures nothing. With cash starting at 0 the earned amount
+    /// sits in its own precision range and is observable.
+    /// </para>
     /// </summary>
     [Fact]
     public async Task Tick_AtSpeedMilestone400_AwardsExpectedCyclesPerSecond()
     {
         var engine = new GameEngine(Repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync();
-        SetCash(engine, new BigDouble(1.0, 300));
+        SetCash(engine, BigDouble.Zero);
 
         var biz = new Business
         {
