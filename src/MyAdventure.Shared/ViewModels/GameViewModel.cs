@@ -4,6 +4,7 @@ using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Entities;
 using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
 using MyAdventure.Shared.Services;
@@ -20,6 +21,21 @@ namespace MyAdventure.Shared.ViewModels;
 /// the View doesn't care what underlying numeric type produced the
 /// displayed glyph, only that it's short and readable, which is what
 /// <see cref="NumberFormatter.Format(BigDouble)"/> guarantees.
+/// </para>
+///
+/// <para>
+/// <b>Cross-business speed bonus (Option B):</b> the engine exposes a
+/// roster-wide earnings multiplier via
+/// <see cref="GameEngine.CrossBusinessSpeedMultiplier"/>. We surface it
+/// here so the player sees a single global "×N Speed" indicator (instead
+/// of per-card chrome), because the bonus is uniform across businesses.
+/// The four properties — <see cref="CrossSpeedText"/>,
+/// <see cref="HasCrossSpeedBonus"/>, <see cref="NextCrossThresholdText"/>,
+/// and <see cref="MinOwnedAcrossText"/> — let the View render both the
+/// active multiplier and the next milestone hint without the View
+/// reaching back into the engine. Each <see cref="RefreshAll"/> snapshots
+/// the multiplier once so every <see cref="BusinessViewModel.Refresh(BigDouble, BigDouble, BigDouble)"/>
+/// call in the same frame sees the same value.
 /// </para>
 /// </summary>
 public partial class GameViewModel : ViewModelBase
@@ -48,6 +64,39 @@ public partial class GameViewModel : ViewModelBase
     [ObservableProperty] private bool _canPrestige;
     [ObservableProperty] private string _nextAngelText = "0";
     [ObservableProperty] private string _prestigeExplanation = "";
+
+    // --- Cross-business speed bonus (Option B) ---
+    /// <summary>
+    /// Display text for the cross-business multiplier, e.g. "×64 Speed" or
+    /// "×4.10 K Speed" once the bonus climbs beyond what fits in three
+    /// digits. Formatting via <see cref="NumberFormatter.Format(BigDouble)"/>
+    /// guarantees the string stays compact at any reachable magnitude —
+    /// including the unbounded post-400 ladder where multipliers grow
+    /// without limit.
+    /// </summary>
+    [ObservableProperty] private string _crossSpeedText = "\u00D71 Speed";
+
+    /// <summary>
+    /// True once the cross-business multiplier exceeds 1.0. Drives the
+    /// visibility of the global "×N Speed" badge so the early-game UI
+    /// stays uncluttered until the player actually has all businesses
+    /// at 25+.
+    /// </summary>
+    [ObservableProperty] private bool _hasCrossSpeedBonus;
+
+    /// <summary>
+    /// Human-readable hint for the next cross-business threshold, e.g.
+    /// "15 more of every business → 25". Updated every refresh so the
+    /// player can see exactly how far they are from the next ×2.
+    /// </summary>
+    [ObservableProperty] private string _nextCrossThresholdText = "";
+
+    /// <summary>
+    /// The current minimum ownership count across all businesses, exposed
+    /// as text so the View can show which business is gating cross-bonus
+    /// progression. ("Lowest business: 12 owned")
+    /// </summary>
+    [ObservableProperty] private string _minOwnedAcrossText = "0";
 
     // --- Transfer panel (import/export) ---
     [ObservableProperty] private bool _isTransferOpen;
@@ -339,12 +388,43 @@ public partial class GameViewModel : ViewModelBase
             PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
         }
 
-        // Snapshot AngelBonus once per refresh so every BusinessViewModel
-        // sees the same value in a single frame.
+        // Snapshot AngelBonus and the cross-business multiplier once per
+        // refresh so every BusinessViewModel sees the same values in a
+        // single frame. The product (angelBonus * crossBonus) is computed
+        // inside BusinessViewModel.Refresh — keeping both factors visible
+        // here lets the global cross-speed UI display the unmultiplied
+        // value cleanly while business cards still show combined revenue.
         var angelBonus = _engine.AngelBonus;
+        var crossBonus = _engine.CrossBusinessSpeedMultiplier;
         var cash = _engine.Cash;
         foreach (var bvm in Businesses)
-            bvm.Refresh(cash, angelBonus);
+            bvm.Refresh(cash, angelBonus, crossBonus);
+
+        // Update the global cross-business UI text. The View shows this
+        // as a single badge in the chrome since the bonus is uniform
+        // across businesses (showing it per-card would just be visual noise).
+        var minOwned = _engine.MinOwnedAcrossBusinesses;
+        MinOwnedAcrossText = minOwned.ToString();
+
+        // HasCrossSpeedBonus drives visibility — the comparison is against
+        // BigDouble.One via BigDouble.Compare semantics so we don't pay
+        // for a string parse or a ToDouble truncation just for the flag.
+        HasCrossSpeedBonus = crossBonus > BigDouble.One;
+
+        if (HasCrossSpeedBonus)
+        {
+            CrossSpeedText = $"\u00D7{NumberFormatter.Format(crossBonus)} Speed";
+        }
+        else
+        {
+            CrossSpeedText = "\u00D71 Speed";
+        }
+
+        // Always show the "next threshold" hint — it's the player's roadmap
+        // to the next ×2, regardless of whether they've earned any stacks yet.
+        var nextThreshold = CrossBusinessSpeedBonus.NextThreshold(minOwned);
+        var unitsToNext = CrossBusinessSpeedBonus.UnitsToNext(minOwned);
+        NextCrossThresholdText = $"{unitsToNext} more of every business \u2192 {nextThreshold}";
     }
 
     /// <summary>
