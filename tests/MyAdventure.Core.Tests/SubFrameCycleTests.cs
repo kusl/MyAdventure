@@ -25,6 +25,17 @@ namespace MyAdventure.Core.Tests;
 /// </para>
 ///
 /// <para>
+/// <b>Cross-business bonus note.</b> Each of these tests adds one
+/// custom business to the engine's roster but leaves the other six
+/// default businesses at zero owned. The minimum across the roster is
+/// therefore 0, so the cross-business multiplier
+/// (<see cref="GameEngine.CrossBusinessSpeedMultiplier"/>) collapses to
+/// <see cref="BigDouble.One"/> and doesn't affect any expected
+/// earnings here. The cross-business bonus has dedicated tests in
+/// <c>CrossBusinessSpeedBonusTests</c> and <c>GameEngineTests</c>.
+/// </para>
+///
+/// <para>
 /// <b>Precision-gap caveat (learned the hard way):</b> these tests
 /// measure earnings by diffing <c>engine.Cash</c> before and after a
 /// tick. <see cref="BigDouble"/>'s mantissa has ~17 digits of precision,
@@ -135,9 +146,20 @@ public class SubFrameCycleTests
 
     /// <summary>
     /// Composing this with the speed-milestone feature: at 400 owned,
-    /// cycle time is 1/16th of base. With a 0.6 s base (lemonade) the
-    /// effective cycle becomes 37.5 ms. A 1 s tick must then pay for
-    /// ~26 cycles, not 1.
+    /// cycle time is 1/64th of base under the new AdCap-parity ladder
+    /// (six halvings: 25/50/100/200/300/400). With a 0.6 s base
+    /// (lemonade) the effective cycle becomes 9.375 ms. A 1 s tick must
+    /// then pay for ~106 cycles, not 1.
+    ///
+    /// <para>
+    /// Under the OLD four-threshold table this test expected ~26 cycles
+    /// (cycle time 37.5 ms, ×16 speed). The numbers below are updated
+    /// for the new six-threshold ×64 ceiling. Revenue per cycle is
+    /// unchanged — the revenue milestone table has always had six ×2
+    /// thresholds at 25/50/100/200/300/400, so 400 × 64 = $25,600/cycle
+    /// remains the same; only the cycle COUNT per second has 4×'d
+    /// because the speed table caught up to the revenue table.
+    /// </para>
     ///
     /// <para>
     /// Starting cash here is <see cref="BigDouble.Zero"/> — earlier I
@@ -166,29 +188,38 @@ public class SubFrameCycleTests
             BaseRevenue = 1.0,
             BaseTimeSeconds = 0.6, // lemonade-like
             CostMultiplier = 1.07,
-            Owned = 400, // hits all 4 speed milestones: cycle becomes 0.6 / 16 = 0.0375 s
+            Owned = 400, // hits all 6 speed milestones: cycle becomes 0.6 / 64 = 0.009375 s
             IsRunning = true,
             HasManager = true,
             ProgressPercent = 0,
         };
         // Sanity: CycleTimeSeconds applies the speed multiplier
-        biz.CycleTimeSeconds.ShouldBe(0.0375, tolerance: 1e-12);
-        biz.SpeedMultiplier.ShouldBe(16.0);
+        biz.CycleTimeSeconds.ShouldBe(0.009375, tolerance: 1e-12);
+        biz.SpeedMultiplier.ShouldBe(64.0);
 
         SetBusinesses(engine, new List<Business>(engine.Businesses) { biz });
+
+        // Cross-business bonus is 1.0 here because the other six default
+        // businesses are owned=0. Verify that as a precondition so a
+        // future regression that miscomputes minOwned would surface
+        // here rather than silently inflating the expected earnings.
+        engine.MinOwnedAcrossBusinesses.ShouldBe(0);
+        engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(1.0);
 
         var cashBefore = engine.Cash;
         engine.Tick(1.0);
 
-        // 1.0 s / 0.0375 s/cycle ≈ 26.66 cycles → integer floor = 26.
-        // Revenue per cycle = 400 owned × $1 base × ×64 milestone (all 6 revenue
-        // milestones at 25/50/100/200/300/400 = 2^6 = 64) = $25,600 / cycle.
+        // 1.0 s / 0.009375 s/cycle ≈ 106.67 cycles → integer floor = 106.
+        // Revenue per cycle = 400 owned × $1 base × ×64 milestone (all 6
+        // revenue milestones at 25/50/100/200/300/400 = 2^6 = 64) = $25,600 / cycle.
         var revenuePerCycle = biz.Revenue.ToDouble();
         revenuePerCycle.ShouldBe(400 * 64, tolerance: 1e-9);
 
         var earned = (engine.Cash - cashBefore).ToDouble();
-        // 26 cycles × $25,600/cycle = $665,600. Allow ±1 cycle for residual.
-        earned.ShouldBeInRange(25 * revenuePerCycle, 27 * revenuePerCycle);
+        // 106 cycles × $25,600/cycle ≈ $2,713,600. Allow ±1 cycle slack
+        // for the integer-truncation residual carried in ProgressPercent
+        // (so the acceptable range is 105 to 107 cycles inclusive).
+        earned.ShouldBeInRange(105 * revenuePerCycle, 107 * revenuePerCycle);
     }
 
     // ---------------- Helpers ----------------

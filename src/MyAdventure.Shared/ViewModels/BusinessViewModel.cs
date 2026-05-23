@@ -12,11 +12,22 @@ namespace MyAdventure.Shared.ViewModels;
 /// expanded detail properties for adaptive display.
 ///
 /// <para>
-/// <b>BigDouble note:</b> the <see cref="Refresh"/> method takes
-/// <see cref="BigDouble"/> for both cash and the angel bonus, mirroring
-/// the engine's new types. Display text properties stay
-/// <see cref="string"/>; formatting happens once here so the views can
-/// bind directly without conversion overhead per frame.
+/// <b>BigDouble note:</b> the <see cref="Refresh(BigDouble, BigDouble)"/>
+/// method takes <see cref="BigDouble"/> for both cash and the angel
+/// bonus, mirroring the engine's new types. Display text properties
+/// stay <see cref="string"/>; formatting happens once here so the views
+/// can bind directly without conversion overhead per frame.
+/// </para>
+///
+/// <para>
+/// <b>Cross-business bonus note:</b> the
+/// <see cref="Refresh(BigDouble, BigDouble, BigDouble)"/> overload
+/// takes a third parameter — the cross-business earnings multiplier
+/// from <see cref="GameEngine.CrossBusinessSpeedMultiplier"/> — and
+/// applies it to the displayed per-cycle revenue and revenue per
+/// second so the UI shows what the player will actually earn. The
+/// two-argument overload forwards with <see cref="BigDouble.One"/>
+/// so existing call sites and tests are unaffected.
 /// </para>
 ///
 /// <para>
@@ -35,11 +46,13 @@ namespace MyAdventure.Shared.ViewModels;
 /// </list>
 ///
 /// <para>
-/// <b>Speed milestone display:</b> separate properties expose the speed
-/// multiplier (e.g. "×4 Speed") and the next speed milestone so the UI
-/// can show how cycle time is improving alongside revenue. This is
-/// orthogonal to the revenue milestone display — both are visible in
-/// the detail panel.
+/// <b>Speed milestone display:</b> separate properties expose the
+/// per-business speed multiplier (e.g. "×64 Speed") and the next speed
+/// milestone so the UI can show how cycle time is improving alongside
+/// revenue. This is orthogonal to the revenue milestone display — both
+/// are visible in the detail panel. The cross-business bonus is shown
+/// at the global level (<see cref="GameViewModel"/>) since it applies
+/// uniformly to every business.
 /// </para>
 /// </summary>
 public partial class BusinessViewModel(
@@ -76,11 +89,11 @@ public partial class BusinessViewModel(
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
 
-    // --- Speed milestone properties ---
-    /// <summary>Compounded speed multiplier (e.g. 4.0 for ×4 Speed). 1.0 below the first speed threshold.</summary>
+    // --- Speed milestone properties (per-business) ---
+    /// <summary>Compounded per-business speed multiplier (e.g. 64.0 for ×64 Speed). 1.0 below the first speed threshold.</summary>
     [ObservableProperty] private double _speedMultiplier = 1.0;
 
-    /// <summary>Human-readable text for the speed multiplier (e.g. "×4 Speed"). Hidden when 1.0 via <see cref="HasSpeedBonus"/>.</summary>
+    /// <summary>Human-readable text for the speed multiplier (e.g. "×64 Speed"). Hidden when 1.0 via <see cref="HasSpeedBonus"/>.</summary>
     [ObservableProperty] private string _speedMultiplierText = "×1 Speed";
 
     /// <summary>True when speed multiplier exceeds 1.0 — drives visibility so the row doesn't clutter early-game cards.</summary>
@@ -202,16 +215,35 @@ public partial class BusinessViewModel(
     }
 
     /// <summary>
-    /// Refresh all bindable properties from the model.
+    /// Refresh all bindable properties from the model, applying ONLY the
+    /// angel bonus to revenue displays. Equivalent to calling the
+    /// three-argument overload with <see cref="BigDouble.One"/> as the
+    /// cross-business multiplier — preserved for backward compatibility
+    /// with the existing test suite (which predates the cross-business
+    /// bonus feature) and any external callers.
+    /// </summary>
+    public void Refresh(BigDouble cash, BigDouble angelBonus) =>
+        Refresh(cash, angelBonus, BigDouble.One);
+
+    /// <summary>
+    /// Refresh all bindable properties from the model, applying both the
+    /// angel bonus and the cross-business multiplier to revenue displays.
     /// </summary>
     /// <param name="cash">Current player cash, used for affordability flags.</param>
     /// <param name="angelBonus">
     /// The current angel multiplier from <see cref="GameEngine.AngelBonus"/>
     /// (e.g. 2.0 for +100%). Applied to <see cref="RevenueText"/> and
-    /// <see cref="RevenuePerSecondText"/> so the UI shows what the player will
-    /// actually earn — not the pre-bonus base values.
+    /// <see cref="RevenuePerSecondText"/> so the UI shows what the player
+    /// will actually earn — not the pre-bonus base values.
     /// </param>
-    public void Refresh(BigDouble cash, BigDouble angelBonus)
+    /// <param name="crossBusinessSpeed">
+    /// The current cross-business earnings multiplier from
+    /// <see cref="GameEngine.CrossBusinessSpeedMultiplier"/>. Applied to
+    /// the same displayed revenue values so the UI matches the engine's
+    /// actual per-tick payout. Pass <see cref="BigDouble.One"/> when not
+    /// applicable.
+    /// </param>
+    public void Refresh(BigDouble cash, BigDouble angelBonus, BigDouble crossBusinessSpeed)
     {
         Owned = model.Owned;
         ProgressPercent = model.ProgressPercent;
@@ -219,21 +251,28 @@ public partial class BusinessViewModel(
         HasManager = model.HasManager;
         CostText = NumberFormatter.Format(model.NextCost);
 
+        // Pre-compute the combined multiplier once per Refresh. Both
+        // values are BigDouble, so the product stays representable at
+        // any scale.
+        var totalEarningsBonus = angelBonus * crossBusinessSpeed;
+
         // Owned == 0 still shows "—" because there's no business to earn from yet.
         RevenueText = model.Owned > 0
-            ? NumberFormatter.Format(model.Revenue * angelBonus)
+            ? NumberFormatter.Format(model.Revenue * totalEarningsBonus)
             : "—";
         var managerCost = new BigDouble(model.BaseCost * 1000);
         ManagerCostText = NumberFormatter.Format(managerCost);
         CanAfford = cash >= model.NextCost;
         CanAffordManager = !model.HasManager && cash >= managerCost;
 
-        // Extended details — cycle time now reflects speed milestones via
-        // Business.CycleTimeSeconds, so the displayed time naturally shrinks
-        // (e.g. "0.6s" → "300ms" → "150ms") as speed thresholds are crossed.
+        // Extended details — cycle time reflects the per-business speed
+        // milestones via Business.CycleTimeSeconds. The cross-business
+        // bonus is NOT folded into cycle time (it's a revenue multiplier),
+        // so the displayed cycle time honestly reports how often a single
+        // cycle of this business fires.
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
         RevenuePerSecondText = model.Owned > 0
-            ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
+            ? $"${NumberFormatter.Format(model.RevenuePerSecond * totalEarningsBonus)}/s"
             : "—";
 
         AffordableCount = model.AffordableCount(cash);
@@ -242,8 +281,10 @@ public partial class BusinessViewModel(
         MilestoneMultiplier = model.MilestoneMultiplier;
         MilestoneMultiplierText = $"×{MilestoneMultiplier:G4}";
 
-        // Speed multiplier display. Hidden when 1.0 to keep early-game
-        // cards uncluttered (HasSpeedBonus is the visibility flag).
+        // Speed multiplier display (per-business only). Hidden when 1.0
+        // to keep early-game cards uncluttered (HasSpeedBonus is the
+        // visibility flag). The cross-business bonus is displayed
+        // globally on GameViewModel rather than per-card.
         SpeedMultiplier = model.SpeedMultiplier;
         SpeedMultiplierText = $"×{SpeedMultiplier:G4} Speed";
         HasSpeedBonus = SpeedMultiplier > 1.0;

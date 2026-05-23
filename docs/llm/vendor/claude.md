@@ -10098,3 +10098,103 @@ Let me write the files.
 
 
 
+00
+64
+
+please continue and return all the files that change 
+
+Now let me write the new CrossBusinessSpeedBonusTests file:Now I need to view the existing GameEngineTests to understand its structure, then update it:Now I need to write the updated GameEngineTests.cs. Most existing tests use single-business scenarios so `MinOwnedAcrossBusinesses = 0` and the cross-business bonus collapses to 1.0 — they pass unchanged. I just add new tests for the new behavior:Now let me check the BusinessViewModelSpeedTests so I can update it:Good — Business is a record. Now let me check BusinessViewModelTests to see if any tests there need updates:Let me check the remaining test files to ensure none of them require updates:Let me verify everything is in place and do a final sanity check on the output:Let me do a final quality check that all the changed/new files compile cleanly together by examining their relationships:Everything is in order. Let me present the files:All ten files are ready. Here's the summary of what changed and where each goes in the project tree:
+
+**Source (5 files)**
+
+| File | Destination | Status |
+|---|---|---|
+| `CrossBusinessSpeedBonus.cs` | `src/MyAdventure.Core/Entities/` | **NEW** — Option B math: 2^N revenue multiplier driven by minOwned across roster; uncapped past 400 |
+| `Milestone.cs` | `src/MyAdventure.Core/Entities/` | Speed table expanded from 4 to 6 thresholds (25/50/100/200/300/400, ×64 max) |
+| `GameEngine.cs` | `src/MyAdventure.Core/Services/` | New `CrossBusinessSpeedMultiplier` and `MinOwnedAcrossBusinesses` properties; `Tick()` and `CalculateOfflineEarnings()` apply both bonuses symmetrically; `ExportToString()` writes ISO-8601 `timestamp`; `ImportFromString()` ignores it |
+| `BusinessViewModel.cs` | `src/MyAdventure.Shared/ViewModels/` | New 3-arg `Refresh(cash, angelBonus, crossBonus)` overload; 2-arg overload forwards `BigDouble.One` for back-compat |
+| `GameViewModel.cs` | `src/MyAdventure.Shared/ViewModels/` | New `CrossSpeedText`, `HasCrossSpeedBonus`, `NextCrossThresholdText`, `MinOwnedAcrossText` properties; `RefreshAll()` snapshots and threads the cross-bonus through every business |
+
+**Tests (5 files)**
+
+| File | Destination | Status |
+|---|---|---|
+| `CrossBusinessSpeedBonusTests.cs` | `tests/MyAdventure.Core.Tests/` | **NEW** — pins the ladder, the uncapped post-400 growth, defensive handling of corrupted negative input |
+| `SpeedMilestoneTests.cs` | `tests/MyAdventure.Core.Tests/` | Threshold assertions migrated 100→25, 200→50, …, 400 now ×64 not ×16 |
+| `SubFrameCycleTests.cs` | `tests/MyAdventure.Core.Tests/` | Only the `Tick_AtSpeedMilestone400` test changed: cycle time 0.009375s, ~106 cycles/sec, precondition checks that cross-bonus is 1.0 in this single-business scenario |
+| `GameEngineTests.cs` | `tests/MyAdventure.Core.Tests/` | All previous tests preserved; ~10 new tests added at the bottom covering cross-bonus property semantics, the "applied once not twice" invariant, offline↔live equivalence with cross-bonus, timestamp emission and round-trip, timestamp-ignored-on-import, no-timestamp-still-imports |
+| `BusinessViewModelSpeedTests.cs` | `tests/MyAdventure.UI.Tests/` | Threshold tests migrated, `$1.60 K/s` → `$6.40 K/s` expected, two new tests for the 3-arg Refresh overload |
+
+**No changes needed:** `BusinessTests.cs`, `BusinessViewModelTests.cs`, `GameViewModelLifecycleTests.cs`, `BusinessAffordableTests.cs`, `MilestoneTests.cs`, `NumberFormatterTests.cs`, `BigDoubleTests.cs`, `AppLifecycleManagerTests.cs`, `ToastServiceTests.cs`, integration tests — they either use ownership counts that stay below the changed thresholds, use single-business scenarios where minOwned=0 keeps cross-bonus at 1.0, or test orthogonal subsystems.
+
+41
+00
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

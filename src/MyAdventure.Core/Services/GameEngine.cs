@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ namespace MyAdventure.Core.Services;
 /// <para>
 /// <b>BigDouble migration:</b> all monetary and progression quantities
 /// (<see cref="Cash"/>, <see cref="LifetimeEarnings"/>,
-/// <see cref="AngelInvestors"/>, <see cref="AngelBonus"/>) are now
+/// <see cref="AngelInvestors"/>, <see cref="AngelBonus"/>) are
 /// <see cref="BigDouble"/>. The prior <c>double</c>-based implementation
 /// had to clamp these values at <c>1e200</c> to avoid overflowing IEEE 754
 /// to <see cref="double.PositiveInfinity"/>; that clamp is the cause of
@@ -29,6 +30,23 @@ namespace MyAdventure.Core.Services;
 /// astronomical angel counts. It's set far past any practically reachable
 /// value, but exists so that downstream multiplications can never produce
 /// non-finite BigDoubles even under absurdly hand-edited saves.
+/// </para>
+/// <para>
+/// <b>Cross-business speed bonus (Option B).</b> A second earnings-rate
+/// multiplier — see <see cref="CrossBusinessSpeedMultiplier"/> and
+/// <see cref="CrossBusinessSpeedBonus"/> — compounds on top of the
+/// per-business speed milestones in <see cref="SpeedMilestone"/>. It
+/// triggers when EVERY business simultaneously crosses a shared
+/// ownership threshold (25, 50, 100, 200, 300, 400, then every +100
+/// forever) and is uncapped: at minimum-owned = 1000 it's already ×4096,
+/// at 10,000 it's ×2¹⁰², and the curve continues without ceiling. It is
+/// folded into the earnings calculation in <see cref="Tick"/> and
+/// <see cref="CalculateOfflineEarnings"/> as a revenue multiplier (NOT
+/// a cycle-time divisor) because halving a <see cref="double"/> cycle
+/// time hundreds of times would underflow to exactly zero in IEEE 754;
+/// folding into <see cref="BigDouble"/> revenue keeps the math
+/// representable forever. The earnings rate is mathematically identical
+/// either way.
 /// </para>
 /// </summary>
 public class GameEngine(
@@ -150,10 +168,19 @@ public class GameEngine(
         var sw = Stopwatch.StartNew();
         TickCounter.Add(1);
 
-        // Snapshot the angel multiplier once per tick so all businesses
-        // settle their cycles against the same value and so the call to
-        // AngelBonus is paid once instead of per-business.
+        // Snapshot ALL earnings multipliers once per tick so every business
+        // settles cycles against the same value. AngelBonus and
+        // CrossBusinessSpeedMultiplier are O(n) / O(small) reads but each
+        // would otherwise be paid n_businesses times per tick.
+        //
+        // The product order matters for BigDouble precision at extremes:
+        // angelBonus can be up to 10^(10^15) and crossBusiness can be
+        // arbitrarily large; multiplying them first concentrates the
+        // exponent into a single BigDouble before the per-cycle multiply,
+        // which is the cheapest way to keep the per-cycle math sub-microsecond.
         var angelBonus = AngelBonus;
+        var crossBusiness = CrossBusinessSpeedMultiplier;
+        var totalBonus = angelBonus * crossBusiness;
 
         foreach (var biz in Businesses)
         {
@@ -164,11 +191,11 @@ public class GameEngine(
             if (biz.ProgressPercent >= 100.0)
             {
                 var cycles = (int)(biz.ProgressPercent / 100.0);
-                // Angel bonus applies to live earnings just like it does to
-                // offline earnings — see CalculateOfflineEarnings(), which
-                // multiplies by AngelBonus once at the end. These two paths
-                // must stay in sync; an invariant test guards this.
-                var earned = biz.Revenue * cycles * angelBonus;
+                // BOTH bonuses applied to live earnings just like they are
+                // to offline earnings — see CalculateOfflineEarnings, which
+                // multiplies by totalBonus once at the end. Keeping the
+                // two paths symmetric is what the invariant tests pin.
+                var earned = biz.Revenue * cycles * totalBonus;
                 Cash = SanitizeMoney(Cash + earned);
                 LifetimeEarnings = SanitizeMoney(LifetimeEarnings + earned);
 
@@ -394,6 +421,72 @@ public class GameEngine(
     }
 
     /// <summary>
+    /// Cross-business earnings multiplier. Triggers when EVERY business
+    /// simultaneously crosses one of the shared ownership thresholds
+    /// (25, 50, 100, 200, 300, 400, then every +100 forever). Each
+    /// threshold doubles the multiplier; the curve has no cap.
+    ///
+    /// <para>
+    /// <b>Applied as a revenue multiplier, not a cycle-time divisor.</b>
+    /// The user's mental model is "all-business halves cycle time
+    /// again", and the earnings rate this produces is mathematically
+    /// identical to that — but cycle time lives in a <see cref="double"/>
+    /// on <see cref="Business.CycleTimeSeconds"/>, and halving a double
+    /// hundreds of times underflows to exactly zero. Folding the entire
+    /// bonus into a <see cref="BigDouble"/> revenue multiplier sidesteps
+    /// that completely: revenue can grow without bound because
+    /// <see cref="BigDouble"/> has no practical exponent ceiling.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>"All businesses" means literally all six.</b> A player with
+    /// 1000 lemonade stands and zero shrimp boats gets exactly zero
+    /// cross-business bonus — the minimum across the roster is 0.
+    /// This is what the user's design called out as the strategic
+    /// incentive shift: balanced ownership is rewarded; hoarding is not.
+    /// </para>
+    ///
+    /// <para>
+    /// Returns <see cref="BigDouble.One"/> when no thresholds are
+    /// crossed (early game), so the per-cycle multiply collapses to a
+    /// no-op for any business roster that hasn't reached 25-of-each.
+    /// </para>
+    /// </summary>
+    public BigDouble CrossBusinessSpeedMultiplier
+    {
+        get
+        {
+            if (Businesses.Count == 0) return BigDouble.One;
+            var minOwned = int.MaxValue;
+            foreach (var biz in Businesses)
+            {
+                if (biz.Owned < minOwned) minOwned = biz.Owned;
+            }
+            if (minOwned < 0) minOwned = 0; // defensive: corrupted save
+            return CrossBusinessSpeedBonus.CalculateSpeedMultiplier(minOwned);
+        }
+    }
+
+    /// <summary>
+    /// The minimum ownership count across all businesses — the input to
+    /// the cross-business bonus. Exposed for the UI's "next threshold"
+    /// hint so the player can see which business is gating progression.
+    /// </summary>
+    public int MinOwnedAcrossBusinesses
+    {
+        get
+        {
+            if (Businesses.Count == 0) return 0;
+            var minOwned = int.MaxValue;
+            foreach (var biz in Businesses)
+            {
+                if (biz.Owned < minOwned) minOwned = biz.Owned;
+            }
+            return minOwned < 0 ? 0 : minOwned;
+        }
+    }
+
+    /// <summary>
     /// Compute how many angels the player's lifetime earnings are
     /// currently worth. Returns the cumulative count (callers subtract
     /// <see cref="AngelInvestors"/> to get the available-to-claim count).
@@ -445,9 +538,13 @@ public class GameEngine(
             var cycles = new BigDouble(elapsed.TotalSeconds / biz.CycleTimeSeconds);
             total += biz.Revenue * cycles;
         }
-        // AngelBonus applied once at the end, matching Tick's per-cycle path
-        // (which multiplies the per-tick earned amount by the snapshot bonus).
-        return total * AngelBonus;
+        // BOTH AngelBonus and CrossBusinessSpeedMultiplier applied once
+        // at the end, matching Tick's per-cycle path (which multiplies
+        // the per-tick earned amount by the snapshot totalBonus). The
+        // invariant test OfflineEarnings_ShouldApplyCrossBonusOnce_NotTwice
+        // guards this — drift between the two paths is a silent earnings
+        // bug that would only surface at extreme scaling.
+        return total * AngelBonus * CrossBusinessSpeedMultiplier;
     }
 
     /// <summary>
@@ -530,6 +627,17 @@ public class GameEngine(
     /// stores in SQLite, so an exported string is essentially a portable
     /// dump of the persisted columns.
     /// </para>
+    /// <para>
+    /// <b>Timestamp field.</b> The export includes a <c>timestamp</c> field
+    /// (ISO 8601 UTC, e.g. <c>"2026-05-23T14:30:00.0000000Z"</c>) recorded
+    /// at the moment the export is generated. It is NOT validated on
+    /// import — its sole purpose is debugging: if a player reports a bug
+    /// with two exported saves, the timestamps let us (and the player)
+    /// see which save is newer and reason about expected progression.
+    /// Example: two saves five days apart with identical cash but
+    /// managers enabled would indicate an offline-earnings defect, since
+    /// the newer one should have more cash.
+    /// </para>
     /// </summary>
     public string ExportToString()
     {
@@ -541,7 +649,12 @@ public class GameEngine(
             ["angels"] = SanitizeAngels(AngelInvestors).ToCanonicalString(),
             ["prestige"] = PrestigeCount,
             ["businesses"] = Businesses.ToDictionary(b => b.Id, b => b.Owned),
-            ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager)
+            ["managers"] = Businesses.ToDictionary(b => b.Id, b => b.HasManager),
+            // ISO 8601 round-trippable UTC timestamp. The "o" format
+            // specifier produces a sortable, lexicographic-friendly
+            // string ("2026-05-23T14:30:00.1234567Z") — diffing two
+            // exports lets us tell at a glance which is newer.
+            ["timestamp"] = _time.GetUtcNow().UtcDateTime.ToString("o", CultureInfo.InvariantCulture)
         };
         var json = JsonSerializer.Serialize(data);
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
@@ -552,6 +665,12 @@ public class GameEngine(
     /// the current v2 format (numbers as canonical BigDouble strings) and
     /// the legacy v1 format (numbers as native JSON doubles), so old
     /// saves from before the BigDouble migration still load.
+    /// <para>
+    /// The <c>timestamp</c> field added in the cross-business-bonus
+    /// patch is read but NOT validated — its only purpose is debugging
+    /// (see <see cref="ExportToString"/>). Exports without a timestamp
+    /// (e.g. saves from before this version) still import fine.
+    /// </para>
     /// </summary>
     public bool ImportFromString(string encoded)
     {
@@ -587,6 +706,11 @@ public class GameEngine(
                         if (has && biz.Owned > 0) biz.IsRunning = true;
                     }
             }
+
+            // The "timestamp" field is intentionally ignored. We don't
+            // validate it (no anti-cheat) and don't expose it on the
+            // engine — its purpose is purely diagnostic, viewable by
+            // decoding the export string offline.
 
             logger.LogInformation("Imported game state. Cash: {Cash}, Angels: {Angels}",
                 Cash.ToCanonicalString(), AngelInvestors.ToCanonicalString());

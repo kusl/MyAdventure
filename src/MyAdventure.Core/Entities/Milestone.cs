@@ -70,55 +70,50 @@ public record Milestone(int Threshold, double Multiplier, string Label)
 /// multiplicatively on earnings-per-second.
 ///
 /// <para>
-/// <b>Why this matters.</b> If cycle time is fixed forever, the player
-/// eventually hits a wall where each new unit of business takes
-/// exponentially more cash to buy but contributes the same earnings rate
-/// per cycle. Buying #1001 becomes pointless because cycles still happen
-/// at the same pace. Speed milestones break that wall by letting cycles
-/// fire faster as ownership grows, so cash compounds rather than
-/// stalls.
+/// <b>AdCap-parity ladder (updated from the original 4-threshold table).</b>
+/// The default table now has SIX thresholds — 25, 50, 100, 200, 300, 400
+/// — matching the per-business speed table in Adventure Capitalist
+/// exactly. Each halves cycle time, so the compound speed-up caps at
+/// ×64 per business (six halvings: 2⁶ = 64). The original table only
+/// had four (100/200/300/400 → ×16) and that was the user's reported
+/// gap from AdCap; this brings Option A to parity.
 /// </para>
 ///
 /// <para>
-/// <b>Why this isn't aggressive.</b> The default table has only four
-/// thresholds (100, 200, 300, 400), each halving cycle time. The total
-/// compound speed-up is therefore capped at ×16 — meaningful, but not
-/// game-breaking. By 400 owned the player already has revenue milestones
-/// at 25/50/100/200/300/400 worth a combined ×64 revenue multiplier; the
-/// extra ×16 speed brings earnings per second to a ×1024 boost over
-/// baseline, which keeps mid-game momentum without trivializing it.
+/// <b>The cap is intentional — for THIS axis.</b> Per-business speed
+/// stays at ×64 max because cycle time is stored in a <see cref="double"/>
+/// (<see cref="Business.CycleTimeSeconds"/>) and further halvings would
+/// quickly underflow when combined with a small base time. The
+/// second-axis cross-business bonus (<see cref="CrossBusinessSpeedBonus"/>)
+/// is what scales without bound — it's a <see cref="BigDouble"/>
+/// revenue multiplier and has no ceiling.
 /// </para>
 ///
 /// <para>
-/// <b>Why we don't put it on the existing <see cref="Milestone"/> record.</b>
-/// Keeping revenue and speed as separate axes lets each be balanced and
-/// tested independently — and keeps the existing milestone tests stable
-/// (no risk of accidentally regressing a ×2 revenue at 25 into a
-/// "×2 revenue + ×0.5 cycle time" change). A future patch can add an
-/// upgrades system that grants extra speed beyond the table without
-/// having to refactor the revenue side.
-/// </para>
-///
-/// <para>
-/// <b>Robustness against very fast cycles.</b> Cycle times will get
-/// small enough at the cap to be less than a single 60 Hz frame
-/// (≈16 ms). The game engine's tick loop is already written to handle
-/// that — it computes <c>cycles = (int)(ProgressPercent / 100.0)</c> on
-/// each tick and pays out for all of them at once, with the leftover
-/// fraction carried into the next tick via <c>ProgressPercent %= 100.0</c>.
-/// An invariant test pins this behavior so future refactors can't break it.
+/// <b>Robustness against very fast cycles.</b> At 400 owned of a 0.6 s
+/// base business (lemonade), the effective cycle drops to 9.375 ms —
+/// below a single 60 Hz frame (16 ms). The game engine's tick loop is
+/// already written to handle that: it computes
+/// <c>cycles = (int)(ProgressPercent / 100.0)</c> on each tick and pays
+/// out for all of them at once, with the leftover fraction carried into
+/// the next tick via <c>ProgressPercent %= 100.0</c>. The
+/// <c>SubFrameCycleTests</c> invariants pin this behavior so future
+/// refactors can't break it.
 /// </para>
 /// </summary>
 public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string Label)
 {
     /// <summary>
-    /// Default speed milestones — each halves cycle time. The thresholds
-    /// are spread between the major revenue milestones so progression
-    /// never feels stagnant for long, but the cap of 4 milestones keeps
-    /// the total speed-up bounded at ×16.
+    /// Default speed milestones — six thresholds matching the AdCap
+    /// per-business speed ladder (25, 50, 100, 200, 300, 400). Each
+    /// halves cycle time; compounded, they reach ×64 max per business.
+    /// The cross-business bonus in <see cref="CrossBusinessSpeedBonus"/>
+    /// stacks multiplicatively on top of this and is uncapped.
     /// </summary>
     public static IReadOnlyList<SpeedMilestone> Defaults { get; } =
     [
+        new(25, 0.5, "×2 Speed"),
+        new(50, 0.5, "×2 Speed"),
         new(100, 0.5, "×2 Speed"),
         new(200, 0.5, "×2 Speed"),
         new(300, 0.5, "×2 Speed"),
@@ -146,7 +141,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
 
     /// <summary>
     /// Convenience: cumulative speed multiplier (the reciprocal of the
-    /// cycle-time multiplier). Useful for UI display ("×4 Speed").
+    /// cycle-time multiplier). Useful for UI display ("×64 Speed").
     /// </summary>
     public static double CalculateSpeedMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {

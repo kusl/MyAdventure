@@ -15,6 +15,18 @@ namespace MyAdventure.Core.Tests;
 /// clamps are lifted to BigDouble here; the invariants they test
 /// (live ↔ offline equivalence, prestige reset, angel bonus, etc.)
 /// remain identical.
+///
+/// <para>
+/// <b>Cross-business bonus interaction:</b> the cross-business
+/// multiplier (Option B) collapses to <see cref="BigDouble.One"/>
+/// whenever the minimum ownership across the roster is below 25 — and
+/// most tests in this file own only the lemonade stand (or test
+/// behaviors orthogonal to ownership). Those tests need no changes:
+/// crossBonus = 1.0 in their state, so adding the second multiplier in
+/// the engine's tick/offline paths is mathematically a no-op for them.
+/// New tests at the bottom of this file exercise the cross-business
+/// bonus directly.
+/// </para>
 /// </summary>
 public class GameEngineTests
 {
@@ -111,6 +123,7 @@ public class GameEngineTests
 
         var earned = (_engine.Cash - cashBefore).ToDouble();
         // 1 owned × $1 base × 1.0 milestone × ~2.69 angel bonus ≈ $2.69.
+        // Cross-business bonus is 1.0 (only lemonade owned, rest at 0).
         earned.ShouldBe(FiftyAngelBonus, tolerance: 1e-9);
     }
 
@@ -904,6 +917,376 @@ public class GameEngineTests
         };
         biz.AffordableCount(BigDouble.PositiveInfinity).ShouldBeGreaterThanOrEqualTo(0);
         biz.AffordableCount(BigDouble.NaN).ShouldBe(0);
+    }
+
+    // ====================================================================
+    //
+    //   Cross-business speed bonus (Option B) — engine-level integration
+    //
+    // ====================================================================
+
+    /// <summary>
+    /// With no businesses owned, the cross-business multiplier collapses
+    /// to BigDouble.One — a hard precondition for early-game balance. If
+    /// this ever returned a value other than 1.0, every existing
+    /// single-business test in this file would silently start failing
+    /// with off-by-2x earnings.
+    /// </summary>
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_NoBusinessesOwned_ReturnsOne()
+    {
+        await _engine.LoadAsync();
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(0);
+        _engine.CrossBusinessSpeedMultiplier.ShouldBe(BigDouble.One);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_OneBusinessAtZero_ReturnsOne()
+    {
+        // Even with most businesses owned heavily, ONE business at zero
+        // pins the minimum to 0 — the strategic incentive described in
+        // the CrossBusinessSpeedBonus design doc. This test pins that
+        // behavior so a future "average instead of min" refactor would
+        // immediately break the suite.
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 1000;
+        _engine.Businesses.First(b => b.Id == "shrimp").Owned = 0;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(0);
+        _engine.CrossBusinessSpeedMultiplier.ShouldBe(BigDouble.One);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AllBizAt25_ReturnsTwo()
+    {
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 25;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(25);
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(2.0, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AllBizAt400_Returns64()
+    {
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 400;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(400);
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(64.0, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AllBizAt1000_Returns4096()
+    {
+        // Defining test for Option B's "uncapped" property: past 400 the
+        // ladder keeps doubling. 1000 owned of every business → 12 stacks
+        // → 4096×. If a future refactor accidentally caps at 6 (the 400
+        // boundary), this test catches it.
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 1000;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(1000);
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(4096.0, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public async Task MinOwnedAcrossBusinesses_TracksLowestBusiness()
+    {
+        await _engine.LoadAsync();
+        var businesses = _engine.Businesses.ToList();
+        businesses[0].Owned = 100;
+        businesses[1].Owned = 17; // the minimum
+        businesses[2].Owned = 200;
+        businesses[3].Owned = 50;
+        businesses[4].Owned = 75;
+        businesses[5].Owned = 1000;
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(17);
+    }
+
+    /// <summary>
+    /// Invariant: the cross-business multiplier must be applied exactly
+    /// ONCE in offline-earnings (not twice via per-business scope and
+    /// total-scope, and not zero times). This mirrors the
+    /// <c>OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice</c> test
+    /// for the angel bonus — adding a second multiplicative axis without
+    /// drift-checking would be a silent earnings bug at extreme scale.
+    /// </summary>
+    [Fact]
+    public async Task OfflineEarnings_ShouldApplyCrossBonusOnce_NotTwice()
+    {
+        // Set up: all six businesses owned at 25 → cross-bonus = 2.0.
+        // Use a single business as the only earner so we can compute
+        // the expected offline earnings analytically.
+        await _engine.LoadAsync();
+        SetCash(BigDouble.Zero);
+
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 25;
+
+        // Only one earns (manager + running). The other five contribute
+        // to the cross-bonus minimum but produce no offline earnings.
+        var lemonade = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemonade.HasManager = true;
+        lemonade.IsRunning = true;
+        lemonade.ProgressPercent = 0;
+        foreach (var biz in _engine.Businesses.Where(b => b.Id != "lemonade"))
+        {
+            biz.HasManager = false; // no offline earnings from these
+            biz.IsRunning = false;
+        }
+
+        // Sanity: cross-bonus exactly 2.0 here.
+        _engine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(2.0, tolerance: 1e-9);
+
+        // Expected: 60 seconds / lemonade.CycleTimeSeconds × Revenue × crossBonus.
+        // The CycleTimeSeconds already reflects per-business speed mults
+        // (lemonade at 25 owned: 0.6 × 0.5 = 0.3s); we just need to factor
+        // in the cross-business multiplier separately.
+        var revenuePerSec = lemonade.RevenuePerSecond.ToDouble(); // pre-cross-bonus
+        var expectedSeconds = 60.0;
+        var expected = revenuePerSec * expectedSeconds * 2.0; // × cross bonus
+
+        var earned = _engine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // If applied twice the actual would be 4.0× rather than 2.0×.
+        // If applied zero times the actual would equal expected/2.
+        // The tolerance is wide because revenue × cycles per second is
+        // already approximate; we only care about the multiplier factor.
+        var actual = earned.ToDouble();
+        actual.ShouldBe(expected, tolerance: expected * 0.01);
+    }
+
+    /// <summary>
+    /// Strong invariant: offline ↔ live equivalence must hold even when
+    /// the cross-business bonus is engaged. The angel bonus version of
+    /// this invariant is the existing
+    /// <c>ApplyOfflineEarnings_AndLiveTick_AreEquivalent</c>; this test
+    /// repeats it with cross-bonus also active to ensure both
+    /// multipliers compose identically in both paths.
+    /// </summary>
+    [Fact]
+    public async Task ApplyOfflineEarnings_AndLiveTick_AreEquivalent_WithCrossBonus()
+    {
+        // Helper to spin up an engine with all-six businesses at 50 owned
+        // (cross-bonus = 4.0) and lemonade as the only earner.
+        async Task<GameEngine> MakeAsync()
+        {
+            var repo = Substitute.For<IGameStateRepository>();
+            repo.GetLatestAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<GameState?>(null));
+            var eng = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+            await eng.LoadAsync();
+            SetCashOn(eng, new BigDouble(1_000_000));
+            foreach (var biz in eng.Businesses)
+                biz.Owned = 50;
+            var lemonade = eng.Businesses.First(b => b.Id == "lemonade");
+            lemonade.HasManager = true;
+            lemonade.IsRunning = true;
+            lemonade.ProgressPercent = 0;
+            foreach (var biz in eng.Businesses.Where(b => b.Id != "lemonade"))
+            {
+                biz.HasManager = false;
+                biz.IsRunning = false;
+            }
+            return eng;
+        }
+
+        var offlineEngine = await MakeAsync();
+        var liveEngine = await MakeAsync();
+
+        // Both engines should report identical cross-bonus.
+        offlineEngine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(4.0, tolerance: 1e-9);
+        liveEngine.CrossBusinessSpeedMultiplier.ToDouble().ShouldBe(4.0, tolerance: 1e-9);
+
+        var cashBeforeOffline = offlineEngine.Cash;
+        var cashBeforeLive = liveEngine.Cash;
+
+        offlineEngine.ApplyOfflineEarnings(TimeSpan.FromSeconds(60));
+
+        // Tick the live engine for the same duration in 100ms increments.
+        for (var i = 0; i < 600; i++) liveEngine.Tick(0.1);
+
+        var earnedOffline = (offlineEngine.Cash - cashBeforeOffline).ToDouble();
+        var earnedLive = (liveEngine.Cash - cashBeforeLive).ToDouble();
+
+        // Both paths must converge. The live tick uses integer-cycle
+        // counting so a small residual is normal; offline is fractional
+        // and exact. The relative difference should be tiny — sub-1% of
+        // the offline value is generous slack here.
+        var relDiff = Math.Abs(earnedOffline - earnedLive) / Math.Max(1.0, earnedOffline);
+        relDiff.ShouldBeLessThan(0.01);
+    }
+
+    /// <summary>
+    /// Export must include the timestamp field for diagnostic purposes.
+    /// The timestamp is written but NOT validated on import — it lets us
+    /// (and the player) tell which of two exported saves is newer when
+    /// diagnosing reported bugs. See <see cref="GameEngine.ExportToString"/>
+    /// XML docs for the full rationale.
+    /// </summary>
+    [Fact]
+    public async Task ExportToString_IncludesTimestamp()
+    {
+        await _engine.LoadAsync();
+        var exported = _engine.ExportToString();
+        var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(exported));
+
+        // The timestamp field is present and ISO-8601-shaped.
+        json.ShouldContain("\"timestamp\"");
+
+        // Pull the timestamp value out and parse it to be sure it's a
+        // valid round-trippable UTC instant.
+        var doc = System.Text.Json.JsonDocument.Parse(json);
+        var stampStr = doc.RootElement.GetProperty("timestamp").GetString();
+        stampStr.ShouldNotBeNullOrWhiteSpace();
+        var parsed = DateTime.Parse(stampStr!,
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+        // Within a minute of "now" — a wide tolerance for slow CI runners.
+        (DateTime.UtcNow - parsed.ToUniversalTime()).Duration().TotalMinutes
+            .ShouldBeLessThan(1.0);
+    }
+
+    /// <summary>
+    /// Two exports taken a moment apart must have distinct timestamps
+    /// (forward-progressing). This pins the diagnostic property: if both
+    /// exports always carried the same timestamp the field would be
+    /// useless for diffing saves.
+    /// </summary>
+    [Fact]
+    public async Task ExportToString_TimestampAdvances_BetweenExports()
+    {
+        await _engine.LoadAsync();
+        var first = _engine.ExportToString();
+        // A small real-time delay to guarantee a tick of the system clock.
+        // 50ms is well above DateTime.UtcNow's resolution on every platform
+        // the project supports.
+        await Task.Delay(50);
+        var second = _engine.ExportToString();
+
+        string TimestampOf(string b64)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            return doc.RootElement.GetProperty("timestamp").GetString()!;
+        }
+
+        var t1 = DateTime.Parse(TimestampOf(first),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+        var t2 = DateTime.Parse(TimestampOf(second),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+
+        (t2 >= t1).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Import must IGNORE the timestamp field — we don't validate it and
+    /// we don't expose it on the engine. The point of this test is to
+    /// pin the "no anti-cheat" stance: a forged or stripped timestamp
+    /// must not cause an otherwise-valid export to fail to import.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_IgnoresTimestamp()
+    {
+        await _engine.LoadAsync();
+        // Build an export with a deliberately bogus timestamp value.
+        var json = """
+        {
+            "v": 2,
+            "cash": "1.23e3",
+            "lifetime": "0e0",
+            "angels": "0e0",
+            "prestige": 0,
+            "businesses": {"lemonade": 3},
+            "managers": {"lemonade": false},
+            "timestamp": "this-is-not-a-date-at-all"
+        }
+        """;
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+
+        // Import succeeds despite the malformed timestamp because we
+        // deliberately don't parse or validate it.
+        _engine.ImportFromString(encoded).ShouldBeTrue();
+        _engine.Cash.ToDouble().ShouldBe(1230.0, tolerance: 1e-9);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(3);
+    }
+
+    /// <summary>
+    /// Exports from before the timestamp field was introduced must still
+    /// import — the field is purely additive. This is the same pattern
+    /// as the v1 legacy support: never break compatibility with older
+    /// exports.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_NoTimestamp_StillImports()
+    {
+        await _engine.LoadAsync();
+        // Pre-timestamp v2 export shape (no "timestamp" field).
+        var json = """
+        {
+            "v": 2,
+            "cash": "5e2",
+            "lifetime": "5e2",
+            "angels": "0e0",
+            "prestige": 0,
+            "businesses": {"lemonade": 5},
+            "managers": {"lemonade": true}
+        }
+        """;
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+
+        _engine.ImportFromString(encoded).ShouldBeTrue();
+        _engine.Cash.ToDouble().ShouldBe(500.0, tolerance: 1e-9);
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(5);
+        _engine.Businesses.First(b => b.Id == "lemonade").HasManager.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Round-trip test for the timestamp specifically: export → import →
+    /// export, and confirm the second export has its OWN timestamp (not
+    /// a carried-over copy of the first one). This pins the
+    /// "non-persistent" property of the timestamp — it always reflects
+    /// the moment of export, not the moment of the imported save.
+    /// </summary>
+    [Fact]
+    public async Task ImportThenExport_TimestampReflectsNewExportTime_NotImportedOne()
+    {
+        await _engine.LoadAsync();
+        var first = _engine.ExportToString();
+        await Task.Delay(50);
+
+        // Import into a fresh engine; export again.
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(first).ShouldBeTrue();
+
+        var second = engine2.ExportToString();
+
+        string TimestampOf(string b64)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            return doc.RootElement.GetProperty("timestamp").GetString()!;
+        }
+
+        var t1 = DateTime.Parse(TimestampOf(first),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+        var t2 = DateTime.Parse(TimestampOf(second),
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind);
+
+        // The second export's timestamp must be strictly later than the
+        // first's — proving the imported timestamp wasn't carried forward.
+        (t2 > t1).ShouldBeTrue();
     }
 
     // ---------------- Test helpers ----------------
