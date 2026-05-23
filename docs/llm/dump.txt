@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Fri May 22 06:50:43 PM EDT 2026
+Generated: Fri May 22 08:10:26 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -1521,7 +1521,7 @@ SIZE: .25 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/Views/MainView.axaml
-SIZE: 19.43 KB
+SIZE: 20.40 KB
 ================================================================================
 
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -1687,16 +1687,26 @@ SIZE: 19.43 KB
                                         </Viewbox>
                                     </Grid>
 
-                                    <!-- Row 3: Milestone + affordable -->
-                                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,0,0,2">
-                                        <TextBlock FontSize="9" Foreground="#FFD740" VerticalAlignment="Center">
-                                            <TextBlock.Text>
-                                                <MultiBinding StringFormat="{}{0} | {1}">
-                                                    <Binding Path="MilestoneMultiplierText" />
-                                                    <Binding Path="AffordableCountText" />
-                                                </MultiBinding>
-                                            </TextBlock.Text>
-                                        </TextBlock>
+                                    <!--
+                                        Row 3: Compact milestone strip. Phone screens are tight so
+                                        we put revenue multiplier, speed multiplier (only when active),
+                                        and the affordable count inline on a single line. The speed
+                                        chip is hidden below the first speed threshold (owned < 100)
+                                        so early-game cards stay simple.
+                                    -->
+                                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="4" Margin="0,0,0,2">
+                                        <TextBlock FontSize="9" Foreground="#FFD740" VerticalAlignment="Center"
+                                                   Text="{Binding MilestoneMultiplierText}" />
+                                        <TextBlock FontSize="9" Foreground="#666" VerticalAlignment="Center"
+                                                   Text="|" />
+                                        <TextBlock FontSize="9" Foreground="#FF8A65" VerticalAlignment="Center"
+                                                   IsVisible="{Binding HasSpeedBonus}"
+                                                   Text="{Binding SpeedMultiplierText}" />
+                                        <TextBlock FontSize="9" Foreground="#666" VerticalAlignment="Center"
+                                                   IsVisible="{Binding HasSpeedBonus}"
+                                                   Text="|" />
+                                        <TextBlock FontSize="9" Foreground="#CE93D8" VerticalAlignment="Center"
+                                                   Text="{Binding AffordableCountText}" />
                                     </StackPanel>
 
                                     <!--
@@ -1913,7 +1923,7 @@ public partial class MainView : UserControl
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Business.cs
-SIZE: 7.92 KB
+SIZE: 9.51 KB
 ================================================================================
 
 using MyAdventure.Core.Numerics;
@@ -1923,8 +1933,9 @@ namespace MyAdventure.Core.Entities;
 /// <summary>
 /// Represents a business the player can own in the idle game. Each
 /// business earns revenue over a cycle time; revenue is boosted by
-/// milestone multipliers and post-milestone scaling (which keeps unit
-/// purchases worthwhile after the milestone table caps out at 1000 owned).
+/// milestone multipliers and post-milestone scaling, and cycle time is
+/// shortened by speed milestones (which keep mid/late game progression
+/// from stalling once revenue scaling alone stops being enough).
 ///
 /// <para>
 /// <b>BigDouble migration note:</b> historically <see cref="NextCost"/>,
@@ -1942,6 +1953,15 @@ namespace MyAdventure.Core.Entities;
 /// The arithmetic that produces unbounded values lifts to <c>BigDouble</c>
 /// at the boundary.
 /// </para>
+/// <para>
+/// <b>Speed milestones note:</b> <see cref="CycleTimeSeconds"/> is the
+/// <i>effective</i> cycle time after speed milestones, not the raw base.
+/// The raw base is preserved at <see cref="BaseTimeSeconds"/> for callers
+/// that need to compare against the original balance value. Until
+/// ownership crosses the first speed-milestone threshold (100), the two
+/// are equal — so every test that constructs a Business with owned &lt; 100
+/// sees the same cycle time as before this feature existed.
+/// </para>
 /// </summary>
 public record Business
 {
@@ -1956,7 +1976,12 @@ public record Business
     /// <summary>Definitional base revenue per cycle for a single unit owned.</summary>
     public required double BaseRevenue { get; init; }
 
-    /// <summary>Cycle duration in seconds.</summary>
+    /// <summary>
+    /// Raw cycle duration in seconds, before any speed-milestone scaling.
+    /// This is the value from the static balance table; the actual cycle
+    /// time the engine uses is <see cref="CycleTimeSeconds"/>, which
+    /// applies <see cref="SpeedMultiplier"/> on top.
+    /// </summary>
     public required double BaseTimeSeconds { get; init; }
 
     /// <summary>Geometric scaling factor on cost per additional unit (e.g. 1.07).</summary>
@@ -1991,6 +2016,14 @@ public record Business
     public double MilestoneMultiplier => Milestone.CalculateMultiplier(Owned);
 
     /// <summary>
+    /// Compounded speed multiplier from speed milestones. ≥ 1.0 — a
+    /// value of 2.0 means cycles fire twice as often. Below the first
+    /// speed-milestone threshold this is exactly 1.0, so early-game
+    /// balance and all pre-milestone tests are unaffected.
+    /// </summary>
+    public double SpeedMultiplier => SpeedMilestone.CalculateSpeedMultiplier(Owned);
+
+    /// <summary>
     /// Past the 1000-unit milestone cap, each additional unit costs
     /// <c>CostMultiplier^N</c> more than the unit before it but contributes
     /// the same revenue per unit. To stop the mid-game from stalling, we
@@ -2012,10 +2045,17 @@ public record Business
         }
     }
 
-    /// <summary>Cycle time in seconds.</summary>
-    public double CycleTimeSeconds => BaseTimeSeconds;
+    /// <summary>
+    /// Effective cycle time in seconds after applying speed milestones.
+    /// This is what the engine's tick loop and offline-earnings
+    /// calculation use. Equals <see cref="BaseTimeSeconds"/> below the
+    /// first speed-milestone threshold so pre-milestone balance is
+    /// untouched.
+    /// </summary>
+    public double CycleTimeSeconds =>
+        BaseTimeSeconds * SpeedMilestone.CalculateCycleTimeMultiplier(Owned);
 
-    /// <summary>Revenue per second when running.</summary>
+    /// <summary>Revenue per second when running, using the effective (post-speed) cycle time.</summary>
     public BigDouble RevenuePerSecond =>
         CycleTimeSeconds > 0 ? Revenue / new BigDouble(CycleTimeSeconds) : BigDouble.Zero;
 
@@ -2224,7 +2264,7 @@ public record GameState : EntityBase
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Milestone.cs
-SIZE: 2.07 KB
+SIZE: 6.56 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -2235,7 +2275,7 @@ namespace MyAdventure.Core.Entities;
 /// </summary>
 public record Milestone(int Threshold, double Multiplier, string Label)
 {
-    /// <summary>Standard milestones for all businesses.</summary>
+    /// <summary>Standard revenue milestones for all businesses.</summary>
     public static IReadOnlyList<Milestone> Defaults { get; } =
     [
         new(25, 2.0, "×2 Revenue"),
@@ -2288,6 +2328,114 @@ public record Milestone(int Threshold, double Multiplier, string Label)
     {
         var next = NextMilestone(owned, milestones);
         return next is null ? 0 : next.Threshold - owned;
+    }
+}
+
+/// <summary>
+/// A speed milestone halves (or further reduces) a business's cycle time
+/// when reached. This is the second compounding axis of mid/late-game
+/// progression: revenue milestones make each cycle pay more, speed
+/// milestones make cycles happen more often, and they compose
+/// multiplicatively on earnings-per-second.
+///
+/// <para>
+/// <b>Why this matters.</b> If cycle time is fixed forever, the player
+/// eventually hits a wall where each new unit of business takes
+/// exponentially more cash to buy but contributes the same earnings rate
+/// per cycle. Buying #1001 becomes pointless because cycles still happen
+/// at the same pace. Speed milestones break that wall by letting cycles
+/// fire faster as ownership grows, so cash compounds rather than
+/// stalls.
+/// </para>
+///
+/// <para>
+/// <b>Why this isn't aggressive.</b> The default table has only four
+/// thresholds (100, 200, 300, 400), each halving cycle time. The total
+/// compound speed-up is therefore capped at ×16 — meaningful, but not
+/// game-breaking. By 400 owned the player already has revenue milestones
+/// at 25/50/100/200/300/400 worth a combined ×64 revenue multiplier; the
+/// extra ×16 speed brings earnings per second to a ×1024 boost over
+/// baseline, which keeps mid-game momentum without trivializing it.
+/// </para>
+///
+/// <para>
+/// <b>Why we don't put it on the existing <see cref="Milestone"/> record.</b>
+/// Keeping revenue and speed as separate axes lets each be balanced and
+/// tested independently — and keeps the existing milestone tests stable
+/// (no risk of accidentally regressing a ×2 revenue at 25 into a
+/// "×2 revenue + ×0.5 cycle time" change). A future patch can add an
+/// upgrades system that grants extra speed beyond the table without
+/// having to refactor the revenue side.
+/// </para>
+///
+/// <para>
+/// <b>Robustness against very fast cycles.</b> Cycle times will get
+/// small enough at the cap to be less than a single 60 Hz frame
+/// (≈16 ms). The game engine's tick loop is already written to handle
+/// that — it computes <c>cycles = (int)(ProgressPercent / 100.0)</c> on
+/// each tick and pays out for all of them at once, with the leftover
+/// fraction carried into the next tick via <c>ProgressPercent %= 100.0</c>.
+/// An invariant test pins this behavior so future refactors can't break it.
+/// </para>
+/// </summary>
+public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string Label)
+{
+    /// <summary>
+    /// Default speed milestones — each halves cycle time. The thresholds
+    /// are spread between the major revenue milestones so progression
+    /// never feels stagnant for long, but the cap of 4 milestones keeps
+    /// the total speed-up bounded at ×16.
+    /// </summary>
+    public static IReadOnlyList<SpeedMilestone> Defaults { get; } =
+    [
+        new(100, 0.5, "×2 Speed"),
+        new(200, 0.5, "×2 Speed"),
+        new(300, 0.5, "×2 Speed"),
+        new(400, 0.5, "×2 Speed"),
+    ];
+
+    /// <summary>
+    /// Compounded cycle-time multiplier for a given ownership count.
+    /// Returns a value in (0, 1] — multiplied into base cycle time, it
+    /// makes the effective cycle time shorter. At zero ownership and
+    /// below the first threshold this is exactly 1.0, leaving early-game
+    /// balance untouched.
+    /// </summary>
+    public static double CalculateCycleTimeMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    {
+        milestones ??= Defaults;
+        var mult = 1.0;
+        foreach (var m in milestones)
+        {
+            if (owned >= m.Threshold)
+                mult *= m.CycleTimeMultiplier;
+        }
+        return mult;
+    }
+
+    /// <summary>
+    /// Convenience: cumulative speed multiplier (the reciprocal of the
+    /// cycle-time multiplier). Useful for UI display ("×4 Speed").
+    /// </summary>
+    public static double CalculateSpeedMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    {
+        var cycleMult = CalculateCycleTimeMultiplier(owned, milestones);
+        return cycleMult > 0 ? 1.0 / cycleMult : 1.0;
+    }
+
+    /// <summary>
+    /// Find the next speed milestone the player hasn't reached yet.
+    /// Returns null if all speed milestones are reached.
+    /// </summary>
+    public static SpeedMilestone? NextSpeedMilestone(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    {
+        milestones ??= Defaults;
+        foreach (var m in milestones)
+        {
+            if (owned < m.Threshold)
+                return m;
+        }
+        return null;
     }
 }
 
@@ -3820,7 +3968,7 @@ internal static class Program
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/Views/MainWindow.axaml
-SIZE: 22.91 KB
+SIZE: 26.14 KB
 ================================================================================
 
 <Window xmlns="https://github.com/avaloniaui"
@@ -3985,9 +4133,24 @@ SIZE: 22.91 KB
                                         </Viewbox>
                                     </Grid>
 
-                                    <!-- Row 3: Detail info panel -->
+                                    <!--
+                                        Row 3: Detail info panel.
+
+                                        Layout grows top-to-bottom in priority order:
+                                          row 0 — cycle time + revenue per second (always visible)
+                                          row 1 — affordable count (always visible)
+                                          row 2 — revenue milestone multiplier (always visible)
+                                          row 3 — next revenue milestone progress (hidden when capped)
+                                          row 4 — speed milestone multiplier (hidden until owned ≥ 100)
+                                          row 5 — next speed milestone progress (hidden when capped)
+
+                                        Speed-related rows use IsVisible so they take zero space
+                                        before the first speed threshold is reached. This keeps
+                                        early-game cards uncluttered and grows the detail panel
+                                        organically as the player progresses.
+                                    -->
                                     <Border Grid.Row="3" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
-                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
                                             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
                                                 <TextBlock Text="⏱️" FontSize="10" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding CycleTimeText}" FontSize="11"
@@ -4011,7 +4174,7 @@ SIZE: 22.91 KB
                                                 <TextBlock Text="⭐" FontSize="10" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding MilestoneMultiplierText}" FontSize="11"
                                                            Foreground="#FFD740" VerticalAlignment="Center" />
-                                                <TextBlock Text="multiplier" FontSize="10"
+                                                <TextBlock Text="revenue" FontSize="10"
                                                            Foreground="#666" VerticalAlignment="Center" />
                                             </StackPanel>
 
@@ -4023,6 +4186,32 @@ SIZE: 22.91 KB
                                                            Foreground="#90CAF9" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding NextMilestoneRewardText}" FontSize="10"
                                                            Foreground="#A5D6A7" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!--
+                                                Speed multiplier row. Hidden below 100 owned so
+                                                early-game cards don't show "×1 Speed" clutter.
+                                                Once visible, it sits alongside the revenue
+                                                multiplier as a parallel progression axis.
+                                            -->
+                                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                                        Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasSpeedBonus}">
+                                                <TextBlock Text="⚡" FontSize="10" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding SpeedMultiplierText}" FontSize="11"
+                                                           Foreground="#FF8A65" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!--
+                                                Next speed milestone progress. Hidden once the
+                                                player passes the last threshold (400 owned).
+                                            -->
+                                            <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                                                        Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasNextSpeedMilestone}">
+                                                <TextBlock Text="🚀" FontSize="10" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding NextSpeedMilestoneText}" FontSize="11"
+                                                           Foreground="#FFCC80" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -4904,7 +5093,7 @@ public class ToastService
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-SIZE: 9.42 KB
+SIZE: 11.54 KB
 ================================================================================
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -4935,13 +5124,21 @@ namespace MyAdventure.Shared.ViewModels;
 /// option past that point. It is now always present:
 /// </para>
 /// <list type="bullet">
-///   <item>While a next milestone exists, it reads
+///   <item>While a next revenue milestone exists, it reads
 ///         <c>"BUY N→threshold"</c> and buys exactly the units needed to
 ///         reach it.</item>
-///   <item>Once all milestones are reached, it reads
+///   <item>Once all revenue milestones are reached, it reads
 ///         <c>"BUY MAX (N)"</c> and buys as many units as the player can
 ///         currently afford.</item>
 /// </list>
+///
+/// <para>
+/// <b>Speed milestone display:</b> separate properties expose the speed
+/// multiplier (e.g. "×4 Speed") and the next speed milestone so the UI
+/// can show how cycle time is improving alongside revenue. This is
+/// orthogonal to the revenue milestone display — both are visible in
+/// the detail panel.
+/// </para>
 /// </summary>
 public partial class BusinessViewModel(
     Business model,
@@ -4976,6 +5173,22 @@ public partial class BusinessViewModel(
     [ObservableProperty] private int _unitsToNextMilestone;
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
+
+    // --- Speed milestone properties ---
+    /// <summary>Compounded speed multiplier (e.g. 4.0 for ×4 Speed). 1.0 below the first speed threshold.</summary>
+    [ObservableProperty] private double _speedMultiplier = 1.0;
+
+    /// <summary>Human-readable text for the speed multiplier (e.g. "×4 Speed"). Hidden when 1.0 via <see cref="HasSpeedBonus"/>.</summary>
+    [ObservableProperty] private string _speedMultiplierText = "×1 Speed";
+
+    /// <summary>True when speed multiplier exceeds 1.0 — drives visibility so the row doesn't clutter early-game cards.</summary>
+    [ObservableProperty] private bool _hasSpeedBonus;
+
+    /// <summary>True when there is a next speed milestone the player has not yet reached.</summary>
+    [ObservableProperty] private bool _hasNextSpeedMilestone;
+
+    /// <summary>Text describing the next speed milestone progress (e.g. "20 more → 100 (×2 Speed)"). Empty when none remain.</summary>
+    [ObservableProperty] private string _nextSpeedMilestoneText = "";
 
     // --- Bulk buy button ---
     /// <summary>
@@ -5113,7 +5326,9 @@ public partial class BusinessViewModel(
         CanAfford = cash >= model.NextCost;
         CanAffordManager = !model.HasManager && cash >= managerCost;
 
-        // Extended details
+        // Extended details — cycle time now reflects speed milestones via
+        // Business.CycleTimeSeconds, so the displayed time naturally shrinks
+        // (e.g. "0.6s" → "300ms" → "150ms") as speed thresholds are crossed.
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
         RevenuePerSecondText = model.Owned > 0
             ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
@@ -5124,6 +5339,18 @@ public partial class BusinessViewModel(
 
         MilestoneMultiplier = model.MilestoneMultiplier;
         MilestoneMultiplierText = $"×{MilestoneMultiplier:G4}";
+
+        // Speed multiplier display. Hidden when 1.0 to keep early-game
+        // cards uncluttered (HasSpeedBonus is the visibility flag).
+        SpeedMultiplier = model.SpeedMultiplier;
+        SpeedMultiplierText = $"×{SpeedMultiplier:G4} Speed";
+        HasSpeedBonus = SpeedMultiplier > 1.0;
+
+        var nextSpeed = SpeedMilestone.NextSpeedMilestone(model.Owned);
+        HasNextSpeedMilestone = nextSpeed is not null;
+        NextSpeedMilestoneText = nextSpeed is not null
+            ? $"{nextSpeed.Threshold - model.Owned} more → {nextSpeed.Threshold} ({nextSpeed.Label})"
+            : "";
 
         var next = Milestone.NextMilestone(model.Owned);
         HasNextMilestone = next is not null;

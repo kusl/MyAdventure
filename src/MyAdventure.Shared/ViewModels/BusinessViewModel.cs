@@ -26,13 +26,21 @@ namespace MyAdventure.Shared.ViewModels;
 /// option past that point. It is now always present:
 /// </para>
 /// <list type="bullet">
-///   <item>While a next milestone exists, it reads
+///   <item>While a next revenue milestone exists, it reads
 ///         <c>"BUY N→threshold"</c> and buys exactly the units needed to
 ///         reach it.</item>
-///   <item>Once all milestones are reached, it reads
+///   <item>Once all revenue milestones are reached, it reads
 ///         <c>"BUY MAX (N)"</c> and buys as many units as the player can
 ///         currently afford.</item>
 /// </list>
+///
+/// <para>
+/// <b>Speed milestone display:</b> separate properties expose the speed
+/// multiplier (e.g. "×4 Speed") and the next speed milestone so the UI
+/// can show how cycle time is improving alongside revenue. This is
+/// orthogonal to the revenue milestone display — both are visible in
+/// the detail panel.
+/// </para>
 /// </summary>
 public partial class BusinessViewModel(
     Business model,
@@ -67,6 +75,22 @@ public partial class BusinessViewModel(
     [ObservableProperty] private int _unitsToNextMilestone;
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
+
+    // --- Speed milestone properties ---
+    /// <summary>Compounded speed multiplier (e.g. 4.0 for ×4 Speed). 1.0 below the first speed threshold.</summary>
+    [ObservableProperty] private double _speedMultiplier = 1.0;
+
+    /// <summary>Human-readable text for the speed multiplier (e.g. "×4 Speed"). Hidden when 1.0 via <see cref="HasSpeedBonus"/>.</summary>
+    [ObservableProperty] private string _speedMultiplierText = "×1 Speed";
+
+    /// <summary>True when speed multiplier exceeds 1.0 — drives visibility so the row doesn't clutter early-game cards.</summary>
+    [ObservableProperty] private bool _hasSpeedBonus;
+
+    /// <summary>True when there is a next speed milestone the player has not yet reached.</summary>
+    [ObservableProperty] private bool _hasNextSpeedMilestone;
+
+    /// <summary>Text describing the next speed milestone progress (e.g. "20 more → 100 (×2 Speed)"). Empty when none remain.</summary>
+    [ObservableProperty] private string _nextSpeedMilestoneText = "";
 
     // --- Bulk buy button ---
     /// <summary>
@@ -204,7 +228,9 @@ public partial class BusinessViewModel(
         CanAfford = cash >= model.NextCost;
         CanAffordManager = !model.HasManager && cash >= managerCost;
 
-        // Extended details
+        // Extended details — cycle time now reflects speed milestones via
+        // Business.CycleTimeSeconds, so the displayed time naturally shrinks
+        // (e.g. "0.6s" → "300ms" → "150ms") as speed thresholds are crossed.
         CycleTimeText = FormatTime(model.CycleTimeSeconds);
         RevenuePerSecondText = model.Owned > 0
             ? $"${NumberFormatter.Format(model.RevenuePerSecond * angelBonus)}/s"
@@ -215,6 +241,18 @@ public partial class BusinessViewModel(
 
         MilestoneMultiplier = model.MilestoneMultiplier;
         MilestoneMultiplierText = $"×{MilestoneMultiplier:G4}";
+
+        // Speed multiplier display. Hidden when 1.0 to keep early-game
+        // cards uncluttered (HasSpeedBonus is the visibility flag).
+        SpeedMultiplier = model.SpeedMultiplier;
+        SpeedMultiplierText = $"×{SpeedMultiplier:G4} Speed";
+        HasSpeedBonus = SpeedMultiplier > 1.0;
+
+        var nextSpeed = SpeedMilestone.NextSpeedMilestone(model.Owned);
+        HasNextSpeedMilestone = nextSpeed is not null;
+        NextSpeedMilestoneText = nextSpeed is not null
+            ? $"{nextSpeed.Threshold - model.Owned} more → {nextSpeed.Threshold} ({nextSpeed.Label})"
+            : "";
 
         var next = Milestone.NextMilestone(model.Owned);
         HasNextMilestone = next is not null;

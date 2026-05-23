@@ -161,16 +161,26 @@
                                         </Viewbox>
                                     </Grid>
 
-                                    <!-- Row 3: Milestone + affordable -->
-                                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,0,0,2">
-                                        <TextBlock FontSize="9" Foreground="#FFD740" VerticalAlignment="Center">
-                                            <TextBlock.Text>
-                                                <MultiBinding StringFormat="{}{0} | {1}">
-                                                    <Binding Path="MilestoneMultiplierText" />
-                                                    <Binding Path="AffordableCountText" />
-                                                </MultiBinding>
-                                            </TextBlock.Text>
-                                        </TextBlock>
+                                    <!--
+                                        Row 3: Compact milestone strip. Phone screens are tight so
+                                        we put revenue multiplier, speed multiplier (only when active),
+                                        and the affordable count inline on a single line. The speed
+                                        chip is hidden below the first speed threshold (owned < 100)
+                                        so early-game cards stay simple.
+                                    -->
+                                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="4" Margin="0,0,0,2">
+                                        <TextBlock FontSize="9" Foreground="#FFD740" VerticalAlignment="Center"
+                                                   Text="{Binding MilestoneMultiplierText}" />
+                                        <TextBlock FontSize="9" Foreground="#666" VerticalAlignment="Center"
+                                                   Text="|" />
+                                        <TextBlock FontSize="9" Foreground="#FF8A65" VerticalAlignment="Center"
+                                                   IsVisible="{Binding HasSpeedBonus}"
+                                                   Text="{Binding SpeedMultiplierText}" />
+                                        <TextBlock FontSize="9" Foreground="#666" VerticalAlignment="Center"
+                                                   IsVisible="{Binding HasSpeedBonus}"
+                                                   Text="|" />
+                                        <TextBlock FontSize="9" Foreground="#CE93D8" VerticalAlignment="Center"
+                                                   Text="{Binding AffordableCountText}" />
                                     </StackPanel>
 
                                     <!--

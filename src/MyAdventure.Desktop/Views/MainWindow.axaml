@@ -160,9 +160,24 @@
                                         </Viewbox>
                                     </Grid>
 
-                                    <!-- Row 3: Detail info panel -->
+                                    <!--
+                                        Row 3: Detail info panel.
+
+                                        Layout grows top-to-bottom in priority order:
+                                          row 0 — cycle time + revenue per second (always visible)
+                                          row 1 — affordable count (always visible)
+                                          row 2 — revenue milestone multiplier (always visible)
+                                          row 3 — next revenue milestone progress (hidden when capped)
+                                          row 4 — speed milestone multiplier (hidden until owned ≥ 100)
+                                          row 5 — next speed milestone progress (hidden when capped)
+
+                                        Speed-related rows use IsVisible so they take zero space
+                                        before the first speed threshold is reached. This keeps
+                                        early-game cards uncluttered and grows the detail panel
+                                        organically as the player progresses.
+                                    -->
                                     <Border Grid.Row="3" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
-                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
                                             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
                                                 <TextBlock Text="⏱️" FontSize="10" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding CycleTimeText}" FontSize="11"
@@ -186,7 +201,7 @@
                                                 <TextBlock Text="⭐" FontSize="10" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding MilestoneMultiplierText}" FontSize="11"
                                                            Foreground="#FFD740" VerticalAlignment="Center" />
-                                                <TextBlock Text="multiplier" FontSize="10"
+                                                <TextBlock Text="revenue" FontSize="10"
                                                            Foreground="#666" VerticalAlignment="Center" />
                                             </StackPanel>
 
@@ -198,6 +213,32 @@
                                                            Foreground="#90CAF9" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding NextMilestoneRewardText}" FontSize="10"
                                                            Foreground="#A5D6A7" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!--
+                                                Speed multiplier row. Hidden below 100 owned so
+                                                early-game cards don't show "×1 Speed" clutter.
+                                                Once visible, it sits alongside the revenue
+                                                multiplier as a parallel progression axis.
+                                            -->
+                                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                                        Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasSpeedBonus}">
+                                                <TextBlock Text="⚡" FontSize="10" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding SpeedMultiplierText}" FontSize="11"
+                                                           Foreground="#FF8A65" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!--
+                                                Next speed milestone progress. Hidden once the
+                                                player passes the last threshold (400 owned).
+                                            -->
+                                            <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                                                        Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasNextSpeedMilestone}">
+                                                <TextBlock Text="🚀" FontSize="10" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding NextSpeedMilestoneText}" FontSize="11"
+                                                           Foreground="#FFCC80" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Grid>
                                     </Border>

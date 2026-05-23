@@ -5,8 +5,9 @@ namespace MyAdventure.Core.Entities;
 /// <summary>
 /// Represents a business the player can own in the idle game. Each
 /// business earns revenue over a cycle time; revenue is boosted by
-/// milestone multipliers and post-milestone scaling (which keeps unit
-/// purchases worthwhile after the milestone table caps out at 1000 owned).
+/// milestone multipliers and post-milestone scaling, and cycle time is
+/// shortened by speed milestones (which keep mid/late game progression
+/// from stalling once revenue scaling alone stops being enough).
 ///
 /// <para>
 /// <b>BigDouble migration note:</b> historically <see cref="NextCost"/>,
@@ -24,6 +25,15 @@ namespace MyAdventure.Core.Entities;
 /// The arithmetic that produces unbounded values lifts to <c>BigDouble</c>
 /// at the boundary.
 /// </para>
+/// <para>
+/// <b>Speed milestones note:</b> <see cref="CycleTimeSeconds"/> is the
+/// <i>effective</i> cycle time after speed milestones, not the raw base.
+/// The raw base is preserved at <see cref="BaseTimeSeconds"/> for callers
+/// that need to compare against the original balance value. Until
+/// ownership crosses the first speed-milestone threshold (100), the two
+/// are equal — so every test that constructs a Business with owned &lt; 100
+/// sees the same cycle time as before this feature existed.
+/// </para>
 /// </summary>
 public record Business
 {
@@ -38,7 +48,12 @@ public record Business
     /// <summary>Definitional base revenue per cycle for a single unit owned.</summary>
     public required double BaseRevenue { get; init; }
 
-    /// <summary>Cycle duration in seconds.</summary>
+    /// <summary>
+    /// Raw cycle duration in seconds, before any speed-milestone scaling.
+    /// This is the value from the static balance table; the actual cycle
+    /// time the engine uses is <see cref="CycleTimeSeconds"/>, which
+    /// applies <see cref="SpeedMultiplier"/> on top.
+    /// </summary>
     public required double BaseTimeSeconds { get; init; }
 
     /// <summary>Geometric scaling factor on cost per additional unit (e.g. 1.07).</summary>
@@ -73,6 +88,14 @@ public record Business
     public double MilestoneMultiplier => Milestone.CalculateMultiplier(Owned);
 
     /// <summary>
+    /// Compounded speed multiplier from speed milestones. ≥ 1.0 — a
+    /// value of 2.0 means cycles fire twice as often. Below the first
+    /// speed-milestone threshold this is exactly 1.0, so early-game
+    /// balance and all pre-milestone tests are unaffected.
+    /// </summary>
+    public double SpeedMultiplier => SpeedMilestone.CalculateSpeedMultiplier(Owned);
+
+    /// <summary>
     /// Past the 1000-unit milestone cap, each additional unit costs
     /// <c>CostMultiplier^N</c> more than the unit before it but contributes
     /// the same revenue per unit. To stop the mid-game from stalling, we
@@ -94,10 +117,17 @@ public record Business
         }
     }
 
-    /// <summary>Cycle time in seconds.</summary>
-    public double CycleTimeSeconds => BaseTimeSeconds;
+    /// <summary>
+    /// Effective cycle time in seconds after applying speed milestones.
+    /// This is what the engine's tick loop and offline-earnings
+    /// calculation use. Equals <see cref="BaseTimeSeconds"/> below the
+    /// first speed-milestone threshold so pre-milestone balance is
+    /// untouched.
+    /// </summary>
+    public double CycleTimeSeconds =>
+        BaseTimeSeconds * SpeedMilestone.CalculateCycleTimeMultiplier(Owned);
 
-    /// <summary>Revenue per second when running.</summary>
+    /// <summary>Revenue per second when running, using the effective (post-speed) cycle time.</summary>
     public BigDouble RevenuePerSecond =>
         CycleTimeSeconds > 0 ? Revenue / new BigDouble(CycleTimeSeconds) : BigDouble.Zero;
 
