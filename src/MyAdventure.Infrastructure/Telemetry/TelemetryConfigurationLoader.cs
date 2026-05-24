@@ -26,7 +26,13 @@ namespace MyAdventure.Infrastructure.Telemetry;
 ///   <c>MYADVENTURE_SENTRY_ENVIRONMENT</c> environment variables.</item>
 ///   <item>The bound <see cref="TelemetryOptions"/> values (which usually
 ///   come from <c>appsettings.json</c>).</item>
-///   <item>Compile-time defaults (Sentry off, verbose off).</item>
+///   <item>The compile-time fallback in <see cref="TelemetryDefaults"/>.
+///   During the testing phase the DSN there is non-empty so a freshly
+///   built or freshly downloaded binary reports to Sentry without any
+///   configuration on the user's machine.</item>
+///   <item>Plain defaults from <see cref="TelemetryOptions"/>'s property
+///   initializers — Sentry off, verbose off — which apply when the
+///   compile-time fallback is empty.</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -40,25 +46,71 @@ public static class TelemetryConfigurationLoader
     /// Build options from environment variables only (Android path).
     /// </summary>
     public static TelemetryOptions LoadFromEnvironment()
+        => LoadFromEnvironment(TelemetryDefaults.DefaultDsn);
+
+    /// <summary>
+    /// Build options by binding <c>Telemetry</c> in
+    /// <paramref name="configuration"/>, layering environment overrides
+    /// on top, and using the compile-time fallback as the floor (Desktop
+    /// path).
+    /// </summary>
+    public static TelemetryOptions LoadFromConfiguration(IConfiguration configuration)
+        => LoadFromConfiguration(configuration, TelemetryDefaults.DefaultDsn);
+
+    /// <summary>
+    /// Test-friendly overload that lets the caller substitute a different
+    /// compile-time DSN fallback. Production code uses the public
+    /// parameterless variant; the unit tests use this one to exercise both
+    /// "fallback present" and "fallback empty" paths without rebuilding
+    /// the assembly.
+    /// </summary>
+    internal static TelemetryOptions LoadFromEnvironment(string fallbackDsn)
     {
         var options = new TelemetryOptions();
+        ApplyCompileTimeFallback(options, fallbackDsn);
         ApplyEnvironmentOverrides(options);
         return options;
     }
 
     /// <summary>
-    /// Build options by binding <c>Telemetry</c> in
-    /// <paramref name="configuration"/> and then applying environment
-    /// overrides on top (Desktop path).
+    /// Test-friendly overload — see
+    /// <see cref="LoadFromEnvironment(string)"/>.
     /// </summary>
-    public static TelemetryOptions LoadFromConfiguration(IConfiguration configuration)
+    internal static TelemetryOptions LoadFromConfiguration(
+        IConfiguration configuration, string fallbackDsn)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
         var options = new TelemetryOptions();
+        ApplyCompileTimeFallback(options, fallbackDsn);
         configuration.GetSection(TelemetryOptions.SectionName).Bind(options);
+
+        // Bind() will overwrite our fallback DSN with whatever is in the
+        // config — including the empty string, which is the literal value
+        // we ship in appsettings.json for the "no DSN configured" case.
+        // We want the compile-time fallback to win over "Dsn=''" but lose
+        // to "Dsn='https://...'". The cleanest way to express that is:
+        // if the bound DSN is empty after Bind, restore the fallback.
+        if (string.IsNullOrWhiteSpace(options.Sentry.Dsn))
+        {
+            options.Sentry.Dsn = fallbackDsn;
+        }
+
         ApplyEnvironmentOverrides(options);
         return options;
+    }
+
+    /// <summary>
+    /// Seed the options with the supplied <paramref name="fallbackDsn"/>.
+    /// Higher-precedence sources are expected to overwrite these afterwards.
+    /// </summary>
+    private static void ApplyCompileTimeFallback(TelemetryOptions options, string fallbackDsn)
+    {
+        if (!string.IsNullOrWhiteSpace(fallbackDsn))
+        {
+            options.Sentry.Dsn = fallbackDsn;
+        }
+        options.Sentry.Environment = TelemetryDefaults.DefaultEnvironment;
     }
 
     private static void ApplyEnvironmentOverrides(TelemetryOptions options)

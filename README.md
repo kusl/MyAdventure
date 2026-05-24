@@ -513,7 +513,7 @@ The full list of log messages can be discovered with `git grep "LogInformation\|
 
 Sentry's Developer (free forever) plan ships with 5,000 errors / 10,000 performance transactions / 5 GB of logs per month. The defaults below are picked to fit comfortably inside that envelope for an idle game with one player:
 
-- **Sentry is opt-in.** No DSN configured → no Sentry exporter is added at all. There is zero outbound network traffic from telemetry until you set a DSN.
+- **Sentry reports out of the box during the testing phase.** A non-secret public DSN is hardcoded in `src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs` so that any fresh clone — and every binary built by the GitHub Actions release job — starts reporting to Sentry immediately. You can override it for your own builds (see below) or empty out the constant when the project leaves the testing phase to return to opt-in behaviour. (Public Sentry DSNs are not secrets; they grant write-only permission to a specific project, which is why mobile SDKs ship them embedded in published binaries.)
 - **Metrics never go to Sentry.** Sentry's OTLP ingestion doesn't accept metrics, and we don't try. Runtime metrics stay on the console exporter.
 - **`Microsoft.EntityFrameworkCore` is pinned at `Warning`** so EF Core's per-statement `Information` chatter (which is voluminous and almost never actionable) doesn't burn through the log quota.
 - **Verbose logging is off by default**, controlled by a single toggle (see below). When verbose is off the app emits a handful of records per session.
@@ -523,7 +523,14 @@ If you go over the free tier, Sentry stops accepting new events for the rest of 
 
 ### Configuration surface
 
-Configuration is bound from `appsettings.json` (Desktop) or environment variables (Desktop *and* Android). Environment variables always win.
+The DSN follows a layered precedence chain. Higher entries win.
+
+| Source | Notes |
+|--------|-------|
+| `SENTRY_DSN` environment variable | Works on Desktop and Android. Always wins. |
+| `Telemetry:Sentry:Dsn` in `appsettings.json` (Desktop only) | The shipped value is `""`, which is treated as "fall through to the next layer". |
+| `TelemetryDefaults.DefaultDsn` constant | The compile-time fallback. Set during the testing phase so fresh clones and GitHub Release binaries Just Work. Edit this file to change the DSN globally; set it to `""` to require explicit configuration. |
+| Hard-coded defaults in `TelemetryOptions` | Sentry off, verbose off — only applies if every other layer is empty. |
 
 `src/MyAdventure.Desktop/appsettings.json`:
 
@@ -544,7 +551,7 @@ Environment variables (recognized on both Desktop and Android):
 
 | Variable | Effect |
 |----------|--------|
-| `SENTRY_DSN` | Sentry DSN. Empty / unset = Sentry exporter is not registered. |
+| `SENTRY_DSN` | Sentry DSN. Wins over the compile-time fallback and `appsettings.json`. Set to `""` to disable — but note that the compile-time fallback will then take over; unset the variable AND empty `TelemetryDefaults.DefaultDsn` to fully turn Sentry off. |
 | `MYADVENTURE_VERBOSE` | `1` / `true` / `yes` / `on` (case-insensitive) lifts log level to `Debug` and EF Core to `Information`. Anything else (or unset) keeps the safe defaults. |
 | `MYADVENTURE_SENTRY_ENVIRONMENT` | Override `deployment.environment` on every event (e.g. `staging`, `development`). |
 
@@ -565,17 +572,24 @@ adb shell setprop debug.MYADVENTURE_VERBOSE 1
 
 ### Setting up Sentry (free tier)
 
+The project ships with a working Sentry DSN baked into `TelemetryDefaults.DefaultDsn`. **You only need this section if you want your own Sentry account to receive events instead of the project's testing-phase account.**
+
 1. Create a Sentry account, organization, and project at https://sentry.io. The project type doesn't really matter (any platform works for the OTLP endpoint); pick "Native" or ".NET" for closest documentation.
 2. Open **Settings → Projects → \<your project\> → Client Keys (DSN)** and copy the **DSN** value. (The page also shows the OTLP endpoints and the `x-sentry-auth` header for reference; the code derives both from the DSN, so you only need to copy the DSN itself.)
-3. Set it on the platform you want:
+3. Choose how to wire it in:
+   - **Globally, for every build:** edit `src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs` and replace `DefaultDsn`. Commit. From this point on every desktop and Android binary built from this checkout reports to your project.
    - **Desktop, one-off run:** `SENTRY_DSN='https://...@...sentry.io/...' dotnet run --project src/MyAdventure.Desktop`
    - **Desktop, persistent (Linux/macOS):** add `export SENTRY_DSN=...` to your shell rc file.
    - **Desktop, persistent (Windows):** `setx SENTRY_DSN "https://..."` in an admin shell, then open a new shell.
-   - **Desktop, baked into a checkout:** edit `Telemetry:Sentry:Dsn` in `src/MyAdventure.Desktop/appsettings.json`. ⚠ Don't commit a real DSN — `appsettings.json` is tracked. To keep a personal DSN out of git, drop it in `src/MyAdventure.Desktop/appsettings.local.json` instead — that file is gitignored, optional, and loaded after `appsettings.json` so it overrides anything in the committed file.
-   - **Android:** `adb shell setprop debug.SENTRY_DSN 'https://...'` for testing, or bake into the build with an `AndroidEnvironment` file for production releases.
+   - **Desktop, baked into a checkout:** edit `Telemetry:Sentry:Dsn` in `src/MyAdventure.Desktop/appsettings.json`. ⚠ Don't commit a real DSN if it's not yours to share — `appsettings.json` is tracked. To keep a personal DSN out of git, drop it in `src/MyAdventure.Desktop/appsettings.local.json` instead — that file is gitignored, optional, and loaded after `appsettings.json` so it overrides anything in the committed file.
+   - **Android:** `adb shell setprop debug.SENTRY_DSN 'https://...'` for testing, or bake into the build by editing `TelemetryDefaults.cs`.
 4. Restart the app. You should see a startup line like `Telemetry: Sentry OTLP enabled, env=production, verbose=False`. Within 30–60 seconds the first events will appear in Sentry's **Issues** and **Traces** views. If they don't, double-check the DSN by opening `Settings → Client Keys (DSN) → OpenTelemetry` in Sentry and confirming the host matches.
 
+To **disable** the project's compile-time DSN entirely (so an unconfigured build reports nothing): edit `TelemetryDefaults.DefaultDsn` to `""`. Tests pin this code path so the behaviour stays correct either way.
+
 If the DSN is malformed (typo, missing scheme, etc.), the app still starts — it logs a single warning and proceeds with console-only exporters. A misconfigured DSN never blocks startup.
+
+**Is the DSN platform-specific?** No. A Sentry DSN identifies a Sentry *project*, not a client platform. The same DSN works for Desktop on Windows/Linux/macOS and for Android — Sentry distinguishes them via the `service.name`, `service.version`, and `deployment.environment` resource attributes that the OpenTelemetry pipeline already attaches. The Sentry project name you typed during onboarding ("android" or whatever) is just a label; the DSN doesn't care.
 
 ### Switching to a different OTLP backend
 
@@ -609,5 +623,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 **Note on dependency licenses:** All NuGet dependencies used by this project are licensed under MIT, Apache-2.0, or BSD licenses, which are compatible with AGPLv3. The AGPLv3 applies to the MyAdventure source code itself.
+
+
 
 

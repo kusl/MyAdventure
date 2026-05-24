@@ -4,6 +4,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      InternalsVisibleTo: the integration tests reach the internal
+      LoadFromConfiguration(IConfiguration, string)/LoadFromEnvironment(string)
+      overloads of TelemetryConfigurationLoader so they can verify both
+      "compile-time fallback present" and "compile-time fallback empty"
+      paths without having to rebuild the assembly with a different
+      const. The internal type TelemetryStartupAnnouncement is also
+      consumed by EmitStartupBreadcrumb from this assembly's tests.
+    -->
+    <InternalsVisibleTo Include="MyAdventure.Integration.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>

@@ -15,6 +15,17 @@ namespace MyAdventure.Integration.Tests;
 /// TelemetryOptions, string?)"/> end-to-end and verify that the IoC
 /// container actually builds with the new code paths — that's an
 /// integration concern, not a unit-test concern.
+///
+/// <para>
+/// Where these tests need to reason about both "compile-time fallback DSN
+/// present" and "compile-time fallback DSN empty", they call the
+/// <c>internal</c> overloads of
+/// <see cref="TelemetryConfigurationLoader.LoadFromEnvironment(string)"/>
+/// and
+/// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration(IConfiguration, string)"/>.
+/// Those overloads are made visible via an <c>InternalsVisibleTo</c> entry
+/// in <c>MyAdventure.Infrastructure.csproj</c>.
+/// </para>
 /// </summary>
 public class TelemetryConfigurationTests : IDisposable
 {
@@ -24,6 +35,14 @@ public class TelemetryConfigurationTests : IDisposable
     public TelemetryConfigurationTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"myadventure-test-{Guid.NewGuid():N}.db");
+
+        // Tests below assume a clean env-var baseline. Earlier tests in the
+        // process may have set these (or the user's shell may have them
+        // exported, e.g. MYADVENTURE_VERBOSE=1 for local debugging) — make
+        // sure each test starts with all three telemetry vars cleared.
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.SentryEnvironmentEnvVar, null);
     }
 
     public void Dispose()
@@ -125,16 +144,16 @@ public class TelemetryConfigurationTests : IDisposable
         err.ShouldNotBeNullOrWhiteSpace();
     }
 
-    // --- TelemetryConfigurationLoader ---------------------------------------
+    // --- TelemetryConfigurationLoader: no compile-time fallback -------------
+    //
+    // These tests pass an empty fallbackDsn so they can pin the
+    // "no DSN at all" behaviour deterministically — without depending on
+    // what TelemetryDefaults.DefaultDsn happens to be set to in source.
 
     [Fact]
-    public void Loader_LoadFromEnvironment_NoVarsSet_ReturnsSafeDefaults()
+    public void Loader_NoFallback_NoVarsSet_ReturnsSafeDefaults()
     {
-        // Make sure no stray env vars are set from outside the test.
-        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
-        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
-
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment();
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
 
         options.VerboseLogging.ShouldBeFalse();
         options.Sentry.Dsn.ShouldBeNullOrEmpty();
@@ -143,11 +162,11 @@ public class TelemetryConfigurationTests : IDisposable
     }
 
     [Fact]
-    public void Loader_LoadFromEnvironment_VerboseEnvVar_Wins()
+    public void Loader_NoFallback_VerboseEnvVar_Wins()
     {
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
 
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment();
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
 
         options.VerboseLogging.ShouldBeTrue();
     }
@@ -165,12 +184,12 @@ public class TelemetryConfigurationTests : IDisposable
     public void Loader_VerboseFlag_ParsesCommonBooleanSpellings(string raw, bool expected)
     {
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, raw);
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment();
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
         options.VerboseLogging.ShouldBe(expected);
     }
 
     [Fact]
-    public void Loader_LoadFromConfiguration_BindsJsonShape()
+    public void Loader_NoFallback_BindsJsonShape()
     {
         var json = new Dictionary<string, string?>
         {
@@ -181,12 +200,7 @@ public class TelemetryConfigurationTests : IDisposable
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
 
-        // Make sure no env var override is present that would mask the bound values.
-        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
-        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
-        SetEnv(TelemetryConfigurationLoader.SentryEnvironmentEnvVar, null);
-
-        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config);
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, fallbackDsn: "");
 
         options.VerboseLogging.ShouldBeTrue();
         options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
@@ -207,10 +221,98 @@ public class TelemetryConfigurationTests : IDisposable
         SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
 
-        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config);
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, fallbackDsn: "");
 
         options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
         options.VerboseLogging.ShouldBeTrue();
+    }
+
+    // --- TelemetryConfigurationLoader: with compile-time fallback -----------
+    //
+    // These tests pin the "DSN baked into the binary" behaviour that ships
+    // during the testing phase. Higher-precedence sources still win, but
+    // the absence of every source should fall back to the constant in
+    // TelemetryDefaults rather than disabling Sentry entirely.
+
+    private const string TestFallback = "https://[email protected]/9";
+
+    [Fact]
+    public void Loader_WithFallback_NoVarsSet_UsesFallbackDsn()
+    {
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(TestFallback);
+
+        options.Sentry.Dsn.ShouldBe(TestFallback);
+    }
+
+    [Fact]
+    public void Loader_WithFallback_AppsettingsEmptyDsn_UsesFallback()
+    {
+        // The shipped appsettings.json has Telemetry:Sentry:Dsn = "" — the
+        // fallback must still apply rather than disabling Sentry.
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:Sentry:Dsn"] = "",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
+
+        options.Sentry.Dsn.ShouldBe(TestFallback);
+    }
+
+    [Fact]
+    public void Loader_WithFallback_AppsettingsNonEmptyDsn_OverridesFallback()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
+
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+    }
+
+    [Fact]
+    public void Loader_WithFallback_EnvVar_OverridesEverything()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
+
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+    }
+
+    // --- Production compile-time fallback (TelemetryDefaults) ---------------
+
+    [Fact]
+    public void TelemetryDefaults_DefaultDsn_IsAValidParseableSentryDsn()
+    {
+        // During the testing phase the project ships a hardcoded DSN.
+        // Whatever it is, it must parse — a typo here would silently
+        // disable Sentry for every shipped binary, which is the failure
+        // mode this test exists to prevent.
+        if (string.IsNullOrWhiteSpace(TelemetryDefaults.DefaultDsn))
+        {
+            // Fallback explicitly disabled — that's a legitimate
+            // post-testing-phase configuration; nothing to assert.
+            return;
+        }
+
+        var ok = SentryDsn.TryParse(TelemetryDefaults.DefaultDsn, out var parsed, out var err);
+
+        ok.ShouldBeTrue(err);
+        parsed.ShouldNotBeNull();
+        parsed.PublicKey.ShouldNotBeNullOrWhiteSpace();
+        parsed.ProjectId.ShouldNotBeNullOrWhiteSpace();
+        parsed.Host.ShouldNotBeNullOrWhiteSpace();
     }
 
     // --- AddInfrastructure --------------------------------------------------
