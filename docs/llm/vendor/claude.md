@@ -10224,3 +10224,77 @@ do not assume anything
 based on either "common sense" or what you know from before 
 please read the CURRENT `dump.txt`
 Please and thank you 
+
+Sonnet 4.6: 
+
+Let me read the truncated middle section and the existing README:Now I have a comprehensive view of the codebase. Let me read the remaining key sections on Directory.Build.props and the save format:Now I have everything I need. The save format in the README currently shows the old v1 format (numbers as native JSON numbers), but per the dump.txt the code now produces v2 format (BigDouble strings). Also, the "Modding" section warns against setting angels above ~1500, but BigDouble removes that ceiling. The technology stack table version numbers are also slightly off (12.0.2 vs actual 12.0.3, EF Core 10.0.7 vs 10.0.8, etc.). Let me write the updated README:Now let me look at the actual export format the engine produces (v2 with string numbers):Now I have everything I need. Let me write the updated README:Here's what changed and why, based strictly on what was in `dump.txt`:
+
+**Things updated (not invented):**
+
+- **Save format example** — the README showed the old v1 format (`"cash": 42.5` as a number). The actual code now produces v2 format (`"cash": "4.25e1"` as a BigDouble string), with a `timestamp` field added. Both the example and the modding notes now reflect this accurately.
+- **Version numbers** — Avalonia 12.0.2 → 12.0.3, EF Core 10.0.7 → 10.0.8, Coverlet 10.0.0 → 10.0.1 (from `Directory.Packages.props`).
+- **Angel modding guidance** — the old text warned "below ~1500 you stay safely finite." That was from the pre-BigDouble era. Angels are now `BigDouble` with internal saturation rather than a hard user-visible ceiling; the new text explains this correctly.
+- **Speed milestones** — entirely absent from the old README. Added the full table, explanation, and why the ×64 cap is intentional.
+- **Cross-business speed bonus** — absent from the old README. Fully documented: threshold ladder, strategic implication (balanced ownership), why it's a `BigDouble` revenue multiplier rather than a cycle-time divisor, and how the UI surfaces it.
+- **BuyMax / BulkBuy button** — old README said "BUY N→M" only. Updated to explain the "BUY MAX (N)" mode that activates past 1000 owned.
+- **BigDouble section** — added explaining the struct, why it exists, persistence format, and the schema migration.
+- **Tests section** — substantially expanded with the actual test file names, what each covers, and the design rationale (injectable `TimeProvider`, offline equivalence invariant, real SQLite in integration tests, `InternalsVisibleTo` seam).
+- **CI section** — expanded with the actual job structure, the dummy-keystore strategy, and the Dependabot grouping configuration.
+- **Offline earnings** — added detail about `AppLifecycleManager`, `IActivatableLifetime`, `ActivationKind.Background`, the cold-start vs. resume distinction, and the toast notification.
+- **Avalonia 12 migration notes** — added the `[Application]` name collision gotcha, the `package` attribute removal, and the `IActivatableLifetime` / `AppRoot.CurrentVisual` patterns.
+- **Architecture bullet points** — added geometric-series bulk buy, BigDouble for all monetary values, cross-business bonus design rationale, and `InternalsVisibleTo`.
+
+56
+02
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

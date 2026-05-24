@@ -3,9 +3,9 @@
 [![Build](https://github.com/kusl/MyAdventure/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/kusl/MyAdventure/actions/workflows/build-and-release.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-> **AI Disclosure:** This repository was developed with significant assistance from large language models (LLMs), including Anthropic Claude and Google Gemini. Substantial portions of the code, documentation, architecture decisions, and test suites were generated, reviewed, and iterated on with LLM help. **AI was a tool, not an author** — the human developer directed all decisions, verified all output, and takes responsibility for the result. If you operate a web scraper, crawler, or AI training pipeline and wish to exclude LLM-assisted content, this notice is for you.
+> **AI Disclosure:** This repository was developed with significant assistance from large language models (LLMs), including Anthropic Claude (Opus and Sonnet models) and Google Gemini. Substantial portions of the code, documentation, architecture decisions, and test suites were generated, reviewed, and iterated on with LLM help. **AI was a tool, not an author** — the human developer directed all decisions, verified all output, and takes responsibility for the result. If you operate a web scraper, crawler, or AI training pipeline and wish to exclude LLM-assisted content, this notice is for you.
 
-An idle/clicker game **inspired by Adventure Capitalist**, built with **Avalonia UI 12** and **.NET 10** (C# 14). Cross-platform — desktop (Windows, Linux, macOS) and Android — from a single codebase. No ads, no payments, no tracking, no strings attached.
+An idle/clicker game **inspired by Adventure Capitalist**, built with **Avalonia UI 12** and **.NET 10** (C# 14). Cross-platform — desktop (Windows, Linux, macOS) and Android — from a single codebase and a single solution file. No ads, no payments, no tracking, no strings attached. Free to play, free to modify, free forever.
 
 ---
 
@@ -23,7 +23,7 @@ Every push to `main` automatically builds and releases for all platforms via Git
 | macOS | ARM64 (Apple Silicon) | [Download](https://github.com/kusl/MyAdventure/releases/latest) |
 | Android | APK | [Download](https://github.com/kusl/MyAdventure/releases/latest) |
 
-**Android users (Obtainium):** Point [Obtainium](https://github.com/ImranR98/Obtainium) at this repository's releases for automatic updates. The APK version code increments with each release.
+**Android users (Obtainium):** Point [Obtainium](https://github.com/ImranR98/Obtainium) at this repository's releases for automatic updates. The APK version code (set by `ApplicationVersion`) increments with every CI run, so Obtainium can track updates automatically.
 
 ---
 
@@ -44,17 +44,17 @@ Six businesses, each with increasing cost, revenue, and cycle time:
 | Donut Shop | 🍩 | $103,680 | $51,840 | 24.0s | 1.12× |
 | Shrimp Boat | 🦐 | $1,244,160 | $622,080 | 96.0s | 1.11× |
 
-Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses, post-milestone scaling (past unit 1000), and your angel-investor bonus.
+Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses, speed bonuses, post-milestone scaling (past unit 1000), the cross-business speed bonus, and your angel-investor bonus — all compounding together.
 
 ### Core Mechanics
 
 - **Click to Run:** Click the ▶ RUN button on a business to start its production cycle. When the progress bar fills, you collect revenue.
 - **Buy Units:** Purchase additional units of any business with the BUY button (one at a time).
-- **Buy to Milestone:** Each business card shows a "BUY N→M" button that purchases units in bulk up to the next milestone threshold. One click instead of dozens.
+- **Buy to Milestone / Buy Max:** Each business card shows a bulk-buy button. While a next revenue milestone exists it reads "BUY N→threshold" and buys exactly the units needed to reach it in one click. Once all milestones are reached at 1000 owned, it switches to "BUY MAX (N)" and buys as many units as you can currently afford. The button is always visible — it never disappears past 1000 owned.
 - **Hire Managers:** Each business can have a manager (costs 1000× the business's base cost). Managers automatically restart production cycles so you don't have to click.
-- **Offline Earnings:** When you close the game and come back, all businesses with managers earn revenue for the time you were away, boosted by your angel investor bonus.
+- **Offline Earnings:** When you close the game and come back, all businesses with managers earn revenue for the time you were away, boosted by your angel investor bonus and the cross-business speed multiplier.
 
-### Milestone Multipliers
+### Revenue Milestone Multipliers
 
 Owning certain quantities of a business triggers permanent revenue multipliers that compound multiplicatively:
 
@@ -73,11 +73,40 @@ Owning certain quantities of a business triggers permanent revenue multipliers t
 | 900 | ×4 | ×65,536 |
 | 1000 | ×5 | ×327,680 |
 
-> 1000 is the milestone cap. Buying past 1000 used to mean every additional unit cost `1.07^N` more than the one before but contributed no more revenue per unit than unit 1000 — eventually each new lemonade stand cost trillions and paid back in centuries. **Post-1000, revenue is now multiplied by `CostMultiplier^((Owned − 1000) / 2)`** — the square root of the cost growth — so unit 1001 is roughly as cost-efficient as unit 1000, and the late game keeps moving instead of stalling. Below 1000 owned this multiplier is exactly 1.0, so all early-game balance is unchanged.
+### Speed Milestones
+
+Owning certain quantities of a business also halves its production cycle time. These are separate from revenue milestones and compound multiplicatively with them:
+
+| Units Owned | Effect | Cumulative Speed |
+|-------------|--------|-----------------|
+| 25 | ×2 Speed | ×2 |
+| 50 | ×2 Speed | ×4 |
+| 100 | ×2 Speed | ×8 |
+| 200 | ×2 Speed | ×16 |
+| 300 | ×2 Speed | ×32 |
+| 400 | ×2 Speed | ×64 |
+
+At 400 owned the effective cycle time is divided by 64 compared to the base. For lemonade (0.6s base), that's a 9.375ms effective cycle — faster than a single 60Hz frame. The game engine handles this correctly: it counts how many complete cycles accumulated in the current tick and pays all of them out at once, carrying the fractional remainder into the next tick. The `SubFrameCycleTests` suite pins this behavior.
+
+The speed-milestone cap at ×64 is deliberate: cycle time is stored as a `double`, and halving it more than ~1000 times would underflow to zero in IEEE 754, causing a divide-by-zero crash. Instead, the **cross-business speed bonus** (see below) provides unlimited scaling beyond that ceiling as a `BigDouble` revenue multiplier rather than a cycle-time divisor.
+
+### Cross-Business Speed Bonus
+
+This is the **third compounding axis** in the game, on top of revenue milestones and per-business speed milestones. When *every* business simultaneously reaches a shared ownership threshold, every business earns an additional ×2 revenue multiplier. Because it requires the minimum owned count across all six businesses to climb, it rewards balanced play: a player with 1000 lemonade stands and zero shrimp boats gets exactly zero cross-business bonus.
+
+Thresholds: 25, 50, 100, 200, 300, 400, then every +100 forever (500, 600, 700, 800, ...). There is no cap. At minimum-owned = 400, the cross-business multiplier is ×64. At minimum-owned = 1000, it is ×4096 (`2^(6 + (1000-400)/100)` = `2^12`). At 10,000 it is `2^102` ≈ 5×10³⁰. The game never runs out of things to do.
+
+The UI shows your current cross-business multiplier in the header (e.g. "×64 Speed" — the same label AdCap uses) and a "N more of every business → threshold" hint showing which threshold you're approaching.
+
+**Why a revenue multiplier rather than a cycle-time divisor?** Halving cycle time 1000+ times underflows `double` to exactly zero. The cross-business effect is therefore folded into a `BigDouble` revenue multiplier — mathematically identical from the player's perspective (halving cycle time doubles earnings per second) but numerically robust at any scale.
+
+### Post-1000 Revenue Scaling
+
+1000 is the revenue milestone cap. Buying past it used to mean every new unit cost `1.07^N` more than the previous but contributed no more revenue per unit than unit 1000 — eventually each new lemonade stand cost trillions and paid back in centuries. **Post-1000, revenue is now multiplied by `CostMultiplier^((Owned − 1000) / 2)`** — the square root of the cost growth — so unit 1001 is roughly as cost-efficient as unit 1000, and the late game keeps moving instead of stalling. Below 1000 owned this multiplier is exactly 1.0, so all early-game balance is unchanged.
 
 ### Prestige System
 
-Prestiging resets all businesses and cash in exchange for **Angel Investors**. Each angel provides a permanent **+2% revenue bonus that compounds**, applied to both live cycle earnings and offline earnings.
+Prestiging resets all businesses and cash (to **$5**, not $0 — enough to immediately buy the first lemonade stand) in exchange for **Angel Investors**. Each angel provides a permanent **+2% revenue bonus that compounds**, applied to both live cycle earnings and offline earnings.
 
 The "compounds" part is what matters. Under a strictly linear "+2% per angel" rule, 50 angels would be ×2.00 and 700 would be ×15.00 — the curve flattens out and a marginal prestige stops feeling worth it. Under compounding (`1.02 ^ angels`), 50 angels is ×2.69, 200 is ×52.5, and 700 is ×750,000+. Each prestige genuinely makes the next run feel like a different game.
 
@@ -89,13 +118,25 @@ floor(150 × sqrt(lifetimeEarnings / 1e13))
 
 The **PRESTIGE** button unlocks whenever that number is at least one greater than your current angel count — i.e. when prestiging right now would give you at least one new angel. **The UI is the signal:** when the button lights up, you can prestige. The formula is there to explain the shape of the curve, not for you to compute thresholds in your head.
 
-**Lifetime earnings are preserved through prestige** — each subsequent prestige requires more lifetime earnings than the last to net the same number of new angels, but the running total never resets. After prestiging, your cash resets to **$5** (exactly enough to buy your first lemonade stand) so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
+**Lifetime earnings are preserved through prestige** — each subsequent prestige requires more lifetime earnings than the last to net the same number of new angels, but the running total never resets. After prestiging, your cash resets to **$5** so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
+
+**The angel cap is gone.** Angels are now stored as `BigDouble` (see the BigDouble section below). You can accumulate astronomically many angels without hitting any ceiling — the `AngelBonus` computation has a saturation cap at `10^MaxAngelBonusExponent` to prevent downstream overflow, but in practice this is only reachable by hand-editing a save to an absurd value.
+
+### BigDouble: Unbounded Numbers
+
+All monetary values (`Cash`, `LifetimeEarnings`, `AngelInvestors`), and the `NextCost`, `Revenue`, and `RevenuePerSecond` properties of each business are `BigDouble` — a custom floating-point struct with a `double` mantissa and a `long` base-10 exponent. This gives an effective range of roughly `±9.99 × 10^(long.MaxValue)`, which is for practical purposes unlimited.
+
+**Why BigDouble?** An idle game that compounds aggressively will routinely exceed `double.MaxValue` (~1.8 × 10³⁰⁸). Before the BigDouble migration, cash capped silently at `1e200` and stopped growing. BigDouble removes that ceiling. The `Cash_AtFormerCap_ContinuesToGrow` test pins the regression: cash at exactly the old cap must continue increasing, not stall.
+
+**Persistence format:** BigDouble values are stored in SQLite as TEXT strings in canonical form: `"<mantissa>e<exponent>"` (e.g. `"4.25e1"` for 42.5, `"1.5e200"` for 1.5×10²⁰⁰). The conversion is handled by an EF Core `ValueConverter` registered in `AppDbContext.OnModelCreating`. The `GameEngine` works exclusively in `BigDouble` and is unaware of the string form.
+
+**Migration from old saves:** The `DependencyInjection.InitializeDatabaseAsync` method detects old databases that still have `Cash`, `LifetimeEarnings`, and `AngelInvestors` as REAL columns and translates them in-place to the new `CashText`, `LifetimeEarningsText`, `AngelInvestorsText` TEXT columns in a single transaction. Your old save is preserved exactly — the migration is idempotent and a crash mid-migration leaves the old schema intact.
 
 ### Save Compatibility
 
-Saves from earlier versions of MyAdventure remain valid. The persisted format hasn't changed — the same `cash`, `lifetime`, `angels`, `prestige`, businesses, and managers fields load and behave identically. The two balance changes (compound angel bonus, post-1000 revenue scaling) are computed on the fly from existing fields, so reopening an old save just shows the new, more rewarding multipliers applied to the angels and units the player already had.
+Saves from all earlier versions of MyAdventure remain valid. The v2 export format stores numbers as canonical BigDouble strings (`"4.25e1"`). The import function transparently handles both the legacy v1 format (numbers as native JSON doubles) and the current v2 format, so any save file you have will load.
 
-If you were stuck mid-progression on a previous version (e.g. unit 401 lemonade was unaffordable for any reasonable amount of time), simply re-opening your save under the new build is the migration: your existing 700+ angels now multiply revenue by millions instead of by a flat 14×, and you'll fly through the previous wall.
+The two balance changes (compound angel bonus, post-1000 revenue scaling, cross-business speed bonus) are computed on the fly from existing fields, so reopening an old save just shows the new, more rewarding multipliers applied to the angels and units the player already had.
 
 ### Import and Export
 
@@ -138,7 +179,7 @@ See [docs/KEYSTORE.md](docs/KEYSTORE.md) for APK signing instructions.
 dotnet test
 ```
 
-All tests (unit, integration, UI) are designed to run fast after every change. No external services or emulators required.
+All tests (unit, integration, UI/ViewModel) are designed to run fast after every change. No external services, emulators, or running applications are required — the test suite is fully headless.
 
 ---
 
@@ -176,9 +217,11 @@ The "Can buy: N" line on each business card tells you exactly how many units of 
 
 ### Past 1000 units: the post-cap scaling
 
-Once a business hits 1000 owned, no further milestone multipliers unlock — the table caps out at the cumulative ×327,680. Without intervention, that creates a wall: every new unit costs `1.07^N` more than the one before, but pays back the same per-unit revenue, so each new lemonade stand becomes exponentially less worthwhile until "the next one" costs trillions and pays back in centuries.
+Once a business hits 1000 owned, no further milestone multipliers unlock — the revenue milestone table caps out at the cumulative ×327,680. Without intervention, that creates a wall: every new unit costs `1.07^N` more than the one before, but pays back the same per-unit revenue, so each new lemonade stand becomes exponentially less worthwhile until "the next one" costs trillions and pays back in centuries.
 
 To keep buying past the cap meaningful, **post-1000 revenue is multiplied by `CostMultiplier^((Owned − 1000) / 2)`**. That's the square root of how fast the cost grows, so unit 1001 is roughly as cost-efficient as unit 1000 was, and unit 5000 stays in the same payback ballpark instead of drifting off to infinity. The math is invisible below 1000 — it's exactly 1.0 — so nothing about the early or middle game changes.
+
+The "BUY MAX (N)" button — which shows how many units you can buy right now — uses an O(1) geometric-series closed form, so buying 50,000 lemonade stands at once takes the same time as buying 5.
 
 ### The late game: prestige early, prestige often
 
@@ -192,9 +235,19 @@ The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`, wh
 
 Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as the button unlocks if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
 
+### The very late game: cross-business bonus
+
+Once all businesses have managers and you've done a few prestiges, a third axis of scaling opens up: the **cross-business speed bonus**. Every time the minimum-owned count across all six businesses crosses a shared threshold (25, 50, 100, 200, 300, 400, then every 100 forever), every business gets another ×2 revenue multiplier.
+
+Unlike the per-business milestones, the cross-business bonus is **uncapped** — it climbs forever as long as you keep buying the least-owned business. At 400 of each it's ×64. At 1000 of each it's ×4096. At 10,000 of each it's `2^102` ≈ 5×10³⁰. The game literally never runs out of progression.
+
+The strategic implication is clear: if you have 1000 lemonade stands but only 200 shrimp boats, your lowest business is what gates the cross-business bonus. Balanced ownership pays. The UI tells you exactly which threshold you're approaching and how many of every business you need to get there.
+
 ### Offline earnings work — use them
 
-Close the game. Walk away. Come back tomorrow. Every business with a manager will have earned revenue for the entire interval you were gone, boosted by your angel bonus. The math is identical to live play: `cycles × revenue × angel_bonus`. There is no offline cap and no offline penalty. Sleeping is a viable strategy.
+Close the game. Walk away. Come back tomorrow. Every business with a manager will have earned revenue for the entire interval you were gone, boosted by your angel bonus and the cross-business speed multiplier. The math is identical to live play: `cycles × revenue × angel_bonus × cross_business_multiplier`. There is no offline cap and no offline penalty. Sleeping is a viable strategy.
+
+When you reopen the app, a toast notification tells you how much you earned while you were away ("While you were away, you earned $X!"). If the gap was less than one second, it's below the minimum threshold and no payout is shown — this avoids spurious toasts for screen flickers or brief app switches.
 
 The only caveat: offline earnings only count businesses with managers. A business sitting at 200 units with no manager produces nothing while you're away. Buy the manager.
 
@@ -204,31 +257,33 @@ Export your game, decode the Base64 string (any Base64 decoder works, or use `ec
 
 ```json
 {
-  "v": 1,
-  "cash": 42.5,
-  "lifetime": 1000,
-  "angels": 0,
+  "v": 2,
+  "cash": "4.25e1",
+  "lifetime": "1e3",
+  "angels": "0",
   "prestige": 0,
   "businesses": {"lemonade": 3, "newspaper": 0, "carwash": 0, "pizza": 0, "donut": 0, "shrimp": 0},
-  "managers": {"lemonade": false, "newspaper": false, "carwash": false, "pizza": false, "donut": false, "shrimp": false}
+  "managers": {"lemonade": false, "newspaper": false, "carwash": false, "pizza": false, "donut": false, "shrimp": false},
+  "timestamp": "2026-05-23T14:30:00.0000000Z"
 }
 ```
 
-Edit whatever you want, re-encode to Base64 (`echo '<json>' | base64` on Linux/macOS), and import it back. Set cash to `1e18`, give yourself 1000 shrimp boats, enable all managers, set angels to 9999 — it's your game.
+Edit whatever you want, re-encode to Base64 (`echo '<json>' | base64` on Linux/macOS), and import it back. Give yourself cash, 1000 shrimp boats, enable all managers, set angels to 9999 — it's your game.
 
 A few things to know:
 
-- **`v: 1`** is the save format version. Don't change it.
-- **`cash`** and **`lifetime`** are doubles. JavaScript-style scientific notation (`1e18`) works.
-- **`angels`** is also a double. Because the angel bonus is `1.02^angels`, even modest values produce gigantic multipliers — `angels: 200` is ×52.5, `angels: 500` is ×19,956, `angels: 9999` is roughly ×1.59×10^86. Setting it to a million is funny but you'll hit `Infinity`, the formatter falls over, and revenue will look like blanks. Below ~1500 you stay safely finite.
+- **`v: 2`** is the current save format version. The import function also accepts the legacy `v: 1` format where numbers were plain JSON numbers instead of strings — old saves still load.
+- **`cash`, `lifetime`, and `angels`** are BigDouble canonical strings: `"<mantissa>e<exponent>"`. You can also use plain numbers like `42.5` or scientific notation like `1e18` — the importer accepts both. There is no ceiling: `"1e500"` is valid and will work correctly.
+- **`angels`** — because the angel bonus is `1.02^angels`, values compound dramatically. `"5e2"` (500 angels) is ×19,956. `"1e4"` (10,000 angels) is astronomical. There is no hard cap in the engine; the `AngelBonus` getter saturates to a very large (but finite) value at extreme angel counts to protect downstream arithmetic.
 - **Business and manager keys** must match the IDs exactly: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`.
-- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional milestones — 1000 is the milestone cap — but the cumulative ×327,680 multiplier still applies, and post-1000 revenue gets multiplied by `1.07^((owned-1000)/2)` so each extra unit stays meaningful.
+- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional revenue milestones — 1000 is the revenue milestone cap — but the cumulative ×327,680 multiplier still applies, and post-1000 revenue gets multiplied by `1.07^((owned-1000)/2)` so each extra unit stays meaningful.
+- **The `timestamp` field** is included for debugging only. Two exported saves plus their timestamps can reveal offline-earnings bugs (if five days passed and cash didn't change, something is wrong). The importer ignores it entirely — it is not validated and not enforced.
 - The save is **not signed or checksummed** — there's no anti-cheat. We don't think there's anyone to cheat against.
 
 If you import garbage and the game looks strange, reset to a fresh save:
 
 - **Desktop:** delete `{LocalApplicationData}/MyAdventure/myadventure.db`. (On Windows that's `%LOCALAPPDATA%\MyAdventure\`; on Linux, `~/.local/share/MyAdventure/`; on macOS, `~/.local/share/MyAdventure/`.)
-- **Android:** clear the app's data via your device's Settings → Apps → MyAdventure → Storage → Clear data. (Reinstalling the APK alone doesn't wipe the save; data lives in the app's private storage.)
+- **Android:** clear the app's data via your device's Settings → Apps → MyAdventure → Storage → Clear data. (Reinstalling the APK alone doesn't wipe the save; data lives in the app's private internal storage.)
 
 ### Frequently confusing things
 
@@ -236,7 +291,8 @@ If you import garbage and the game looks strange, reset to a fresh save:
 - **"My progress bar isn't moving."** The business is probably not running. Click RUN once to start it; if it has a manager, it should auto-restart on the next cycle.
 - **"I have a manager but I'm not earning anything."** You need to own at least one unit *and* the business must be running. Click RUN once to kick it off; the manager handles every cycle after that.
 - **"I closed the game for 8 hours and earned barely anything."** Check that your most profitable businesses had managers. Offline earnings ignore unmanaged businesses entirely.
-- **"The numbers are getting weird (Qa, Sx, O, N, D)."** Those are abbreviations for quadrillion, sextillion, octillion, nonillion, decillion. The formatter handles up to about $10³³. If you blow past that, the display falls back to plain decimal — you've broken the game in the most beautiful way.
+- **"The numbers are getting weird (Qa, Sx, O, N, D)."** Those are abbreviations for quadrillion, sextillion, octillion, nonillion, decillion. The formatter handles up to 10³⁶ with suffixes; past that it switches to scientific notation with Unicode superscript exponents (`7.53 × 10⁴⁰`). You have not broken the game — this is the intended display for very large values.
+- **"My cash was stuck at 1e200 in an old version."** That was a real bug — the old `double`-based engine silently capped at 1e200. The fix was the BigDouble migration. If you have an old save from before that migration, simply open it in the new build: the database migration runs automatically and your progress is preserved.
 
 ### Honest expectations
 
@@ -251,40 +307,46 @@ If that's what you're looking for, welcome. If you wanted Adventure Capitalist w
 ```
 MyAdventure.slnx
 ├── src/
-│   ├── MyAdventure.Core           — Domain entities, game engine, number formatting
-│   ├── MyAdventure.Infrastructure — EF Core SQLite persistence, DI, OpenTelemetry
+│   ├── MyAdventure.Core           — Domain entities, game engine, BigDouble, number formatting
+│   ├── MyAdventure.Infrastructure — EF Core SQLite persistence, DI, OpenTelemetry, BigDouble schema migration
 │   ├── MyAdventure.Shared         — ViewModels, converters, toast service, AppRoot, AppLifecycleManager, i18n
 │   ├── MyAdventure.Desktop        — Avalonia desktop app (Windows/Linux/macOS)
 │   └── MyAdventure.Android        — Avalonia Android app
 └── tests/
-    ├── MyAdventure.Core.Tests         — Unit tests for entities, engine, milestones
-    ├── MyAdventure.Integration.Tests  — EF Core repository round-trip tests
-    └── MyAdventure.UI.Tests           — ViewModel and service tests
+    ├── MyAdventure.Core.Tests         — Unit tests for entities, engine, BigDouble, milestones, number formatting
+    ├── MyAdventure.Integration.Tests  — EF Core repository round-trip tests, schema migration tests
+    └── MyAdventure.UI.Tests           — ViewModel, lifecycle, and service tests
 ```
 
 ### Design Principles
 
-**One solution, one team.** There is one `.slnx` file, one CI pipeline, and one build. Desktop and Android are not siloed into separate solutions or scripts. Everyone works with all parts of the code. If the build is slow, everyone feels it, so it gets fixed quickly.
+**One solution, one team.** There is one `.slnx` file, one CI pipeline, and one build command. Desktop and Android are not siloed into separate solutions or build scripts. Everyone works with all parts of the code. If the build is slow, everyone feels it, so it gets fixed quickly. There is no `build-desktop.sh`, no `build-android.sh`, no per-platform solution file. Single-team culture is enforced by the project structure itself.
 
 **Clean architecture with pragmatism.** Core has zero UI dependencies. Infrastructure handles persistence and telemetry. Shared contains ViewModels used by both Desktop and Android. Platform projects are thin shells: they wire up DI, set up the timer, and host the view.
 
-**Testable from the ground up.** The `GameEngine` accepts injected dependencies (`IGameStateRepository`, `ILogger`, `TimeProvider`) and is fully testable without any UI framework. ViewModels are tested against real engine instances with mocked repositories. Integration tests use EF Core's in-memory provider.
+**Testable from the ground up.** The `GameEngine` accepts injected dependencies (`IGameStateRepository`, `ILogger`, `TimeProvider`) and is fully testable without any UI framework. ViewModels are tested against real engine instances with mocked repositories. Integration tests use EF Core's SQLite in a temp file, not an in-memory fake, so schema migrations run against the real driver. The `TimeProvider` abstraction (via `TestTimeProvider`) lets tests advance the clock deterministically without sleeping.
 
 **No scrollbars — designed for at-a-glance play.** The UI fits on screen without scrolling so the entire game state is visible at once on any device. Desktop uses a 3×2 grid for businesses; Android uses a 2×3 grid. The import/export transfer panel overlays the business grid rather than adding height. This is a deliberate design stance, not a missing feature.
 
+**Cash display auto-scales.** Both the Desktop and Android cash text are wrapped in a `Viewbox` with `StretchDirection="DownOnly"`, so when a value like `7.53 × 10⁴⁰` would otherwise overflow the header, it auto-shrinks to fit the available width while retaining its natural size when there's room.
+
 ### Key Technical Decisions
 
-- **SQLite for persistence** via EF Core. Uses `DateTime` (UTC) instead of `DateTimeOffset` because SQLite doesn't support `DateTimeOffset` in `ORDER BY` clauses.
-- **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android.
-- **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android. OpenTelemetry's console exporter is also disabled on Android.
+- **SQLite for persistence** via EF Core. Uses `DateTime` (UTC) instead of `DateTimeOffset` because SQLite's EF Core provider doesn't support `DateTimeOffset` in `ORDER BY` clauses; dates are stored and loaded as `DateTime.UtcNow` / `.UtcDateTime`.
+- **BigDouble for all monetary values.** `Cash`, `LifetimeEarnings`, `AngelInvestors`, and the game balance values that scale with ownership are all `BigDouble`. The columns are stored as TEXT in SQLite (canonical form `"<mantissa>e<exponent>"`). Legacy databases with REAL columns are migrated in-place by `DependencyInjection.InitializeDatabaseAsync` in a single transaction.
+- **Geometric-series bulk buy (O(1)).** `GameEngine.BuyMultiple` uses the closed-form `c₀ × (rⁿ − 1) / (r − 1)` to calculate the total cost of N units in constant time, regardless of how many units that is. The prior implementation looped unit-by-unit up to a 10,000-unit safety cap; the new one handles BuyMax of 50,000 in the same time as buying 5. A defensive fallback loop catches any floating-point noise that would cause the geometric series to produce a total just over the cash balance and backs off by one unit.
+- **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android without any platform-specific layout code.
+- **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android. OpenTelemetry's console exporter is also disabled on Android (`AddInfrastructure` takes an optional `androidLogging` flag to suppress it).
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause silent trimming crashes. Re-enable once trimmer roots are properly configured.
-- **Angel bonus is compounded, not linear.** `AngelBonus = Math.Pow(1.02, AngelInvestors)` — each angel multiplies revenue by 1.02 on top of the previous angel's contribution. The same value is applied identically to live and offline earnings: `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` exactly once. The invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other. Save format is unchanged; the formula is computed from the same persisted `AngelInvestors` field old saves already have.
-- **Post-1000 revenue scaling** lives on `Business.PostMilestoneScaling` and equals exactly `1.0` for `Owned <= 1000` (preserving every pre-cap balance number and test) and `Math.Pow(CostMultiplier, (Owned - 1000) / 2.0)` past the cap. The square root of cost growth keeps unit 1001+ purchases roughly as efficient as unit 1000, fixing the "stuck at 400 lemonade" problem that's mathematically inevitable when revenue grows linearly while cost grows exponentially.
-- **Toast notifications** use a simple service with expiration timestamps, cleaned up on each game tick. No platform-specific notification APIs needed.
-- **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, etc.) in `Directory.Packages.props` so updating a version is a single-line change.
-- **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's new `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference.
+- **Angel bonus is compounded, not linear.** `AngelBonus = BigDouble(1.02).Pow(angelCount)` — each angel multiplies revenue by 1.02 on top of the previous angel's contribution. The same value is applied identically to live and offline earnings: `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` once. The invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other. The bonus is capped at `10^MaxAngelBonusExponent` to prevent the `long` exponent from overflowing at truly absurd angel counts.
+- **Cross-business speed bonus is a `BigDouble` revenue multiplier, not a cycle-time divisor.** Halving cycle time hundreds of times underflows `double` to zero; folding the entire cross-business effect into a `BigDouble` multiplier sidesteps that completely. Revenue can grow without bound because `BigDouble` has no practical ceiling.
+- **Post-1000 revenue scaling** lives on `Business.PostMilestoneScaling` and equals exactly `1.0` for `Owned <= 1000` (preserving every pre-cap balance number and test) and `CostMultiplier^((Owned - 1000) / 2.0)` past the cap. The square root of cost growth keeps unit 1001+ purchases roughly as efficient as unit 1000.
+- **Toast notifications** use a simple service (`ToastService`) with expiration timestamps, cleaned up on each game tick via `CleanupExpired()`. No platform-specific notification APIs needed. Toast lifetime defaults to 3 seconds; tests can pass `TimeSpan.Zero` to get immediately-expirable toasts.
+- **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, `$(EfCoreVersion)`, `$(OpenTelemetryVersion)`, `$(XunitVersion)`) in `Directory.Packages.props` so updating a version is a single-line change.
+- **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference. Views register `AppRoot.CurrentVisual = this` in `OnOpened` / `OnAttachedToVisualTree` and clear it on detach.
 - **Android safe-area is handled explicitly by `MainView`**, not by the framework's auto-padding. The Android `UserControl` sets `TopLevel.AutoSafeAreaPadding="False"`, captures `InsetsManager.SafeAreaPadding` on attach, and subscribes to `SafeAreaChanged` to keep its `Padding` in sync with the OS-reported insets. This is needed because Android 15+ enforces edge-to-edge rendering — without explicit handling, the top bar (PRESTIGE / cash) gets drawn under the status bar and front-camera cutout on devices like the Moto G Stylus 2025, and the first row of business cards visually rides on top of the prestige bar. Owning the padding deterministically on `MainView` rather than relying on auto-injection at the TopLevel root is also more robust across activity recreation, which is aggressive on Android.
-- **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that both platform apps wire into their respective lifetime events (`Activated`/`Deactivated` on desktop, the Android activity lifecycle on Android). When the app suspends, `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. On resume, it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout.
+- **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that wires into Avalonia's `IActivatableLifetime` (available via `Application.Current.TryGetFeature<IActivatableLifetime>()`), which works uniformly on all platforms. When the app goes to background (`ActivationKind.Background` Deactivated event), `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. When it returns to foreground (`ActivationKind.Background` Activated event), it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout. The `AppLifecycleManager` holds a replaceable static "current target" so Android activity recreation (which constructs a fresh ViewModel each time) doesn't leak handlers on the old VM.
+- **Cold-start vs. foreground-resume are distinct paths.** `GameEngine.LoadAsync` handles the cold-start path: it reads `LastPlayedAt` from the saved state and calls `ApplyOfflineEarnings(now - lastPlayedAt)` if the gap exceeds the minimum threshold. The foreground-resume path is handled by `GameViewModel.OnSuspended()` / `OnResumed()`, which uses `AppLifecycleManager`. Both paths call the same `GameEngine.ApplyOfflineEarnings(TimeSpan)` method — the single public entry point for offline earnings — so the logic is never duplicated and both paths are pinned by the same invariant tests.
 - **Localization** is wired via `Microsoft.Extensions.Localization` with JSON resource files (`src/MyAdventure.Shared/Resources/i18n/`). English (`en.json`) and Spanish (`es.json`) are included. The infrastructure is in place to add more locales by adding a new JSON file and updating the supported-cultures list in `DependencyInjection.cs`.
 - **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) gates the actual Dev Tools UI behind a paid Avalonia Plus / Pro subscription. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
 
@@ -292,12 +354,15 @@ MyAdventure.slnx
 
 This project tracks the latest Avalonia stable release. These notes capture the gotchas that cost real time during the v11 → v12 migration; documenting them here in case they save someone else hours.
 
-- **Android `MainActivity` was split.** In v11 it was `AvaloniaMainActivity<App>` and `WithInterFont()` lived on its `CustomizeAppBuilder` override. In v12 those virtual hooks are no longer called by the framework. The activity is now an empty `AvaloniaMainActivity` (non-generic) declaring only its `[Activity]` metadata, and a new `[Application] AndroidApp : AvaloniaAndroidApplication<App>` class hosts the AppBuilder customization.
+- **Android `MainActivity` was split.** In v11 it was `AvaloniaMainActivity<App>` and `WithInterFont()` lived on its `CustomizeAppBuilder` override. In v12 those virtual hooks are no longer called by the framework. The activity is now an empty `AvaloniaMainActivity` (non-generic) declaring only its `[Activity]` metadata, and a new `[Application] AndroidApp : AvaloniaAndroidApplication<App>` class hosts the AppBuilder customization (`WithInterFont()`). The `[Application]` attribute must **not** set `Name` equal to the package name (e.g. `"com.myadventure.app"`) — that would cause a javac collision between the generated Application class and R.java.
+- **`package` attribute on `<manifest>` removed.** In modern .NET for Android the package identity is set by `<ApplicationId>` in the `.csproj`, which is the single canonical source. Setting it in both places causes javac collisions.
 - **Android lifetime is `IActivityApplicationLifetime`** (not `ISingleViewApplicationLifetime`). Set `MainViewFactory = () => new MainView { DataContext = vm }` rather than `MainView = ...`. The factory runs each time Android creates a fresh activity, producing a fresh view + fresh ViewModel that re-loads state from the database.
 - **Plugins are no longer configurable** and the data-annotations plugin is **off by default**. This removed the long-standing nuisance where `CommunityToolkit.Mvvm` validation conflicted with Avalonia's, so no extra config is needed.
 - **`DispatcherTimer` binds to the dispatcher of the constructing thread** rather than the UI thread implicitly. Our timers are constructed in `OnOpened` / `OnAttachedToVisualTree`, both of which run on the UI thread, so behavior is unchanged.
 - **Compiled bindings remain enabled by default** via `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>` in the platform csprojs.
-- **Edge-to-edge is enforced on Android 15+.** `InsetsManager.DisplayEdgeToEdge` is now obsolete (replaced by `DisplayEdgeToEdgePreference`), and the OS no longer respects requests to draw inside the system-bar area. Apps must handle `SafeAreaPadding` explicitly. We do this on the Android `MainView` rather than relying on Avalonia's auto-padding (which depends on the TopLevel.AutoSafeAreaPadding attached property and has historical regressions around activity recreation and orientation changes — see Avalonia issue #20448 for one example). See the *Android safe-area is handled explicitly by `MainView`* bullet above for details.
+- **Edge-to-edge is enforced on Android 15+.** `InsetsManager.DisplayEdgeToEdge` is now obsolete (replaced by `DisplayEdgeToEdgePreference`), and the OS no longer respects requests to draw inside the system-bar area. Apps must handle `SafeAreaPadding` explicitly. We do this on the Android `MainView` rather than relying on Avalonia's auto-padding (which depends on the `TopLevel.AutoSafeAreaPadding` attached property and has historical regressions around activity recreation and orientation changes — see Avalonia issue #20448 for one example).
+- **`Application.GetTopLevel()` is not a valid Avalonia 12 API.** Use the `AppRoot.CurrentVisual` static pattern instead: views register themselves on attach and the VM reads `TopLevel.GetTopLevel(AppRoot.CurrentVisual)?.Clipboard` to get the clipboard.
+- **`IActivatableLifetime` replaces `Window.Activated`/`MainView.OnAttachedToVisualTree` for lifecycle events.** Obtained via `Application.Current.TryGetFeature<IActivatableLifetime>()`. Listen for `ActivationKind.Background` events only — `ActivationKind.Application` fires for things like dialog focus and would cause spurious offline-earnings payouts.
 
 ---
 
@@ -308,46 +373,121 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Category | Technology | License |
 |----------|-----------|---------|
 | Runtime | .NET 10 / C# 14 | MIT |
-| UI Framework | Avalonia UI 12.0.2 | MIT |
+| UI Framework | Avalonia UI 12.0.3 | MIT |
 | MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
-| Database | SQLite via EF Core 10.0.7 | MIT |
+| Database | SQLite via EF Core 10.0.8 | MIT |
 | Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
 | Mocking | NSubstitute 5.3.0 | BSD |
 | Test Data | Bogus 35.6.5 | MIT |
-| Coverage | Coverlet 10.0.0 | MIT |
+| Coverage | Coverlet 10.0.1 | MIT |
 
 ### Modern .NET Practices
 
-- **Central package management** via `Directory.Packages.props` — all NuGet versions defined in one place using MSBuild variables for grouped version updates.
-- **Shared build configuration** via `Directory.Build.props` — target framework, versioning, and compiler settings.
+- **Central package management** via `Directory.Packages.props` — all NuGet versions defined in one place using MSBuild variables for grouped version updates. Updating all Avalonia packages is a one-line change to `$(AvaloniaVersion)`.
+- **Shared build configuration** via `Directory.Build.props` — target framework (`net10.0`), `ImplicitUsings`, `Nullable enable`, `LangVersion latest`, versioning (driven by `$(BuildNumber)` from CI), deterministic builds, `TreatWarningsAsErrors` in Release.
 - **Solution file** uses the new `.slnx` XML format (one solution for the whole repo, no per-platform `.sln`s).
-- **C# 14 features** including primary constructors, records, collection expressions, and `required` properties.
+- **C# 14 features** including primary constructors, records, collection expressions, `required` properties, and global usings.
 - **Compiled bindings** enabled by default in Avalonia (`AvaloniaUseCompiledBindingsByDefault`).
+- **`InternalsVisibleTo`** used in `MyAdventure.Shared.csproj` to give `MyAdventure.UI.Tests` access to `AppLifecycleManager.ResetForTesting()` without over-exposing internals to production code.
+- **Global `using Xunit;`** injected by `tests/Directory.Build.props` so test files don't need per-file using directives for xUnit attributes.
+- **`global.json`** pins the SDK to `10.0.100` with `rollForward: latestMinor` so local builds and CI always use a compatible SDK version; `allowPrerelease: false` keeps things stable.
+
+---
+
+## Tests
+
+The test suite runs fully headless — no emulators, no running applications, no external services. `dotnet test` from the repo root runs everything.
+
+### Test Projects
+
+**`MyAdventure.Core.Tests`** — unit tests for the domain layer.
+
+- `BigDoubleTests` — construction/normalization, arithmetic (add/subtract/multiply/divide), exponentiation (including past `double` overflow range), sqrt, log10, comparison, string round-tripping, implicit conversions, Floor, and edge cases (NaN, Infinity, zero, negative).
+- `BusinessAffordableTests` — `AffordableCount` closed-form calculation including huge-cash edge cases.
+- `BusinessTests` — `NextCost`, `Revenue`, `PostMilestoneScaling`, `MilestoneMultiplier`, `SpeedMultiplier`, `CycleTimeSeconds` at various owned counts including extreme values past 1000.
+- `CrossBusinessSpeedBonusTests` — `BonusCount`, `CalculateSpeedMultiplier`, `NextThreshold`, `UnitsToNext` at all threshold boundaries and into the open-ended ladder past 400.
+- `GameEngineTests` — the most comprehensive suite: `LoadAsync`, `Tick`, `StartBusiness`, `BuyBusiness`, `BuyManager`, `BuyMultiple`, `BuyMax`, `Prestige`, `CalculateAngels`, `AngelBonus`, `ApplyOfflineEarnings`, `ExportToString`/`ImportFromString` (including the legacy v1 format), and invariant tests for offline-earnings equivalence with live ticks.
+- `MilestoneTests` — `CalculateMultiplier`, `NextMilestone`, `UnitsToNext`.
+- `NumberFormatterTests` — suffix formatting (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D), scientific notation past 10³⁶, `BigDouble` overload including values at 10⁵⁰⁰ and 10⁵⁰⁰⁰, infinity/NaN display.
+- `SpeedMilestoneTests` — `CalculateCycleTimeMultiplier`, `CalculateSpeedMultiplier`, `NextSpeedMilestone` at all threshold boundaries.
+- `SubFrameCycleTests` — invariants that guarantee sub-frame cycles (effective cycle time < 16ms) pay out correctly without being lost or double-counted.
+
+**`MyAdventure.Integration.Tests`** — tests that hit the real EF Core + SQLite stack.
+
+- `GameStateRepositoryTests` — round-trip save/load for all fields including BigDouble string columns; extreme-magnitude BigDouble values; upsert behaviour (single row kept, `CreatedAt` never changes across saves).
+- `SchemaMigrationTests` — verifies that the legacy REAL-column schema (pre-BigDouble migration) is correctly translated to the new TEXT-column schema in place, without data loss, in a single transaction.
+
+**`MyAdventure.UI.Tests`** — ViewModel and service tests. No Avalonia UI host needed; all tests run in a standard xUnit process.
+
+- `AppLifecycleManagerTests` — `Attach` with and without an active Avalonia `Application`, replaceable target on repeated `Attach` calls, `ResetForTesting` isolation.
+- `BusinessViewModelSpeedTests` — `SpeedMultiplierText`, `HasSpeedBonus`, `HasNextSpeedMilestone`, `NextSpeedMilestoneText` at every speed threshold; cross-business multiplier applied correctly to the displayed revenue.
+- `BusinessViewModelTests` — `Refresh` with various cash and angel bonus combinations; affordability flags; bulk-buy button visibility and label transitions ("BUY N→threshold" vs. "BUY MAX (N)" past 1000 owned); `CanBulkBuy` dims on zero affordable rather than vanishing.
+- `GameViewModelLifecycleTests` — `OnSuspended`/`OnResumed` round-trip with a controllable `TestTimeProvider`: payout for a 10-minute gap, angel bonus applied once, toast notification on payout, no toast when no managed businesses, tiny gaps below threshold produce no payout, second `OnResumed` without intervening `OnSuspended` produces no payout, `LastTick` reset on resume prevents the next timer tick from replaying the gap.
+- `ToastServiceTests` — `Show`, `CleanupExpired`, mixed expired/active toasts.
+
+### Why the tests are designed this way
+
+**No mocked time — injectable `TimeProvider`.** `GameEngine` and `GameViewModel` accept a `TimeProvider` (the .NET 8+ standard abstraction). Tests pass a `TestTimeProvider` that starts at a fixed UTC instant and can be advanced with `Advance(TimeSpan)`. This makes every time-dependent test deterministic and instant — no `Thread.Sleep`, no flakiness.
+
+**Offline earnings equivalence invariant.** The most important invariant in the test suite: `OnSuspendedThenOnResumed` results must match what live ticks would have produced for the same duration. This is not just a sanity check — it's the guard against the class of bug where the live-tick path and the offline-earnings path use different multipliers (e.g. angel bonus applied twice, or cross-business multiplier missing from one path). The test pins both paths against the same arithmetic.
+
+**`TestTimeProvider` (not `FakeTimeProvider`).** We implement our own `TestTimeProvider` rather than using the Microsoft `FakeTimeProvider` from `Microsoft.Extensions.TimeProvider.Testing` because that package was not yet available on the target SDK. `TestTimeProvider` is ~30 lines and lives in the test project; it overrides `GetUtcNow()` and provides an `Advance(TimeSpan)` method.
+
+**Real SQLite in integration tests.** Integration tests use a temp file `Path.GetTempFileName()` rather than EF Core's in-memory provider. The in-memory provider doesn't run the raw ADO.NET SQL in the schema-migration path (which uses `SqliteConnection` directly), so using a real SQLite file is the only way to test the migration end-to-end. Temp files are cleaned up in `IAsyncLifetime.DisposeAsync`.
+
+**`InternalsVisibleTo` for test seams.** `AppLifecycleManager.ResetForTesting()` is an `internal` method exposed to the UI test project via `<InternalsVisibleTo Include="MyAdventure.UI.Tests" />` in `MyAdventure.Shared.csproj`. Production code can't see it; tests can call it to reset static state between cases without the risk of accidentally calling it in production.
 
 ---
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/build-and-release.yml`) automates everything from a single workflow:
+GitHub Actions (`.github/workflows/build-and-release.yml`) automates everything from a single workflow file. There is one workflow, no per-platform workflow files, and no matrix tricks that hide failures from part of the team.
 
-1. **Build and Test** — runs on every push and PR. Restores, builds (including Android with a dummy keystore if signing secrets aren't configured), and runs all tests.
-2. **Build Desktop Releases** — produces self-contained single-file executables for 6 platform/architecture combinations (linux-x64, linux-arm64, win-x64, win-arm64, osx-x64, osx-arm64).
-3. **Build Android APK** — produces a signed APK if keystore secrets are configured, unsigned otherwise.
-4. **Create GitHub Release** — tags and publishes all artifacts as a GitHub Release with download links.
+### Jobs
 
-Dependabot is configured to check NuGet packages and GitHub Actions weekly, with grouping for Avalonia, Microsoft, OpenTelemetry, and testing packages so version bumps land as a small number of coherent PRs.
+**1. `build-and-test`** runs on every push and every PR.
+- Sets up .NET 10, Java 21 (Temurin), and the Android workload.
+- Sets up a keystore: uses the real keystore from `ANDROID_KEYSTORE_BASE64` if the secret is configured; otherwise generates a dummy keystore valid for 1 day so the Android build compiles even without signing credentials.
+- Restores, builds (Release, including Android with the keystore), and runs all tests.
+- Warnings are treated as errors in Release builds (`TreatWarningsAsErrors=true` in `Directory.Build.props`).
+
+**2. `build-desktop`** runs only on pushes to `main` (not PRs), after `build-and-test` succeeds. Matrix strategy across 6 RIDs:
+
+| Runner | RID |
+|--------|-----|
+| ubuntu-latest | linux-x64 |
+| ubuntu-latest | linux-arm64 |
+| windows-latest | win-x64 |
+| windows-latest | win-arm64 |
+| macos-latest | osx-x64 |
+| macos-latest | osx-arm64 |
+
+Each publishes a self-contained single-file executable (`PublishSingleFile=true`, `IncludeNativeLibrariesForSelfExtract=true`), archives it (`.tar.gz` on Unix, `.zip` on Windows), and uploads it as a GitHub Actions artifact.
+
+**3. `build-android`** runs only on pushes to `main`, after `build-and-test` succeeds. Runs on `ubuntu-latest`. Builds a signed APK if `ANDROID_KEYSTORE_BASE64` is configured, unsigned otherwise. Uses `AndroidUseAapt2Daemon=false` to avoid daemon startup timeouts in CI. Renames the APK to `MyAdventure-android-<run_number>.apk` and uploads it as an artifact.
+
+**4. `create-release`** runs after both `build-desktop` and `build-android` succeed. Downloads all artifacts, creates a GitHub Release tagged `v1.0.<run_number>`, and uploads all binaries. Release notes are auto-generated from commit messages by `generate_release_notes: true`.
+
+### Why this structure
+
+`build-and-test` on every PR is the gate — it's what must stay green for the codebase to be mergeable. The release jobs only run on pushes to `main`, so PRs don't spend CI minutes building seven platform artifacts when all you care about is "does it compile and do the tests pass?". The gate job builds Android too (with a dummy keystore) so Android compilation failures are caught on every PR, not just on merges.
+
+### Dependabot
+
+Configured in `.github/dependabot.yml` to check NuGet packages and GitHub Actions weekly. NuGet packages are grouped so version bumps arrive as coherent PRs rather than one PR per package: `avalonia` group (all `Avalonia*`), `microsoft` group (all `Microsoft.*`), `opentelemetry` group (all `OpenTelemetry*`), and `testing` group (xUnit, Shouldly, NSubstitute, Bogus, coverlet). FluentAssertions and Moq are explicitly ignored — those are not used in this project, and Dependabot sometimes suggests them as transitive updates.
 
 ---
 
 ## Development
 
-- The game runs at ~60fps via a `DispatcherTimer` with a 16ms interval. The `OnTick()` method drives all game logic.
-- Auto-save triggers every ~300 ticks (~5 seconds).
-- The `NumberFormatter` handles large number display with suffixes: K, M, B, T, Qa, Qi, Sx, Sp, O, N, D.
+- The game runs at ~60fps via a `DispatcherTimer` with a 16ms interval. The `OnTick()` method in `GameViewModel` drives all game logic. Each tick calls `engine.Tick(delta)` where `delta` is the elapsed time since the last tick, and then refreshes all ViewModel properties.
+- Auto-save triggers every ~300 ticks (~5 seconds at 60fps). Save is asynchronous; the game state is captured synchronously from the engine, then the write runs on a background task so the UI never hitches.
+- The `NumberFormatter` handles large number display. Below 1000: two decimal places. 1000 to 10³⁶: metric suffixes (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D). Above 10³⁶: scientific notation with Unicode superscript exponents (e.g. `7.53 × 10⁴⁰`). The `BigDouble` overload handles values arbitrarily past the `double` overflow range. Non-finite values display as `∞`, `-∞`, or `?` so they can never propagate crashes through the UI.
 - Database location: `{LocalApplicationData}/MyAdventure/myadventure.db` on every platform — on Android this resolves to the app's private internal storage.
-- OpenTelemetry exports to console by default on desktop. Configure OTLP exporters in `DependencyInjection.cs` to send to Jaeger, Grafana, or any OTLP-compatible backend.
+- OpenTelemetry exports to console by default on desktop. The `DependencyInjection.AddInfrastructure` method wires up logging, tracing (`AddSource("MyAdventure.*")`), metrics (`AddMeter("MyAdventure.*")`), and runtime instrumentation. The `GameEngine` emits an `EarningsCounter` metric (tagged by business ID and source) and a `TickDuration` histogram. Configure OTLP exporters in `DependencyInjection.cs` to send to Jaeger, Grafana, or any OTLP-compatible backend.
+- On Android, the OpenTelemetry console exporter is suppressed and logging routes through `Android.Util.Log` (visible in `adb logcat`) rather than the console (which is invisible on Android).
 
 ---
 
@@ -356,9 +496,9 @@ Dependabot is configured to check NuGet packages and GitHub Actions weekly, with
 This project is built collaboratively between a human developer and AI assistants. In the interest of full transparency:
 
 - **Code generation:** Significant portions of C#, AXAML, YAML, and configuration files were generated by Anthropic Claude (Opus and Sonnet models) and Google Gemini, then reviewed, tested, and iterated on by the human developer.
-- **Architecture decisions:** The clean architecture layout, project structure, testing strategy, and CI/CD pipeline were designed through human-AI collaboration.
+- **Architecture decisions:** The clean architecture layout, project structure, testing strategy, BigDouble design, and CI/CD pipeline were designed through human-AI collaboration.
 - **Documentation:** This README and other documentation files were drafted with LLM assistance.
-- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration itself, edge-to-edge safe-area handling on Android 15) were diagnosed and resolved with AI help.
+- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration, edge-to-edge safe-area handling on Android 15, the offline-earnings DispatcherTimer tick-clamping bug, and the cash-stall-at-1e200 BigDouble migration) were diagnosed and resolved with AI help.
 
 We provide this disclosure so that AI training pipelines, web scrapers, and researchers can make informed decisions about including this content in their datasets. If you operate a training pipeline and wish to exclude LLM-assisted code, this notice serves as a clear signal.
 
