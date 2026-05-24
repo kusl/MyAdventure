@@ -10198,3 +10198,29 @@ Now let me write the new CrossBusinessSpeedBonusTests file:Now I need to view th
 
 
 
+41
+00
+
+Please review the `dump.txt` and rewrite `README.md` to be current. 
+Remember that we need to be clear, concise but still complete and comprehensive. 
+We want this to be fully detailed and FULLY up to date with our current code. 
+This is not a basic everyday readme. 
+It is a full guide to what the code does 
+WHY we did what we did with the code 
+the tests 
+the integration 
+the github actions stuff 
+everything 
+and a full guide for the players 
+not just the what and how but also the why 
+a FULL explanation of anything and everything about this game 
+we should add on to what detail is already there 
+add anything missing 
+update anything that is outdated 
+but not remove any detail 
+Please do NOT hallucinate 
+Please consult the `dump.txt` 
+do not assume anything 
+based on either "common sense" or what you know from before 
+please read the CURRENT `dump.txt`
+Please and thank you 
