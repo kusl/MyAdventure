@@ -10341,3 +10341,167 @@ Additional Information
 
     Advanced Configuration: Customize the SDK initialization behavior.
     Jetpack Compose: Learn about our first class integration with Jetpack Compose.
+
+I'll help you set up Sentry with OpenTelemetry-based transmission (avoiding the Sentry SDK where possible). Let me first explore your project structure to understand what's there.Now let me look at the current Infrastructure DependencyInjection and the platform startup files for clipboard/lifetime patterns:Now let me look at the GameViewModel and key game lifecycle events to understand where to add Sentry breadcrumbs for "major events":Now I have a clear picture. Let me also look at the README briefly to see relevant sections, and look at AppLifecycleManager:Now let me check the README structure quickly:Now I need to research Sentry's OTLP support. Let me search for current information on whether Sentry accepts OpenTelemetry data directly via OTLP HTTP:This is excellent news. Sentry accepts OTLP for **traces and logs** directly. Let me confirm the exact endpoint URL format and free tier limits:Now I have a clear picture. Let me confirm the exact OTLP endpoint URL format for the user's DSN:Now I have everything I need. Let me parse the user's DSN:
+
+The DSN is: `https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160`
+
+- **Public key:** `fe6ae5ee15285c313b8171bb7a5a4ad0`
+- **Org ID:** `4511444968079360` (note: `de.sentry.io` is the German EU region)
+- **Project ID:** `4511444969390160`
+- **OTLP base:** `https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp`
+- **Traces:** `https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/traces`
+- **Logs:** `https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/logs`
+- **Auth header:** `x-sentry-auth: sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0`
+
+Now let me also quickly verify the README structure and check `OpenTelemetry.Exporter.OpenTelemetryProtocol` is in the package list (it was earlier but let me double check):The `OpenTelemetry.Exporter.OpenTelemetryProtocol` package version is **defined** in `Directory.Packages.props` but **not referenced** in `MyAdventure.Infrastructure.csproj`. I need to add the reference. Let me also check the GameViewModel for what's currently logged:Now I have a complete picture. Let me think about the plan:
+
+## Plan
+
+**Approach: Use OpenTelemetry OTLP exporters — NO Sentry SDK.**
+
+Sentry has first-class OTLP HTTP support for **traces and logs**. Since the project already has full OpenTelemetry instrumentation, all that's needed is:
+
+1. **Add `OpenTelemetry.Exporter.OpenTelemetryProtocol` PackageReference** to `MyAdventure.Infrastructure.csproj` (the package version is already in `Directory.Packages.props` but not referenced).
+
+2. **Add configuration options** (`SentryOptions` class) to `MyAdventure.Infrastructure` so:
+   - DSN can be turned on/off via `appsettings.json` / environment variables
+   - A `VerboseLogging` flag toggles minimum log level (Debug vs Information)
+   - Default-off for tests / safety
+
+3. **Update `DependencyInjection.AddInfrastructure`** to:
+   - Read these options
+   - Build OTLP endpoint URLs from the DSN
+   - Conditionally add OTLP exporters to logging + tracing pipelines (alongside existing console exporters)
+   - Adjust minimum log level based on `VerboseLogging`
+
+4. **Add `appsettings.json`** in the Desktop project (it already exists - just augment) and document the same env vars for Android.
+
+5. **Sentry does NOT accept OTLP metrics** — keep metrics on console exporter only.
+
+6. **Major events are already logged via `_logger.LogInformation`** (load, save, buy, prestige, suspend/resume, import/export). The OTLP logs exporter will forward those automatically — no code changes to GameEngine/GameViewModel needed.
+
+7. **Update README** with the Sentry section.
+
+8. **Tests**: Add a test that verifies `AddInfrastructure` works both with and without Sentry enabled (no crash, no DI errors).
+
+9. **Update Android `App.axaml.cs`** to register an Android-aware logger if not already done (it appears it's not — Android already routes through OpenTelemetry which can now also route to Sentry — good!).
+
+Let me set up the working area:Now let me also verify a few more things. Let me check the Integration tests file structure:Good. Now let me check the README "Technology Stack" + "Development" sections more closely so I can properly update them:Now let me also briefly look at the README's beginning so I can update it consistently:Now I have enough context. Let me build the solution. I'll think about important design decisions first:
+
+**Design decisions:**
+
+1. **Config first** — `appsettings.json` plus environment variable overrides. Sensible defaults: Sentry **disabled** by default, **verbose logging disabled** by default. This protects tests/CI and keeps the project usable without any Sentry account.
+
+2. **Why no Sentry SDK** — The user explicitly asked for OTLP. Sentry's OTLP endpoint accepts traces and logs (it does NOT accept metrics over OTLP). So:
+   - Logs → OTLP HTTP → Sentry ✅
+   - Traces → OTLP HTTP → Sentry ✅
+   - Metrics → keep on console only (Sentry doesn't accept OTLP metrics)
+   - Errors → captured as ERROR-level logs (since they flow through `ILogger.LogError(ex, ...)`)
+
+3. **Configuration surface:**
+   - `Telemetry:Sentry:Dsn` — empty/null = disabled. Or env var `SENTRY_DSN`.
+   - `Telemetry:VerboseLogging` — bool, default false. Or env var `MYADVENTURE_VERBOSE`.
+   - `Telemetry:Sentry:Environment` — "production"/"development"/etc. Default "production".
+
+4. **DSN parsing** — small helper that derives org/project/key from the DSN URL. Robust to the EU region (`ingest.de.sentry.io` and similar variants).
+
+5. **No new tests broken** — the existing `AddInfrastructure()` signature stays compatible (still works without any config). Add a new overload that accepts options.
+
+Let me start writing the files:Now the main DI module with full OTLP wiring:Wait — I used `ThisAssembly.InformationalVersion` but that's not in this project. Let me fix that — use a simple hardcoded fallback or use reflection. Let me use a cleaner approach:Now create the updated Infrastructure csproj that references the OTLP exporter package:Now check if `Microsoft.Extensions.Configuration.Binder` is already in `Directory.Packages.props`:Configuration.Binder isn't in props. I need to add it. Let me create updated Directory.Packages.props:Now the Desktop App.axaml.cs needs to wire the configuration and call EmitStartupBreadcrumb. Let me also build a clean appsettings.json:Now the Android side. For Android, we use the environment-variable path (no appsettings.json bundling complication), and also use the existing Android log path for redundancy:Now let me write tests. I'll add tests for DSN parsing and the new AddInfrastructure overload:Good. Now let me create the tests file. I'll add a new file `TelemetryConfigurationTests.cs`:Now let me also create an updated Integration tests csproj that includes Microsoft.Extensions.Configuration (needed for the in-memory config in tests):Wait - I need to re-think the integration test for "AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds". The OTLP exporter may try to start a background HTTP connection. Let me check the OpenTelemetry docs to make sure that's safe to do in tests — typically the exporters lazy-init their HTTP clients and buffer locally without making any network call at construction time. That should be fine.
+
+However, the test using a `localhost:9999` DSN will try to send logs/traces to a non-existent endpoint. The exporter will log errors but won't crash. Let me make that test more robust by ensuring it doesn't actually try to flush. Better: use a DSN with a clearly unreachable hostname so DNS resolution fails fast — exporters retry silently. This is fine; the OTLP exporters in `OpenTelemetry.Exporter.OpenTelemetryProtocol` are designed to handle network failures gracefully.
+
+Let me sanity-check the build to make sure my code compiles. Let me try to actually compile this Infrastructure project (we have dotnet available):No dotnet in the sandbox. Let me carefully review the code I wrote for errors.
+
+Let me check the OTLP exporter API to make sure I'm calling it correctly:The API I used is correct. Now let me carefully review my DependencyInjection.cs for issues. Let me view the whole thing:Two issues to consider:
+
+1. **`TelemetryStartupAnnouncement` is `internal` but is registered as a singleton + resolved by `EmitStartupBreadcrumb`** — that's fine since both are in the same assembly. But I declared `EmitStartupBreadcrumb` as `public static`, and it uses `GetRequiredService<TelemetryStartupAnnouncement>()` where the record is internal. **This is fine within the same assembly** but might surprise external consumers. Let me make sure it doesn't escape.
+
+2. **The `EmitStartupBreadcrumb` method must be safe** — i.e., not crash if the announcement record isn't registered. Since `AddInfrastructure` always registers it, this should be safe, but only if the public type is exposed. Let me think... `GetRequiredService<TelemetryStartupAnnouncement>()` from a public method that returns nothing → since it's used internally only, the compiler will be fine since the call site is within the same assembly. ✅
+
+Actually wait — looking more carefully, since `EmitStartupBreadcrumb` is `public static` and uses a `GetRequiredService<TelemetryStartupAnnouncement>()` call with an internal type, **the method signature doesn't expose the internal type, only its body uses it**. That's legal C#.
+
+Now let me address one more important thing — the **`AddOpenTelemetry()` is called twice**. Once for logging implicitly via `services.AddLogging`, and once explicitly for tracing/metrics. Looking at my code more carefully: I call `services.AddLogging(...)` then later `services.AddOpenTelemetry()`. These are independent. The `AddOpenTelemetry()` builder pattern doesn't include `.WithLogging()` in 1.15.x (logging is registered via `ILoggingBuilder.AddOpenTelemetry`). Let me double-check this design works.
+
+Looking at the original code:
+```csharp
+services.AddLogging(logging =>
+    logging.AddOpenTelemetry(otel => ...));
+
+services.AddOpenTelemetry()
+    .WithTracing(tracing => ...)
+    .WithMetrics(metrics => ...);
+```
+
+This is the documented pattern — `AddLogging`+`AddOpenTelemetry` for logs, separate `services.AddOpenTelemetry().WithTracing().WithMetrics()` for traces and metrics. ✅
+
+Let me also verify that the previous `services.AddOpenTelemetry()` from `AddInfrastructure` did NOT also implicitly register the logger provider — it didn't. So my pattern is identical. Good.
+
+Now let me also look at a potential issue with `EmitStartupBreadcrumb` being called BEFORE any actual game code runs — the logger factory needs to be ready. With `IServiceProvider` after `BuildServiceProvider()`, this should be fine.
+
+One concern: the **OTLP logs exporter sometimes needs `OpenTelemetryLoggerOptions.IncludeFormattedMessage = true`** to get the structured message + parameters properly delivered. I've set that. ✅
+
+Let me also reconsider: **Sentry's `x-sentry-auth` header value contains a space character (`sentry sentry_key=...`)**. The OpenTelemetry `Headers` property uses the standard format `key=value,key2=value2` — let me verify that a value containing a space works correctly:## Summary
+
+Sentry accepts OpenTelemetry **traces and logs** (not metrics) over OTLP/HTTP, so the OpenTelemetry stack the project already has can talk to Sentry directly with **no Sentry SDK**. I've built the configuration scaffolding (`TelemetryOptions`, `SentryDsn`, `TelemetryConfigurationLoader`), updated `DependencyInjection.cs` to conditionally add OTLP exporters, updated the Desktop and Android startup files, added a comprehensive integration test file, and updated `Directory.Packages.props` and the Infrastructure csproj.
+
+**One concern I uncovered right before the tool limit hit, that you should know about before applying these files**: the OTel/W3C spec says the `Headers` property is a `key1=value1,key2=value2` list. Sentry's required value (`sentry sentry_key=...`) contains a literal **space and equals sign**. Some implementations may parse the inner `=` as a second key/value boundary or strip the space. The .NET OTLP exporter has historically accepted "raw" values (the space gets URL-decoded into the header), but I didn't get to write the focused validation test for this exact value before tools ran out.
+
+**Recommended verification before merge** — after `dotnet build` succeeds, run the Desktop app once with the DSN set and watch for one of these in the console:
+1. A `Telemetry: Sentry OTLP enabled` startup line (configuration parsed ✅)
+2. Within ~30s, a Sentry event visible in the Sentry UI ✅
+
+If nothing shows in Sentry within a couple minutes, the most likely fix is to URL-encode the space: change the Headers value to `"x-sentry-auth=sentry%20sentry_key={key}"` (the .NET exporter URL-decodes header values).
+
+**What I produced in `/home/claude/MyAdventure/`**:
+- `Directory.Packages.props` (adds `Microsoft.Extensions.Configuration.Binder`)
+- `src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj` (adds OTLP exporter + Configuration.Binder references)
+- `src/MyAdventure.Infrastructure/DependencyInjection.cs` (full rewrite with Sentry-via-OTLP wiring)
+- `src/MyAdventure.Infrastructure/Telemetry/TelemetryOptions.cs` (new)
+- `src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs` (new, parses your real DSN)
+- `src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs` (new, env + JSON binding)
+- `src/MyAdventure.Desktop/appsettings.json` (adds `Telemetry` section, DSN empty by default)
+- `src/MyAdventure.Desktop/App.axaml.cs` (loads config, emits startup breadcrumb)
+- `src/MyAdventure.Android/App.axaml.cs` (env-var path, emits startup breadcrumb)
+- `tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj` (adds Configuration packages)
+- `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs` (new — 16 tests covering DSN parsing, env/JSON loading precedence, and container-build smoke tests)
+
+**What I did NOT finish**:
+- **README.md update** — the existing README has a Tech Stack table, a Development section, and a Modern .NET Practices section that all need a paragraph or two about the Sentry-via-OTLP integration, the verbose-logging toggle, and the free-tier guardrails. I had the section locations identified but ran out of tool calls before writing the prose.
+- **Manual verification** — I couldn't run `dotnet build` or `dotnet test` in this sandbox (no SDK available), so the code is reviewed-but-untested. The `Headers` value space-character question above is the one specific thing I'd validate first.
+- **`SentryDsn.AuthHeaderValue` URL-encoding fix** — see the concern above. If Sentry doesn't receive events, change the format to `sentry%20sentry_key=KEY` and re-test.
+
+Want me to start a fresh turn to write the README updates and verify the headers format against the actual Sentry OTLP request the .NET exporter will produce?
+
+
+
+
+
+
+
+
+
+35
+05
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+35
+05
+
+Yes, please continue and generate all files that need to change 
+and yes that includes the readme file as well as any test files that need to change 
+
+
