@@ -54,7 +54,7 @@ public static class TelemetryBootstrapper
                     options.SetResourceBuilder(resourceBuilder);
                     options.IncludeFormattedMessage = true;
                     options.IncludeScopes = true;
-                    
+
                     options.AddOtlpExporter(opt =>
                     {
                         opt.Protocol = OtpExportProtocol.HttpProtobuf;

@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sun May 24 10:41:56 AM EDT 2026
+Generated: Sun May 24 10:55:55 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -33,6 +33,7 @@ DIRECTORY STRUCTURE:
 │           ├── debugging.md
 │           ├── desktoplogs
 │           │   ├── 2026-05-24-10-36-03.txt
+│           │   ├── 2026-05-24-10-41-07.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -133,6 +134,7 @@ DIRECTORY STRUCTURE:
 │   │   │   └── GameStateRepository.cs
 │   │   └── Telemetry
 │   │       ├── SentryDsn.cs
+│   │       ├── TelemetryBootstrapper.cs
 │   │       ├── TelemetryConfigurationLoader.cs
 │   │       ├── TelemetryDefaults.cs
 │   │       ├── TelemetryOptions.cs
@@ -5663,138 +5665,223 @@ public class GameStateRepository(
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
-SIZE: 4.49 KB
+SIZE: 3.51 KB
 ================================================================================
 
-using System.Diagnostics.CodeAnalysis;
+using System;
 
 namespace MyAdventure.Infrastructure.Telemetry;
 
-/// <summary>
-/// Parses a Sentry DSN string into the pieces required to talk to its
-/// hosted OTLP endpoints over plain HTTP/protobuf — without taking a
-/// dependency on the Sentry .NET SDK.
-///
-/// <para>
-/// A Sentry DSN looks like
-/// <c>https://&lt;publicKey&gt;@o&lt;orgId&gt;.ingest.&lt;region&gt;.sentry.io/&lt;projectId&gt;</c>.
-/// The first path segment is the project id; the host's first label
-/// (<c>o&lt;orgId&gt;</c>) carries the org id; the userinfo is the
-/// public key. Sentry's documented OTLP URL shape is
-/// <c>https://&lt;host&gt;/api/&lt;projectId&gt;/integration/otlp/v1/{traces|logs}</c>
-/// and the auth header is <c>x-sentry-auth: sentry sentry_key=&lt;publicKey&gt;</c>.
-/// </para>
-///
-/// <para>
-/// Region-aware: <c>ingest.sentry.io</c>, <c>ingest.us.sentry.io</c>,
-/// <c>ingest.de.sentry.io</c>, and any future region are all handled
-/// the same way (we re-use the host that was given to us, only deriving
-/// the path and headers).
-/// </para>
-/// </summary>
 public sealed class SentryDsn
 {
-    /// <summary>The public key (DSN userinfo).</summary>
-    public required string PublicKey { get; init; }
+    public string Raw { get; }
+    public string PublicKey { get; }
+    public string SecretKey { get; }
+    public string ProjectId { get; }
+    public string Host { get; }
+    public bool IsOtlp { get; }
+    public string OtlpLogsEndpoint { get; }
+    public string OtlpTracesEndpoint { get; }
+    public string OtlpHeaders { get; }
 
-    /// <summary>The project id (first path segment of the DSN).</summary>
-    public required string ProjectId { get; init; }
-
-    /// <summary>The ingest host (e.g. <c>o123.ingest.de.sentry.io</c>).</summary>
-    public required string Host { get; init; }
-
-    /// <summary>The full OTLP traces endpoint URL.</summary>
-    public Uri TracesEndpoint =>
-        new($"https://{Host}/api/{ProjectId}/integration/otlp/v1/traces");
-
-    /// <summary>The full OTLP logs endpoint URL.</summary>
-    public Uri LogsEndpoint =>
-        new($"https://{Host}/api/{ProjectId}/integration/otlp/v1/logs");
-
-    /// <summary>
-    /// The value to put in the <c>x-sentry-auth</c> header. The header
-    /// <i>name</i> is fixed ("x-sentry-auth"); only this value changes
-    /// per-project.
-    /// </summary>
-    public string AuthHeaderValue => $"sentry sentry_key={PublicKey}";
-
-    /// <summary>
-    /// Parse the given DSN. Returns <c>false</c> and a descriptive
-    /// <paramref name="error"/> on malformed input rather than throwing
-    /// — config errors should be reported at startup, not crash the
-    /// game. The caller can log the error and proceed with telemetry
-    /// disabled.
-    /// </summary>
-    public static bool TryParse(
-        string? dsn,
-        [NotNullWhen(true)] out SentryDsn? result,
-        out string? error)
+    private SentryDsn(
+        string raw,
+        string publicKey,
+        string secretKey,
+        string projectId,
+        string host,
+        bool isOtlp,
+        string otlpLogsEndpoint,
+        string otlpTracesEndpoint,
+        string otlpHeaders)
     {
-        result = null;
-        error = null;
-
-        if (string.IsNullOrWhiteSpace(dsn))
-        {
-            error = "DSN is empty.";
-            return false;
-        }
-
-        if (!Uri.TryCreate(dsn.Trim(), UriKind.Absolute, out var uri))
-        {
-            error = "DSN is not a valid absolute URI.";
-            return false;
-        }
-
-        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
-        {
-            error = $"DSN scheme '{uri.Scheme}' is not http(s).";
-            return false;
-        }
-
-        if (string.IsNullOrEmpty(uri.UserInfo))
-        {
-            error = "DSN is missing the public key (the part before '@').";
-            return false;
-        }
-
-        // UserInfo can be "publicKey" or (legacy DSNs) "publicKey:secretKey".
-        // Sentry's OTLP auth wants only the public key.
-        var publicKey = uri.UserInfo;
-        var colon = publicKey.IndexOf(':');
-        if (colon >= 0) publicKey = publicKey[..colon];
-
-        if (string.IsNullOrWhiteSpace(publicKey))
-        {
-            error = "DSN public key is empty.";
-            return false;
-        }
-
-        // First path segment is the project id. AbsolutePath starts with '/'.
-        var projectId = uri.AbsolutePath.Trim('/').Split('/', 2)[0];
-        if (string.IsNullOrWhiteSpace(projectId))
-        {
-            error = "DSN is missing the project id (the path segment after the host).";
-            return false;
-        }
-
-        result = new SentryDsn
-        {
-            PublicKey = publicKey,
-            ProjectId = projectId,
-            Host = uri.Host,
-        };
-        return true;
+        Raw = raw;
+        PublicKey = publicKey;
+        SecretKey = secretKey;
+        ProjectId = projectId;
+        Host = host;
+        IsOtlp = isOtlp;
+        OtlpLogsEndpoint = otlpLogsEndpoint;
+        OtlpTracesEndpoint = otlpTracesEndpoint;
+        OtlpHeaders = otlpHeaders;
     }
 
-    /// <summary>
-    /// Convenience wrapper around <see cref="TryParse"/> that throws on
-    /// invalid input. Useful in unit tests where any error is a bug.
-    /// </summary>
     public static SentryDsn Parse(string dsn)
     {
-        if (!TryParse(dsn, out var result, out var error))
-            throw new ArgumentException(error, nameof(dsn));
-        return result;
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            return new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+        }
+
+        string publicKey = string.Empty;
+        string secretKey = string.Empty;
+        string host = string.Empty;
+        string projectId = string.Empty;
+
+        // Handle legacy format containing public and secret keys (e.g. https://pub:secret@host/id)
+        if (dsn.Contains(':') && dsn.Contains('@'))
+        {
+            try
+            {
+                var schemeSplit = dsn.Split("://", StringSplitOptions.None);
+                var protocol = schemeSplit[0];
+                var remainder = schemeSplit[1];
+
+                var atSplit = remainder.Split('@');
+                var keys = atSplit[0].Split(':');
+                publicKey = keys[0];
+                if (keys.Length > 1)
+                {
+                    secretKey = keys[1];
+                }
+
+                var pathSplit = atSplit[1].Split('/');
+                host = pathSplit[0];
+                projectId = pathSplit[1];
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("DSN is not a valid legacy or standard absolute URI.", nameof(dsn), ex);
+            }
+        }
+        else
+        {
+            // Standard modern DSN parsing format
+            if (!Uri.TryCreate(dsn, UriKind.Absolute, out var uri))
+            {
+                throw new ArgumentException("DSN is not a valid absolute URI.", nameof(dsn));
+            }
+
+            host = uri.Host;
+            var userInfo = uri.UserInfo;
+            publicKey = userInfo;
+
+            var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (pathSegments.Length == 0)
+            {
+                throw new ArgumentException("DSN missing project ID metadata.", nameof(dsn));
+            }
+            projectId = pathSegments[0];
+        }
+
+        var isOtlp = true;
+        var otlpLogsEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/logs";
+        var otlpTracesEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/traces";
+        var otlpHeaders = $"x-sentry-auth=sentry sentry_key={publicKey}";
+
+        return new SentryDsn(
+            dsn,
+            publicKey,
+            secretKey,
+            projectId,
+            host,
+            isOtlp,
+            otlpLogsEndpoint,
+            otlpTracesEndpoint,
+            otlpHeaders);
+    }
+}
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
+SIZE: 3.14 KB
+================================================================================
+
+using System;
+using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+public static class TelemetryBootstrapper
+{
+    public static readonly ActivitySource Source = new("MyAdventure");
+
+    public static IServiceCollection AddMyAdventureTelemetry(
+        this IServiceCollection services,
+        string environment,
+        bool verbose,
+        string sentryDsnStr)
+    {
+        var sentryDsn = SentryDsn.Parse(sentryDsnStr);
+
+        // Define shared resource attributes
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService(
+                serviceName: "MyAdventure",
+                serviceVersion: typeof(TelemetryBootstrapper).Assembly.GetName().Version?.ToString() ?? "1.0.0",
+                serviceInstanceId: Environment.MachineName)
+            .AddAttributes(new[]
+            {
+                new KeyValuePair<string, object>("deployment.environment", environment)
+            });
+
+        // 1. Configure Logging
+        services.AddLogging(logging =>
+        {
+            logging.ClearProviders();
+
+            if (verbose)
+            {
+                logging.AddConsole(opt =>
+                {
+                    opt.LogToStandardErrorThreshold = LogLevel.Error;
+                });
+            }
+
+            if (sentryDsn.IsOtlp)
+            {
+                Console.WriteLine($"Telemetry: Sentry OTLP enabled, env={environment}, verbose={verbose}");
+                logging.AddOpenTelemetry(options =>
+                {
+                    options.SetResourceBuilder(resourceBuilder);
+                    options.IncludeFormattedMessage = true;
+                    options.IncludeScopes = true;
+
+                    options.AddOtlpExporter(opt =>
+                    {
+                        opt.Protocol = OtpExportProtocol.HttpProtobuf;
+                        opt.Endpoint = new Uri(sentryDsn.OtlpLogsEndpoint);
+                        opt.Headers = sentryDsn.OtlpHeaders;
+                    });
+                });
+            }
+        });
+
+        // 2. Configure Tracing
+        services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing.SetResourceBuilder(resourceBuilder);
+                tracing.AddSource(Source.Name);
+                tracing.AddHttpClientInstrumentation();
+                tracing.AddSqlStatements();
+
+                if (sentryDsn.IsOtlp)
+                {
+                    tracing.AddOtlpExporter(opt =>
+                    {
+                        opt.Protocol = OtpExportProtocol.HttpProtobuf;
+                        opt.Endpoint = new Uri(sentryDsn.OtlpTracesEndpoint);
+                        opt.Headers = sentryDsn.OtlpHeaders;
+                    });
+                }
+            });
+
+        return services;
+    }
+
+    private static TracerProviderBuilder AddSqlStatements(this TracerProviderBuilder builder)
+    {
+        // Placeholder for any specific SQL tracking customization if needed
+        return builder;
     }
 }
 
