@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sun May 24 08:55:07 AM EDT 2026
+Generated: Sun May 24 09:45:28 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -25,6 +25,7 @@ DIRECTORY STRUCTURE:
 │       └── vendor
 │           ├── 2026-05-21.md
 │           ├── 2026-05-22.md
+│           ├── 2026-05-23.md
 │           ├── RCA-offline-earnings-on-resume.md
 │           ├── claude.md
 │           ├── commands.txt
@@ -64,7 +65,8 @@ DIRECTORY STRUCTURE:
 │               ├── 031.txt
 │               ├── 032.txt
 │               ├── 033.txt
-│               └── 034.txt
+│               ├── 034.txt
+│               └── 035.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -119,8 +121,13 @@ DIRECTORY STRUCTURE:
 │   │   │   └── DesignTimeDbContextFactory.cs
 │   │   ├── DependencyInjection.cs
 │   │   ├── MyAdventure.Infrastructure.csproj
-│   │   └── Repositories
-│   │       └── GameStateRepository.cs
+│   │   ├── Repositories
+│   │   │   └── GameStateRepository.cs
+│   │   └── Telemetry
+│   │       ├── SentryDsn.cs
+│   │       ├── TelemetryConfigurationLoader.cs
+│   │       ├── TelemetryOptions.cs
+│   │       └── TelemetryStartupAnnouncement.cs
 │   └── MyAdventure.Shared
 │       ├── Converters
 │       │   └── GameConverters.cs
@@ -153,7 +160,8 @@ DIRECTORY STRUCTURE:
     ├── MyAdventure.Integration.Tests
     │   ├── GameStateRepositoryTests.cs
     │   ├── MyAdventure.Integration.Tests.csproj
-    │   └── SchemaMigrationTests.cs
+    │   ├── SchemaMigrationTests.cs
+    │   └── TelemetryConfigurationTests.cs
     └── MyAdventure.UI.Tests
         ├── AppLifecycleManagerTests.cs
         ├── BusinessViewModelSpeedTests.cs
@@ -595,7 +603,7 @@ SIZE: 1.02 KB
 
 ================================================================================
 FILE: Directory.Packages.props
-SIZE: 3.93 KB
+SIZE: 4.04 KB
 ================================================================================
 
 <Project>
@@ -635,6 +643,7 @@ SIZE: 3.93 KB
 
   <ItemGroup Label="Configuration and DI - MIT License">
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
@@ -709,7 +718,7 @@ SIZE: .71 KB
 
 ================================================================================
 FILE: README.md
-SIZE: 53.60 KB
+SIZE: 62.27 KB
 ================================================================================
 
 # MyAdventure
@@ -1062,6 +1071,7 @@ MyAdventure.slnx
 - **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that wires into Avalonia's `IActivatableLifetime` (available via `Application.Current.TryGetFeature<IActivatableLifetime>()`), which works uniformly on all platforms. When the app goes to background (`ActivationKind.Background` Deactivated event), `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. When it returns to foreground (`ActivationKind.Background` Activated event), it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout. The `AppLifecycleManager` holds a replaceable static "current target" so Android activity recreation (which constructs a fresh ViewModel each time) doesn't leak handlers on the old VM.
 - **Cold-start vs. foreground-resume are distinct paths.** `GameEngine.LoadAsync` handles the cold-start path: it reads `LastPlayedAt` from the saved state and calls `ApplyOfflineEarnings(now - lastPlayedAt)` if the gap exceeds the minimum threshold. The foreground-resume path is handled by `GameViewModel.OnSuspended()` / `OnResumed()`, which uses `AppLifecycleManager`. Both paths call the same `GameEngine.ApplyOfflineEarnings(TimeSpan)` method — the single public entry point for offline earnings — so the logic is never duplicated and both paths are pinned by the same invariant tests.
 - **Localization** is wired via `Microsoft.Extensions.Localization` with JSON resource files (`src/MyAdventure.Shared/Resources/i18n/`). English (`en.json`) and Spanish (`es.json`) are included. The infrastructure is in place to add more locales by adding a new JSON file and updating the supported-cultures list in `DependencyInjection.cs`.
+- **Optional Sentry error tracking via OTLP — no Sentry SDK.** Sentry's hosted ingestion accepts standard OpenTelemetry traces and logs over OTLP/HTTP (`Settings → Client Keys (DSN) → OpenTelemetry`). The Infrastructure project's existing OpenTelemetry stack adds an OTLP exporter for logs and traces when a DSN is configured; metrics stay console-only because Sentry's OTLP ingestion does not accept metrics. No `Sentry.*` NuGet package is used — swapping to any other OTLP backend (Grafana Cloud, Honeycomb, Tempo, Loki, an OpenTelemetry Collector) is a one-line config change. See the [Observability](#observability-and-error-tracking) section for the configuration surface.
 - **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) gates the actual Dev Tools UI behind a paid Avalonia Plus / Pro subscription. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
 
 ### Avalonia 12 migration notes
@@ -1091,6 +1101,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
 | Database | SQLite via EF Core 10.0.8 | MIT |
 | Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
+| Optional error tracking | Sentry (via OTLP HTTP — no Sentry SDK) | n/a (free tier) |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
 | Mocking | NSubstitute 5.3.0 | BSD |
@@ -1200,8 +1211,98 @@ Configured in `.github/dependabot.yml` to check NuGet packages and GitHub Action
 - Auto-save triggers every ~300 ticks (~5 seconds at 60fps). Save is asynchronous; the game state is captured synchronously from the engine, then the write runs on a background task so the UI never hitches.
 - The `NumberFormatter` handles large number display. Below 1000: two decimal places. 1000 to 10³⁶: metric suffixes (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D). Above 10³⁶: scientific notation with Unicode superscript exponents (e.g. `7.53 × 10⁴⁰`). The `BigDouble` overload handles values arbitrarily past the `double` overflow range. Non-finite values display as `∞`, `-∞`, or `?` so they can never propagate crashes through the UI.
 - Database location: `{LocalApplicationData}/MyAdventure/myadventure.db` on every platform — on Android this resolves to the app's private internal storage.
-- OpenTelemetry exports to console by default on desktop. The `DependencyInjection.AddInfrastructure` method wires up logging, tracing (`AddSource("MyAdventure.*")`), metrics (`AddMeter("MyAdventure.*")`), and runtime instrumentation. The `GameEngine` emits an `EarningsCounter` metric (tagged by business ID and source) and a `TickDuration` histogram. Configure OTLP exporters in `DependencyInjection.cs` to send to Jaeger, Grafana, or any OTLP-compatible backend.
-- On Android, the OpenTelemetry console exporter is suppressed and logging routes through `Android.Util.Log` (visible in `adb logcat`) rather than the console (which is invisible on Android).
+- OpenTelemetry exports to console by default on desktop. The `DependencyInjection.AddInfrastructure` method wires up logging, tracing (`AddSource("MyAdventure.*")`), metrics (`AddMeter("MyAdventure.*")`), and runtime instrumentation. The `GameEngine` emits an `EarningsCounter` metric (tagged by business ID and source) and a `TickDuration` histogram. OTLP exporters for logs and traces are added automatically when a Sentry DSN is configured (see the next section); the same code path will forward to Jaeger, Grafana, Honeycomb, or an OpenTelemetry Collector with a different DSN-less endpoint URL.
+- On Android, the OpenTelemetry console exporter still runs but Android's standard output is invisible to users; the same log records go through the OTLP exporter when a DSN is configured. `Android.Util.Log` calls remain in `AndroidApp` / `App.axaml.cs` for the early-boot path (before the OpenTelemetry pipeline is ready) so initialization errors are still visible in `adb logcat`.
+
+---
+
+## Observability and error tracking
+
+The project ships with first-class OpenTelemetry instrumentation: structured logs, traces, and runtime metrics. By default everything goes to the console. **Optionally** the same data can be forwarded to Sentry — using Sentry's native OTLP HTTP endpoint, not the Sentry .NET SDK. There is no `Sentry.*` NuGet package in this repo. The OpenTelemetry stack already in place does the entire job: pointing it at a different OTLP backend later is a configuration change, not a code change.
+
+### What gets captured
+
+The instrumentation lives in the regular code path — `GameEngine`, `GameViewModel`, `AppLifecycleManager`, `GameStateRepository`, and `DependencyInjection.InitializeDatabaseAsync` — and is emitted on every major event in the app's life. Concretely:
+
+- **Lifecycle:** app start, telemetry-configuration breadcrumb (Sentry on/off, verbose on/off, environment), database migration begin/end, game-state load, fresh-game start (no save found), app suspended, app resumed, offline earnings applied (with seconds and amount).
+- **Game economy:** buy single unit, buy bulk (with count, cost, and resulting total), buy manager, prestige (with new angel count), import (with extracted cash and angels), export (with payload size), copy-to-clipboard.
+- **Errors and warnings:** parse errors when importing a tampered save, clipboard failures, save failures, schema-migration failures (rolled back), business-data / manager-data JSON parse failures.
+- **Spans (traces):** every game load, every tick batch, every save, every prestige, every offline-earnings calculation.
+- **Metrics (console-only — Sentry doesn't accept OTLP metrics):** tick counter, earnings counter (tagged by business and by `live` vs `offline` source), tick-duration histogram, plus the standard .NET runtime metrics from `OpenTelemetry.Instrumentation.Runtime` (GC, threadpool, exceptions, etc).
+
+The full list of log messages can be discovered with `git grep "LogInformation\|LogWarning\|LogError" src/`.
+
+### Free-tier-friendly defaults
+
+Sentry's Developer (free forever) plan ships with 5,000 errors / 10,000 performance transactions / 5 GB of logs per month. The defaults below are picked to fit comfortably inside that envelope for an idle game with one player:
+
+- **Sentry is opt-in.** No DSN configured → no Sentry exporter is added at all. There is zero outbound network traffic from telemetry until you set a DSN.
+- **Metrics never go to Sentry.** Sentry's OTLP ingestion doesn't accept metrics, and we don't try. Runtime metrics stay on the console exporter.
+- **`Microsoft.EntityFrameworkCore` is pinned at `Warning`** so EF Core's per-statement `Information` chatter (which is voluminous and almost never actionable) doesn't burn through the log quota.
+- **Verbose logging is off by default**, controlled by a single toggle (see below). When verbose is off the app emits a handful of records per session.
+- **Traces are sampled at 100% by default** because the game produces only a few spans per session. Lower `TracesSampleRate` if you start running automated soak tests.
+
+If you go over the free tier, Sentry stops accepting new events for the rest of the billing month rather than charging you. The "drop events on quota exhaustion" behaviour is exactly what we want — there is no scenario where this project starts costing money silently.
+
+### Configuration surface
+
+Configuration is bound from `appsettings.json` (Desktop) or environment variables (Desktop *and* Android). Environment variables always win.
+
+`src/MyAdventure.Desktop/appsettings.json`:
+
+```json
+{
+  "Telemetry": {
+    "VerboseLogging": false,
+    "Sentry": {
+      "Dsn": "",
+      "Environment": "production",
+      "TracesSampleRate": 1.0
+    }
+  }
+}
+```
+
+Environment variables (recognized on both Desktop and Android):
+
+| Variable | Effect |
+|----------|--------|
+| `SENTRY_DSN` | Sentry DSN. Empty / unset = Sentry exporter is not registered. |
+| `MYADVENTURE_VERBOSE` | `1` / `true` / `yes` / `on` (case-insensitive) lifts log level to `Debug` and EF Core to `Information`. Anything else (or unset) keeps the safe defaults. |
+| `MYADVENTURE_SENTRY_ENVIRONMENT` | Override `deployment.environment` on every event (e.g. `staging`, `development`). |
+
+A startup breadcrumb log line records the configuration the app actually applied — visible on the console, in Sentry (if configured), and in `adb logcat` on Android — so you can see at a glance whether Sentry is on, what environment is reported, and whether verbose mode is active.
+
+### Verbose logging
+
+Verbose mode is a runtime toggle, not a rebuild. Flip `MYADVENTURE_VERBOSE=1` (or set `Telemetry:VerboseLogging: true` in `appsettings.json`) and restart the app. The OpenTelemetry log pipeline's minimum level drops from `Information` to `Debug`, and Entity Framework Core lifts from `Warning` to `Information` (so SQL command traces start appearing). Turn it back off when you're done — the verbose stream is intentionally chatty.
+
+On Android the simplest way to toggle it for a single APK install is:
+
+```bash
+adb shell setprop debug.MYADVENTURE_VERBOSE 1
+# then force-stop and relaunch the app
+```
+
+…or rebuild with the env var burned in via an `AndroidEnvironment` file.
+
+### Setting up Sentry (free tier)
+
+1. Create a Sentry account, organization, and project at https://sentry.io. The project type doesn't really matter (any platform works for the OTLP endpoint); pick "Native" or ".NET" for closest documentation.
+2. Open **Settings → Projects → \<your project\> → Client Keys (DSN)** and copy the **DSN** value. (The page also shows the OTLP endpoints and the `x-sentry-auth` header for reference; the code derives both from the DSN, so you only need to copy the DSN itself.)
+3. Set it on the platform you want:
+   - **Desktop, one-off run:** `SENTRY_DSN='https://...@...sentry.io/...' dotnet run --project src/MyAdventure.Desktop`
+   - **Desktop, persistent (Linux/macOS):** add `export SENTRY_DSN=...` to your shell rc file.
+   - **Desktop, persistent (Windows):** `setx SENTRY_DSN "https://..."` in an admin shell, then open a new shell.
+   - **Desktop, baked into a checkout:** edit `Telemetry:Sentry:Dsn` in `src/MyAdventure.Desktop/appsettings.json`. ⚠ Don't commit a real DSN — `appsettings.json` is tracked. To keep a personal DSN out of git, drop it in `src/MyAdventure.Desktop/appsettings.local.json` instead — that file is gitignored, optional, and loaded after `appsettings.json` so it overrides anything in the committed file.
+   - **Android:** `adb shell setprop debug.SENTRY_DSN 'https://...'` for testing, or bake into the build with an `AndroidEnvironment` file for production releases.
+4. Restart the app. You should see a startup line like `Telemetry: Sentry OTLP enabled, env=production, verbose=False`. Within 30–60 seconds the first events will appear in Sentry's **Issues** and **Traces** views. If they don't, double-check the DSN by opening `Settings → Client Keys (DSN) → OpenTelemetry` in Sentry and confirming the host matches.
+
+If the DSN is malformed (typo, missing scheme, etc.), the app still starts — it logs a single warning and proceeds with console-only exporters. A misconfigured DSN never blocks startup.
+
+### Switching to a different OTLP backend
+
+Because the integration uses standard OTLP/HTTP, redirecting to a non-Sentry backend is a one-line edit in `Infrastructure/DependencyInjection.cs`: change the endpoint construction in `SentryDsn` (or replace the whole DSN-parsing path) and adjust the auth header to whatever the new backend expects. The rest of the OpenTelemetry pipeline — instrumentation, resource attributes, sampling — stays exactly as-is.
 
 ---
 
@@ -1212,7 +1313,7 @@ This project is built collaboratively between a human developer and AI assistant
 - **Code generation:** Significant portions of C#, AXAML, YAML, and configuration files were generated by Anthropic Claude (Opus and Sonnet models) and Google Gemini, then reviewed, tested, and iterated on by the human developer.
 - **Architecture decisions:** The clean architecture layout, project structure, testing strategy, BigDouble design, and CI/CD pipeline were designed through human-AI collaboration.
 - **Documentation:** This README and other documentation files were drafted with LLM assistance.
-- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration, edge-to-edge safe-area handling on Android 15, the offline-earnings DispatcherTimer tick-clamping bug, and the cash-stall-at-1e200 BigDouble migration) were diagnosed and resolved with AI help.
+- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration, edge-to-edge safe-area handling on Android 15, the offline-earnings DispatcherTimer tick-clamping bug, the cash-stall-at-1e200 BigDouble migration, and the Sentry-via-OTLP integration that avoids the Sentry .NET SDK) were diagnosed and resolved with AI help.
 
 We provide this disclosure so that AI training pipelines, web scrapers, and researchers can make informed decisions about including this content in their datasets. If you operate a training pipeline and wish to exclude LLM-assisted code, this notice serves as a clear signal.
 
@@ -1231,6 +1332,8 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 **Note on dependency licenses:** All NuGet dependencies used by this project are licensed under MIT, Apache-2.0, or BSD licenses, which are compatible with AGPLv3. The AGPLv3 applies to the MyAdventure source code itself.
+
+
 
 
 ================================================================================
@@ -1475,7 +1578,7 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/App.axaml.cs
-SIZE: 2.78 KB
+SIZE: 3.44 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
@@ -1484,6 +1587,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyAdventure.Android.Views;
 using MyAdventure.Core.Services;
 using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
 using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
 
@@ -1508,13 +1612,23 @@ public partial class App : Avalonia.Application
         {
             global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted starting");
 
+            // Android does not ship with the typical .NET host-bootstrapping
+            // pipeline that auto-binds appsettings.json. Instead we read
+            // telemetry config from environment variables — toggling
+            // Sentry on/off for the APK is a matter of setting SENTRY_DSN
+            // (e.g. via `adb shell setprop` during testing, or by burning
+            // it into the build via an AndroidEnvironment file for
+            // production builds).
+            var telemetry = TelemetryConfigurationLoader.LoadFromEnvironment();
+
             var services = new ServiceCollection();
-            services.AddInfrastructure();
+            services.AddInfrastructure(telemetry);
             services.AddSingleton<ToastService>();
             services.AddTransient<GameEngine>();
             services.AddTransient<GameViewModel>();
             Services = services.BuildServiceProvider();
 
+            DependencyInjection.EmitStartupBreadcrumb(Services);
             await DependencyInjection.InitializeDatabaseAsync(Services);
 
             // Avalonia 12: Android uses IActivityApplicationLifetime with
@@ -4300,15 +4414,17 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/App.axaml.cs
-SIZE: 1.27 KB
+SIZE: 2.66 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyAdventure.Core.Services;
 using MyAdventure.Desktop.Views;
 using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
 using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
 
@@ -4325,13 +4441,36 @@ public partial class App : Avalonia.Application
 
     public override async void OnFrameworkInitializationCompleted()
     {
+        // Load appsettings.json (copied to the output directory by the
+        // csproj's <None Include="appsettings.json" CopyToOutputDirectory />
+        // rule) and merge environment-variable overrides on top. The
+        // result is a TelemetryOptions instance that drives whether
+        // Sentry's OTLP exporters are registered. Defaults are completely
+        // safe — Sentry off, console-only logging — so the first build
+        // after a fresh checkout works without any configuration at all.
+        //
+        // appsettings.local.json is honoured for developer overrides
+        // (e.g. a personal Sentry DSN) and is gitignored. It does not
+        // need to exist; the optional flag keeps startup clean when
+        // there is no override file.
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var telemetry = TelemetryConfigurationLoader.LoadFromConfiguration(configuration);
+
         var services = new ServiceCollection();
-        services.AddInfrastructure();
+        services.AddInfrastructure(telemetry);
         services.AddSingleton<ToastService>();
         services.AddTransient<GameEngine>();
         services.AddTransient<GameViewModel>();
+        services.AddSingleton<IConfiguration>(configuration);
         Services = services.BuildServiceProvider();
 
+        DependencyInjection.EmitStartupBreadcrumb(Services);
         await DependencyInjection.InitializeDatabaseAsync(Services);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -4881,7 +5020,7 @@ SIZE: .63 KB
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/appsettings.json
-SIZE: .18 KB
+SIZE: .34 KB
 ================================================================================
 
 {
@@ -4893,6 +5032,14 @@ SIZE: .18 KB
     "LogLevel": {
       "Default": "Information",
       "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "Telemetry": {
+    "VerboseLogging": false,
+    "Sentry": {
+      "Dsn": "",
+      "Environment": "production",
+      "TracesSampleRate": 1.0
     }
   }
 }
@@ -4956,7 +5103,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/DependencyInjection.cs
-SIZE: 7.61 KB
+SIZE: 16.31 KB
 ================================================================================
 
 using Microsoft.Data.Sqlite;
@@ -4966,6 +5113,8 @@ using Microsoft.Extensions.Logging;
 using MyAdventure.Core.Interfaces;
 using MyAdventure.Infrastructure.Data;
 using MyAdventure.Infrastructure.Repositories;
+using MyAdventure.Infrastructure.Telemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -4975,8 +5124,52 @@ namespace MyAdventure.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string? dbPath = null)
+    /// <summary>
+    /// Convenience overload preserved for callers (and tests) that don't
+    /// want to opt into the telemetry configuration object. Behaviour is
+    /// unchanged from before: console exporters only, no Sentry, info-level
+    /// logging — exactly what every existing test relies on.
+    /// </summary>
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        string? dbPath = null)
+        => AddInfrastructure(services, new TelemetryOptions(), dbPath);
+
+    /// <summary>
+    /// Register everything the Infrastructure layer owns: the SQLite
+    /// <see cref="AppDbContext"/>, the <see cref="IGameStateRepository"/>,
+    /// and the full OpenTelemetry logging/tracing/metrics pipeline.
+    ///
+    /// <para>
+    /// <b>Sentry integration.</b> If <see cref="SentryOptions.Dsn"/> is
+    /// populated <i>and</i> parses successfully, an OTLP/HTTP exporter
+    /// is registered for both logs and traces (Sentry doesn't accept
+    /// OTLP metrics, so the metrics pipeline stays console-only). The
+    /// DSN, environment, and sampling rate come from
+    /// <paramref name="telemetry"/>; callers usually build that via
+    /// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration"/>
+    /// (Desktop) or <see cref="TelemetryConfigurationLoader.LoadFromEnvironment"/>
+    /// (Android).
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Verbose logging.</b> When <see cref="TelemetryOptions.VerboseLogging"/>
+    /// is true the OpenTelemetry log pipeline's minimum level drops to
+    /// <c>Debug</c> and Entity Framework Core's category lifts from
+    /// <c>Warning</c> to <c>Information</c>, so SQL command traces start
+    /// showing up. This is a runtime switch — no rebuild needed; the
+    /// player (or a beta tester) can toggle it via
+    /// <c>MYADVENTURE_VERBOSE=1</c> or by editing
+    /// <c>appsettings.json</c>.
+    /// </para>
+    /// </summary>
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        TelemetryOptions telemetry,
+        string? dbPath = null)
     {
+        ArgumentNullException.ThrowIfNull(telemetry);
+
         dbPath ??= GetDefaultDbPath();
 
         services.AddDbContext<AppDbContext>(opts =>
@@ -4984,28 +5177,160 @@ public static class DependencyInjection
 
         services.AddScoped<IGameStateRepository, GameStateRepository>();
 
-        // OpenTelemetry
-        var resourceBuilder = ResourceBuilder.CreateDefault()
-            .AddService("MyAdventure", "1.0.0");
+        // Make the snapshotted options available to anyone who wants to
+        // inspect them at runtime (the App startup logs them).
+        services.AddSingleton(telemetry);
 
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService(
+                serviceName: "MyAdventure",
+                serviceVersion: GetAssemblyVersion(),
+                serviceInstanceId: Environment.MachineName)
+            .AddAttributes(new KeyValuePair<string, object>[]
+            {
+                new("deployment.environment", telemetry.Sentry.Environment),
+            });
+
+        // Parse the DSN exactly once. If it's invalid we proceed with the
+        // console exporter only — a misconfigured DSN must never block
+        // app startup. The parse error is captured in a logger message
+        // emitted by the very pipeline we're building, so it shows up on
+        // the same console the developer is already watching.
+        SentryDsn? sentry = null;
+        string? sentryParseError = null;
+        var sentryEnabled = !string.IsNullOrWhiteSpace(telemetry.Sentry.Dsn)
+            && SentryDsn.TryParse(telemetry.Sentry.Dsn, out sentry, out sentryParseError);
+
+        ConfigureLogging(services, telemetry, resourceBuilder, sentry);
+        ConfigureTracingAndMetrics(services, telemetry, resourceBuilder, sentry);
+
+        // Emit a single-line breadcrumb that records the configuration
+        // we landed on. We can't log it directly here (no IServiceProvider
+        // yet), so we use a transient hosted-style activator: register a
+        // startup-time announcer that the app calls explicitly via
+        // EmitStartupBreadcrumb.
+        services.AddSingleton(new TelemetryStartupAnnouncement(
+            SentryEnabled: sentryEnabled,
+            SentryParseError: sentryParseError,
+            VerboseLogging: telemetry.VerboseLogging,
+            Environment: telemetry.Sentry.Environment));
+
+        return services;
+    }
+
+    private static void ConfigureLogging(
+        IServiceCollection services,
+        TelemetryOptions telemetry,
+        ResourceBuilder resourceBuilder,
+        SentryDsn? sentry)
+    {
         services.AddLogging(logging =>
+        {
+            // Lift EF Core noise to Information when verbose mode is on,
+            // otherwise keep it pinned at Warning so the default
+            // OpenTelemetry log pipeline doesn't spam Sentry with
+            // benign EnsureCreated chatter.
+            logging.AddFilter("Microsoft.EntityFrameworkCore",
+                telemetry.VerboseLogging ? LogLevel.Information : LogLevel.Warning);
+
+            logging.SetMinimumLevel(telemetry.VerboseLogging ? LogLevel.Debug : LogLevel.Information);
+
             logging.AddOpenTelemetry(otel =>
             {
                 otel.SetResourceBuilder(resourceBuilder);
+                otel.IncludeFormattedMessage = true;
+                otel.IncludeScopes = true;
+                otel.ParseStateValues = true;
+
                 otel.AddConsoleExporter();
-            }));
 
+                if (sentry is not null)
+                {
+                    otel.AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = sentry.LogsEndpoint;
+                        o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
+                    });
+                }
+            });
+        });
+    }
+
+    private static void ConfigureTracingAndMetrics(
+        IServiceCollection services,
+        TelemetryOptions telemetry,
+        ResourceBuilder resourceBuilder,
+        SentryDsn? sentry)
+    {
         services.AddOpenTelemetry()
-            .WithTracing(tracing => tracing
-                .SetResourceBuilder(resourceBuilder)
-                .AddSource("MyAdventure.*")
-                .AddConsoleExporter())
-            .WithMetrics(metrics => metrics
-                .AddMeter("MyAdventure.*")
-                .AddRuntimeInstrumentation()
-                .AddConsoleExporter());
+            .WithTracing(tracing =>
+            {
+                tracing.SetResourceBuilder(resourceBuilder);
+                tracing.AddSource("MyAdventure.*");
+                tracing.SetSampler(new TraceIdRatioBasedSampler(
+                    Math.Clamp(telemetry.Sentry.TracesSampleRate, 0.0, 1.0)));
 
-        return services;
+                tracing.AddConsoleExporter();
+
+                if (sentry is not null)
+                {
+                    tracing.AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = sentry.TracesEndpoint;
+                        o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
+                    });
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                // Sentry's OTLP ingestion does NOT accept metrics, so the
+                // metrics pipeline stays console-only. The runtime metrics
+                // are still useful locally and would be picked up by any
+                // separate OTLP backend (Grafana Mimir, Prometheus via
+                // OTLP, etc.) when added later.
+                metrics.SetResourceBuilder(resourceBuilder);
+                metrics.AddMeter("MyAdventure.*");
+                metrics.AddRuntimeInstrumentation();
+                metrics.AddConsoleExporter();
+            });
+    }
+
+    /// <summary>
+    /// Emit a single startup log line summarising the telemetry decisions
+    /// we made in <see cref="AddInfrastructure(IServiceCollection, TelemetryOptions, string?)"/>.
+    /// The Desktop and Android entry points call this once after building
+    /// the service provider, so the configuration shows up in every log
+    /// sink (console, OTLP/Sentry, Android logcat) without the
+    /// Infrastructure project needing to know about any of them directly.
+    /// </summary>
+    public static void EmitStartupBreadcrumb(IServiceProvider services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var announcement = services.GetRequiredService<TelemetryStartupAnnouncement>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger("MyAdventure.Telemetry");
+
+        if (announcement.SentryEnabled)
+        {
+            logger.LogInformation(
+                "Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}",
+                announcement.Environment, announcement.VerboseLogging);
+        }
+        else if (!string.IsNullOrEmpty(announcement.SentryParseError))
+        {
+            logger.LogWarning(
+                "Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.",
+                announcement.SentryParseError);
+        }
+        else
+        {
+            logger.LogInformation(
+                "Telemetry: Sentry disabled (no DSN), verbose={Verbose}",
+                announcement.VerboseLogging);
+        }
     }
 
     /// <summary>
@@ -5142,19 +5467,40 @@ public static class DependencyInjection
         Directory.CreateDirectory(appData);
         return Path.Combine(appData, "myadventure.db");
     }
+
+    /// <summary>
+    /// Read the assembly's InformationalVersion at runtime (set by
+    /// <c>Directory.Build.props</c>) so the OpenTelemetry resource is
+    /// tagged with the build number. Falls back to "0.0.0" if the
+    /// attribute is missing — which would only happen in an oddly
+    /// stripped build, so we don't make it fatal.
+    /// </summary>
+    private static string GetAssemblyVersion()
+    {
+        var asm = typeof(DependencyInjection).Assembly;
+        var info = asm.GetCustomAttributes(
+            typeof(System.Reflection.AssemblyInformationalVersionAttribute), false);
+        if (info.Length > 0 &&
+            info[0] is System.Reflection.AssemblyInformationalVersionAttribute attr &&
+            !string.IsNullOrWhiteSpace(attr.InformationalVersion))
+        {
+            return attr.InformationalVersion;
+        }
+        return asm.GetName().Version?.ToString() ?? "0.0.0";
+    }
 }
 
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
-SIZE: 1.15 KB
+SIZE: 1.30 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -5162,6 +5508,7 @@ SIZE: 1.15 KB
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
@@ -5170,6 +5517,7 @@ SIZE: 1.15 KB
     <PackageReference Include="OpenTelemetry" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
   </ItemGroup>
 </Project>
@@ -5235,6 +5583,383 @@ public class GameStateRepository(
         logger.LogInformation("All game states deleted");
     }
 }
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
+SIZE: 4.49 KB
+================================================================================
+
+using System.Diagnostics.CodeAnalysis;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+/// <summary>
+/// Parses a Sentry DSN string into the pieces required to talk to its
+/// hosted OTLP endpoints over plain HTTP/protobuf — without taking a
+/// dependency on the Sentry .NET SDK.
+///
+/// <para>
+/// A Sentry DSN looks like
+/// <c>https://&lt;publicKey&gt;@o&lt;orgId&gt;.ingest.&lt;region&gt;.sentry.io/&lt;projectId&gt;</c>.
+/// The first path segment is the project id; the host's first label
+/// (<c>o&lt;orgId&gt;</c>) carries the org id; the userinfo is the
+/// public key. Sentry's documented OTLP URL shape is
+/// <c>https://&lt;host&gt;/api/&lt;projectId&gt;/integration/otlp/v1/{traces|logs}</c>
+/// and the auth header is <c>x-sentry-auth: sentry sentry_key=&lt;publicKey&gt;</c>.
+/// </para>
+///
+/// <para>
+/// Region-aware: <c>ingest.sentry.io</c>, <c>ingest.us.sentry.io</c>,
+/// <c>ingest.de.sentry.io</c>, and any future region are all handled
+/// the same way (we re-use the host that was given to us, only deriving
+/// the path and headers).
+/// </para>
+/// </summary>
+public sealed class SentryDsn
+{
+    /// <summary>The public key (DSN userinfo).</summary>
+    public required string PublicKey { get; init; }
+
+    /// <summary>The project id (first path segment of the DSN).</summary>
+    public required string ProjectId { get; init; }
+
+    /// <summary>The ingest host (e.g. <c>o123.ingest.de.sentry.io</c>).</summary>
+    public required string Host { get; init; }
+
+    /// <summary>The full OTLP traces endpoint URL.</summary>
+    public Uri TracesEndpoint =>
+        new($"https://{Host}/api/{ProjectId}/integration/otlp/v1/traces");
+
+    /// <summary>The full OTLP logs endpoint URL.</summary>
+    public Uri LogsEndpoint =>
+        new($"https://{Host}/api/{ProjectId}/integration/otlp/v1/logs");
+
+    /// <summary>
+    /// The value to put in the <c>x-sentry-auth</c> header. The header
+    /// <i>name</i> is fixed ("x-sentry-auth"); only this value changes
+    /// per-project.
+    /// </summary>
+    public string AuthHeaderValue => $"sentry sentry_key={PublicKey}";
+
+    /// <summary>
+    /// Parse the given DSN. Returns <c>false</c> and a descriptive
+    /// <paramref name="error"/> on malformed input rather than throwing
+    /// — config errors should be reported at startup, not crash the
+    /// game. The caller can log the error and proceed with telemetry
+    /// disabled.
+    /// </summary>
+    public static bool TryParse(
+        string? dsn,
+        [NotNullWhen(true)] out SentryDsn? result,
+        out string? error)
+    {
+        result = null;
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            error = "DSN is empty.";
+            return false;
+        }
+
+        if (!Uri.TryCreate(dsn.Trim(), UriKind.Absolute, out var uri))
+        {
+            error = "DSN is not a valid absolute URI.";
+            return false;
+        }
+
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+        {
+            error = $"DSN scheme '{uri.Scheme}' is not http(s).";
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(uri.UserInfo))
+        {
+            error = "DSN is missing the public key (the part before '@').";
+            return false;
+        }
+
+        // UserInfo can be "publicKey" or (legacy DSNs) "publicKey:secretKey".
+        // Sentry's OTLP auth wants only the public key.
+        var publicKey = uri.UserInfo;
+        var colon = publicKey.IndexOf(':');
+        if (colon >= 0) publicKey = publicKey[..colon];
+
+        if (string.IsNullOrWhiteSpace(publicKey))
+        {
+            error = "DSN public key is empty.";
+            return false;
+        }
+
+        // First path segment is the project id. AbsolutePath starts with '/'.
+        var projectId = uri.AbsolutePath.Trim('/').Split('/', 2)[0];
+        if (string.IsNullOrWhiteSpace(projectId))
+        {
+            error = "DSN is missing the project id (the path segment after the host).";
+            return false;
+        }
+
+        result = new SentryDsn
+        {
+            PublicKey = publicKey,
+            ProjectId = projectId,
+            Host = uri.Host,
+        };
+        return true;
+    }
+
+    /// <summary>
+    /// Convenience wrapper around <see cref="TryParse"/> that throws on
+    /// invalid input. Useful in unit tests where any error is a bug.
+    /// </summary>
+    public static SentryDsn Parse(string dsn)
+    {
+        if (!TryParse(dsn, out var result, out var error))
+            throw new ArgumentException(error, nameof(dsn));
+        return result;
+    }
+}
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
+SIZE: 3.78 KB
+================================================================================
+
+using Microsoft.Extensions.Configuration;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+/// <summary>
+/// Builds a <see cref="TelemetryOptions"/> from environment variables and
+/// (optionally) an <see cref="IConfiguration"/>. Lives in
+/// <c>Infrastructure</c> so both Desktop and Android can share it.
+///
+/// <para>
+/// <b>Why this exists.</b> Android does not ship with the typical .NET
+/// host bootstrapping that auto-binds <c>appsettings.json</c>; the
+/// Android project's <c>App.axaml.cs</c> calls <see cref="LoadFromEnvironment"/>
+/// directly, while the Desktop project loads <c>appsettings.json</c> first
+/// and then merges environment overrides via <see cref="LoadFromConfiguration"/>.
+/// Both code paths end up with identical <see cref="TelemetryOptions"/>
+/// semantics, which is what lets us keep a single
+/// <see cref="DependencyInjection.AddInfrastructure(Microsoft.Extensions.DependencyInjection.IServiceCollection, TelemetryOptions, string?)"/>
+/// overload servicing both platforms.
+/// </para>
+///
+/// <para>
+/// Honour order (highest precedence wins):
+/// <list type="number">
+///   <item>The <c>SENTRY_DSN</c> / <c>MYADVENTURE_VERBOSE</c> /
+///   <c>MYADVENTURE_SENTRY_ENVIRONMENT</c> environment variables.</item>
+///   <item>The bound <see cref="TelemetryOptions"/> values (which usually
+///   come from <c>appsettings.json</c>).</item>
+///   <item>Compile-time defaults (Sentry off, verbose off).</item>
+/// </list>
+/// </para>
+/// </summary>
+public static class TelemetryConfigurationLoader
+{
+    public const string SentryDsnEnvVar = "SENTRY_DSN";
+    public const string VerboseLoggingEnvVar = "MYADVENTURE_VERBOSE";
+    public const string SentryEnvironmentEnvVar = "MYADVENTURE_SENTRY_ENVIRONMENT";
+
+    /// <summary>
+    /// Build options from environment variables only (Android path).
+    /// </summary>
+    public static TelemetryOptions LoadFromEnvironment()
+    {
+        var options = new TelemetryOptions();
+        ApplyEnvironmentOverrides(options);
+        return options;
+    }
+
+    /// <summary>
+    /// Build options by binding <c>Telemetry</c> in
+    /// <paramref name="configuration"/> and then applying environment
+    /// overrides on top (Desktop path).
+    /// </summary>
+    public static TelemetryOptions LoadFromConfiguration(IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        var options = new TelemetryOptions();
+        configuration.GetSection(TelemetryOptions.SectionName).Bind(options);
+        ApplyEnvironmentOverrides(options);
+        return options;
+    }
+
+    private static void ApplyEnvironmentOverrides(TelemetryOptions options)
+    {
+        var dsn = Environment.GetEnvironmentVariable(SentryDsnEnvVar);
+        if (!string.IsNullOrWhiteSpace(dsn))
+        {
+            options.Sentry.Dsn = dsn;
+        }
+
+        var verbose = Environment.GetEnvironmentVariable(VerboseLoggingEnvVar);
+        if (!string.IsNullOrWhiteSpace(verbose))
+        {
+            options.VerboseLogging = ParseBool(verbose);
+        }
+
+        var env = Environment.GetEnvironmentVariable(SentryEnvironmentEnvVar);
+        if (!string.IsNullOrWhiteSpace(env))
+        {
+            options.Sentry.Environment = env;
+        }
+    }
+
+    /// <summary>
+    /// Tolerant boolean parser: accepts <c>true</c>/<c>1</c>/<c>yes</c>/<c>on</c>
+    /// (any casing) as true; treats anything else, including <c>0</c>/<c>false</c>,
+    /// as false. People set env vars in strange ways.
+    /// </summary>
+    private static bool ParseBool(string raw)
+    {
+        var trimmed = raw.Trim();
+        return trimmed.Equals("true", StringComparison.OrdinalIgnoreCase)
+            || trimmed.Equals("1", StringComparison.Ordinal)
+            || trimmed.Equals("yes", StringComparison.OrdinalIgnoreCase)
+            || trimmed.Equals("on", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryOptions.cs
+SIZE: 3.91 KB
+================================================================================
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+/// <summary>
+/// Strongly-typed configuration for the OpenTelemetry pipeline.
+/// Bound from the <c>Telemetry</c> section in <c>appsettings.json</c> and
+/// from environment variables (see <see cref="TelemetryConfigurationLoader"/>
+/// for the exact precedence rules).
+///
+/// <para>
+/// Everything here has a safe, off-by-default value: a fresh checkout of
+/// the project, a developer who has never heard of Sentry, and the CI
+/// test runner all get the same behaviour — console-only OpenTelemetry,
+/// no outbound network calls, no extra startup cost.
+/// </para>
+/// </summary>
+public sealed class TelemetryOptions
+{
+    /// <summary>
+    /// Configuration section name (<c>appsettings.json</c>).
+    /// </summary>
+    public const string SectionName = "Telemetry";
+
+    /// <summary>
+    /// When true, the OpenTelemetry logger's minimum level is dropped to
+    /// <c>Debug</c> (and the EF Core category lifts from <c>Warning</c>
+    /// to <c>Information</c>). Useful for chasing bugs without forcing
+    /// every release build to emit a tick-by-tick log stream. Default
+    /// is <c>false</c>.
+    ///
+    /// <para>
+    /// Toggle via <c>Telemetry:VerboseLogging</c> in <c>appsettings.json</c>
+    /// or the <c>MYADVENTURE_VERBOSE</c> environment variable (any value
+    /// other than <c>0</c>/<c>false</c> enables it).
+    /// </para>
+    /// </summary>
+    public bool VerboseLogging { get; set; }
+
+    /// <summary>
+    /// Sentry-specific options. Honoured only when
+    /// <see cref="SentryOptions.Dsn"/> is non-empty.
+    /// </summary>
+    public SentryOptions Sentry { get; set; } = new();
+}
+
+/// <summary>
+/// Settings for forwarding logs and traces to Sentry via OTLP/HTTP.
+///
+/// <para>
+/// This project deliberately does <b>not</b> use the Sentry .NET SDK.
+/// Sentry's hosted ingestion accepts the standard OpenTelemetry
+/// Protocol natively (traces + logs; metrics are not supported by
+/// Sentry over OTLP), so the existing OpenTelemetry stack can talk
+/// to it directly with no vendor-specific NuGet package. Swapping to
+/// any other OTLP backend (Grafana Cloud, Honeycomb, Tempo, Loki, an
+/// OpenTelemetry Collector, etc.) becomes a one-line config change.
+/// </para>
+/// </summary>
+public sealed class SentryOptions
+{
+    /// <summary>
+    /// The Sentry DSN. When empty or <c>null</c>, the Sentry OTLP
+    /// exporters are not registered and the app behaves exactly as it
+    /// did before the Sentry integration existed.
+    ///
+    /// <para>
+    /// Looks like <c>https://&lt;key&gt;@o&lt;org&gt;.ingest.&lt;region&gt;.sentry.io/&lt;project&gt;</c>.
+    /// The DSN encodes the public key, org id, ingest region, and
+    /// project id; <see cref="SentryDsn.Parse"/> derives the OTLP
+    /// endpoint URLs and auth header from it.
+    /// </para>
+    ///
+    /// <para>
+    /// Honour order (highest precedence first):
+    /// <list type="number">
+    ///   <item>The <c>SENTRY_DSN</c> environment variable.</item>
+    ///   <item>The <c>Telemetry:Sentry:Dsn</c> key in
+    ///   <c>appsettings.json</c>.</item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    public string? Dsn { get; set; }
+
+    /// <summary>
+    /// Tag every event with the deployment environment. Common values
+    /// are <c>production</c>, <c>staging</c>, <c>development</c>. Default
+    /// is <c>production</c> so that the rare developer who turns Sentry
+    /// on locally can override it explicitly and avoid polluting the
+    /// production stream with dev noise.
+    /// </summary>
+    public string Environment { get; set; } = "production";
+
+    /// <summary>
+    /// Fraction of traces to sample [0.0 - 1.0]. Default is 1.0 (sample
+    /// everything) because the game emits very few spans per session
+    /// — there's no risk of blowing the free quota at full sampling.
+    /// Lower it if you start running large automated soak tests.
+    /// </summary>
+    public double TracesSampleRate { get; set; } = 1.0;
+}
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs
+SIZE: .88 KB
+================================================================================
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+/// <summary>
+/// A startup-time snapshot of the decisions
+/// <see cref="DependencyInjection.AddInfrastructure(Microsoft.Extensions.DependencyInjection.IServiceCollection, TelemetryOptions, string?)"/>
+/// made while wiring the OpenTelemetry pipeline. Stored as a singleton
+/// service so the entry point can emit a single human-readable startup
+/// log line through the very pipeline that was just built — see
+/// <see cref="DependencyInjection.EmitStartupBreadcrumb"/>.
+///
+/// <para>
+/// Kept <c>internal</c> deliberately: outside the Infrastructure project
+/// nobody should be reading these flags individually. The startup
+/// breadcrumb is the one supported surface.
+/// </para>
+/// </summary>
+internal sealed record TelemetryStartupAnnouncement(
+    bool SentryEnabled,
+    string? SentryParseError,
+    bool VerboseLogging,
+    string Environment);
 
 
 ================================================================================
@@ -9340,7 +10065,7 @@ public class GameStateRepositoryTests : IDisposable
 
 ================================================================================
 FILE: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
-SIZE: 1.08 KB
+SIZE: 1.22 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
@@ -9348,12 +10073,12 @@ SIZE: 1.08 KB
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\MyAdventure.Core\MyAdventure.Core.csproj" />
     <ProjectReference Include="..\..\src\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
@@ -9364,6 +10089,8 @@ SIZE: 1.08 KB
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -9546,6 +10273,330 @@ public class SchemaMigrationTests : IDisposable
         {
             // Swallow — temp directory cleanup will handle it eventually.
         }
+    }
+}
+
+
+================================================================================
+FILE: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+SIZE: 11.73 KB
+================================================================================
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
+using Shouldly;
+
+namespace MyAdventure.Integration.Tests;
+
+/// <summary>
+/// Tests for the telemetry / Sentry-via-OTLP configuration plumbing. These
+/// live under Integration.Tests rather than Core.Tests because they
+/// exercise <see cref="DependencyInjection.AddInfrastructure(IServiceCollection,
+/// TelemetryOptions, string?)"/> end-to-end and verify that the IoC
+/// container actually builds with the new code paths — that's an
+/// integration concern, not a unit-test concern.
+/// </summary>
+public class TelemetryConfigurationTests : IDisposable
+{
+    private readonly string _dbPath;
+    private readonly List<string> _envVarsToRestore = new();
+
+    public TelemetryConfigurationTests()
+    {
+        _dbPath = Path.Combine(Path.GetTempPath(), $"myadventure-test-{Guid.NewGuid():N}.db");
+    }
+
+    public void Dispose()
+    {
+        // Restore env vars that any individual test set, so subsequent
+        // tests start from a clean baseline.
+        foreach (var name in _envVarsToRestore)
+        {
+            Environment.SetEnvironmentVariable(name, null);
+        }
+
+        if (File.Exists(_dbPath))
+        {
+            try { File.Delete(_dbPath); } catch { /* best-effort cleanup */ }
+        }
+    }
+
+    private void SetEnv(string name, string? value)
+    {
+        if (!_envVarsToRestore.Contains(name)) _envVarsToRestore.Add(name);
+        Environment.SetEnvironmentVariable(name, value);
+    }
+
+    // --- SentryDsn parser ---------------------------------------------------
+
+    [Fact]
+    public void SentryDsn_TryParse_RealisticDsn_PopulatesAllFields()
+    {
+        const string dsn =
+            "https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+        var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
+
+        ok.ShouldBeTrue(err);
+        parsed.ShouldNotBeNull();
+        parsed.PublicKey.ShouldBe("fe6ae5ee15285c313b8171bb7a5a4ad0");
+        parsed.ProjectId.ShouldBe("4511444969390160");
+        parsed.Host.ShouldBe("o4511444968079360.ingest.de.sentry.io");
+    }
+
+    [Fact]
+    public void SentryDsn_TracesEndpoint_HasExpectedShape()
+    {
+        const string dsn =
+            "https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+        var parsed = SentryDsn.Parse(dsn);
+
+        parsed.TracesEndpoint.ToString().ShouldBe(
+            "https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/traces");
+    }
+
+    [Fact]
+    public void SentryDsn_LogsEndpoint_HasExpectedShape()
+    {
+        const string dsn =
+            "https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+        var parsed = SentryDsn.Parse(dsn);
+
+        parsed.LogsEndpoint.ToString().ShouldBe(
+            "https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/logs");
+    }
+
+    [Fact]
+    public void SentryDsn_AuthHeader_StartsWithSentryKeyword()
+    {
+        const string dsn =
+            "https://abc123@o123.ingest.us.sentry.io/456";
+        var parsed = SentryDsn.Parse(dsn);
+        parsed.AuthHeaderValue.ShouldBe("sentry sentry_key=abc123");
+    }
+
+    [Fact]
+    public void SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat()
+    {
+        // Old-style DSNs included a secret key after a colon. Sentry's
+        // OTLP only wants the public key — the parser must strip the
+        // secret portion silently rather than treating it as part of the
+        // key.
+        const string dsn = "https://[email protected]/9";
+        var parsed = SentryDsn.Parse(dsn);
+        parsed.PublicKey.ShouldBe("pubkey");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    [InlineData("not-a-url")]
+    [InlineData("ftp://x@example.com/1")]            // wrong scheme
+    [InlineData("https://example.com/1")]            // no public key
+    [InlineData("https://[email protected]")]          // no project id
+    public void SentryDsn_TryParse_RejectsInvalidInput(string? dsn)
+    {
+        var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
+        ok.ShouldBeFalse();
+        parsed.ShouldBeNull();
+        err.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    // --- TelemetryConfigurationLoader ---------------------------------------
+
+    [Fact]
+    public void Loader_LoadFromEnvironment_NoVarsSet_ReturnsSafeDefaults()
+    {
+        // Make sure no stray env vars are set from outside the test.
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
+
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment();
+
+        options.VerboseLogging.ShouldBeFalse();
+        options.Sentry.Dsn.ShouldBeNullOrEmpty();
+        options.Sentry.Environment.ShouldBe("production");
+        options.Sentry.TracesSampleRate.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void Loader_LoadFromEnvironment_VerboseEnvVar_Wins()
+    {
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
+
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment();
+
+        options.VerboseLogging.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("1", true)]
+    [InlineData("true", true)]
+    [InlineData("TRUE", true)]
+    [InlineData("yes", true)]
+    [InlineData("on", true)]
+    [InlineData("0", false)]
+    [InlineData("false", false)]
+    [InlineData("off", false)]
+    [InlineData("nope", false)]
+    public void Loader_VerboseFlag_ParsesCommonBooleanSpellings(string raw, bool expected)
+    {
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, raw);
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment();
+        options.VerboseLogging.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Loader_LoadFromConfiguration_BindsJsonShape()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:VerboseLogging"] = "true",
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+            ["Telemetry:Sentry:Environment"] = "staging",
+            ["Telemetry:Sentry:TracesSampleRate"] = "0.25",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        // Make sure no env var override is present that would mask the bound values.
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.SentryEnvironmentEnvVar, null);
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config);
+
+        options.VerboseLogging.ShouldBeTrue();
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+        options.Sentry.Environment.ShouldBe("staging");
+        options.Sentry.TracesSampleRate.ShouldBe(0.25);
+    }
+
+    [Fact]
+    public void Loader_EnvironmentVariables_OverrideJsonValues()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:VerboseLogging"] = "false",
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config);
+
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+        options.VerboseLogging.ShouldBeTrue();
+    }
+
+    // --- AddInfrastructure --------------------------------------------------
+
+    [Fact]
+    public async Task AddInfrastructure_NoTelemetryOptions_BehavesLikeBeforeIntegration()
+    {
+        // The legacy single-argument overload must keep working. This is
+        // the contract every existing test relies on.
+        var services = new ServiceCollection();
+        services.AddInfrastructure(_dbPath);
+        var provider = services.BuildServiceProvider();
+
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        // Both the repository and the logger factory must be resolvable.
+        provider.GetService<IGameStateRepository>().ShouldNotBeNull();
+        provider.GetService<ILoggerFactory>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddInfrastructure_TelemetryOff_NoOutboundExporterErrors()
+    {
+        // With Sentry off, the service provider must build cleanly and
+        // the breadcrumb logger must not throw. This is the "fresh
+        // checkout, no Sentry account" smoke test.
+        var services = new ServiceCollection();
+        services.AddInfrastructure(new TelemetryOptions(), _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        DependencyInjection.EmitStartupBreadcrumb(provider);
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        provider.GetService<TelemetryOptions>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds()
+    {
+        // We do not actually contact Sentry from a test — the OTLP
+        // exporter buffers spans/logs in-process and flushes them on
+        // a background timer. What this test verifies is that with a
+        // valid DSN the container builds without throwing (no missing
+        // services, no exporter-constructor crashes) and that the
+        // breadcrumb fires successfully.
+        var telemetry = new TelemetryOptions
+        {
+            VerboseLogging = false,
+            Sentry =
+            {
+                Dsn = "https://[email protected]/2",
+                Environment = "test",
+                TracesSampleRate = 1.0,
+            },
+        };
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(telemetry, _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        DependencyInjection.EmitStartupBreadcrumb(provider);
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        provider.GetService<IGameStateRepository>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddInfrastructure_TelemetryOnWithMalformedDsn_DoesNotCrash()
+    {
+        // Garbage in must not take the app down. The breadcrumb logger
+        // is expected to emit a warning; we just assert no exception
+        // bubbles out and the container still serves the repository.
+        var telemetry = new TelemetryOptions
+        {
+            Sentry = { Dsn = "definitely not a url" },
+        };
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(telemetry, _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        Should.NotThrow(() => DependencyInjection.EmitStartupBreadcrumb(provider));
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        provider.GetService<IGameStateRepository>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void AddInfrastructure_VerboseFlagPropagatesToTelemetryOptionsSingleton()
+    {
+        // The singleton TelemetryOptions registered into the container
+        // must match the values we passed in — that's the contract that
+        // downstream code (ViewModels, future toggle UI) relies on to
+        // know whether verbose mode is currently active.
+        var telemetry = new TelemetryOptions { VerboseLogging = true };
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(telemetry, _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        var resolved = provider.GetRequiredService<TelemetryOptions>();
+        resolved.VerboseLogging.ShouldBeTrue();
     }
 }
 
