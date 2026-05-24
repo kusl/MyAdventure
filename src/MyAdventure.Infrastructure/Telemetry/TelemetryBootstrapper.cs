@@ -23,7 +23,6 @@ public static class TelemetryBootstrapper
     {
         var sentryDsn = SentryDsn.Parse(sentryDsnStr);
 
-        // Define shared resource attributes
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(
                 serviceName: "MyAdventure",
@@ -34,7 +33,6 @@ public static class TelemetryBootstrapper
                 new KeyValuePair<string, object>("deployment.environment", environment)
             });
 
-        // 1. Configure Logging
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
@@ -59,14 +57,13 @@ public static class TelemetryBootstrapper
                     options.AddOtlpExporter(opt =>
                     {
                         opt.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        opt.Endpoint = new Uri(sentryDsn.OtlpLogsEndpoint);
-                        opt.Headers = sentryDsn.OtlpHeaders;
+                        opt.Endpoint = new Uri(sentryDsn.LogsEndpoint);
+                        opt.Headers = sentryDsn.AuthHeaderValue;
                     });
                 });
             }
         });
 
-        // 2. Configure Tracing
         services.AddOpenTelemetry()
             .WithTracing(tracing =>
             {
@@ -80,8 +77,8 @@ public static class TelemetryBootstrapper
                     tracing.AddOtlpExporter(opt =>
                     {
                         opt.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        opt.Endpoint = new Uri(sentryDsn.OtlpTracesEndpoint);
-                        opt.Headers = sentryDsn.OtlpHeaders;
+                        opt.Endpoint = new Uri(sentryDsn.TracesEndpoint);
+                        opt.Headers = sentryDsn.AuthHeaderValue;
                     });
                 }
             });

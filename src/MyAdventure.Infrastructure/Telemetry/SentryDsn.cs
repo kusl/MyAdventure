@@ -10,9 +10,9 @@ public sealed class SentryDsn
     public string ProjectId { get; }
     public string Host { get; }
     public bool IsOtlp { get; }
-    public string OtlpLogsEndpoint { get; }
-    public string OtlpTracesEndpoint { get; }
-    public string OtlpHeaders { get; }
+    public string LogsEndpoint { get; }
+    public string TracesEndpoint { get; }
+    public string AuthHeaderValue { get; }
 
     private SentryDsn(
         string raw,
@@ -21,9 +21,9 @@ public sealed class SentryDsn
         string projectId,
         string host,
         bool isOtlp,
-        string otlpLogsEndpoint,
-        string otlpTracesEndpoint,
-        string otlpHeaders)
+        string logsEndpoint,
+        string tracesEndpoint,
+        string authHeaderValue)
     {
         Raw = raw;
         PublicKey = publicKey;
@@ -31,9 +31,29 @@ public sealed class SentryDsn
         ProjectId = projectId;
         Host = host;
         IsOtlp = isOtlp;
-        OtlpLogsEndpoint = otlpLogsEndpoint;
-        OtlpTracesEndpoint = otlpTracesEndpoint;
-        OtlpHeaders = otlpHeaders;
+        LogsEndpoint = logsEndpoint;
+        TracesEndpoint = tracesEndpoint;
+        AuthHeaderValue = authHeaderValue;
+    }
+
+    public static bool TryParse(string dsn, out SentryDsn result)
+    {
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            result = new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            return false;
+        }
+
+        try
+        {
+            result = Parse(dsn);
+            return true;
+        }
+        catch
+        {
+            result = new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            return false;
+        }
     }
 
     public static SentryDsn Parse(string dsn)
@@ -91,9 +111,9 @@ public sealed class SentryDsn
         }
 
         var isOtlp = true;
-        var otlpLogsEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/logs";
-        var otlpTracesEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/traces";
-        var otlpHeaders = $"x-sentry-auth=sentry sentry_key={publicKey}";
+        var logsEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/logs";
+        var tracesEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/traces";
+        var authHeaderValue = $"x-sentry-auth=sentry sentry_key={publicKey}";
 
         return new SentryDsn(
             dsn,
@@ -102,8 +122,8 @@ public sealed class SentryDsn
             projectId,
             host,
             isOtlp,
-            otlpLogsEndpoint,
-            otlpTracesEndpoint,
-            otlpHeaders);
+            logsEndpoint,
+            tracesEndpoint,
+            authHeaderValue);
     }
 }
