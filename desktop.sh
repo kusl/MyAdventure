@@ -24,8 +24,8 @@ time dotnet format
 cat export.sh
 time sh export.sh
 
-# Run the desktop app and pipe the output to the timestamped file
-echo "Starting MyAdventure.Desktop... Logging to $LOG_FILE"
+# Run the desktop app with OpenTelemetry variables mapped to Sentry
 MYADVENTURE_VERBOSE=1 \
-SENTRY_DSN='https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160' \
+OTEL_EXPORTER_OTLP_ENDPOINT="https://de.sentry.io/api/4511444969390160/opentelemetry" \
+OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
 dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
