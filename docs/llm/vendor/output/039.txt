@@ -307,3 +307,214 @@ real	0m2.910s
 user	0m3.108s
 sys	0m0.586s
 
+real	0m10.704s
+user	0m21.552s
+sys	0m1.613s
+#!/bin/bash
+# =============================================================================
+# Clean Project Export for LLM Analysis (Final Directory Fix)
+# =============================================================================
+
+set -e
+
+OUTPUT_DIR="docs/llm"
+OUTPUT_FILE="$OUTPUT_DIR/dump.txt"
+PROJECT_PATH="$(pwd)"
+
+# Ensure we are in a git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: This script must be run inside a Git repository."
+    exit 1
+fi
+
+mkdir -p "$OUTPUT_DIR"
+
+echo "=============================================="
+echo "  Generating Clean Project Export"
+echo "=============================================="
+
+# Start output file with header
+{
+    echo "==============================================================================="
+    echo "PROJECT EXPORT (GIT TRACKED ONLY)"
+    echo "Generated: $(date)"
+    echo "Project Path: $PROJECT_PATH"
+    echo "==============================================================================="
+    echo ""
+} > "$OUTPUT_FILE"
+
+# 1. Directory Structure (Using Python for a reliable tree)
+echo "Generating directory structure..."
+{
+    echo "DIRECTORY STRUCTURE:"
+    echo "==================="
+    # This python snippet takes git-tracked files and builds a perfect visual tree
+    git ls-files | python3 -c "
+import sys
+tree = {}
+for line in sys.stdin:
+    parts = line.strip().split('/')
+    curr = tree
+    for part in parts:
+        curr = curr.setdefault(part, {})
+def print_tree(d, indent=''):
+    items = sorted(d.items())
+    for i, (name, children) in enumerate(items):
+        is_last = (i == len(items) - 1)
+        print(f'{indent}{\"└── \" if is_last else \"├── \"}{name}')
+        print_tree(children, indent + ('    ' if is_last else '│   '))
+print_tree(tree)
+"
+    echo ""
+} >> "$OUTPUT_FILE"
+
+# 2. Collect and Process Files
+echo "Collecting and cleaning file contents..."
+{
+    echo "FILE CONTENTS:"
+    echo "=============="
+    echo ""
+} >> "$OUTPUT_FILE"
+
+git ls-files | while read -r FILENAME; do
+    # Skip the export script itself and the output file
+    if [[ "$FILENAME" == "export.sh" || "$FILENAME" == "$OUTPUT_FILE" || "$FILENAME" == docs/llm/* ]]; then
+        continue
+    fi
+
+    # Skip specific binary extensions
+    if [[ "$FILENAME" =~ \.(ico|png|jpg|jpeg|gif|dll|exe|pdb|bin|zip|tar|gz|7z|ttf|woff|woff2)$ ]]; then
+        continue
+    fi
+
+    # Content-based binary check
+    if file --mime "$FILENAME" | grep -q "binary"; then
+        continue
+    fi
+
+    # Null byte check (Crucial for preventing "Unsupported Encoding" in Grok)
+    if grep -qP '\x00' "$FILENAME" 2>/dev/null; then
+        continue
+    fi
+
+    FILESIZE=$(stat -c%s "$FILENAME" 2>/dev/null || stat -f%z "$FILENAME" 2>/dev/null || echo "0")
+    
+    # Skip large files (>500KB)
+    if [ "$FILESIZE" -gt 512000 ]; then
+        continue
+    fi
+
+    {
+        echo "================================================================================"
+        echo "FILE: $FILENAME"
+        echo "SIZE: $(echo "scale=2; $FILESIZE/1024" | bc 2>/dev/null || echo "0.00") KB"
+        echo "================================================================================"
+        echo ""
+        # tr -d removes non-printable control characters that break LLM parsers
+        cat "$FILENAME" | tr -d '\000-\010\013\014\016-\037' 
+        echo ""
+        echo ""
+    } >> "$OUTPUT_FILE"
+    
+    echo "Processed: $FILENAME"
+done
+
+echo ""
+echo "Export Complete: $OUTPUT_FILE"
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: SUMMARY.md
+Processed: desktop.sh
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: src/MyAdventure.Android/AndroidApp.cs
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/CrossBusinessSpeedBonus.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Numerics/BigDouble.cs
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryOptions.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+Processed: src/MyAdventure.Shared/Services/AppRoot.cs
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BigDoubleTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/CrossBusinessSpeedBonusTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Core.Tests/SpeedMilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/SubFrameCycleTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.Integration.Tests/SchemaMigrationTests.cs
+Processed: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+Processed: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelSpeedTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
+
+Export Complete: docs/llm/dump.txt
+
+real	0m0.948s
+user	0m0.477s
+sys	0m0.623s
+Starting MyAdventure.Desktop... Logging to /home/kushal/src/dotnet/MyAdventure/docs/llm/vendor/desktoplogs/2026-05-24-10-36-03.txt
+

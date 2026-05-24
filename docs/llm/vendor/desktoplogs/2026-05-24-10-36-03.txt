@@ -258,3 +258,306 @@ telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
 
+LogRecord.Timestamp:               2026-05-24T14:37:05.6400020Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "g"."Id", "g"."AngelInvestorsText", "g"."BusinessDataJson", "g"."CashText", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarningsText", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+FROM "GameStates" AS "g"
+LIMIT 1
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+
+    commandText: SELECT "g"."Id", "g"."AngelInvestorsText", "g"."BusinessDataJson", "g"."CashText", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarningsText", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+FROM "GameStates" AS "g"
+LIMIT 1
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:05.6410991Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Executed DbCommand (0ms) [Parameters=[@p4='?' (DbType = Guid), @p0='?' (Size = 21), @p1='?' (DbType = DateTime), @p2='?' (Size = 20), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+UPDATE "GameStates" SET "CashText" = @p0, "LastPlayedAt" = @p1, "LifetimeEarningsText" = @p2, "UpdatedAt" = @p3
+WHERE "Id" = @p4
+RETURNING 1;
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: @p4='?' (DbType = Guid), @p0='?' (Size = 21), @p1='?' (DbType = DateTime), @p2='?' (Size = 20), @p3='?' (DbType = DateTime)
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+
+    commandText: UPDATE "GameStates" SET "CashText" = @p0, "LastPlayedAt" = @p1, "LifetimeEarningsText" = @p2, "UpdatedAt" = @p3
+WHERE "Id" = @p4
+RETURNING 1;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:05.6666865Z
+LogRecord.CategoryName:            MyAdventure.Infrastructure.Repositories.GameStateRepository
+LogRecord.Severity:                Debug
+LogRecord.SeverityText:            Debug
+LogRecord.FormattedMessage:        Game state saved
+LogRecord.Body:                    Game state saved
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Game state saved
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:05.6669273Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Debug
+LogRecord.SeverityText:            Debug
+LogRecord.FormattedMessage:        Game saved. Cash: 3.4693108122967167e13
+LogRecord.Body:                    Game saved. Cash: {Cash}
+LogRecord.Attributes (Key:Value):
+    Cash: 3.4693108122967167e13
+    OriginalFormat (a.k.a Body): Game saved. Cash: {Cash}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:10.4748757Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "g"."Id", "g"."AngelInvestorsText", "g"."BusinessDataJson", "g"."CashText", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarningsText", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+FROM "GameStates" AS "g"
+LIMIT 1
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+
+    commandText: SELECT "g"."Id", "g"."AngelInvestorsText", "g"."BusinessDataJson", "g"."CashText", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarningsText", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+FROM "GameStates" AS "g"
+LIMIT 1
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:10.4767073Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Executed DbCommand (0ms) [Parameters=[@p4='?' (DbType = Guid), @p0='?' (Size = 21), @p1='?' (DbType = DateTime), @p2='?' (Size = 19), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+UPDATE "GameStates" SET "CashText" = @p0, "LastPlayedAt" = @p1, "LifetimeEarningsText" = @p2, "UpdatedAt" = @p3
+WHERE "Id" = @p4
+RETURNING 1;
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: @p4='?' (DbType = Guid), @p0='?' (Size = 21), @p1='?' (DbType = DateTime), @p2='?' (Size = 19), @p3='?' (DbType = DateTime)
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+
+    commandText: UPDATE "GameStates" SET "CashText" = @p0, "LastPlayedAt" = @p1, "LifetimeEarningsText" = @p2, "UpdatedAt" = @p3
+WHERE "Id" = @p4
+RETURNING 1;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:10.4875547Z
+LogRecord.CategoryName:            MyAdventure.Infrastructure.Repositories.GameStateRepository
+LogRecord.Severity:                Debug
+LogRecord.SeverityText:            Debug
+LogRecord.FormattedMessage:        Game state saved
+LogRecord.Body:                    Game state saved
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Game state saved
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:10.4876579Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Debug
+LogRecord.SeverityText:            Debug
+LogRecord.FormattedMessage:        Game saved. Cash: 3.4855157326971664e13
+LogRecord.Body:                    Game saved. Cash: {Cash}
+LogRecord.Attributes (Key:Value):
+    Cash: 3.4855157326971664e13
+    OriginalFormat (a.k.a Body): Game saved. Cash: {Cash}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:15.2911764Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "g"."Id", "g"."AngelInvestorsText", "g"."BusinessDataJson", "g"."CashText", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarningsText", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+FROM "GameStates" AS "g"
+LIMIT 1
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: 
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+
+    commandText: SELECT "g"."Id", "g"."AngelInvestorsText", "g"."BusinessDataJson", "g"."CashText", "g"."CreatedAt", "g"."LastPlayedAt", "g"."LifetimeEarningsText", "g"."ManagerDataJson", "g"."PrestigeCount", "g"."UpdatedAt"
+FROM "GameStates" AS "g"
+LIMIT 1
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:15.2928662Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Database.Command
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Executed DbCommand (0ms) [Parameters=[@p4='?' (DbType = Guid), @p0='?' (Size = 20), @p1='?' (DbType = DateTime), @p2='?' (Size = 20), @p3='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+UPDATE "GameStates" SET "CashText" = @p0, "LastPlayedAt" = @p1, "LifetimeEarningsText" = @p2, "UpdatedAt" = @p3
+WHERE "Id" = @p4
+RETURNING 1;
+LogRecord.Body:                    Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.Attributes (Key:Value):
+    elapsed: 0
+    parameters: @p4='?' (DbType = Guid), @p0='?' (Size = 20), @p1='?' (DbType = DateTime), @p2='?' (Size = 20), @p3='?' (DbType = DateTime)
+    commandType: Text
+    commandTimeout: 30
+    newLine: 
+
+    commandText: UPDATE "GameStates" SET "CashText" = @p0, "LastPlayedAt" = @p1, "LifetimeEarningsText" = @p2, "UpdatedAt" = @p3
+WHERE "Id" = @p4
+RETURNING 1;
+    OriginalFormat (a.k.a Body): Executed DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType='{commandType}', CommandTimeout='{commandTimeout}']{newLine}{commandText}
+LogRecord.EventId:                 20101
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:15.3039493Z
+LogRecord.CategoryName:            MyAdventure.Infrastructure.Repositories.GameStateRepository
+LogRecord.Severity:                Debug
+LogRecord.SeverityText:            Debug
+LogRecord.FormattedMessage:        Game state saved
+LogRecord.Body:                    Game state saved
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Game state saved
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-24T14:37:15.3040799Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Debug
+LogRecord.SeverityText:            Debug
+LogRecord.FormattedMessage:        Game saved. Cash: 3.487089762566793e13
+LogRecord.Body:                    Game saved. Cash: {Cash}
+LogRecord.Attributes (Key:Value):
+    Cash: 3.487089762566793e13
+    OriginalFormat (a.k.a Body): Game saved. Cash: {Cash}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+0599f2db5d1fb1c8886e10e6c3d8c2cd023d4895
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
