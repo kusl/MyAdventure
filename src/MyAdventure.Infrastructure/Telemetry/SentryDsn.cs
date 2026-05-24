@@ -48,13 +48,11 @@ public sealed class SentryDsn
         string host = string.Empty;
         string projectId = string.Empty;
 
-        // Handle legacy format containing public and secret keys (e.g. https://pub:secret@host/id)
         if (dsn.Contains(':') && dsn.Contains('@'))
         {
             try
             {
                 var schemeSplit = dsn.Split("://", StringSplitOptions.None);
-                var protocol = schemeSplit[0];
                 var remainder = schemeSplit[1];
 
                 var atSplit = remainder.Split('@');
@@ -76,15 +74,13 @@ public sealed class SentryDsn
         }
         else
         {
-            // Standard modern DSN parsing format
             if (!Uri.TryCreate(dsn, UriKind.Absolute, out var uri))
             {
                 throw new ArgumentException("DSN is not a valid absolute URI.", nameof(dsn));
             }
 
             host = uri.Host;
-            var userInfo = uri.UserInfo;
-            publicKey = userInfo;
+            publicKey = uri.UserInfo;
 
             var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (pathSegments.Length == 0)

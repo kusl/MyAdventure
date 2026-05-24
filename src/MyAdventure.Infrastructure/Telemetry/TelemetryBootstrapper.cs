@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -54,10 +55,10 @@ public static class TelemetryBootstrapper
                     options.SetResourceBuilder(resourceBuilder);
                     options.IncludeFormattedMessage = true;
                     options.IncludeScopes = true;
-
+                    
                     options.AddOtlpExporter(opt =>
                     {
-                        opt.Protocol = OtpExportProtocol.HttpProtobuf;
+                        opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                         opt.Endpoint = new Uri(sentryDsn.OtlpLogsEndpoint);
                         opt.Headers = sentryDsn.OtlpHeaders;
                     });
@@ -78,7 +79,7 @@ public static class TelemetryBootstrapper
                 {
                     tracing.AddOtlpExporter(opt =>
                     {
-                        opt.Protocol = OtpExportProtocol.HttpProtobuf;
+                        opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                         opt.Endpoint = new Uri(sentryDsn.OtlpTracesEndpoint);
                         opt.Headers = sentryDsn.OtlpHeaders;
                     });
@@ -90,7 +91,6 @@ public static class TelemetryBootstrapper
 
     private static TracerProviderBuilder AddSqlStatements(this TracerProviderBuilder builder)
     {
-        // Placeholder for any specific SQL tracking customization if needed
         return builder;
     }
 }
