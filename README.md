@@ -348,6 +348,7 @@ MyAdventure.slnx
 - **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that wires into Avalonia's `IActivatableLifetime` (available via `Application.Current.TryGetFeature<IActivatableLifetime>()`), which works uniformly on all platforms. When the app goes to background (`ActivationKind.Background` Deactivated event), `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. When it returns to foreground (`ActivationKind.Background` Activated event), it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout. The `AppLifecycleManager` holds a replaceable static "current target" so Android activity recreation (which constructs a fresh ViewModel each time) doesn't leak handlers on the old VM.
 - **Cold-start vs. foreground-resume are distinct paths.** `GameEngine.LoadAsync` handles the cold-start path: it reads `LastPlayedAt` from the saved state and calls `ApplyOfflineEarnings(now - lastPlayedAt)` if the gap exceeds the minimum threshold. The foreground-resume path is handled by `GameViewModel.OnSuspended()` / `OnResumed()`, which uses `AppLifecycleManager`. Both paths call the same `GameEngine.ApplyOfflineEarnings(TimeSpan)` method — the single public entry point for offline earnings — so the logic is never duplicated and both paths are pinned by the same invariant tests.
 - **Localization** is wired via `Microsoft.Extensions.Localization` with JSON resource files (`src/MyAdventure.Shared/Resources/i18n/`). English (`en.json`) and Spanish (`es.json`) are included. The infrastructure is in place to add more locales by adding a new JSON file and updating the supported-cultures list in `DependencyInjection.cs`.
+- **Optional Sentry error tracking via OTLP — no Sentry SDK.** Sentry's hosted ingestion accepts standard OpenTelemetry traces and logs over OTLP/HTTP (`Settings → Client Keys (DSN) → OpenTelemetry`). The Infrastructure project's existing OpenTelemetry stack adds an OTLP exporter for logs and traces when a DSN is configured; metrics stay console-only because Sentry's OTLP ingestion does not accept metrics. No `Sentry.*` NuGet package is used — swapping to any other OTLP backend (Grafana Cloud, Honeycomb, Tempo, Loki, an OpenTelemetry Collector) is a one-line config change. See the [Observability](#observability-and-error-tracking) section for the configuration surface.
 - **No `Avalonia.Diagnostics` package.** Removed in Avalonia 12; the official replacement (`AvaloniaUI.DiagnosticsSupport`) gates the actual Dev Tools UI behind a paid Avalonia Plus / Pro subscription. The Community tier is free for non-commercial use only — and this project's policy is to avoid any package whose use is conditional on payment of any kind. Use the FOSS Avalonia VS Code or Rider extensions for design-time previewing.
 
 ### Avalonia 12 migration notes
@@ -377,6 +378,7 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
 | Database | SQLite via EF Core 10.0.8 | MIT |
 | Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
+| Optional error tracking | Sentry (via OTLP HTTP — no Sentry SDK) | n/a (free tier) |
 | Unit Testing | xUnit 2.9.3 | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
 | Mocking | NSubstitute 5.3.0 | BSD |
@@ -486,8 +488,98 @@ Configured in `.github/dependabot.yml` to check NuGet packages and GitHub Action
 - Auto-save triggers every ~300 ticks (~5 seconds at 60fps). Save is asynchronous; the game state is captured synchronously from the engine, then the write runs on a background task so the UI never hitches.
 - The `NumberFormatter` handles large number display. Below 1000: two decimal places. 1000 to 10³⁶: metric suffixes (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D). Above 10³⁶: scientific notation with Unicode superscript exponents (e.g. `7.53 × 10⁴⁰`). The `BigDouble` overload handles values arbitrarily past the `double` overflow range. Non-finite values display as `∞`, `-∞`, or `?` so they can never propagate crashes through the UI.
 - Database location: `{LocalApplicationData}/MyAdventure/myadventure.db` on every platform — on Android this resolves to the app's private internal storage.
-- OpenTelemetry exports to console by default on desktop. The `DependencyInjection.AddInfrastructure` method wires up logging, tracing (`AddSource("MyAdventure.*")`), metrics (`AddMeter("MyAdventure.*")`), and runtime instrumentation. The `GameEngine` emits an `EarningsCounter` metric (tagged by business ID and source) and a `TickDuration` histogram. Configure OTLP exporters in `DependencyInjection.cs` to send to Jaeger, Grafana, or any OTLP-compatible backend.
-- On Android, the OpenTelemetry console exporter is suppressed and logging routes through `Android.Util.Log` (visible in `adb logcat`) rather than the console (which is invisible on Android).
+- OpenTelemetry exports to console by default on desktop. The `DependencyInjection.AddInfrastructure` method wires up logging, tracing (`AddSource("MyAdventure.*")`), metrics (`AddMeter("MyAdventure.*")`), and runtime instrumentation. The `GameEngine` emits an `EarningsCounter` metric (tagged by business ID and source) and a `TickDuration` histogram. OTLP exporters for logs and traces are added automatically when a Sentry DSN is configured (see the next section); the same code path will forward to Jaeger, Grafana, Honeycomb, or an OpenTelemetry Collector with a different DSN-less endpoint URL.
+- On Android, the OpenTelemetry console exporter still runs but Android's standard output is invisible to users; the same log records go through the OTLP exporter when a DSN is configured. `Android.Util.Log` calls remain in `AndroidApp` / `App.axaml.cs` for the early-boot path (before the OpenTelemetry pipeline is ready) so initialization errors are still visible in `adb logcat`.
+
+---
+
+## Observability and error tracking
+
+The project ships with first-class OpenTelemetry instrumentation: structured logs, traces, and runtime metrics. By default everything goes to the console. **Optionally** the same data can be forwarded to Sentry — using Sentry's native OTLP HTTP endpoint, not the Sentry .NET SDK. There is no `Sentry.*` NuGet package in this repo. The OpenTelemetry stack already in place does the entire job: pointing it at a different OTLP backend later is a configuration change, not a code change.
+
+### What gets captured
+
+The instrumentation lives in the regular code path — `GameEngine`, `GameViewModel`, `AppLifecycleManager`, `GameStateRepository`, and `DependencyInjection.InitializeDatabaseAsync` — and is emitted on every major event in the app's life. Concretely:
+
+- **Lifecycle:** app start, telemetry-configuration breadcrumb (Sentry on/off, verbose on/off, environment), database migration begin/end, game-state load, fresh-game start (no save found), app suspended, app resumed, offline earnings applied (with seconds and amount).
+- **Game economy:** buy single unit, buy bulk (with count, cost, and resulting total), buy manager, prestige (with new angel count), import (with extracted cash and angels), export (with payload size), copy-to-clipboard.
+- **Errors and warnings:** parse errors when importing a tampered save, clipboard failures, save failures, schema-migration failures (rolled back), business-data / manager-data JSON parse failures.
+- **Spans (traces):** every game load, every tick batch, every save, every prestige, every offline-earnings calculation.
+- **Metrics (console-only — Sentry doesn't accept OTLP metrics):** tick counter, earnings counter (tagged by business and by `live` vs `offline` source), tick-duration histogram, plus the standard .NET runtime metrics from `OpenTelemetry.Instrumentation.Runtime` (GC, threadpool, exceptions, etc).
+
+The full list of log messages can be discovered with `git grep "LogInformation\|LogWarning\|LogError" src/`.
+
+### Free-tier-friendly defaults
+
+Sentry's Developer (free forever) plan ships with 5,000 errors / 10,000 performance transactions / 5 GB of logs per month. The defaults below are picked to fit comfortably inside that envelope for an idle game with one player:
+
+- **Sentry is opt-in.** No DSN configured → no Sentry exporter is added at all. There is zero outbound network traffic from telemetry until you set a DSN.
+- **Metrics never go to Sentry.** Sentry's OTLP ingestion doesn't accept metrics, and we don't try. Runtime metrics stay on the console exporter.
+- **`Microsoft.EntityFrameworkCore` is pinned at `Warning`** so EF Core's per-statement `Information` chatter (which is voluminous and almost never actionable) doesn't burn through the log quota.
+- **Verbose logging is off by default**, controlled by a single toggle (see below). When verbose is off the app emits a handful of records per session.
+- **Traces are sampled at 100% by default** because the game produces only a few spans per session. Lower `TracesSampleRate` if you start running automated soak tests.
+
+If you go over the free tier, Sentry stops accepting new events for the rest of the billing month rather than charging you. The "drop events on quota exhaustion" behaviour is exactly what we want — there is no scenario where this project starts costing money silently.
+
+### Configuration surface
+
+Configuration is bound from `appsettings.json` (Desktop) or environment variables (Desktop *and* Android). Environment variables always win.
+
+`src/MyAdventure.Desktop/appsettings.json`:
+
+```json
+{
+  "Telemetry": {
+    "VerboseLogging": false,
+    "Sentry": {
+      "Dsn": "",
+      "Environment": "production",
+      "TracesSampleRate": 1.0
+    }
+  }
+}
+```
+
+Environment variables (recognized on both Desktop and Android):
+
+| Variable | Effect |
+|----------|--------|
+| `SENTRY_DSN` | Sentry DSN. Empty / unset = Sentry exporter is not registered. |
+| `MYADVENTURE_VERBOSE` | `1` / `true` / `yes` / `on` (case-insensitive) lifts log level to `Debug` and EF Core to `Information`. Anything else (or unset) keeps the safe defaults. |
+| `MYADVENTURE_SENTRY_ENVIRONMENT` | Override `deployment.environment` on every event (e.g. `staging`, `development`). |
+
+A startup breadcrumb log line records the configuration the app actually applied — visible on the console, in Sentry (if configured), and in `adb logcat` on Android — so you can see at a glance whether Sentry is on, what environment is reported, and whether verbose mode is active.
+
+### Verbose logging
+
+Verbose mode is a runtime toggle, not a rebuild. Flip `MYADVENTURE_VERBOSE=1` (or set `Telemetry:VerboseLogging: true` in `appsettings.json`) and restart the app. The OpenTelemetry log pipeline's minimum level drops from `Information` to `Debug`, and Entity Framework Core lifts from `Warning` to `Information` (so SQL command traces start appearing). Turn it back off when you're done — the verbose stream is intentionally chatty.
+
+On Android the simplest way to toggle it for a single APK install is:
+
+```bash
+adb shell setprop debug.MYADVENTURE_VERBOSE 1
+# then force-stop and relaunch the app
+```
+
+…or rebuild with the env var burned in via an `AndroidEnvironment` file.
+
+### Setting up Sentry (free tier)
+
+1. Create a Sentry account, organization, and project at https://sentry.io. The project type doesn't really matter (any platform works for the OTLP endpoint); pick "Native" or ".NET" for closest documentation.
+2. Open **Settings → Projects → \<your project\> → Client Keys (DSN)** and copy the **DSN** value. (The page also shows the OTLP endpoints and the `x-sentry-auth` header for reference; the code derives both from the DSN, so you only need to copy the DSN itself.)
+3. Set it on the platform you want:
+   - **Desktop, one-off run:** `SENTRY_DSN='https://...@...sentry.io/...' dotnet run --project src/MyAdventure.Desktop`
+   - **Desktop, persistent (Linux/macOS):** add `export SENTRY_DSN=...` to your shell rc file.
+   - **Desktop, persistent (Windows):** `setx SENTRY_DSN "https://..."` in an admin shell, then open a new shell.
+   - **Desktop, baked into a checkout:** edit `Telemetry:Sentry:Dsn` in `src/MyAdventure.Desktop/appsettings.json`. ⚠ Don't commit a real DSN — `appsettings.json` is tracked. To keep a personal DSN out of git, drop it in `src/MyAdventure.Desktop/appsettings.local.json` instead — that file is gitignored, optional, and loaded after `appsettings.json` so it overrides anything in the committed file.
+   - **Android:** `adb shell setprop debug.SENTRY_DSN 'https://...'` for testing, or bake into the build with an `AndroidEnvironment` file for production releases.
+4. Restart the app. You should see a startup line like `Telemetry: Sentry OTLP enabled, env=production, verbose=False`. Within 30–60 seconds the first events will appear in Sentry's **Issues** and **Traces** views. If they don't, double-check the DSN by opening `Settings → Client Keys (DSN) → OpenTelemetry` in Sentry and confirming the host matches.
+
+If the DSN is malformed (typo, missing scheme, etc.), the app still starts — it logs a single warning and proceeds with console-only exporters. A misconfigured DSN never blocks startup.
+
+### Switching to a different OTLP backend
+
+Because the integration uses standard OTLP/HTTP, redirecting to a non-Sentry backend is a one-line edit in `Infrastructure/DependencyInjection.cs`: change the endpoint construction in `SentryDsn` (or replace the whole DSN-parsing path) and adjust the auth header to whatever the new backend expects. The rest of the OpenTelemetry pipeline — instrumentation, resource attributes, sampling — stays exactly as-is.
 
 ---
 
@@ -498,7 +590,7 @@ This project is built collaboratively between a human developer and AI assistant
 - **Code generation:** Significant portions of C#, AXAML, YAML, and configuration files were generated by Anthropic Claude (Opus and Sonnet models) and Google Gemini, then reviewed, tested, and iterated on by the human developer.
 - **Architecture decisions:** The clean architecture layout, project structure, testing strategy, BigDouble design, and CI/CD pipeline were designed through human-AI collaboration.
 - **Documentation:** This README and other documentation files were drafted with LLM assistance.
-- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration, edge-to-edge safe-area handling on Android 15, the offline-earnings DispatcherTimer tick-clamping bug, and the cash-stall-at-1e200 BigDouble migration) were diagnosed and resolved with AI help.
+- **Debugging:** Platform-specific issues (Android SQLite quirks, progress bar rendering, logging providers, the Avalonia 12 migration, edge-to-edge safe-area handling on Android 15, the offline-earnings DispatcherTimer tick-clamping bug, the cash-stall-at-1e200 BigDouble migration, and the Sentry-via-OTLP integration that avoids the Sentry .NET SDK) were diagnosed and resolved with AI help.
 
 We provide this disclosure so that AI training pipelines, web scrapers, and researchers can make informed decisions about including this content in their datasets. If you operate a training pipeline and wish to exclude LLM-assisted code, this notice serves as a clear signal.
 
@@ -517,3 +609,5 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 **Note on dependency licenses:** All NuGet dependencies used by this project are licensed under MIT, Apache-2.0, or BSD licenses, which are compatible with AGPLv3. The AGPLv3 applies to the MyAdventure source code itself.
+
+

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyAdventure.Android.Views;
 using MyAdventure.Core.Services;
 using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
 using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
 
@@ -28,13 +29,23 @@ public partial class App : Avalonia.Application
         {
             global::Android.Util.Log.Info(Tag, "OnFrameworkInitializationCompleted starting");
 
+            // Android does not ship with the typical .NET host-bootstrapping
+            // pipeline that auto-binds appsettings.json. Instead we read
+            // telemetry config from environment variables — toggling
+            // Sentry on/off for the APK is a matter of setting SENTRY_DSN
+            // (e.g. via `adb shell setprop` during testing, or by burning
+            // it into the build via an AndroidEnvironment file for
+            // production builds).
+            var telemetry = TelemetryConfigurationLoader.LoadFromEnvironment();
+
             var services = new ServiceCollection();
-            services.AddInfrastructure();
+            services.AddInfrastructure(telemetry);
             services.AddSingleton<ToastService>();
             services.AddTransient<GameEngine>();
             services.AddTransient<GameViewModel>();
             Services = services.BuildServiceProvider();
 
+            DependencyInjection.EmitStartupBreadcrumb(Services);
             await DependencyInjection.InitializeDatabaseAsync(Services);
 
             // Avalonia 12: Android uses IActivityApplicationLifetime with
