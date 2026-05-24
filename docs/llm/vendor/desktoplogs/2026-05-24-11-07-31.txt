@@ -1,0 +1,6 @@
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,61): error CS1503: Argument 2: cannot convert from 'out MyAdventure.Infrastructure.Telemetry.SentryDsn' to 'out System.Uri?' [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,73): error CS1503: Argument 3: cannot convert from 'out string' to 'out System.Uri?' [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(60,48): error CS1503: Argument 1: cannot convert from 'System.Uri' to 'string' [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(80,48): error CS1503: Argument 1: cannot convert from 'System.Uri' to 'string' [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+
+The build failed. Fix the build errors and run again.
