@@ -14,6 +14,8 @@ mkdir -p "$LOG_DIR"
 # Navigate to the project root
 cd /home/kushal/src/dotnet/MyAdventure
 
+cat desktop.sh
+
 # Run the build pipeline
 time dotnet clean
 time dotnet restore
@@ -22,6 +24,7 @@ time dotnet test
 time dotnet list package
 time dotnet list package --outdated
 time dotnet format
+cat export.sh
 time sh export.sh
 
 # Run the desktop app and pipe the output to the timestamped file
