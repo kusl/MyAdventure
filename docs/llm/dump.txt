@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sun May 24 10:36:51 AM EDT 2026
+Generated: Sun May 24 10:41:56 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -32,6 +32,7 @@ DIRECTORY STRUCTURE:
 │           ├── commands.txt
 │           ├── debugging.md
 │           ├── desktoplogs
+│           │   ├── 2026-05-24-10-36-03.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -72,7 +73,8 @@ DIRECTORY STRUCTURE:
 │               ├── 035.txt
 │               ├── 036.txt
 │               ├── 037.txt
-│               └── 038.txt
+│               ├── 038.txt
+│               └── 039.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -1465,7 +1467,7 @@ are all preserved). After that the game can grow past 10^200 freely.
 
 ================================================================================
 FILE: desktop.sh
-SIZE: .84 KB
+SIZE: .88 KB
 ================================================================================
 
 #!/bin/bash
@@ -1494,10 +1496,10 @@ time dotnet format
 cat export.sh
 time sh export.sh
 
-# Run the desktop app and pipe the output to the timestamped file
-echo "Starting MyAdventure.Desktop... Logging to $LOG_FILE"
+# Run the desktop app with OpenTelemetry variables mapped to Sentry
 MYADVENTURE_VERBOSE=1 \
-SENTRY_DSN='https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160' \
+OTEL_EXPORTER_OTLP_ENDPOINT="https://de.sentry.io/api/4511444969390160/opentelemetry" \
+OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
 dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
 
 
