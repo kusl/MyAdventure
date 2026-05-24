@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sun May 24 10:23:50 AM EDT 2026
+Generated: Sun May 24 10:36:51 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -18,6 +18,7 @@ DIRECTORY STRUCTURE:
 ├── MyAdventure.slnx
 ├── README.md
 ├── SUMMARY.md
+├── desktop.sh
 ├── docs
 │   ├── KEYSTORE.md
 │   └── llm
@@ -30,6 +31,8 @@ DIRECTORY STRUCTURE:
 │           ├── claude.md
 │           ├── commands.txt
 │           ├── debugging.md
+│           ├── desktoplogs
+│           │   └── README.md
 │           ├── instructions.md
 │           └── output
 │               ├── 001.txt
@@ -68,7 +71,8 @@ DIRECTORY STRUCTURE:
 │               ├── 034.txt
 │               ├── 035.txt
 │               ├── 036.txt
-│               └── 037.txt
+│               ├── 037.txt
+│               └── 038.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -1457,6 +1461,44 @@ are all preserved). After that the game can grow past 10^200 freely.
 - No `build-desktop.sh` / `build-android.sh`; the existing `commands.txt` recipe (`dotnet build`, `dotnet test`) still works
 - Tests cover the new BigDouble behavior, the buy-max button, the schema migration, and the user's exact "stuck at 1e200" symptom
 - OpenTelemetry telemetry preserved; the only change is that `EarningsCounter.Add` now takes `earned.ToDouble()` (saturating at `double.MaxValue` is fine for graphs)
+
+
+================================================================================
+FILE: desktop.sh
+SIZE: .84 KB
+================================================================================
+
+#!/bin/bash
+
+# Define paths and file names
+LOG_DIR="/home/kushal/src/dotnet/MyAdventure/docs/llm/vendor/desktoplogs"
+TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
+LOG_FILE="$LOG_DIR/$TIMESTAMP.txt"
+
+# Ensure the log directory exists
+mkdir -p "$LOG_DIR"
+
+# Navigate to the project root
+cd /home/kushal/src/dotnet/MyAdventure
+
+cat desktop.sh
+
+# Run the build pipeline
+time dotnet clean
+time dotnet restore
+time dotnet build
+time dotnet test
+time dotnet list package
+time dotnet list package --outdated
+time dotnet format
+cat export.sh
+time sh export.sh
+
+# Run the desktop app and pipe the output to the timestamped file
+echo "Starting MyAdventure.Desktop... Logging to $LOG_FILE"
+MYADVENTURE_VERBOSE=1 \
+SENTRY_DSN='https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160' \
+dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
 
 
 ================================================================================
