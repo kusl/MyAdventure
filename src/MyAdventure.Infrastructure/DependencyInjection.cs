@@ -140,7 +140,7 @@ public static class DependencyInjection
                 {
                     otel.AddOtlpExporter(o =>
                     {
-                        o.Endpoint = sentry.LogsEndpoint;
+                        o.Endpoint = new Uri(sentry.LogsEndpoint);
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
                         o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
                     });
@@ -169,7 +169,7 @@ public static class DependencyInjection
                 {
                     tracing.AddOtlpExporter(o =>
                     {
-                        o.Endpoint = sentry.TracesEndpoint;
+                        o.Endpoint = new Uri(sentry.TracesEndpoint);
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
                         o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
                     });
