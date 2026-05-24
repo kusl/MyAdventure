@@ -10,8 +10,8 @@ public sealed class SentryDsn
     public string ProjectId { get; }
     public string Host { get; }
     public bool IsOtlp { get; }
-    public string LogsEndpoint { get; }
-    public string TracesEndpoint { get; }
+    public Uri LogsEndpoint { get; }
+    public Uri TracesEndpoint { get; }
     public string AuthHeaderValue { get; }
 
     private SentryDsn(
@@ -21,8 +21,8 @@ public sealed class SentryDsn
         string projectId,
         string host,
         bool isOtlp,
-        string logsEndpoint,
-        string tracesEndpoint,
+        Uri logsEndpoint,
+        Uri tracesEndpoint,
         string authHeaderValue)
     {
         Raw = raw;
@@ -36,22 +36,27 @@ public sealed class SentryDsn
         AuthHeaderValue = authHeaderValue;
     }
 
-    public static bool TryParse(string dsn, out SentryDsn result)
+    /// <Matches the signature expected on Line 94 of DependencyInjection.cs>
+    public static bool TryParse(string dsn, out Uri? logsEndpoint, out Uri? tracesEndpoint)
     {
         if (string.IsNullOrWhiteSpace(dsn))
         {
-            result = new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            logsEndpoint = null;
+            tracesEndpoint = null;
             return false;
         }
 
         try
         {
-            result = Parse(dsn);
-            return true;
+            var parsed = Parse(dsn);
+            logsEndpoint = parsed.LogsEndpoint;
+            tracesEndpoint = parsed.TracesEndpoint;
+            return parsed.IsOtlp;
         }
         catch
         {
-            result = new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            logsEndpoint = null;
+            tracesEndpoint = null;
             return false;
         }
     }
@@ -60,7 +65,8 @@ public sealed class SentryDsn
     {
         if (string.IsNullOrWhiteSpace(dsn))
         {
-            return new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            var emptyUri = new Uri("http://localhost");
+            return new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, emptyUri, emptyUri, string.Empty);
         }
 
         string publicKey = string.Empty;
@@ -111,8 +117,8 @@ public sealed class SentryDsn
         }
 
         var isOtlp = true;
-        var logsEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/logs";
-        var tracesEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/traces";
+        var logsUri = new Uri($"https://{host}/api/{projectId}/integration/otlp/v1/logs");
+        var tracesUri = new Uri($"https://{host}/api/{projectId}/integration/otlp/v1/traces");
         var authHeaderValue = $"x-sentry-auth=sentry sentry_key={publicKey}";
 
         return new SentryDsn(
@@ -122,8 +128,8 @@ public sealed class SentryDsn
             projectId,
             host,
             isOtlp,
-            logsEndpoint,
-            tracesEndpoint,
+            logsUri,
+            tracesUri,
             authHeaderValue);
     }
 }
