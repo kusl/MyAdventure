@@ -171,7 +171,7 @@ public static class DependencyInjection
                     {
                         o.Endpoint = new Uri(sentry.TracesEndpoint);
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
+                        o.Headers = sentry.AuthHeaderValue;
                     });
                 }
             })

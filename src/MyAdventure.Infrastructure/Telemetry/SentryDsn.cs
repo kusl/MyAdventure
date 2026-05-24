@@ -1,95 +1,43 @@
+using System;
+
 namespace MyAdventure.Infrastructure.Telemetry;
 
 public sealed class SentryDsn
 {
-    public string Scheme { get; }
+    public string Raw { get; }
     public string PublicKey { get; }
-    public string? SecretKey { get; }
-    public string Host { get; }
-    public int? Port { get; }
+    public string SecretKey { get; }
     public string ProjectId { get; }
-
-    public bool IsOtlp => true;
-
-    public string LogsEndpoint => $"{GetBaseUri()}/api/{ProjectId}/otlp/v1/logs";
-
-    public string TracesEndpoint => $"{GetBaseUri()}/api/{ProjectId}/otlp/v1/traces";
-
-    public string AuthHeader
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(SecretKey))
-            {
-                return $"Sentry sentry_key={PublicKey}";
-            }
-
-            return $"Sentry sentry_key={PublicKey}, sentry_secret={SecretKey}";
-        }
-    }
+    public string Host { get; }
+    public bool IsOtlp { get; }
+    public string LogsEndpoint { get; }
+    public string TracesEndpoint { get; }
+    public string AuthHeaderValue { get; }
 
     private SentryDsn(
-        string scheme,
+        string raw,
         string publicKey,
-        string? secretKey,
+        string secretKey,
+        string projectId,
         string host,
-        int? port,
-        string projectId)
+        bool isOtlp,
+        string logsEndpoint,
+        string tracesEndpoint,
+        string authHeaderValue)
     {
-        Scheme = scheme;
+        Raw = raw;
         PublicKey = publicKey;
         SecretKey = secretKey;
-        Host = host;
-        Port = port;
         ProjectId = projectId;
-    }
-
-    public static SentryDsn Parse(string dsn)
-    {
-        if (string.IsNullOrWhiteSpace(dsn))
-        {
-            throw new ArgumentException("DSN is empty.", nameof(dsn));
-        }
-
-        if (!Uri.TryCreate(dsn, UriKind.Absolute, out var uri))
-        {
-            throw new ArgumentException("DSN is not a valid absolute URI.", nameof(dsn));
-        }
-
-        var publicKey = uri.UserInfo;
-        string? secretKey = null;
-
-        if (publicKey.Contains(':'))
-        {
-            var split = publicKey.Split(':', 2);
-
-            publicKey = split[0];
-            secretKey = split[1];
-        }
-
-        if (string.IsNullOrWhiteSpace(publicKey))
-        {
-            throw new ArgumentException("DSN public key is missing.", nameof(dsn));
-        }
-
-        var projectId = uri.AbsolutePath.Trim('/');
-
-        if (string.IsNullOrWhiteSpace(projectId))
-        {
-            throw new ArgumentException("DSN project id is missing.", nameof(dsn));
-        }
-
-        return new SentryDsn(
-            scheme: uri.Scheme,
-            publicKey: publicKey,
-            secretKey: secretKey,
-            host: uri.Host,
-            port: uri.IsDefaultPort ? null : uri.Port,
-            projectId: projectId);
+        Host = host;
+        IsOtlp = isOtlp;
+        LogsEndpoint = logsEndpoint;
+        TracesEndpoint = tracesEndpoint;
+        AuthHeaderValue = authHeaderValue;
     }
 
     public static bool TryParse(
-        string? dsn,
+        string dsn,
         out SentryDsn? parsed,
         out string? error)
     {
@@ -114,13 +62,80 @@ public sealed class SentryDsn
         }
     }
 
-    private string GetBaseUri()
+    public static SentryDsn Parse(string dsn)
     {
-        if (Port.HasValue)
+        if (string.IsNullOrWhiteSpace(dsn))
         {
-            return $"{Scheme}://{Host}:{Port.Value}";
+            throw new ArgumentException("DSN is empty.", nameof(dsn));
         }
 
-        return $"{Scheme}://{Host}";
+        if (!Uri.TryCreate(dsn, UriKind.Absolute, out var uri))
+        {
+            throw new ArgumentException("DSN is not a valid absolute URI.", nameof(dsn));
+        }
+
+        var publicKey = uri.UserInfo;
+        var secretKey = string.Empty;
+
+        if (publicKey.Contains(':'))
+        {
+            var split = publicKey.Split(':', 2);
+            publicKey = split[0];
+
+            if (split.Length > 1)
+            {
+                secretKey = split[1];
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(publicKey))
+        {
+            throw new ArgumentException("DSN public key is missing.", nameof(dsn));
+        }
+
+        var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (pathSegments.Length == 0)
+        {
+            throw new ArgumentException("DSN missing project ID metadata.", nameof(dsn));
+        }
+
+        var projectId = pathSegments[0];
+
+        var host = uri.IsDefaultPort
+            ? uri.Host
+            : $"{uri.Host}:{uri.Port}";
+
+        var baseUri = $"{uri.Scheme}://{host}";
+
+        var logsEndpoint =
+            $"{baseUri}/api/{projectId}/otlp/v1/logs";
+
+        var tracesEndpoint =
+            $"{baseUri}/api/{projectId}/otlp/v1/traces";
+
+        string authHeaderValue;
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            authHeaderValue =
+                $"Sentry sentry_key={publicKey}";
+        }
+        else
+        {
+            authHeaderValue =
+                $"Sentry sentry_key={publicKey}, sentry_secret={secretKey}";
+        }
+
+        return new SentryDsn(
+            raw: dsn,
+            publicKey: publicKey,
+            secretKey: secretKey,
+            projectId: projectId,
+            host: host,
+            isOtlp: true,
+            logsEndpoint: logsEndpoint,
+            tracesEndpoint: tracesEndpoint,
+            authHeaderValue: authHeaderValue);
     }
 }
