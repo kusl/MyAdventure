@@ -1,0 +1,5 @@
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS1501: No overload for method 'TryParse' takes 3 arguments [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri' [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri' [/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj]
+
+The build failed. Fix the build errors and run again.

@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Sun May 24 10:59:07 AM EDT 2026
+Generated: Sun May 24 11:04:04 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -35,6 +35,7 @@ DIRECTORY STRUCTURE:
 │           │   ├── 2026-05-24-10-36-03.txt
 │           │   ├── 2026-05-24-10-41-07.txt
 │           │   ├── 2026-05-24-10-55-28.txt
+│           │   ├── 2026-05-24-10-58-45.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -616,7 +617,7 @@ SIZE: 1.02 KB
 
 ================================================================================
 FILE: Directory.Packages.props
-SIZE: 4.04 KB
+SIZE: 4.25 KB
 ================================================================================
 
 <Project>
@@ -629,6 +630,7 @@ SIZE: 4.04 KB
     <EfCoreVersion>10.0.8</EfCoreVersion>
     <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
     <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
+    <OpenTelemetryInstrumentationHttpVersion>1.15.1</OpenTelemetryInstrumentationHttpVersion>
     <XunitVersion>2.9.3</XunitVersion>
     <TestSdkVersion>18.5.1</TestSdkVersion>
   </PropertyGroup>
@@ -673,6 +675,7 @@ SIZE: 4.04 KB
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryInstrumentationRuntimeVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryInstrumentationHttpVersion)" />
   </ItemGroup>
 
   <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
@@ -5560,46 +5563,42 @@ public static class DependencyInjection
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
-SIZE: 1.89 KB
+SIZE: 1.54 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      InternalsVisibleTo: the integration tests reach the internal
-      LoadFromConfiguration(IConfiguration, string)/LoadFromEnvironment(string)
-      overloads of TelemetryConfigurationLoader so they can verify both
-      "compile-time fallback present" and "compile-time fallback empty"
-      paths without having to rebuild the assembly with a different
-      const. The internal type TelemetryStartupAnnouncement is also
-      consumed by EmitStartupBreadcrumb from this assembly's tests.
-    -->
-    <InternalsVisibleTo Include="MyAdventure.Integration.Tests" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
     <PackageReference Include="OpenTelemetry" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
   </ItemGroup>
+
 </Project>
 
 
@@ -5667,7 +5666,7 @@ public class GameStateRepository(
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
-SIZE: 3.28 KB
+SIZE: 3.87 KB
 ================================================================================
 
 using System;
@@ -5682,9 +5681,9 @@ public sealed class SentryDsn
     public string ProjectId { get; }
     public string Host { get; }
     public bool IsOtlp { get; }
-    public string OtlpLogsEndpoint { get; }
-    public string OtlpTracesEndpoint { get; }
-    public string OtlpHeaders { get; }
+    public string LogsEndpoint { get; }
+    public string TracesEndpoint { get; }
+    public string AuthHeaderValue { get; }
 
     private SentryDsn(
         string raw,
@@ -5693,9 +5692,9 @@ public sealed class SentryDsn
         string projectId,
         string host,
         bool isOtlp,
-        string otlpLogsEndpoint,
-        string otlpTracesEndpoint,
-        string otlpHeaders)
+        string logsEndpoint,
+        string tracesEndpoint,
+        string authHeaderValue)
     {
         Raw = raw;
         PublicKey = publicKey;
@@ -5703,9 +5702,29 @@ public sealed class SentryDsn
         ProjectId = projectId;
         Host = host;
         IsOtlp = isOtlp;
-        OtlpLogsEndpoint = otlpLogsEndpoint;
-        OtlpTracesEndpoint = otlpTracesEndpoint;
-        OtlpHeaders = otlpHeaders;
+        LogsEndpoint = logsEndpoint;
+        TracesEndpoint = tracesEndpoint;
+        AuthHeaderValue = authHeaderValue;
+    }
+
+    public static bool TryParse(string dsn, out SentryDsn result)
+    {
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            result = new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            return false;
+        }
+
+        try
+        {
+            result = Parse(dsn);
+            return true;
+        }
+        catch
+        {
+            result = new SentryDsn(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty, string.Empty, string.Empty);
+            return false;
+        }
     }
 
     public static SentryDsn Parse(string dsn)
@@ -5763,9 +5782,9 @@ public sealed class SentryDsn
         }
 
         var isOtlp = true;
-        var otlpLogsEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/logs";
-        var otlpTracesEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/traces";
-        var otlpHeaders = $"x-sentry-auth=sentry sentry_key={publicKey}";
+        var logsEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/logs";
+        var tracesEndpoint = $"https://{host}/api/{projectId}/integration/otlp/v1/traces";
+        var authHeaderValue = $"x-sentry-auth=sentry sentry_key={publicKey}";
 
         return new SentryDsn(
             dsn,
@@ -5774,16 +5793,16 @@ public sealed class SentryDsn
             projectId,
             host,
             isOtlp,
-            otlpLogsEndpoint,
-            otlpTracesEndpoint,
-            otlpHeaders);
+            logsEndpoint,
+            tracesEndpoint,
+            authHeaderValue);
     }
 }
 
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
-SIZE: 3.10 KB
+SIZE: 2.99 KB
 ================================================================================
 
 using System;
@@ -5811,7 +5830,6 @@ public static class TelemetryBootstrapper
     {
         var sentryDsn = SentryDsn.Parse(sentryDsnStr);
 
-        // Define shared resource attributes
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(
                 serviceName: "MyAdventure",
@@ -5822,7 +5840,6 @@ public static class TelemetryBootstrapper
                 new KeyValuePair<string, object>("deployment.environment", environment)
             });
 
-        // 1. Configure Logging
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
@@ -5847,14 +5864,13 @@ public static class TelemetryBootstrapper
                     options.AddOtlpExporter(opt =>
                     {
                         opt.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        opt.Endpoint = new Uri(sentryDsn.OtlpLogsEndpoint);
-                        opt.Headers = sentryDsn.OtlpHeaders;
+                        opt.Endpoint = new Uri(sentryDsn.LogsEndpoint);
+                        opt.Headers = sentryDsn.AuthHeaderValue;
                     });
                 });
             }
         });
 
-        // 2. Configure Tracing
         services.AddOpenTelemetry()
             .WithTracing(tracing =>
             {
@@ -5868,8 +5884,8 @@ public static class TelemetryBootstrapper
                     tracing.AddOtlpExporter(opt =>
                     {
                         opt.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        opt.Endpoint = new Uri(sentryDsn.OtlpTracesEndpoint);
-                        opt.Headers = sentryDsn.OtlpHeaders;
+                        opt.Endpoint = new Uri(sentryDsn.TracesEndpoint);
+                        opt.Headers = sentryDsn.AuthHeaderValue;
                     });
                 }
             });

@@ -27,65 +27,55 @@ time sh export.sh
 
 # Run the desktop app with OpenTelemetry variables mapped to Sentry
 MYADVENTURE_VERBOSE=1 \
-OTEL_EXPORTER_OTLP_ENDPOINT="https://de.sentry.io/api/4511444969390160/opentelemetry" \
-OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
+# OTEL_EXPORTER_OTLP_ENDPOINT="https://de.sentry.io/api/4511444969390160/opentelemetry" \
+# OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
 dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
 
-Build succeeded in 1.2s
+Build succeeded in 1.0s
 
-real	0m1.396s
-user	0m1.094s
-sys	0m0.343s
+real	0m1.235s
+user	0m0.925s
+sys	0m0.249s
+Restore complete (1.3s)
+
+Build succeeded in 1.4s
+
+real	0m1.581s
+user	0m2.022s
+sys	0m0.359s
 Restore complete (0.7s)
+  MyAdventure.Core net10.0 succeeded (0.4s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 failed with 3 error(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS1501: No overload for method 'TryParse' takes 3 arguments
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
+  MyAdventure.Core.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
 
-Build succeeded in 0.8s
+Build failed with 3 error(s) in 1.8s
 
-real	0m0.951s
-user	0m1.065s
-sys	0m0.244s
-Restore complete (0.7s)
-  MyAdventure.Core net10.0 succeeded (2.7s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 failed with 8 error(s) (0.5s)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS0117: 'SentryDsn' does not contain a definition for 'TryParse'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,45): error CS1061: 'SentryDsn' does not contain a definition for 'LogsEndpoint' and no accessible extension method 'LogsEndpoint' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(145,61): error CS1061: 'SentryDsn' does not contain a definition for 'AuthHeaderValue' and no accessible extension method 'AuthHeaderValue' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(60,40): error CS0103: The name 'OtpExportProtocol' does not exist in the current context
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(74,25): error CS1061: 'TracerProviderBuilder' does not contain a definition for 'AddHttpClientInstrumentation' and no accessible extension method 'AddHttpClientInstrumentation' accepting a first argument of type 'TracerProviderBuilder' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(81,40): error CS0103: The name 'OtpExportProtocol' does not exist in the current context
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,45): error CS1061: 'SentryDsn' does not contain a definition for 'TracesEndpoint' and no accessible extension method 'TracesEndpoint' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(174,61): error CS1061: 'SentryDsn' does not contain a definition for 'AuthHeaderValue' and no accessible extension method 'AuthHeaderValue' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-  MyAdventure.Core.Tests net10.0 succeeded (0.7s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-
-Build failed with 8 error(s) in 4.3s
-
-real	0m4.445s
-user	0m2.358s
+real	0m1.912s
+user	0m1.881s
 sys	0m0.439s
-Restore complete (0.6s)
+Restore complete (0.7s)
   MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-  MyAdventure.Infrastructure net10.0 failed with 8 error(s) (0.1s)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS0117: 'SentryDsn' does not contain a definition for 'TryParse'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(60,40): error CS0103: The name 'OtpExportProtocol' does not exist in the current context
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(74,25): error CS1061: 'TracerProviderBuilder' does not contain a definition for 'AddHttpClientInstrumentation' and no accessible extension method 'AddHttpClientInstrumentation' accepting a first argument of type 'TracerProviderBuilder' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(81,40): error CS0103: The name 'OtpExportProtocol' does not exist in the current context
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,45): error CS1061: 'SentryDsn' does not contain a definition for 'LogsEndpoint' and no accessible extension method 'LogsEndpoint' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(145,61): error CS1061: 'SentryDsn' does not contain a definition for 'AuthHeaderValue' and no accessible extension method 'AuthHeaderValue' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,45): error CS1061: 'SentryDsn' does not contain a definition for 'TracesEndpoint' and no accessible extension method 'TracesEndpoint' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(174,61): error CS1061: 'SentryDsn' does not contain a definition for 'AuthHeaderValue' and no accessible extension method 'AuthHeaderValue' accepting a first argument of type 'SentryDsn' could be found (are you missing a using directive or an assembly reference?)
+  MyAdventure.Infrastructure net10.0 failed with 3 error(s) (0.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS1501: No overload for method 'TryParse' takes 3 arguments
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
+  MyAdventure.Core.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
-[xUnit.net 00:00:00.09]   Discovering: MyAdventure.Core.Tests
-[xUnit.net 00:00:00.17]   Discovered:  MyAdventure.Core.Tests
-[xUnit.net 00:00:00.22]   Starting:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.59]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.08]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.16]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.21]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.57]   Finished:    MyAdventure.Core.Tests
   MyAdventure.Core.Tests test net10.0 succeeded (1.2s)
 
 Test summary: total: 278, failed: 0, succeeded: 278, skipped: 0, duration: 1.2s
-Build failed with 8 error(s) in 2.3s
+Build failed with 3 error(s) in 2.3s
 
-real	0m2.421s
-user	0m1.615s
-sys	0m0.347s
+real	0m2.490s
+user	0m1.699s
+sys	0m0.385s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -128,6 +118,7 @@ Project 'MyAdventure.Infrastructure' has the following package references
    > OpenTelemetry.Exporter.Console                               1.15.3      1.15.3  
    > OpenTelemetry.Exporter.OpenTelemetryProtocol                 1.15.3      1.15.3  
    > OpenTelemetry.Extensions.Hosting                             1.15.3      1.15.3  
+   > OpenTelemetry.Instrumentation.Http                           1.15.1      1.15.1  
    > OpenTelemetry.Instrumentation.Runtime                        1.15.1      1.15.1  
 
 Project 'MyAdventure.Shared' has the following package references
@@ -175,9 +166,9 @@ Project 'MyAdventure.UI.Tests' has the following package references
 
 (A) : Auto-referenced package.
 
-real	0m2.220s
+real	0m2.191s
 user	0m2.286s
-sys	0m0.554s
+sys	0m0.537s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -194,13 +185,13 @@ The given project `MyAdventure.Core.Tests` has no updates given the current sour
 The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
 The given project `MyAdventure.UI.Tests` has no updates given the current sources.
 
-real	0m4.216s
-user	0m3.716s
-sys	0m0.680s
+real	0m2.955s
+user	0m2.923s
+sys	0m0.592s
 
-real	0m10.907s
-user	0m20.277s
-sys	0m1.666s
+real	0m10.753s
+user	0m18.885s
+sys	0m1.610s
 #!/bin/bash
 # =============================================================================
 # Clean Project Export for LLM Analysis (Final Directory Fix)
@@ -405,11 +396,11 @@ Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
 
 Export Complete: docs/llm/dump.txt
 
-real	0m0.976s
-user	0m0.478s
-sys	0m0.653s
+real	0m0.939s
+user	0m0.504s
+sys	0m0.591s
 
-real	0m28.670s
-user	0m34.001s
-sys	0m5.137s
+real	0m25.188s
+user	0m32.203s
+sys	0m4.996s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
