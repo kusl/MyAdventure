@@ -10298,3 +10298,46 @@ Let me read the truncated middle section and the existing README:Now I have a co
 
 
 
+00
+02
+
+I just set up a new sentry account and I am on a 14 day trial. 
+After the fourteen days, 
+I will be on the free tier. 
+We only want to use features available on the free tier. 
+I have this DSN 
+https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160
+the motivation is to capture errors and logs from the app during major events in the app
+we should also have an option to easily turn on and off verbose logging 
+As usual, we want to NOT install third party SDK as much as possible 
+if it is possible to transmit logging information without sentry specific software, 
+lets do that instead of using vendor specific packages 
+
+please give full files for all files that need to change 
+
+let me know if you need more information 
+
+Configure Android SDK
+Automatic Configuration (Recommended)
+Add Sentry automatically to your app with the Sentry wizard (call this inside your project directory).
+
+downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v4.0.1/sentry-wizard-linux-x64"
+curl -L $downloadUrl -o sentry-wizard
+chmod +x sentry-wizard
+./sentry-wizard -i android --saas --org collabs-with-kushal --project android
+
+The Sentry wizard will automatically patch your application:
+
+    Update your app's build.gradle file with the Sentry Gradle plugin and configure it.
+    Update your AndroidManifest.xml with the default Sentry configuration
+    Create sentry.properties with an auth token to upload proguard mappings (this file is automatically added to .gitignore)
+    Add an example error to your app's Main Activity to verify your Sentry setup
+
+Manual Configuration
+Alternatively, you can also set up the SDK manually, by following the manual setup docs.
+
+If you already have the configuration for Sentry in your application, and just need this project's (android) DSN, you can find it below:
+Additional Information
+
+    Advanced Configuration: Customize the SDK initialization behavior.
+    Jetpack Compose: Learn about our first class integration with Jetpack Compose.
