@@ -31,56 +31,54 @@ MYADVENTURE_VERBOSE=1 \
 # OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
 dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
 
-Build succeeded in 1.0s
+Build succeeded in 0.9s
 
-real	0m1.123s
-user	0m0.892s
-sys	0m0.265s
+real	0m1.063s
+user	0m0.887s
+sys	0m0.230s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
 
-real	0m0.890s
-user	0m1.024s
-sys	0m0.225s
-Restore complete (0.7s)
-  MyAdventure.Core net10.0 succeeded (0.3s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 failed with 4 error(s) (0.3s)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,61): error CS1503: Argument 2: cannot convert from 'out MyAdventure.Infrastructure.Telemetry.SentryDsn' to 'out System.Uri?'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,73): error CS1503: Argument 3: cannot convert from 'out string' to 'out System.Uri?'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(60,48): error CS1503: Argument 1: cannot convert from 'System.Uri' to 'string'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(80,48): error CS1503: Argument 1: cannot convert from 'System.Uri' to 'string'
+real	0m0.877s
+user	0m1.005s
+sys	0m0.204s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.4s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 failed with 3 error(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS7036: There is no argument given that corresponds to the required parameter 'authHeader' of 'SentryDsn.TryParse(string, out string?, out string?, out string?)'
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
   MyAdventure.Core.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
 
-Build failed with 4 error(s) in 1.6s
+Build failed with 3 error(s) in 1.7s
 
-real	0m1.791s
-user	0m1.824s
-sys	0m0.411s
+real	0m1.810s
+user	0m1.831s
+sys	0m0.417s
 Restore complete (0.7s)
   MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-  MyAdventure.Infrastructure net10.0 failed with 4 error(s) (0.2s)
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,61): error CS1503: Argument 2: cannot convert from 'out MyAdventure.Infrastructure.Telemetry.SentryDsn' to 'out System.Uri?'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,73): error CS1503: Argument 3: cannot convert from 'out string' to 'out System.Uri?'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(60,48): error CS1503: Argument 1: cannot convert from 'System.Uri' to 'string'
-    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs(80,48): error CS1503: Argument 1: cannot convert from 'System.Uri' to 'string'
+  MyAdventure.Core.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Infrastructure net10.0 failed with 3 error(s) (0.2s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(94,26): error CS7036: There is no argument given that corresponds to the required parameter 'authHeader' of 'SentryDsn.TryParse(string, out string?, out string?, out string?)'
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(143,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/DependencyInjection.cs(172,38): error CS0029: Cannot implicitly convert type 'string' to 'System.Uri'
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
-[xUnit.net 00:00:00.09]   Discovering: MyAdventure.Core.Tests
-[xUnit.net 00:00:00.16]   Discovered:  MyAdventure.Core.Tests
-[xUnit.net 00:00:00.21]   Starting:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.61]   Finished:    MyAdventure.Core.Tests
-  MyAdventure.Core.Tests test net10.0 succeeded (1.2s)
+[xUnit.net 00:00:00.08]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.15]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.20]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.55]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (1.1s)
 
-Test summary: total: 278, failed: 0, succeeded: 278, skipped: 0, duration: 1.2s
-Build failed with 4 error(s) in 2.3s
+Test summary: total: 278, failed: 0, succeeded: 278, skipped: 0, duration: 1.1s
+Build failed with 3 error(s) in 2.3s
 
-real	0m2.494s
-user	0m1.686s
-sys	0m0.426s
+real	0m2.504s
+user	0m1.658s
+sys	0m0.444s
 Restore complete (0.6s)
 
-Build succeeded in 0.8s
+Build succeeded in 0.7s
 Project 'MyAdventure.Android' has the following package references
    [net10.0-android36.0]: 
    Top-level Package                    Requested    Resolved
@@ -168,9 +166,9 @@ Project 'MyAdventure.UI.Tests' has the following package references
 
 (A) : Auto-referenced package.
 
-real	0m2.267s
-user	0m2.360s
-sys	0m0.600s
+real	0m2.192s
+user	0m2.370s
+sys	0m0.537s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -187,13 +185,13 @@ The given project `MyAdventure.Core.Tests` has no updates given the current sour
 The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
 The given project `MyAdventure.UI.Tests` has no updates given the current sources.
 
-real	0m2.713s
-user	0m2.830s
-sys	0m0.571s
+real	0m2.628s
+user	0m2.823s
+sys	0m0.527s
 
-real	0m10.468s
-user	0m21.045s
-sys	0m1.561s
+real	0m10.021s
+user	0m19.713s
+sys	0m1.437s
 #!/bin/bash
 # =============================================================================
 # Clean Project Export for LLM Analysis (Final Directory Fix)
@@ -398,11 +396,11 @@ Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
 
 Export Complete: docs/llm/dump.txt
 
-real	0m0.933s
-user	0m0.498s
-sys	0m0.610s
+real	0m0.918s
+user	0m0.470s
+sys	0m0.611s
 
-real	0m23.791s
-user	0m33.264s
-sys	0m4.903s
+real	0m23.053s
+user	0m31.761s
+sys	0m4.643s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
