@@ -12198,3 +12198,8 @@ After the 14-day Sentry trial ends, the integration keeps working as-is on the D
 
 
 
+74
+08
+
+yes but how does this sentry DSN get set on the build of the application from github releases? also I built and ran the desktop app locally but don't see the logs on the sentry website 
+
