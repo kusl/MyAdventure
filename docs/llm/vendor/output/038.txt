@@ -373,8 +373,174 @@ Export Complete: docs/llm/dump.txt
 real	0m0.920s
 user	0m0.483s
 sys	0m0.578s
+kushal@fedora:~/src/dotnet/MyAdventure$ time bash /home/kushal/src/dotnet/MyAdventure/desktop.sh
+
+Build succeeded in 0.5s
+
+real	0m0.698s
+user	0m0.855s
+sys	0m0.210s
+Restore complete (0.6s)
+
+Build succeeded in 0.7s
+
+real	0m0.867s
+user	0m0.958s
+sys	0m0.217s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.2s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.2s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.3s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (1.0s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded (24.1s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+
+Build succeeded in 25.7s
+
+real	0m25.847s
+user	1m45.895s
+sys	0m3.581s
+Restore complete (0.6s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.13]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.10]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.17]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.12]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.23]     MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat [FAIL]
+[xUnit.net 00:00:00.23]       System.ArgumentException : DSN is not a valid absolute URI. (Parameter 'dsn')
+[xUnit.net 00:00:00.23]       Stack Trace:
+[xUnit.net 00:00:00.23]         /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs(128,0): at MyAdventure.Infrastructure.Telemetry.SentryDsn.Parse(String dsn)
+[xUnit.net 00:00:00.23]         /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(127,0): at MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat()
+[xUnit.net 00:00:00.23]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.23]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+LogRecord.Timestamp:               2026-05-24T14:30:16.8725002Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry disabled (no DSN), verbose=False
+LogRecord.Body:                    Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+b5c372af4ac34898ad1d19d935f9e972ee6d0695
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:00.28]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (0.8s)
+[xUnit.net 00:00:00.50]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (1.1s)
+LogRecord.Timestamp:               2026-05-24T14:30:17.2947544Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        Telemetry: Sentry DSN was provided but could not be parsed (DSN is not a valid absolute URI.); console-only.
+LogRecord.Body:                    Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+LogRecord.Attributes (Key:Value):
+    Error: DSN is not a valid absolute URI.
+    OriginalFormat (a.k.a Body): Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+Resource associated with LogRecord:
+deployment.environment: test
+service.name: MyAdventure
+service.version: 1.0.1+b5c372af4ac34898ad1d19d935f9e972ee6d0695
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-24T14:30:17.2986403Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Body:                    Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Migrating GameStates table to BigDouble TEXT schema
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+b5c372af4ac34898ad1d19d935f9e972ee6d0695
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-24T14:30:17.3001625Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        BigDouble migration complete
+LogRecord.Body:                    BigDouble migration complete
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): BigDouble migration complete
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+b5c372af4ac34898ad1d19d935f9e972ee6d0695
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-24T14:30:17.3003920Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        Telemetry: Sentry DSN was provided but could not be parsed (DSN is not a valid absolute URI.); console-only.
+LogRecord.Body:                    Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+LogRecord.Attributes (Key:Value):
+    Error: DSN is not a valid absolute URI.
+    OriginalFormat (a.k.a Body): Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+b5c372af4ac34898ad1d19d935f9e972ee6d0695
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:00.75]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 failed with 1 error(s) (1.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs(128): error TESTERROR: 
+      MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSec
+      retKeyFormat (< 1ms): Error Message: System.ArgumentException : DSN is not a valid absolute URI. (P
+      arameter 'dsn')
+      Stack Trace:
+         at MyAdventure.Infrastructure.Telemetry.SentryDsn.Parse(String dsn) in /home/kushal/src/dotnet/M
+      yAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs:line 128
+         at MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPub
+      licSecretKeyFormat() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/Tel
+      emetryConfigurationTests.cs:line 127
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test summary: total: 358, failed: 1, succeeded: 357, skipped: 0, duration: 1.3s
+Build failed with 1 error(s) in 2.2s
+
+real	0m2.410s
+user	0m1.792s
+sys	0m0.413s
+
+real	0m29.827s
+user	1m49.502s
+sys	0m4.422s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
-
-
-
-
