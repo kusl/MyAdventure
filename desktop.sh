@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Exit immediately if any command fails
-set -e
-
 # Define paths and file names
 LOG_DIR="/home/kushal/src/dotnet/MyAdventure/docs/llm/vendor/desktoplogs"
 TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
