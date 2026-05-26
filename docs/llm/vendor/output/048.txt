@@ -1,0 +1,897 @@
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh; cat desktop.sh; time bash desktop.sh
+
+Build succeeded in 1.7s
+
+real	0m1.945s
+user	0m1.571s
+sys	0m0.476s
+Restore complete (1.0s)
+
+Build succeeded in 1.2s
+
+real	0m1.459s
+user	0m1.539s
+sys	0m0.278s
+Restore complete (1.1s)
+  MyAdventure.Core net10.0 succeeded (0.6s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.7s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (1.0s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.8s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (1.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.8s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (2.0s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android                                                              _Compi  MyAdventure.Android net10.0-android succeeded (37.2s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+
+Build succeeded in 41.3s
+
+real	0m41.621s
+user	2m30.793s
+sys	0m7.263s
+Restore complete (1.0s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.11]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.11]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.24]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.19]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.31]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.23]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.12]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.19]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.23]   Starting:    MyAdventure.UI.Tests
+LogRecord.Timestamp:               2026-05-26T23:13:53.4284837Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry disabled (no DSN), verbose=False
+LogRecord.Body:                    Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:00.48]   Finished:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.80]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (1.4s)
+  MyAdventure.Core.Tests test net10.0 succeeded (1.8s)
+LogRecord.Timestamp:               2026-05-26T23:13:54.1083709Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Body:                    Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Migrating GameStates table to BigDouble TEXT schema
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-26T23:13:54.1107406Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        BigDouble migration complete
+LogRecord.Body:                    BigDouble migration complete
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): BigDouble migration complete
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-26T23:13:54.1237361Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry OTLP enabled, env=test, verbose=False
+LogRecord.Body:                    Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Environment: test
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}
+Resource associated with LogRecord:
+deployment.environment: test
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-26T23:13:54.1333769Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        Telemetry: Sentry DSN was provided but could not be parsed (DSN is not a valid absolute URI. (Parameter 'dsn')); console-only.
+LogRecord.Body:                    Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+LogRecord.Attributes (Key:Value):
+    Error: DSN is not a valid absolute URI. (Parameter 'dsn')
+    OriginalFormat (a.k.a Body): Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:01.21]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (2.1s)
+
+Test summary: total: 358, failed: 0, succeeded: 358, skipped: 0, duration: 2.3s
+Build succeeded in 3.7s
+
+real	0m4.016s
+user	0m2.690s
+sys	0m0.561s
+Restore complete (0.9s)
+
+Build succeeded in 1.1s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                    Requested    Resolved
+   > Avalonia                           12.0.3       12.0.3  
+   > Avalonia.Android                   12.0.3       12.0.3  
+   > Avalonia.Fonts.Inter               12.0.3       12.0.3  
+   > Avalonia.Themes.Fluent             12.0.3       12.0.3  
+   > Microsoft.NET.ILLink.Tasks   (A)   [10.0.8, )   10.0.8  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.8      10.0.8  
+   > OpenTelemetry.Api                 1.15.3      1.15.3  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package             Requested   Resolved
+   > Avalonia                    12.0.3      12.0.3  
+   > Avalonia.Desktop            12.0.3      12.0.3  
+   > Avalonia.Fonts.Inter        12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent      12.0.3      12.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.8      10.0.8  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration                           10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.Binder                    10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.Json                      10.0.8      10.0.8  
+   > Microsoft.Extensions.DependencyInjection                     10.0.8      10.0.8  
+   > Microsoft.Extensions.Logging                                 10.0.8      10.0.8  
+   > Microsoft.Extensions.Logging.Console                         10.0.8      10.0.8  
+   > OpenTelemetry                                                1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.Console                               1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.OpenTelemetryProtocol                 1.15.3      1.15.3  
+   > OpenTelemetry.Extensions.Hosting                             1.15.3      1.15.3  
+   > OpenTelemetry.Instrumentation.Http                           1.15.1      1.15.1  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.1      1.15.1  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent                        12.0.3      12.0.3  
+   > CommunityToolkit.Mvvm                         8.4.2       8.4.2   
+   > Microsoft.Extensions.DependencyInjection      10.0.8      10.0.8  
+   > Microsoft.Extensions.Logging                  10.0.8      10.0.8  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             10.0.1      10.0.1  
+   > Microsoft.NET.Test.Sdk         18.6.0      18.6.0  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                                Requested   Resolved
+   > coverlet.collector                             10.0.1      10.0.1  
+   > Microsoft.EntityFrameworkCore.InMemory         10.0.8      10.0.8  
+   > Microsoft.EntityFrameworkCore.Sqlite           10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration             10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.Binder      10.0.8      10.0.8  
+   > Microsoft.NET.Test.Sdk                         18.6.0      18.6.0  
+   > Shouldly                                       4.3.0       4.3.0   
+   > xunit                                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio                      3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             10.0.1      10.0.1  
+   > Microsoft.NET.Test.Sdk         18.6.0      18.6.0  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m3.399s
+user	0m3.449s
+sys	0m0.735s
+Restore complete (0.9s)
+
+Build succeeded in 1.1s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m4.311s
+user	0m4.338s
+sys	0m0.755s
+
+real	0m15.840s
+user	0m27.999s
+sys	0m2.114s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: SUMMARY.md
+Processed: desktop.sh
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: src/MyAdventure.Android/AndroidApp.cs
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/CrossBusinessSpeedBonus.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Numerics/BigDouble.cs
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryOptions.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+Processed: src/MyAdventure.Shared/Services/AppRoot.cs
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BigDoubleTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/CrossBusinessSpeedBonusTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Core.Tests/SpeedMilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/SubFrameCycleTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.Integration.Tests/SchemaMigrationTests.cs
+Processed: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+Processed: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelSpeedTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
+
+Export Complete: docs/llm/dump.txt
+
+real	0m1.339s
+user	0m0.636s
+sys	0m0.889s
+#!/bin/bash
+
+# Define paths and file names
+LOG_DIR="/home/kushal/src/dotnet/MyAdventure/docs/llm/vendor/desktoplogs"
+TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
+LOG_FILE="$LOG_DIR/$TIMESTAMP.txt"
+
+# Ensure the log directory exists
+mkdir -p "$LOG_DIR"
+
+# Navigate to the project root
+cd /home/kushal/src/dotnet/MyAdventure
+
+cat desktop.sh
+
+# Run the build pipeline
+time dotnet clean
+time dotnet restore
+time dotnet build
+time dotnet test
+time dotnet list package
+time dotnet list package --outdated
+time dotnet format
+cat export.sh
+time sh export.sh
+
+# Run the desktop app with OpenTelemetry variables mapped to Sentry
+MYADVENTURE_VERBOSE=1 \
+# OTEL_EXPORTER_OTLP_ENDPOINT="https://de.sentry.io/api/4511444969390160/opentelemetry" \
+# OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
+dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
+#!/bin/bash
+
+# Define paths and file names
+LOG_DIR="/home/kushal/src/dotnet/MyAdventure/docs/llm/vendor/desktoplogs"
+TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
+LOG_FILE="$LOG_DIR/$TIMESTAMP.txt"
+
+# Ensure the log directory exists
+mkdir -p "$LOG_DIR"
+
+# Navigate to the project root
+cd /home/kushal/src/dotnet/MyAdventure
+
+cat desktop.sh
+
+# Run the build pipeline
+time dotnet clean
+time dotnet restore
+time dotnet build
+time dotnet test
+time dotnet list package
+time dotnet list package --outdated
+time dotnet format
+cat export.sh
+time sh export.sh
+
+# Run the desktop app with OpenTelemetry variables mapped to Sentry
+MYADVENTURE_VERBOSE=1 \
+# OTEL_EXPORTER_OTLP_ENDPOINT="https://de.sentry.io/api/4511444969390160/opentelemetry" \
+# OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
+dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
+
+Build succeeded in 0.9s
+
+real	0m1.124s
+user	0m1.208s
+sys	0m0.317s
+Restore complete (0.9s)
+
+Build succeeded in 1.1s
+
+real	0m1.370s
+user	0m1.465s
+sys	0m0.258s
+Restore complete (0.9s)
+  MyAdventure.Core net10.0 succeeded (0.2s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.3s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.3s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.6s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (1.4s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded (34.0s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+
+Build succeeded in 36.5s
+
+real	0m36.839s
+user	2m17.789s
+sys	0m5.456s
+Restore complete (1.0s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.10]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.10]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.21]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.10]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.17]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.15]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.28]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.21]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.18]   Starting:    MyAdventure.UI.Tests
+LogRecord.Timestamp:               2026-05-26T23:15:01.4094813Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry disabled (no DSN), verbose=False
+LogRecord.Body:                    Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:00.44]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (1.2s)
+[xUnit.net 00:00:00.73]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.Core.Tests test net10.0 succeeded (1.6s)
+LogRecord.Timestamp:               2026-05-26T23:15:02.0609899Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Body:                    Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Migrating GameStates table to BigDouble TEXT schema
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-26T23:15:02.0632111Z
+LogRecord.CategoryName:            DbInit
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        BigDouble migration complete
+LogRecord.Body:                    BigDouble migration complete
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): BigDouble migration complete
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-26T23:15:02.0763724Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry OTLP enabled, env=test, verbose=False
+LogRecord.Body:                    Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Environment: test
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}
+Resource associated with LogRecord:
+deployment.environment: test
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+LogRecord.Timestamp:               2026-05-26T23:15:02.0851713Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        Telemetry: Sentry DSN was provided but could not be parsed (DSN is not a valid absolute URI. (Parameter 'dsn')); console-only.
+LogRecord.Body:                    Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+LogRecord.Attributes (Key:Value):
+    Error: DSN is not a valid absolute URI. (Parameter 'dsn')
+    OriginalFormat (a.k.a Body): Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+6413cd25d390311360fe499d44bb4ec588b0bbe7
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+[xUnit.net 00:00:01.14]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (2.0s)
+
+Test summary: total: 358, failed: 0, succeeded: 358, skipped: 0, duration: 2.1s
+Build succeeded in 3.5s
+
+real	0m3.748s
+user	0m2.546s
+sys	0m0.473s
+Restore complete (0.9s)
+
+Build succeeded in 1.1s
+Project 'MyAdventure.Android' has the following package references
+   [net10.0-android36.0]: 
+   Top-level Package                    Requested    Resolved
+   > Avalonia                           12.0.3       12.0.3  
+   > Avalonia.Android                   12.0.3       12.0.3  
+   > Avalonia.Fonts.Inter               12.0.3       12.0.3  
+   > Avalonia.Themes.Fluent             12.0.3       12.0.3  
+   > Microsoft.NET.ILLink.Tasks   (A)   [10.0.8, )   10.0.8  
+
+Project 'MyAdventure.Core' has the following package references
+   [net10.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      10.0.8      10.0.8  
+   > OpenTelemetry.Api                 1.15.3      1.15.3  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net10.0]: 
+   Top-level Package             Requested   Resolved
+   > Avalonia                    12.0.3      12.0.3  
+   > Avalonia.Desktop            12.0.3      12.0.3  
+   > Avalonia.Fonts.Inter        12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent      12.0.3      12.0.3  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net10.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Design                         10.0.8      10.0.8  
+   > Microsoft.EntityFrameworkCore.Sqlite                         10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration                           10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.Binder                    10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.Json                      10.0.8      10.0.8  
+   > Microsoft.Extensions.DependencyInjection                     10.0.8      10.0.8  
+   > Microsoft.Extensions.Logging                                 10.0.8      10.0.8  
+   > Microsoft.Extensions.Logging.Console                         10.0.8      10.0.8  
+   > OpenTelemetry                                                1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.Console                               1.15.3      1.15.3  
+   > OpenTelemetry.Exporter.OpenTelemetryProtocol                 1.15.3      1.15.3  
+   > OpenTelemetry.Extensions.Hosting                             1.15.3      1.15.3  
+   > OpenTelemetry.Instrumentation.Http                           1.15.1      1.15.1  
+   > OpenTelemetry.Instrumentation.Runtime                        1.15.1      1.15.1  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net10.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      12.0.3      12.0.3  
+   > Avalonia.Themes.Fluent                        12.0.3      12.0.3  
+   > CommunityToolkit.Mvvm                         8.4.2       8.4.2   
+   > Microsoft.Extensions.DependencyInjection      10.0.8      10.0.8  
+   > Microsoft.Extensions.Logging                  10.0.8      10.0.8  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > Bogus                          35.6.5      35.6.5  
+   > coverlet.collector             10.0.1      10.0.1  
+   > Microsoft.NET.Test.Sdk         18.6.0      18.6.0  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                                Requested   Resolved
+   > coverlet.collector                             10.0.1      10.0.1  
+   > Microsoft.EntityFrameworkCore.InMemory         10.0.8      10.0.8  
+   > Microsoft.EntityFrameworkCore.Sqlite           10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration             10.0.8      10.0.8  
+   > Microsoft.Extensions.Configuration.Binder      10.0.8      10.0.8  
+   > Microsoft.NET.Test.Sdk                         18.6.0      18.6.0  
+   > Shouldly                                       4.3.0       4.3.0   
+   > xunit                                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio                      3.1.5       3.1.5   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net10.0]: 
+   Top-level Package                Requested   Resolved
+   > coverlet.collector             10.0.1      10.0.1  
+   > Microsoft.NET.Test.Sdk         18.6.0      18.6.0  
+   > NSubstitute                    5.3.0       5.3.0   
+   > Shouldly                       4.3.0       4.3.0   
+   > xunit                          2.9.3       2.9.3   
+   > xunit.runner.visualstudio      3.1.5       3.1.5   
+
+(A) : Auto-referenced package.
+
+real	0m3.226s
+user	0m3.273s
+sys	0m0.650s
+Restore complete (0.9s)
+
+Build succeeded in 1.1s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m4.545s
+user	0m4.794s
+sys	0m0.767s
+
+real	0m15.937s
+user	0m29.491s
+sys	0m2.122s
+#!/bin/bash
+# =============================================================================
+# Clean Project Export for LLM Analysis (Final Directory Fix)
+# =============================================================================
+
+set -e
+
+OUTPUT_DIR="docs/llm"
+OUTPUT_FILE="$OUTPUT_DIR/dump.txt"
+PROJECT_PATH="$(pwd)"
+
+# Ensure we are in a git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: This script must be run inside a Git repository."
+    exit 1
+fi
+
+mkdir -p "$OUTPUT_DIR"
+
+echo "=============================================="
+echo "  Generating Clean Project Export"
+echo "=============================================="
+
+# Start output file with header
+{
+    echo "==============================================================================="
+    echo "PROJECT EXPORT (GIT TRACKED ONLY)"
+    echo "Generated: $(date)"
+    echo "Project Path: $PROJECT_PATH"
+    echo "==============================================================================="
+    echo ""
+} > "$OUTPUT_FILE"
+
+# 1. Directory Structure (Using Python for a reliable tree)
+echo "Generating directory structure..."
+{
+    echo "DIRECTORY STRUCTURE:"
+    echo "==================="
+    # This python snippet takes git-tracked files and builds a perfect visual tree
+    git ls-files | python3 -c "
+import sys
+tree = {}
+for line in sys.stdin:
+    parts = line.strip().split('/')
+    curr = tree
+    for part in parts:
+        curr = curr.setdefault(part, {})
+def print_tree(d, indent=''):
+    items = sorted(d.items())
+    for i, (name, children) in enumerate(items):
+        is_last = (i == len(items) - 1)
+        print(f'{indent}{\"└── \" if is_last else \"├── \"}{name}')
+        print_tree(children, indent + ('    ' if is_last else '│   '))
+print_tree(tree)
+"
+    echo ""
+} >> "$OUTPUT_FILE"
+
+# 2. Collect and Process Files
+echo "Collecting and cleaning file contents..."
+{
+    echo "FILE CONTENTS:"
+    echo "=============="
+    echo ""
+} >> "$OUTPUT_FILE"
+
+git ls-files | while read -r FILENAME; do
+    # Skip the export script itself and the output file
+    if [[ "$FILENAME" == "export.sh" || "$FILENAME" == "$OUTPUT_FILE" || "$FILENAME" == docs/llm/* ]]; then
+        continue
+    fi
+
+    # Skip specific binary extensions
+    if [[ "$FILENAME" =~ \.(ico|png|jpg|jpeg|gif|dll|exe|pdb|bin|zip|tar|gz|7z|ttf|woff|woff2)$ ]]; then
+        continue
+    fi
+
+    # Content-based binary check
+    if file --mime "$FILENAME" | grep -q "binary"; then
+        continue
+    fi
+
+    # Null byte check (Crucial for preventing "Unsupported Encoding" in Grok)
+    if grep -qP '\x00' "$FILENAME" 2>/dev/null; then
+        continue
+    fi
+
+    FILESIZE=$(stat -c%s "$FILENAME" 2>/dev/null || stat -f%z "$FILENAME" 2>/dev/null || echo "0")
+    
+    # Skip large files (>500KB)
+    if [ "$FILESIZE" -gt 512000 ]; then
+        continue
+    fi
+
+    {
+        echo "================================================================================"
+        echo "FILE: $FILENAME"
+        echo "SIZE: $(echo "scale=2; $FILESIZE/1024" | bc 2>/dev/null || echo "0.00") KB"
+        echo "================================================================================"
+        echo ""
+        # tr -d removes non-printable control characters that break LLM parsers
+        cat "$FILENAME" | tr -d '\000-\010\013\014\016-\037' 
+        echo ""
+        echo ""
+    } >> "$OUTPUT_FILE"
+    
+    echo "Processed: $FILENAME"
+done
+
+echo ""
+echo "Export Complete: $OUTPUT_FILE"
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: SUMMARY.md
+Processed: desktop.sh
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: src/MyAdventure.Android/AndroidApp.cs
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/App.axaml
+Processed: src/MyAdventure.Android/App.axaml.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Android/Views/MainView.axaml
+Processed: src/MyAdventure.Android/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/CrossBusinessSpeedBonus.cs
+Processed: src/MyAdventure.Core/Entities/EntityBase.cs
+Processed: src/MyAdventure.Core/Entities/GameState.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Numerics/BigDouble.cs
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/App.axaml
+Processed: src/MyAdventure.Desktop/App.axaml.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml
+Processed: src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+Processed: src/MyAdventure.Infrastructure/DependencyInjection.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryOptions.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Resources/i18n/en.json
+Processed: src/MyAdventure.Shared/Resources/i18n/es.json
+Processed: src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+Processed: src/MyAdventure.Shared/Services/AppRoot.cs
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/BigDoubleTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/CrossBusinessSpeedBonusTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Core.Tests/SpeedMilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/SubFrameCycleTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.Integration.Tests/SchemaMigrationTests.cs
+Processed: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+Processed: tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelSpeedTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
+
+Export Complete: docs/llm/dump.txt
+
+real	0m1.351s
+user	0m0.639s
+sys	0m0.901s
+
+real	24m8.763s
+user	5m50.747s
+sys	1m4.903s
+kushal@fedora:~/src/dotnet/MyAdventure$ 
