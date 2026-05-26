@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue May 26 06:25:34 PM EDT 2026
+Generated: Tue May 26 06:28:36 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -86,7 +86,8 @@ DIRECTORY STRUCTURE:
 │               ├── 038.txt
 │               ├── 039.txt
 │               ├── 040.txt
-│               └── 041.txt
+│               ├── 041.txt
+│               └── 042.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -640,7 +641,7 @@ SIZE: 4.25 KB
     <OpenTelemetryInstrumentationRuntimeVersion>1.15.1</OpenTelemetryInstrumentationRuntimeVersion>
     <OpenTelemetryInstrumentationHttpVersion>1.15.1</OpenTelemetryInstrumentationHttpVersion>
     <XunitVersion>2.9.3</XunitVersion>
-    <TestSdkVersion>18.5.1</TestSdkVersion>
+    <TestSdkVersion>18.6.0</TestSdkVersion>
   </PropertyGroup>
 
   <ItemGroup Label="Avalonia - MIT License">
