@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue May 26 06:36:23 PM EDT 2026
+Generated: Tue May 26 06:47:13 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -88,7 +88,8 @@ DIRECTORY STRUCTURE:
 │               ├── 040.txt
 │               ├── 041.txt
 │               ├── 042.txt
-│               └── 043.txt
+│               ├── 043.txt
+│               └── 044.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -10695,7 +10696,7 @@ public class SchemaMigrationTests : IDisposable
 
 ================================================================================
 FILE: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
-SIZE: 15.75 KB
+SIZE: 15.76 KB
 ================================================================================
 
 using Microsoft.Extensions.Configuration;
@@ -10823,7 +10824,7 @@ public class TelemetryConfigurationTests : IDisposable
         // OTLP only wants the public key — the parser must strip the
         // secret portion silently rather than treating it as part of the
         // key.
-        const string dsn = "https://[email protected]/9";
+        const string dsn = "https://pubkey:[email protected]/9";
         var parsed = SentryDsn.Parse(dsn);
         parsed.PublicKey.ShouldBe("pubkey");
     }
