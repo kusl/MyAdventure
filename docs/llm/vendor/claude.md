@@ -13225,3 +13225,376 @@ exporters:
     encoding: proto
     timeout: 30s
 
+I'll help you fix this. Let me first read the project to understand what state things are in, then diagnose the build errors independently before making any changes.I have a clear picture. Let me look at the integration test file to see exactly what was changed, and the current state of the loader.Now let me read the TelemetryConfigurationTests.cs file (the broken one) and the current TelemetryConfigurationLoader.cs source:Now let me look at the current state of `TelemetryConfigurationLoader.cs` (the source-of-truth) — since the test is calling `LoadFromEnvironment(fallbackDsn: ...)` and `LoadFromConfiguration(config, fallbackDsn: ...)`. The build errors say those overloads don't exist. Let me find the loader in dump.txt:Now I have a complete picture. Let me trace through this independently to verify my understanding:
+
+**What the build errors say:**
+1. CS1739 on lines 156, 169, 187, 203, 224 — "The best overload for `LoadFromEnvironment` / `LoadFromConfiguration` does not have a parameter named `fallbackDsn`"
+2. CS1501 on lines 242, 258, 272, 288 — Method overloads taking 1 or 2 arguments don't exist
+3. CS0122 on lines 302, 309 — `TelemetryDefaults` is inaccessible due to its protection level
+
+**Tracing each error against the source:**
+
+Looking at `TelemetryConfigurationLoader.cs`:
+- `LoadFromEnvironment()` — parameterless overload, public
+- `LoadFromEnvironment(string fallbackDsn)` — **`internal`**
+- `LoadFromConfiguration(IConfiguration)` — public
+- `LoadFromConfiguration(IConfiguration, string fallbackDsn)` — **`internal`**
+
+The test project is `MyAdventure.Integration.Tests` and calls these `internal` overloads. The errors are *exactly what you'd expect when `InternalsVisibleTo` isn't set up* for that assembly — the compiler can't see the `internal` methods so it falls back to the public ones (which take fewer args / no `fallbackDsn` param), giving CS1739 and CS1501. The CS0122 on `TelemetryDefaults` (which is `internal`) confirms it definitively — that's the textbook "internal not visible" diagnostic.
+
+Now, the kicker: the test file's own docstring says *"Those overloads are made visible via an `InternalsVisibleTo` entry in `MyAdventure.Infrastructure.csproj`."* So the design intent was always for InternalsVisibleTo to grant that access. Let me check the Infrastructure csproj to confirm it's missing or wrong:Confirmed. The `MyAdventure.Infrastructure.csproj` has no `InternalsVisibleTo` entry — that's why `internal` members aren't visible to the integration test project, which is exactly what produces:
+- CS1739 / CS1501 → the `internal` overloads of `LoadFromEnvironment(string)` / `LoadFromConfiguration(IConfiguration, string)` are invisible
+- CS0122 → `TelemetryDefaults` (which is `internal`) is inaccessible
+
+**Root cause:** The intended design (per the test's own docstring) is to grant the integration test assembly access via `InternalsVisibleTo`. That entry is missing from `MyAdventure.Infrastructure.csproj`.
+
+Also worth noting: the warning CS8604 at line 141 about `dsn` being a possibly-null `string?` passed to `SentryDsn.TryParse(string dsn, ...)` is a separate, smaller issue. Looking at the test:
+
+```csharp
+public void SentryDsn_TryParse_RejectsInvalidInput(string? dsn)
+{
+    var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
+```
+
+`TryParse` declares its first parameter as non-null `string`. The clean fix is to widen the parser signature to `string?` (it already returns `false` for null inputs per the test, so the implementation handles null — only the signature is wrong). Let me peek at SentryDsn:Good. Now I have everything I need. Let me also quickly confirm what the integration tests csproj looks like, so I know how it references Infrastructure (so I can find the right assembly name for `InternalsVisibleTo`):Good — assembly name is `MyAdventure.Integration.Tests` (matches the csproj filename, since there's no `<AssemblyName>` override).
+
+## Diagnosis summary
+
+You were right to suspect the fix made things worse — but the root cause isn't where the recent change went. Every single one of the 11 errors collapses to one missing line in `MyAdventure.Infrastructure.csproj`:
+
+```xml
+<InternalsVisibleTo Include="MyAdventure.Integration.Tests" />
+```
+
+The test file itself documents this dependency explicitly in its XML docs:
+
+> *"Those overloads are made visible via an `InternalsVisibleTo` entry in `MyAdventure.Infrastructure.csproj`."*
+
+That entry doesn't exist in the csproj you have. Without it, the integration test assembly can't see:
+
+1. `LoadFromEnvironment(string fallbackDsn)` (internal) → compiler falls through to the parameterless public overload → CS1739 "no parameter named `fallbackDsn`" and CS1501 "no overload takes 1 argument"
+2. `LoadFromConfiguration(IConfiguration, string fallbackDsn)` (internal) → same pattern → CS1739 / CS1501 "no overload takes 2 arguments"  
+3. `TelemetryDefaults` (the class itself is `internal`) → CS0122 "inaccessible due to its protection level"
+
+Adding the `InternalsVisibleTo` entry makes all 11 errors disappear in one stroke. The loader source itself is correct — production callers use the public overloads, and the internal overloads exist precisely for these tests, exactly as the design comments describe. Nothing needs to change in the loader or the tests.
+
+The CS8604 nullable warning is a separate, smaller issue: the `SentryDsn_TryParse_RejectsInvalidInput` test passes `string? dsn` (including `null` via `[InlineData(null)]`) into `SentryDsn.TryParse(string dsn, ...)`. The implementation already handles null correctly (`string.IsNullOrWhiteSpace` short-circuits), so the right fix is to widen the parameter to `string?`.
+
+## The fix
+
+Two files to change. I'll give you the full contents of each.
+
+### File 1: `src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj`
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+  </ItemGroup>
+
+  <!--
+    Grant the integration test assembly access to internal types like
+    TelemetryDefaults and the test-friendly internal overloads of
+    TelemetryConfigurationLoader.LoadFromEnvironment(string) and
+    LoadFromConfiguration(IConfiguration, string). Production callers
+    continue to use the public parameterless overloads; the internals are
+    only there so tests can pin both "fallback present" and "fallback empty"
+    behaviour without rebuilding the assembly.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="MyAdventure.Integration.Tests" />
+  </ItemGroup>
+
+</Project>
+```
+
+### File 2: `src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs`
+
+The only change is widening `TryParse`'s first parameter from `string` to `string?`. The body already handles null. This silences CS8604 in the test without weakening any contract — `Parse` (which throws) stays non-nullable; only the safe-by-design `TryParse` accepts nulls, which is the standard `TryParse` convention anyway.
+
+```csharp
+using System;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+public sealed class SentryDsn
+{
+    public string Raw { get; }
+    public string PublicKey { get; }
+    public string SecretKey { get; }
+    public string ProjectId { get; }
+    public string Host { get; }
+    public bool IsOtlp { get; }
+    public string LogsEndpoint { get; }
+    public string TracesEndpoint { get; }
+    public string AuthHeaderValue { get; }
+
+    private SentryDsn(
+        string raw,
+        string publicKey,
+        string secretKey,
+        string projectId,
+        string host,
+        bool isOtlp,
+        string logsEndpoint,
+        string tracesEndpoint,
+        string authHeaderValue)
+    {
+        Raw = raw;
+        PublicKey = publicKey;
+        SecretKey = secretKey;
+        ProjectId = projectId;
+        Host = host;
+        IsOtlp = isOtlp;
+        LogsEndpoint = logsEndpoint;
+        TracesEndpoint = tracesEndpoint;
+        AuthHeaderValue = authHeaderValue;
+    }
+
+    /// <summary>
+    /// Non-throwing parser. Accepts <see langword="null"/> and whitespace
+    /// alongside the obvious malformed-string cases — they all return
+    /// <see langword="false"/> with a populated <paramref name="error"/>.
+    /// This is the standard TryParse contract: never throw, always
+    /// produce a verdict.
+    /// </summary>
+    public static bool TryParse(
+        string? dsn,
+        out SentryDsn? parsed,
+        out string? error)
+    {
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            parsed = null;
+            error = "DSN is empty.";
+            return false;
+        }
+
+        try
+        {
+            parsed = Parse(dsn);
+            error = null;
+            return parsed.IsOtlp;
+        }
+        catch (Exception ex)
+        {
+            parsed = null;
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    public static SentryDsn Parse(string dsn)
+    {
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            throw new ArgumentException("DSN is empty.", nameof(dsn));
+        }
+
+        if (!Uri.TryCreate(dsn, UriKind.Absolute, out var uri))
+        {
+            throw new ArgumentException("DSN is not a valid absolute URI.", nameof(dsn));
+        }
+
+        var publicKey = uri.UserInfo;
+        var secretKey = string.Empty;
+
+        if (publicKey.Contains(':'))
+        {
+            var split = publicKey.Split(':', 2);
+            publicKey = split[0];
+
+            if (split.Length > 1)
+            {
+                secretKey = split[1];
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(publicKey))
+        {
+            throw new ArgumentException("DSN public key is missing.", nameof(dsn));
+        }
+
+        var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (pathSegments.Length == 0)
+        {
+            throw new ArgumentException("DSN missing project ID metadata.", nameof(dsn));
+        }
+
+        var projectId = pathSegments[0];
+
+        var host = uri.IsDefaultPort
+            ? uri.Host
+            : $"{uri.Host}:{uri.Port}";
+
+        var baseUri = $"{uri.Scheme}://{host}";
+
+        var logsEndpoint =
+            $"{baseUri}/api/{projectId}/otlp/v1/logs";
+
+        var tracesEndpoint =
+            $"{baseUri}/api/{projectId}/otlp/v1/traces";
+
+        string authHeaderValue;
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            authHeaderValue =
+                $"Sentry sentry_key={publicKey}";
+        }
+        else
+        {
+            authHeaderValue =
+                $"Sentry sentry_key={publicKey}, sentry_secret={secretKey}";
+        }
+
+        return new SentryDsn(
+            raw: dsn,
+            publicKey: publicKey,
+            secretKey: secretKey,
+            projectId: projectId,
+            host: host,
+            isOtlp: true,
+            logsEndpoint: logsEndpoint,
+            tracesEndpoint: tracesEndpoint,
+            authHeaderValue: authHeaderValue);
+    }
+}
+```
+
+## Why I'm not touching the loader or tests
+
+The temptation when you see CS1739 is to either (a) make the internal overloads public, or (b) rewrite the tests to only use the public surface. Both are wrong here:
+
+- **Don't make the internal overloads public.** Production code on Desktop and Android explicitly calls only the parameterless overloads (`LoadFromEnvironment()` / `LoadFromConfiguration(IConfiguration)`). The `string fallbackDsn` overloads exist *only* so tests can substitute the compile-time DSN with `""` to pin "no fallback" behaviour deterministically. Promoting them to public would expose internals to consumers who have no business knowing about them, and would create a second supported surface area to maintain.
+- **Don't gut the tests.** They're pinning real invariants: the compile-time fallback wins over an empty `appsettings.json` DSN, but loses to a non-empty one; env vars beat everything. Those are the rules that determine whether Sentry actually receives events from a fresh build. Losing the "no fallback" tests would mean the next time someone refactors the precedence logic, the regression goes unnoticed.
+
+`InternalsVisibleTo` is precisely the mechanism .NET provides for this exact situation, and the test file's docstring confirms it was the original intent.
+
+## Sentry/logs side-note
+
+Since you mentioned the logs weren't showing in Sentry — that's a separate problem from the build failure, and it'll be easier to diagnose once the build is green again and the integration tests are passing. A few things worth checking once you can run end-to-end:
+
+1. `appsettings.json` ships with `Telemetry:Sentry:Dsn = ""` (per the loader comments). On Desktop the compile-time fallback in `TelemetryDefaults.DefaultDsn` is what's supposed to fill that in. Verify the desktop binary is actually picking it up by setting `MYADVENTURE_VERBOSE=1` and watching for the `Telemetry: Sentry OTLP enabled, env=..., verbose=...` line that `TelemetryBootstrapper` writes to console.
+2. Sentry's OTLP endpoint requires events to flow through actual log calls at or above the level the OpenTelemetry logger has configured — `ILogger.LogInformation` and friends with `IncludeFormattedMessage = true`. The bootstrapper looks correct for that.
+3. Sentry's OTLP intake buffers and there can be a 30-60s delay before events appear in the UI. If you've been hitting refresh quickly, give it a minute.
+
+Want me to dig into the Sentry-not-receiving-logs question next once the build is unblocked? If so it'd help to know what exactly you're doing to generate a log event and what the verbose console output shows when the app starts.
+
+08
+22
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

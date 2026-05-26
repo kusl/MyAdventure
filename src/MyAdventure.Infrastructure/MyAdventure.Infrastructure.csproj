@@ -31,4 +31,17 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
   </ItemGroup>
 
+  <!--
+    Grant the integration test assembly access to internal types like
+    TelemetryDefaults and the test-friendly internal overloads of
+    TelemetryConfigurationLoader.LoadFromEnvironment(string) and
+    LoadFromConfiguration(IConfiguration, string). Production callers
+    continue to use the public parameterless overloads; the internals are
+    only there so tests can pin both "fallback present" and "fallback empty"
+    behaviour without rebuilding the assembly.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="MyAdventure.Integration.Tests" />
+  </ItemGroup>
+
 </Project>

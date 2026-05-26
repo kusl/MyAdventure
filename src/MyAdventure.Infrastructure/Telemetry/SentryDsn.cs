@@ -36,8 +36,15 @@ public sealed class SentryDsn
         AuthHeaderValue = authHeaderValue;
     }
 
+    /// <summary>
+    /// Non-throwing parser. Accepts <see langword="null"/> and whitespace
+    /// alongside the obvious malformed-string cases — they all return
+    /// <see langword="false"/> with a populated <paramref name="error"/>.
+    /// This is the standard TryParse contract: never throw, always
+    /// produce a verdict.
+    /// </summary>
     public static bool TryParse(
-        string dsn,
+        string? dsn,
         out SentryDsn? parsed,
         out string? error)
     {
