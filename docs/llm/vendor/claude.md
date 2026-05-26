@@ -15198,3 +15198,89 @@ After applying the file above, you should be back to 358/358 green, and the lega
 
 
 
+32
+24
+Please do not hallucinate and fix the test properly 
+  MyAdventure.Integration.Tests test net10.0 failed with 1 error(s) (2.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs(110): error TESTERROR: 
+      MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat (< 1ms): Error Message: System.ArgumentException : DSN is not a valid absolute URI. (Parameter
+       'dsn')
+      Stack Trace:
+         at MyAdventure.Infrastructure.Telemetry.SentryDsn.Parse(String dsn) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs:line 110
+         at MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryCo
+      nfigurationTests.cs:line 127
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test summary: total: 358, failed: 1, succeeded: 357, skipped: 0, duration: 2.2s
+Build failed with 1 error(s) in 3.6s
+
+You're right to push back. Let me actually verify what's in the file rather than guessing.So the test source on disk now is:
+
+```csharp
+const string dsn = "https://pubkey:[email protected]/9";
+```
+
+That's the corrected form — you applied my previous fix to that line. The test is still failing. So my parser is genuinely broken on a valid legacy DSN. Let me trace it precisely and stop guessing.Confirmed — the input is the proper legacy form `https://pubkey:[email protected]/9`. Now let me also confirm what the current `SentryDsn.cs` looks like, particularly line 110 where the throw is:OK, the parser source is intact as I wrote it. Now let me actually trace what `StripLegacySecretKey` does on the real input, byte by byte:There it is. **`atSign = -1`. There is no `@` in the input string.**
+
+Let me confirm character by character:I see what's happened. **The Cloudflare email-protection corruption is still in the test source.** The string `"https://pubkey:[email protected]/9"` literally contains `[email protected]` as a substring — there's no `@` anywhere in it. The `@` is part of the *rendering* of the markdown-style "email obfuscation" token; the actual stored characters are `[ e m a i l (space) p r o t e c t e d ]`.
+
+So my previous "fix" never made it into the source file. Either you didn't apply it, or you applied my edit verbatim *as it appeared* in your chat client, and the chat client also rendered any `@` I tried to send as `[email protected]`. Let me check exactly what happened in your file. Since the file I'm reading in `/mnt/user-data/uploads/dump.txt` is the current state of disk:Definitive: the bytes in your test file are `pubkey:[email protected]/9` — literally the placeholder text, not an email address. There is no `@` character.
+
+This is the Cloudflare-style email-obfuscation corruption from the very beginning of this thread. Last time I told you to "replace `[email protected]` with `pubkey:[email protected]/9`" — and either the chat client mangled my reply (so what you saved was the same placeholder) or the round trip through some clipboard/web view re-mangled it on the way back. Either way, the file on disk has the same corruption.
+
+## The fix — without using the `@` character in this reply
+
+I'm not going to write that literal character in this turn. I'll give you instructions that produce the right bytes regardless of any rendering layer between us. Run this one-liner from the repo root — it edits the file directly using sed's `\x40` escape so no rendering layer can swallow the `@`:
+
+```bash
+sed -i 's|"https://pubkey:\[email protected]\]/9"|"https://pubkey:secretkey\x40example.com/9"|' tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+```
+
+Then verify it actually landed correctly:
+
+```bash
+grep -n 'pubkey:secretkey' tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+od -c tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs | grep -A1 pubkey | head -10
+```
+
+You should see the byte `@` (octal `100`, hex `40`) sitting between `secretkey` and `example.com` in the `od -c` output. If you see `[email protected]` again, the rendering layer is still rewriting on display — but the bytes on disk will be correct, and `dotnet test` reads the bytes, not the rendering.
+
+## Do the same for every other corrupted DSN
+
+The grep you ran earlier showed all the other corrupted lines in the same file. They aren't currently breaking the build (their assertions compare the corrupted string to itself, so equality holds), but they make the file misleading and the "valid DSN" test no longer covers what it claims to. One sweep with sed cleans the lot:
+
+```bash
+sed -i \
+  -e 's|"https://\[email protected]\]/1"|"https://a\x40example.com/1"|g' \
+  -e 's|"https://\[email protected]\]/2"|"https://b\x40example.com/2"|g' \
+  -e 's|"https://\[email protected]\]/9"|"https://x\x40example.com/9"|g' \
+  -e 's|"https://\[email protected]\]"|"https://k\x40example.com"|g' \
+  tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+```
+
+Two notes on that batch sed:
+
+1. The legacy-DSN line (`pubkey:[email protected]/9`) needs its own command first because it has `pubkey:` before the placeholder — the patterns above won't match it. Run the first sed for that line on its own, then the batch sed for the rest.
+2. After both seds, run `grep -F '[email protected]]' tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs` — that should return *nothing*. If anything is left, those lines have a slightly different surrounding context and need an individual sed. Send me the grep output and I'll write the matching command for the remainders.
+
+## Why I missed this last turn
+
+I owe you a clear answer here. In the previous reply I wrote out the corrected file contents in full, including what I thought was the literal `@` character at every fix site. But the entire chat pipeline between me and your disk treats `name@host` substrings as candidates for the Cloudflare-obfuscation rewrite — so whatever I produced got transformed back into `[email protected]` before it reached your file. The result is that my "fixed" file, when you saved it, contained the same corruption I was trying to remove. From your seat that looked like I gave the same broken file twice; from mine it looked like I'd fixed it, because the `@` is what I tried to type. I should have anticipated this after the first round of corruption and used the sed-with-`\x40` approach immediately rather than writing the file out a second time. That's on me.
+
+The sed commands above sidestep the rendering issue entirely by using the hex escape that bash interprets locally. Run them on your machine and the actual byte `@` (0x40) ends up in the file regardless of what any web view in between does.
+
+## Hardening so this can't bite again
+
+Add a guard to either `setup.sh` or a pre-commit hook so the placeholder can never sit in tracked source again:
+
+```bash
+if git grep -F -n '[email protected]]' -- ':!docs/llm/vendor/*' ':!*.md'; then
+    echo "Cloudflare email-protection placeholder found in tracked source. Restore the real strings."
+    exit 1
+fi
+```
+
+The exclusions matter: `docs/llm/vendor/*` holds your archived LLM transcripts which legitimately contain the placeholder, and `*.md` may carry it inside backtick-quoted example text without breaking anything. The check is tight on `.cs`, `.json`, scripts, and other live source.
+
+Once the seds are run and the tests are green, you're also free of the underlying Sentry-not-receiving-events problem from the earlier rounds — the parser changes, the `x-sentry-auth=` header fix on the traces branch, and now the correctly-formed test data all stack to make that pipeline work end-to-end.
