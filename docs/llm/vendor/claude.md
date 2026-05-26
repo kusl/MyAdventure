@@ -14571,3 +14571,630 @@ kushal@fedora:~/src/dotnet/MyAdventure$
 
 25
 24
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+25
+24
+
+kushal@fedora:~/src/dotnet/MyAdventure$ grep -rn '\[email\xc2\xa0protected\]\|\[email protected\]' .
+grep: warning: stray \ before x
+grep: warning: stray \ before x
+./docs/llm/dump.txt:10826:        const string dsn = "https://[email protected]/9";
+./docs/llm/dump.txt:10838:    [InlineData("https://[email protected]")]          // no project id
+./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/dump.txt:10937:    private const string TestFallback = "https://[email protected]/9";
+./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/dump.txt:11066:                Dsn = "https://[email protected]/2",
+./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://[email protected]/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
+./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://[email protected]")]` (no project id) — `Uri.AbsolutePath` of `https://[email protected]` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
+./docs/llm/vendor/claude.md:11880:        const string dsn = "https://[email protected]/9";
+./docs/llm/vendor/claude.md:11892:    [InlineData("https://[email protected]")]          // no project id
+./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/vendor/claude.md:12037:                Dsn = "https://[email protected]/2",
+./docs/llm/vendor/claude.md:12718:        const string dsn = "https://[email protected]/9";
+./docs/llm/vendor/claude.md:12730:    [InlineData("https://[email protected]")]          // no project id
+./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://[email protected]/9";
+./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/vendor/claude.md:12958:                Dsn = "https://[email protected]/2",
+./docs/llm/vendor/claude.md:13626:- DSN: `https://[email protected]/9`
+./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/refint/MyAdventure.Integration.Tests.dll: binary file matches
+grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/ref/MyAdventure.Integration.Tests.dll: binary file matches
+grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/MyAdventure.Integration.Tests.dll: binary file matches
+grep: ./tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll: binary file matches
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://[email protected]/9";
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://[email protected]")]          // no project id
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://[email protected]/9";
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://[email protected]/2",
+kushal@fedora:~/src/dotnet/MyAdventure$ 
+
+Good — that grep confirms it. The `[email protected]` corruption is widespread throughout the test file, not just in the one failing test. The other tests happen to pass because their assertions are *string-equality* — they store `"https://[email protected]/1"` in config, then assert `options.Sentry.Dsn.ShouldBe("https://[email protected]/1")`. Since both sides have the same corrupted string, equality holds. The legacy-format test fails because it actually feeds the DSN through `Parse`, which does URL surgery and trips over the brackets.
+
+Before I trust my fix, let me verify by examining each corrupted line in your actual test file to understand what each was *meant* to be. Let me look at the surrounding context for the lines grep found:Now I can see every corrupted line in full context. Let me enumerate what each one was originally:
+
+| Line | Current (corrupted) | Original intent |
+|---|---|---|
+| 126 | `https://[email protected]/9` | `https://[email protected]/9` — *legacy form with secret key* |
+| 138 | `[InlineData("https://[email protected]")]` `// no project id` | `[InlineData("https://[email protected]")]` — *invalid because of missing project id* |
+| 197 | `["Telemetry:Sentry:Dsn"] = "https://[email protected]/1"` | `["Telemetry:Sentry:Dsn"] = "https://[email protected]/1"` |
+| 206 | `options.Sentry.Dsn.ShouldBe("https://[email protected]/1")` | same |
+| 217 | `"https://[email protected]/1"` (json) | `"https://[email protected]/1"` |
+| 221 | `"https://[email protected]/2"` (env) | `"https://[email protected]/2"` |
+| 226 | `.ShouldBe("https://[email protected]/2")` | same |
+| 237 | `TestFallback = "https://[email protected]/9"` | `"https://[email protected]/9"` |
+| 268 | `"https://[email protected]/1"` (config) | `"https://[email protected]/1"` |
+| 274 | `.ShouldBe("https://[email protected]/1")` | same |
+| 282 | `"https://[email protected]/1"` | `"https://[email protected]/1"` |
+| 286 | `"https://[email protected]/2"` | `"https://[email protected]/2"` |
+| 290 | `.ShouldBe("https://[email protected]/2")` | same |
+| 366 | `Dsn = "https://[email protected]/2"` | `"https://[email protected]/2"` |
+
+**Critical insight: the only line where the corrupted string is actually passed to `SentryDsn.Parse` and that test depends on URL-shape parsing is line 126 (the legacy-format test).** The others survive because:
+
+- The loader tests (lines 197–290) just store/echo strings through configuration; the corrupted string equals itself, so equality assertions pass even though the strings are nonsense URLs.
+- Line 138 (`[InlineData("https://[email protected]")]`) is in the *reject-invalid-input* theory — it's *supposed* to be rejected, and indeed `[email protected]` doesn't parse as a URL, so the test passes for the wrong reason (rejected for being garbled, not for missing project id). This still passes, just with a misleading comment.
+- Line 366 (`AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds`) passes the corrupted string to `AddInfrastructure`, which calls `SentryDsn.TryParse` (not `Parse`) — `TryParse` returns false silently on this junk and the container builds with `sentry == null`. The test still passes; what it's actually verifying is now "the container builds when given a junk DSN" rather than "the container builds when given a valid DSN", which overlaps with `AddInfrastructure_TelemetryOnWithMalformedDsn_DoesNotCrash` further down (also at line 366ish?). Let me verify:Confirmed — `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` and `AddInfrastructure_TelemetryOnWithMalformedDsn_DoesNotCrash` are now testing the same thing (provider builds with junk DSN). Fixing line 366 restores the intended distinction: one test with a *valid* DSN that actually exercises the OTLP exporter wiring, one with a clearly malformed string.
+
+So the right thing to do is **fix every corrupted line, not just line 126**. Even though the others happen to pass, leaving them broken means: (a) tests are testing the wrong thing, (b) anyone reading the test file sees the corruption staring back at them, (c) if a future refactor changes what these strings flow through, latent bugs surface.
+
+## The fix
+
+One file changes, with every corrupted DSN string restored. Below is the full corrected `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs`. Every `[email protected]` becomes the real `name@host` form. I'm preserving every other byte exactly as-is.
+
+A note on what I substituted at each site: the convention in this test file (and across most Sentry-DSN test suites) is `<key>@<host>/<projectId>`. I read each comment / context and restored what fits:
+
+- Line 126 (legacy with secret key): `pubkey:[email protected]/9` — the only one that needs a colon, per the test name and docstring.
+- Line 138 (`InlineData` for "no project id"): `[email protected]` — the comment explicitly says "no project id". Restored as `[email protected]`. (The lack of `/projectId` is what makes it invalid.)
+- All other sites use simple `name@host/N` shapes. The most natural restoration when the corruption replaced a full local-part is `a@host/1` style. I'll use `[email protected]/1`, `[email protected]/2`, etc., matching the obvious pattern from the comparison structure across the loader tests.
+
+Here's the full file:
+
+```csharp
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
+using Shouldly;
+
+namespace MyAdventure.Integration.Tests;
+
+/// <summary>
+/// Tests for the telemetry / Sentry-via-OTLP configuration plumbing. These
+/// live under Integration.Tests rather than Core.Tests because they
+/// exercise <see cref="DependencyInjection.AddInfrastructure(IServiceCollection,
+/// TelemetryOptions, string?)"/> end-to-end and verify that the IoC
+/// container actually builds with the new code paths — that's an
+/// integration concern, not a unit-test concern.
+///
+/// <para>
+/// Where these tests need to reason about both "compile-time fallback DSN
+/// present" and "compile-time fallback DSN empty", they call the
+/// <c>internal</c> overloads of
+/// <see cref="TelemetryConfigurationLoader.LoadFromEnvironment(string)"/>
+/// and
+/// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration(IConfiguration, string)"/>.
+/// Those overloads are made visible via an <c>InternalsVisibleTo</c> entry
+/// in <c>MyAdventure.Infrastructure.csproj</c>.
+/// </para>
+/// </summary>
+public class TelemetryConfigurationTests : IDisposable
+{
+    private readonly string _dbPath;
+    private readonly List<string> _envVarsToRestore = new();
+
+    public TelemetryConfigurationTests()
+    {
+        _dbPath = Path.Combine(Path.GetTempPath(), $"myadventure-test-{Guid.NewGuid():N}.db");
+
+        // Tests below assume a clean env-var baseline. Earlier tests in the
+        // process may have set these (or the user's shell may have them
+        // exported, e.g. MYADVENTURE_VERBOSE=1 for local debugging) — make
+        // sure each test starts with all three telemetry vars cleared.
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
+        SetEnv(TelemetryConfigurationLoader.SentryEnvironmentEnvVar, null);
+    }
+
+    public void Dispose()
+    {
+        // Restore env vars that any individual test set, so subsequent
+        // tests start from a clean baseline.
+        foreach (var name in _envVarsToRestore)
+        {
+            Environment.SetEnvironmentVariable(name, null);
+        }
+
+        if (File.Exists(_dbPath))
+        {
+            try { File.Delete(_dbPath); } catch { /* best-effort cleanup */ }
+        }
+    }
+
+    private void SetEnv(string name, string? value)
+    {
+        if (!_envVarsToRestore.Contains(name)) _envVarsToRestore.Add(name);
+        Environment.SetEnvironmentVariable(name, value);
+    }
+
+    // --- SentryDsn parser ---------------------------------------------------
+
+    [Fact]
+    public void SentryDsn_TryParse_RealisticDsn_PopulatesAllFields()
+    {
+        const string dsn =
+            "https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+        var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
+
+        ok.ShouldBeTrue(err);
+        parsed.ShouldNotBeNull();
+        parsed.PublicKey.ShouldBe("fe6ae5ee15285c313b8171bb7a5a4ad0");
+        parsed.ProjectId.ShouldBe("4511444969390160");
+        parsed.Host.ShouldBe("o4511444968079360.ingest.de.sentry.io");
+    }
+
+    [Fact]
+    public void SentryDsn_TracesEndpoint_HasExpectedShape()
+    {
+        const string dsn =
+            "https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+        var parsed = SentryDsn.Parse(dsn);
+
+        parsed.TracesEndpoint.ToString().ShouldBe(
+            "https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/traces");
+    }
+
+    [Fact]
+    public void SentryDsn_LogsEndpoint_HasExpectedShape()
+    {
+        const string dsn =
+            "https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+        var parsed = SentryDsn.Parse(dsn);
+
+        parsed.LogsEndpoint.ToString().ShouldBe(
+            "https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/logs");
+    }
+
+    [Fact]
+    public void SentryDsn_AuthHeader_StartsWithSentryKeyword()
+    {
+        const string dsn =
+            "https://abc123@o123.ingest.us.sentry.io/456";
+        var parsed = SentryDsn.Parse(dsn);
+        parsed.AuthHeaderValue.ShouldBe("sentry sentry_key=abc123");
+    }
+
+    [Fact]
+    public void SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat()
+    {
+        // Old-style DSNs included a secret key after a colon. Sentry's
+        // OTLP only wants the public key — the parser must strip the
+        // secret portion silently rather than treating it as part of the
+        // key.
+        const string dsn = "https://pubkey:[email protected]/9";
+        var parsed = SentryDsn.Parse(dsn);
+        parsed.PublicKey.ShouldBe("pubkey");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    [InlineData("not-a-url")]
+    [InlineData("ftp://x@example.com/1")]            // wrong scheme
+    [InlineData("https://example.com/1")]            // no public key
+    [InlineData("https://[email protected]")]          // no project id
+    public void SentryDsn_TryParse_RejectsInvalidInput(string? dsn)
+    {
+        var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
+        ok.ShouldBeFalse();
+        parsed.ShouldBeNull();
+        err.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    // --- TelemetryConfigurationLoader: no compile-time fallback -------------
+    //
+    // These tests pass an empty fallbackDsn so they can pin the
+    // "no DSN at all" behaviour deterministically — without depending on
+    // what TelemetryDefaults.DefaultDsn happens to be set to in source.
+
+    [Fact]
+    public void Loader_NoFallback_NoVarsSet_ReturnsSafeDefaults()
+    {
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
+
+        options.VerboseLogging.ShouldBeFalse();
+        options.Sentry.Dsn.ShouldBeNullOrEmpty();
+        options.Sentry.Environment.ShouldBe("production");
+        options.Sentry.TracesSampleRate.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void Loader_NoFallback_VerboseEnvVar_Wins()
+    {
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
+
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
+
+        options.VerboseLogging.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("1", true)]
+    [InlineData("true", true)]
+    [InlineData("TRUE", true)]
+    [InlineData("yes", true)]
+    [InlineData("on", true)]
+    [InlineData("0", false)]
+    [InlineData("false", false)]
+    [InlineData("off", false)]
+    [InlineData("nope", false)]
+    public void Loader_VerboseFlag_ParsesCommonBooleanSpellings(string raw, bool expected)
+    {
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, raw);
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
+        options.VerboseLogging.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Loader_NoFallback_BindsJsonShape()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:VerboseLogging"] = "true",
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+            ["Telemetry:Sentry:Environment"] = "staging",
+            ["Telemetry:Sentry:TracesSampleRate"] = "0.25",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, fallbackDsn: "");
+
+        options.VerboseLogging.ShouldBeTrue();
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+        options.Sentry.Environment.ShouldBe("staging");
+        options.Sentry.TracesSampleRate.ShouldBe(0.25);
+    }
+
+    [Fact]
+    public void Loader_EnvironmentVariables_OverrideJsonValues()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:VerboseLogging"] = "false",
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+        SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, fallbackDsn: "");
+
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+        options.VerboseLogging.ShouldBeTrue();
+    }
+
+    // --- TelemetryConfigurationLoader: with compile-time fallback -----------
+    //
+    // These tests pin the "DSN baked into the binary" behaviour that ships
+    // during the testing phase. Higher-precedence sources still win, but
+    // the absence of every source should fall back to the constant in
+    // TelemetryDefaults rather than disabling Sentry entirely.
+
+    private const string TestFallback = "https://[email protected]/9";
+
+    [Fact]
+    public void Loader_WithFallback_NoVarsSet_UsesFallbackDsn()
+    {
+        var options = TelemetryConfigurationLoader.LoadFromEnvironment(TestFallback);
+
+        options.Sentry.Dsn.ShouldBe(TestFallback);
+    }
+
+    [Fact]
+    public void Loader_WithFallback_AppsettingsEmptyDsn_UsesFallback()
+    {
+        // The shipped appsettings.json has Telemetry:Sentry:Dsn = "" — the
+        // fallback must still apply rather than disabling Sentry.
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:Sentry:Dsn"] = "",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
+
+        options.Sentry.Dsn.ShouldBe(TestFallback);
+    }
+
+    [Fact]
+    public void Loader_WithFallback_AppsettingsNonEmptyDsn_OverridesFallback()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
+
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+    }
+
+    [Fact]
+    public void Loader_WithFallback_EnvVar_OverridesEverything()
+    {
+        var json = new Dictionary<string, string?>
+        {
+            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
+
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
+
+        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+    }
+
+    // --- Production compile-time fallback (TelemetryDefaults) ---------------
+
+    [Fact]
+    public void TelemetryDefaults_DefaultDsn_IsAValidParseableSentryDsn()
+    {
+        // During the testing phase the project ships a hardcoded DSN.
+        // Whatever it is, it must parse — a typo here would silently
+        // disable Sentry for every shipped binary, which is the failure
+        // mode this test exists to prevent.
+        if (string.IsNullOrWhiteSpace(TelemetryDefaults.DefaultDsn))
+        {
+            // Fallback explicitly disabled — that's a legitimate
+            // post-testing-phase configuration; nothing to assert.
+            return;
+        }
+
+        var ok = SentryDsn.TryParse(TelemetryDefaults.DefaultDsn, out var parsed, out var err);
+
+        ok.ShouldBeTrue(err);
+        parsed.ShouldNotBeNull();
+        parsed.PublicKey.ShouldNotBeNullOrWhiteSpace();
+        parsed.ProjectId.ShouldNotBeNullOrWhiteSpace();
+        parsed.Host.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    // --- AddInfrastructure --------------------------------------------------
+
+    [Fact]
+    public async Task AddInfrastructure_NoTelemetryOptions_BehavesLikeBeforeIntegration()
+    {
+        // The legacy single-argument overload must keep working. This is
+        // the contract every existing test relies on.
+        var services = new ServiceCollection();
+        services.AddInfrastructure(_dbPath);
+        var provider = services.BuildServiceProvider();
+
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        // Both the repository and the logger factory must be resolvable.
+        provider.GetService<IGameStateRepository>().ShouldNotBeNull();
+        provider.GetService<ILoggerFactory>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddInfrastructure_TelemetryOff_NoOutboundExporterErrors()
+    {
+        // With Sentry off, the service provider must build cleanly and
+        // the breadcrumb logger must not throw. This is the "fresh
+        // checkout, no Sentry account" smoke test.
+        var services = new ServiceCollection();
+        services.AddInfrastructure(new TelemetryOptions(), _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        DependencyInjection.EmitStartupBreadcrumb(provider);
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        provider.GetService<TelemetryOptions>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds()
+    {
+        // We do not actually contact Sentry from a test — the OTLP
+        // exporter buffers spans/logs in-process and flushes them on
+        // a background timer. What this test verifies is that with a
+        // valid DSN the container builds without throwing (no missing
+        // services, no exporter-constructor crashes) and that the
+        // breadcrumb fires successfully.
+        var telemetry = new TelemetryOptions
+        {
+            VerboseLogging = false,
+            Sentry =
+            {
+                Dsn = "https://[email protected]/2",
+                Environment = "test",
+                TracesSampleRate = 1.0,
+            },
+        };
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(telemetry, _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        DependencyInjection.EmitStartupBreadcrumb(provider);
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        provider.GetService<IGameStateRepository>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddInfrastructure_TelemetryOnWithMalformedDsn_DoesNotCrash()
+    {
+        // Garbage in must not take the app down. The breadcrumb logger
+        // is expected to emit a warning; we just assert no exception
+        // bubbles out and the container still serves the repository.
+        var telemetry = new TelemetryOptions
+        {
+            Sentry = { Dsn = "definitely not a url" },
+        };
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(telemetry, _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        Should.NotThrow(() => DependencyInjection.EmitStartupBreadcrumb(provider));
+        await DependencyInjection.InitializeDatabaseAsync(provider);
+
+        provider.GetService<IGameStateRepository>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void AddInfrastructure_VerboseFlagPropagatesToTelemetryOptionsSingleton()
+    {
+        // The singleton TelemetryOptions registered into the container
+        // must match the values we passed in — that's the contract that
+        // downstream code (ViewModels, future toggle UI) relies on to
+        // know whether verbose mode is currently active.
+        var telemetry = new TelemetryOptions { VerboseLogging = true };
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(telemetry, _dbPath);
+        var provider = services.BuildServiceProvider();
+
+        var resolved = provider.GetRequiredService<TelemetryOptions>();
+        resolved.VerboseLogging.ShouldBeTrue();
+    }
+}
+```
+
+## How the corruption snuck in (and one suggestion to keep it out)
+
+The `[email protected]` placeholder is what Cloudflare's email-obfuscation feature inserts when its JS doesn't get to run. Most likely path: at some point a previous LLM-assisted session (or a paste from a webpage rendered through Cloudflare) introduced these strings, the file got saved, and they've been sitting there ever since — passing tests, but only because every assertion compares the corrupted string to itself.
+
+One small hardening idea: a one-line guard in `setup.sh` or as a pre-commit hook that fails if `[email protected]` or `\xa0` (the non-breaking-space variant) appear anywhere in the repo. Something like:
+
+```sh
+if git grep -nE '\[email[[:space:]]protected\]' -- ':!docs/llm/vendor/*'; then
+    echo "Cloudflare email-protection placeholder found in tracked files. Restore the real strings before committing."
+    exit 1
+fi
+```
+
+The `:!docs/llm/vendor/*` exclusion is important — that path contains your own LLM session logs (the grep output shows `claude.md` files there), and those *should* preserve the corruption since they're historical artifacts. Restricting the check to the live source tree means a future paste of corrupted data fails the next CI run instead of silently passing tests for weeks.
+
+After applying the file above, you should be back to 358/358 green, and the legacy-DSN test will actually exercise the legacy-DSN code path it was meant to.
+
+32
+24
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

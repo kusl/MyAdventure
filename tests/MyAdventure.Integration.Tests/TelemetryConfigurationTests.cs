@@ -123,7 +123,7 @@ public class TelemetryConfigurationTests : IDisposable
         // OTLP only wants the public key — the parser must strip the
         // secret portion silently rather than treating it as part of the
         // key.
-        const string dsn = "https://[email protected]/9";
+        const string dsn = "https://pubkey:[email protected]/9";
         var parsed = SentryDsn.Parse(dsn);
         parsed.PublicKey.ShouldBe("pubkey");
     }
