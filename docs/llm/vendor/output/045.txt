@@ -1,277 +1,277 @@
 kushal@fedora:~/src/dotnet/MyAdventure$ grep -rn '\[email\xc2\xa0protected\]\|\[email protected\]' .
 grep: warning: stray \ before x
 grep: warning: stray \ before x
-./docs/llm/dump.txt:10826:        const string dsn = "https://[email protected]/9";
-./docs/llm/dump.txt:10838:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/dump.txt:10937:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/dump.txt:11066:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://[email protected]/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
-./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://[email protected]")]` (no project id) — `Uri.AbsolutePath` of `https://[email protected]` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
-./docs/llm/vendor/claude.md:11880:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:11892:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:12037:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:12718:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:12730:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:12958:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:13626:- DSN: `https://[email protected]/9`
-./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
-./docs/llm/vendor/claude.md:14422:The test DSN is `https://[email protected]/9`.
-./docs/llm/vendor/claude.md:14433:"https://[email protected]/9"
-./docs/llm/vendor/claude.md:14443:Wait, that can't be right either — every URL needs `@` to separate userinfo from host. Let me check the raw bytes:Mystery solved. The string was email-obfuscated somewhere in transit — `[email protected]` was rendered as `[email protected]` literally. This is *not* the actual test source. Let me look at the actual source file as it sits on disk in the test:The test source on disk is `"https://[email protected]/9"` — that's the literal string in the test. The `[email protected]` is markdown email obfuscation that exists *only in your dump.txt export script's rendering*, but the actual `.cs` file on disk has the real `pubkey:secretkey@example.com/9` form. The compiler is reading the *real* file, so the test really is parsing `https://[email protected]/9`.
-./docs/llm/vendor/claude.md:14445:Let me re-trace my `StripLegacySecretKey` on the actual input:Wait — Python is *also* email-obfuscating? Let me look at the raw bytes again, but this time I'll search for `\x40` (the `@` character) in the source file rendering:**Confirmed: the source file on disk literally contains the string `https://[email protected]/9`.** The dump export script isn't obfuscating anything — that's the actual content of `TelemetryConfigurationTests.cs`. Something earlier in this project's pipeline replaced what was meant to be `pubkey:[email protected]` (or `pubkey@[email protected]/9` if the test author intended a different scheme) with the literal Cloudflare-style email-protection marker `[email protected]`.
-./docs/llm/vendor/claude.md:14447:Now the picture is much clearer. The test compiles fine — `"https://[email protected]/9"` is a valid C# string literal. When passed to my parser:
-./docs/llm/vendor/claude.md:14449:1. `Uri.TryCreate("https://[email protected]/9", Absolute, out uri)` — let me check what `Uri` does with that.No dotnet here. Let me just reason through it. I can verify the behaviour by checking the failure message from the test run — that gives me the definitive answer about what `Uri.TryCreate` does with this string:
-./docs/llm/vendor/claude.md:14454:Line 110 is exactly the `throw` on the failure branch of `Uri.TryCreate`. So `Uri.TryCreate("https://[email protected]/9", Absolute, …)` is returning **false** on the Fedora .NET 10 runtime, *and* my `StripLegacySecretKey` is returning the input unchanged (no `@`, no colon-in-userinfo, so it short-circuits). Result: parser dies.
-./docs/llm/vendor/claude.md:14456:**Why does `Uri.TryCreate` reject `https://[email protected]/9`?** Because the bracket `[` in `[email]` triggers `Uri`'s IPv6 address parser. `https://[...]` is the syntax for `https://[2001:db8::1]/...`. The contents of the brackets must look like a valid IPv6 address, and `email protected` doesn't, so `Uri.TryCreate` rejects the whole string.
-./docs/llm/vendor/claude.md:14461:2. **Recognise this for what it is: an upstream data corruption issue.** The dump export script (or whatever processed the original test file) replaced an email-like substring with the Cloudflare email-obfuscation placeholder `[email protected]`. This same corruption is now in the actual test source on disk. The test was originally meant to verify legacy `pubkey:[email protected]` parsing. After corruption it's now a different test that parses an invalid URL.
-./docs/llm/vendor/claude.md:14465:Look at the README in your project — that's the script doing it:OK — `export.sh` itself isn't doing the obfuscation. So the corruption is *already in the source file on disk*. That's where the bug lives. Most likely scenario: some web tool (a Cloudflare-protected viewer, or a chat platform's preview-renderer, or a clipboard paste from a browser) rendered an actual `pubkey:[email protected]/9` style URL with the literal `[email protected]` substitution at some earlier point, and that corrupted output got committed to the test source.
-./docs/llm/vendor/claude.md:14467:You should verify this directly — open `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs` in your editor and look at line 126. If it really says `https://[email protected]/9` rather than something with a real `@` or colon, then that's the corruption.
-./docs/llm/vendor/claude.md:14480:        const string dsn = "https://pubkey:[email protected]/9";
-./docs/llm/vendor/claude.md:14485:- `StripLegacySecretKey` sees `://` at position 5, `@` at position 23, finds the colon between `pubkey` and `secretkey` inside the userinfo, returns `("https://[email protected]/9", "secretkey")`.
-./docs/llm/vendor/claude.md:14500:(That checks for both the non-breaking-space and ordinary-space variants of the Cloudflare placeholder.) If anything else turns up — README examples, other test DSNs, comments — fix the same way: replace `[email protected]` with what the original text should have been. Inside this codebase the original was almost certainly a literal `name@host`-style email or DSN.
-./docs/llm/vendor/claude.md:14504:It would be possible to harden `StripLegacySecretKey` to also detect `[email protected]`-style corruption and rewrite it back, but that's exactly the kind of bandaid your project policy explicitly forbids: papering over data corruption inside a URL parser that has no business knowing what Cloudflare's email-obfuscation widget looks like. The parser is correct; the test data is wrong. Fix the test data.
-./docs/llm/vendor/claude.md:14512:./docs/llm/dump.txt:10826:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14513:./docs/llm/dump.txt:10838:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14514:./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14515:./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14516:./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14517:./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14518:./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14519:./docs/llm/dump.txt:10937:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14520:./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14521:./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14522:./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14523:./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14524:./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14525:./docs/llm/dump.txt:11066:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14526:./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://[email protected]/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
-./docs/llm/vendor/claude.md:14527:./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://[email protected]")]` (no project id) — `Uri.AbsolutePath` of `https://[email protected]` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
-./docs/llm/vendor/claude.md:14528:./docs/llm/vendor/claude.md:11880:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14529:./docs/llm/vendor/claude.md:11892:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14530:./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14531:./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14532:./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14533:./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14534:./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14535:./docs/llm/vendor/claude.md:12037:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14536:./docs/llm/vendor/claude.md:12718:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14537:./docs/llm/vendor/claude.md:12730:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14538:./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14539:./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14540:./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14541:./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14542:./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14543:./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14544:./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14545:./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14546:./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14547:./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14548:./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14549:./docs/llm/vendor/claude.md:12958:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14550:./docs/llm/vendor/claude.md:13626:- DSN: `https://[email protected]/9`
-./docs/llm/vendor/claude.md:14551:./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
-./docs/llm/vendor/claude.md:14556:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14557:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14558:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14559:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14560:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14561:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14562:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14563:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14564:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14565:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14566:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14567:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14568:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14569:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14607:./docs/llm/dump.txt:10826:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14608:./docs/llm/dump.txt:10838:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14609:./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14610:./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14611:./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14612:./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14613:./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14614:./docs/llm/dump.txt:10937:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14615:./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14616:./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14617:./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14618:./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14619:./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14620:./docs/llm/dump.txt:11066:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14621:./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://[email protected]/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
-./docs/llm/vendor/claude.md:14622:./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://[email protected]")]` (no project id) — `Uri.AbsolutePath` of `https://[email protected]` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
-./docs/llm/vendor/claude.md:14623:./docs/llm/vendor/claude.md:11880:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14624:./docs/llm/vendor/claude.md:11892:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14625:./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14626:./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14627:./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14628:./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14629:./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14630:./docs/llm/vendor/claude.md:12037:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14631:./docs/llm/vendor/claude.md:12718:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14632:./docs/llm/vendor/claude.md:12730:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14633:./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14634:./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14635:./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14636:./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14637:./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14638:./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14639:./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14640:./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14641:./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14642:./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14643:./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14644:./docs/llm/vendor/claude.md:12958:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14645:./docs/llm/vendor/claude.md:13626:- DSN: `https://[email protected]/9`
-./docs/llm/vendor/claude.md:14646:./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
-./docs/llm/vendor/claude.md:14651:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14652:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14653:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14654:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14655:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14656:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14657:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14658:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14659:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14660:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14661:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14662:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14663:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14664:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:14667:Good — that grep confirms it. The `[email protected]` corruption is widespread throughout the test file, not just in the one failing test. The other tests happen to pass because their assertions are *string-equality* — they store `"https://[email protected]/1"` in config, then assert `options.Sentry.Dsn.ShouldBe("https://[email protected]/1")`. Since both sides have the same corrupted string, equality holds. The legacy-format test fails because it actually feeds the DSN through `Parse`, which does URL surgery and trips over the brackets.
-./docs/llm/vendor/claude.md:14673:| 126 | `https://[email protected]/9` | `https://[email protected]/9` — *legacy form with secret key* |
-./docs/llm/vendor/claude.md:14674:| 138 | `[InlineData("https://[email protected]")]` `// no project id` | `[InlineData("https://[email protected]")]` — *invalid because of missing project id* |
-./docs/llm/vendor/claude.md:14675:| 197 | `["Telemetry:Sentry:Dsn"] = "https://[email protected]/1"` | `["Telemetry:Sentry:Dsn"] = "https://[email protected]/1"` |
-./docs/llm/vendor/claude.md:14676:| 206 | `options.Sentry.Dsn.ShouldBe("https://[email protected]/1")` | same |
-./docs/llm/vendor/claude.md:14677:| 217 | `"https://[email protected]/1"` (json) | `"https://[email protected]/1"` |
-./docs/llm/vendor/claude.md:14678:| 221 | `"https://[email protected]/2"` (env) | `"https://[email protected]/2"` |
-./docs/llm/vendor/claude.md:14679:| 226 | `.ShouldBe("https://[email protected]/2")` | same |
-./docs/llm/vendor/claude.md:14680:| 237 | `TestFallback = "https://[email protected]/9"` | `"https://[email protected]/9"` |
-./docs/llm/vendor/claude.md:14681:| 268 | `"https://[email protected]/1"` (config) | `"https://[email protected]/1"` |
-./docs/llm/vendor/claude.md:14682:| 274 | `.ShouldBe("https://[email protected]/1")` | same |
-./docs/llm/vendor/claude.md:14683:| 282 | `"https://[email protected]/1"` | `"https://[email protected]/1"` |
-./docs/llm/vendor/claude.md:14684:| 286 | `"https://[email protected]/2"` | `"https://[email protected]/2"` |
-./docs/llm/vendor/claude.md:14685:| 290 | `.ShouldBe("https://[email protected]/2")` | same |
-./docs/llm/vendor/claude.md:14686:| 366 | `Dsn = "https://[email protected]/2"` | `"https://[email protected]/2"` |
-./docs/llm/vendor/claude.md:14691:- Line 138 (`[InlineData("https://[email protected]")]`) is in the *reject-invalid-input* theory — it's *supposed* to be rejected, and indeed `[email protected]` doesn't parse as a URL, so the test passes for the wrong reason (rejected for being garbled, not for missing project id). This still passes, just with a misleading comment.
-./docs/llm/vendor/claude.md:14698:One file changes, with every corrupted DSN string restored. Below is the full corrected `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs`. Every `[email protected]` becomes the real `name@host` form. I'm preserving every other byte exactly as-is.
-./docs/llm/vendor/claude.md:14702:- Line 126 (legacy with secret key): `pubkey:[email protected]/9` — the only one that needs a colon, per the test name and docstring.
-./docs/llm/vendor/claude.md:14703:- Line 138 (`InlineData` for "no project id"): `[email protected]` — the comment explicitly says "no project id". Restored as `[email protected]`. (The lack of `/projectId` is what makes it invalid.)
-./docs/llm/vendor/claude.md:14704:- All other sites use simple `name@host/N` shapes. The most natural restoration when the corruption replaced a full local-part is `a@host/1` style. I'll use `[email protected]/1`, `[email protected]/2`, etc., matching the obvious pattern from the comparison structure across the loader tests.
-./docs/llm/vendor/claude.md:14834:        const string dsn = "https://pubkey:[email protected]/9";
-./docs/llm/vendor/claude.md:14846:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/claude.md:14905:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14914:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14925:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14929:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14934:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:14945:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/claude.md:14976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14982:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/claude.md:14990:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/claude.md:14994:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/claude.md:14998:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/claude.md:15074:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/claude.md:15132:The `[email protected]` placeholder is what Cloudflare's email-obfuscation feature inserts when its JS doesn't get to run. Most likely path: at some point a previous LLM-assisted session (or a paste from a webpage rendered through Cloudflare) introduced these strings, the file got saved, and they've been sitting there ever since — passing tests, but only because every assertion compares the corrupted string to itself.
-./docs/llm/vendor/claude.md:15134:One small hardening idea: a one-line guard in `setup.sh` or as a pre-commit hook that fails if `[email protected]` or `\xa0` (the non-breaking-space variant) appear anywhere in the repo. Something like:
-./docs/llm/vendor/output/044.txt:379:./docs/llm/dump.txt:10826:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:380:./docs/llm/dump.txt:10838:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/output/044.txt:381:./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:382:./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:383:./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:384:./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:385:./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:386:./docs/llm/dump.txt:10937:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:387:./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:388:./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:389:./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:390:./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:391:./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:392:./docs/llm/dump.txt:11066:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/output/044.txt:393:./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://[email protected]/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
-./docs/llm/vendor/output/044.txt:394:./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://[email protected]")]` (no project id) — `Uri.AbsolutePath` of `https://[email protected]` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
-./docs/llm/vendor/output/044.txt:395:./docs/llm/vendor/claude.md:11880:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:396:./docs/llm/vendor/claude.md:11892:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/output/044.txt:397:./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:398:./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:399:./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:400:./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:401:./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:402:./docs/llm/vendor/claude.md:12037:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/output/044.txt:403:./docs/llm/vendor/claude.md:12718:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:404:./docs/llm/vendor/claude.md:12730:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/output/044.txt:405:./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:406:./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:407:./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:408:./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:409:./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:410:./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:411:./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:412:./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:413:./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:414:./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:415:./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:416:./docs/llm/vendor/claude.md:12958:                Dsn = "https://[email protected]/2",
-./docs/llm/vendor/output/044.txt:417:./docs/llm/vendor/claude.md:13626:- DSN: `https://[email protected]/9`
-./docs/llm/vendor/output/044.txt:418:./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
-./docs/llm/vendor/output/044.txt:423:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:424:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://[email protected]")]          // no project id
-./docs/llm/vendor/output/044.txt:425:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:426:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:427:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:428:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:429:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:430:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://[email protected]/9";
-./docs/llm/vendor/output/044.txt:431:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:432:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./docs/llm/vendor/output/044.txt:433:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./docs/llm/vendor/output/044.txt:434:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:435:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./docs/llm/vendor/output/044.txt:436:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://[email protected]/2",
+./docs/llm/dump.txt:10826:        const string dsn = "https://potato@example.com/9";
+./docs/llm/dump.txt:10838:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/dump.txt:10937:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/dump.txt:11066:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://potato@example.com/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
+./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://potato@example.com")]` (no project id) — `Uri.AbsolutePath` of `https://potato@example.com` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
+./docs/llm/vendor/claude.md:11880:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:11892:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:12037:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:12718:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:12730:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:12958:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:13626:- DSN: `https://potato@example.com/9`
+./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://potato@example.com/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+./docs/llm/vendor/claude.md:14422:The test DSN is `https://potato@example.com/9`.
+./docs/llm/vendor/claude.md:14433:"https://potato@example.com/9"
+./docs/llm/vendor/claude.md:14443:Wait, that can't be right either — every URL needs `@` to separate userinfo from host. Let me check the raw bytes:Mystery solved. The string was email-obfuscated somewhere in transit — `potato@example.com` was rendered as `potato@example.com` literally. This is *not* the actual test source. Let me look at the actual source file as it sits on disk in the test:The test source on disk is `"https://potato@example.com/9"` — that's the literal string in the test. The `potato@example.com` is markdown email obfuscation that exists *only in your dump.txt export script's rendering*, but the actual `.cs` file on disk has the real `pubkey:secretkey@example.com/9` form. The compiler is reading the *real* file, so the test really is parsing `https://potato@example.com/9`.
+./docs/llm/vendor/claude.md:14445:Let me re-trace my `StripLegacySecretKey` on the actual input:Wait — Python is *also* email-obfuscating? Let me look at the raw bytes again, but this time I'll search for `\x40` (the `@` character) in the source file rendering:**Confirmed: the source file on disk literally contains the string `https://potato@example.com/9`.** The dump export script isn't obfuscating anything — that's the actual content of `TelemetryConfigurationTests.cs`. Something earlier in this project's pipeline replaced what was meant to be `pubkey:potato@example.com` (or `pubkey@potato@example.com/9` if the test author intended a different scheme) with the literal Cloudflare-style email-protection marker `potato@example.com`.
+./docs/llm/vendor/claude.md:14447:Now the picture is much clearer. The test compiles fine — `"https://potato@example.com/9"` is a valid C# string literal. When passed to my parser:
+./docs/llm/vendor/claude.md:14449:1. `Uri.TryCreate("https://potato@example.com/9", Absolute, out uri)` — let me check what `Uri` does with that.No dotnet here. Let me just reason through it. I can verify the behaviour by checking the failure message from the test run — that gives me the definitive answer about what `Uri.TryCreate` does with this string:
+./docs/llm/vendor/claude.md:14454:Line 110 is exactly the `throw` on the failure branch of `Uri.TryCreate`. So `Uri.TryCreate("https://potato@example.com/9", Absolute, …)` is returning **false** on the Fedora .NET 10 runtime, *and* my `StripLegacySecretKey` is returning the input unchanged (no `@`, no colon-in-userinfo, so it short-circuits). Result: parser dies.
+./docs/llm/vendor/claude.md:14456:**Why does `Uri.TryCreate` reject `https://potato@example.com/9`?** Because the bracket `[` in `[email]` triggers `Uri`'s IPv6 address parser. `https://[...]` is the syntax for `https://[2001:db8::1]/...`. The contents of the brackets must look like a valid IPv6 address, and `email protected` doesn't, so `Uri.TryCreate` rejects the whole string.
+./docs/llm/vendor/claude.md:14461:2. **Recognise this for what it is: an upstream data corruption issue.** The dump export script (or whatever processed the original test file) replaced an email-like substring with the Cloudflare email-obfuscation placeholder `potato@example.com`. This same corruption is now in the actual test source on disk. The test was originally meant to verify legacy `pubkey:potato@example.com` parsing. After corruption it's now a different test that parses an invalid URL.
+./docs/llm/vendor/claude.md:14465:Look at the README in your project — that's the script doing it:OK — `export.sh` itself isn't doing the obfuscation. So the corruption is *already in the source file on disk*. That's where the bug lives. Most likely scenario: some web tool (a Cloudflare-protected viewer, or a chat platform's preview-renderer, or a clipboard paste from a browser) rendered an actual `pubkey:potato@example.com/9` style URL with the literal `potato@example.com` substitution at some earlier point, and that corrupted output got committed to the test source.
+./docs/llm/vendor/claude.md:14467:You should verify this directly — open `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs` in your editor and look at line 126. If it really says `https://potato@example.com/9` rather than something with a real `@` or colon, then that's the corruption.
+./docs/llm/vendor/claude.md:14480:        const string dsn = "https://pubkey:potato@example.com/9";
+./docs/llm/vendor/claude.md:14485:- `StripLegacySecretKey` sees `://` at position 5, `@` at position 23, finds the colon between `pubkey` and `secretkey` inside the userinfo, returns `("https://potato@example.com/9", "secretkey")`.
+./docs/llm/vendor/claude.md:14500:(That checks for both the non-breaking-space and ordinary-space variants of the Cloudflare placeholder.) If anything else turns up — README examples, other test DSNs, comments — fix the same way: replace `potato@example.com` with what the original text should have been. Inside this codebase the original was almost certainly a literal `name@host`-style email or DSN.
+./docs/llm/vendor/claude.md:14504:It would be possible to harden `StripLegacySecretKey` to also detect `potato@example.com`-style corruption and rewrite it back, but that's exactly the kind of bandaid your project policy explicitly forbids: papering over data corruption inside a URL parser that has no business knowing what Cloudflare's email-obfuscation widget looks like. The parser is correct; the test data is wrong. Fix the test data.
+./docs/llm/vendor/claude.md:14512:./docs/llm/dump.txt:10826:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14513:./docs/llm/dump.txt:10838:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14514:./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14515:./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14516:./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14517:./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14518:./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14519:./docs/llm/dump.txt:10937:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14520:./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14521:./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14522:./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14523:./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14524:./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14525:./docs/llm/dump.txt:11066:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14526:./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://potato@example.com/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
+./docs/llm/vendor/claude.md:14527:./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://potato@example.com")]` (no project id) — `Uri.AbsolutePath` of `https://potato@example.com` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
+./docs/llm/vendor/claude.md:14528:./docs/llm/vendor/claude.md:11880:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14529:./docs/llm/vendor/claude.md:11892:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14530:./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14531:./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14532:./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14533:./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14534:./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14535:./docs/llm/vendor/claude.md:12037:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14536:./docs/llm/vendor/claude.md:12718:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14537:./docs/llm/vendor/claude.md:12730:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14538:./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14539:./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14540:./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14541:./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14542:./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14543:./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14544:./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14545:./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14546:./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14547:./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14548:./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14549:./docs/llm/vendor/claude.md:12958:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14550:./docs/llm/vendor/claude.md:13626:- DSN: `https://potato@example.com/9`
+./docs/llm/vendor/claude.md:14551:./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://potato@example.com/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+./docs/llm/vendor/claude.md:14556:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14557:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14558:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14559:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14560:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14561:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14562:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14563:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14564:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14565:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14566:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14567:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14568:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14569:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14607:./docs/llm/dump.txt:10826:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14608:./docs/llm/dump.txt:10838:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14609:./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14610:./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14611:./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14612:./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14613:./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14614:./docs/llm/dump.txt:10937:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14615:./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14616:./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14617:./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14618:./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14619:./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14620:./docs/llm/dump.txt:11066:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14621:./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://potato@example.com/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
+./docs/llm/vendor/claude.md:14622:./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://potato@example.com")]` (no project id) — `Uri.AbsolutePath` of `https://potato@example.com` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
+./docs/llm/vendor/claude.md:14623:./docs/llm/vendor/claude.md:11880:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14624:./docs/llm/vendor/claude.md:11892:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14625:./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14626:./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14627:./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14628:./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14629:./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14630:./docs/llm/vendor/claude.md:12037:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14631:./docs/llm/vendor/claude.md:12718:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14632:./docs/llm/vendor/claude.md:12730:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14633:./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14634:./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14635:./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14636:./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14637:./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14638:./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14639:./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14640:./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14641:./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14642:./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14643:./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14644:./docs/llm/vendor/claude.md:12958:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14645:./docs/llm/vendor/claude.md:13626:- DSN: `https://potato@example.com/9`
+./docs/llm/vendor/claude.md:14646:./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://potato@example.com/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+./docs/llm/vendor/claude.md:14651:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14652:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14653:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14654:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14655:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14656:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14657:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14658:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14659:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14660:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14661:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14662:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14663:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14664:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:14667:Good — that grep confirms it. The `potato@example.com` corruption is widespread throughout the test file, not just in the one failing test. The other tests happen to pass because their assertions are *string-equality* — they store `"https://potato@example.com/1"` in config, then assert `options.Sentry.Dsn.ShouldBe("https://potato@example.com/1")`. Since both sides have the same corrupted string, equality holds. The legacy-format test fails because it actually feeds the DSN through `Parse`, which does URL surgery and trips over the brackets.
+./docs/llm/vendor/claude.md:14673:| 126 | `https://potato@example.com/9` | `https://potato@example.com/9` — *legacy form with secret key* |
+./docs/llm/vendor/claude.md:14674:| 138 | `[InlineData("https://potato@example.com")]` `// no project id` | `[InlineData("https://potato@example.com")]` — *invalid because of missing project id* |
+./docs/llm/vendor/claude.md:14675:| 197 | `["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1"` | `["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1"` |
+./docs/llm/vendor/claude.md:14676:| 206 | `options.Sentry.Dsn.ShouldBe("https://potato@example.com/1")` | same |
+./docs/llm/vendor/claude.md:14677:| 217 | `"https://potato@example.com/1"` (json) | `"https://potato@example.com/1"` |
+./docs/llm/vendor/claude.md:14678:| 221 | `"https://potato@example.com/2"` (env) | `"https://potato@example.com/2"` |
+./docs/llm/vendor/claude.md:14679:| 226 | `.ShouldBe("https://potato@example.com/2")` | same |
+./docs/llm/vendor/claude.md:14680:| 237 | `TestFallback = "https://potato@example.com/9"` | `"https://potato@example.com/9"` |
+./docs/llm/vendor/claude.md:14681:| 268 | `"https://potato@example.com/1"` (config) | `"https://potato@example.com/1"` |
+./docs/llm/vendor/claude.md:14682:| 274 | `.ShouldBe("https://potato@example.com/1")` | same |
+./docs/llm/vendor/claude.md:14683:| 282 | `"https://potato@example.com/1"` | `"https://potato@example.com/1"` |
+./docs/llm/vendor/claude.md:14684:| 286 | `"https://potato@example.com/2"` | `"https://potato@example.com/2"` |
+./docs/llm/vendor/claude.md:14685:| 290 | `.ShouldBe("https://potato@example.com/2")` | same |
+./docs/llm/vendor/claude.md:14686:| 366 | `Dsn = "https://potato@example.com/2"` | `"https://potato@example.com/2"` |
+./docs/llm/vendor/claude.md:14691:- Line 138 (`[InlineData("https://potato@example.com")]`) is in the *reject-invalid-input* theory — it's *supposed* to be rejected, and indeed `potato@example.com` doesn't parse as a URL, so the test passes for the wrong reason (rejected for being garbled, not for missing project id). This still passes, just with a misleading comment.
+./docs/llm/vendor/claude.md:14698:One file changes, with every corrupted DSN string restored. Below is the full corrected `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs`. Every `potato@example.com` becomes the real `name@host` form. I'm preserving every other byte exactly as-is.
+./docs/llm/vendor/claude.md:14702:- Line 126 (legacy with secret key): `pubkey:potato@example.com/9` — the only one that needs a colon, per the test name and docstring.
+./docs/llm/vendor/claude.md:14703:- Line 138 (`InlineData` for "no project id"): `potato@example.com` — the comment explicitly says "no project id". Restored as `potato@example.com`. (The lack of `/projectId` is what makes it invalid.)
+./docs/llm/vendor/claude.md:14704:- All other sites use simple `name@host/N` shapes. The most natural restoration when the corruption replaced a full local-part is `a@host/1` style. I'll use `potato@example.com/1`, `potato@example.com/2`, etc., matching the obvious pattern from the comparison structure across the loader tests.
+./docs/llm/vendor/claude.md:14834:        const string dsn = "https://pubkey:potato@example.com/9";
+./docs/llm/vendor/claude.md:14846:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/claude.md:14905:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14914:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14925:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14929:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14934:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14945:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/claude.md:14976:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14982:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/claude.md:14990:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/claude.md:14994:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/claude.md:14998:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/claude.md:15074:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/claude.md:15132:The `potato@example.com` placeholder is what Cloudflare's email-obfuscation feature inserts when its JS doesn't get to run. Most likely path: at some point a previous LLM-assisted session (or a paste from a webpage rendered through Cloudflare) introduced these strings, the file got saved, and they've been sitting there ever since — passing tests, but only because every assertion compares the corrupted string to itself.
+./docs/llm/vendor/claude.md:15134:One small hardening idea: a one-line guard in `setup.sh` or as a pre-commit hook that fails if `potato@example.com` or `\xa0` (the non-breaking-space variant) appear anywhere in the repo. Something like:
+./docs/llm/vendor/output/044.txt:379:./docs/llm/dump.txt:10826:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:380:./docs/llm/dump.txt:10838:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/output/044.txt:381:./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:382:./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:383:./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:384:./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:385:./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:386:./docs/llm/dump.txt:10937:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:387:./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:388:./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:389:./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:390:./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:391:./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:392:./docs/llm/dump.txt:11066:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/output/044.txt:393:./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://potato@example.com/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
+./docs/llm/vendor/output/044.txt:394:./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://potato@example.com")]` (no project id) — `Uri.AbsolutePath` of `https://potato@example.com` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
+./docs/llm/vendor/output/044.txt:395:./docs/llm/vendor/claude.md:11880:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:396:./docs/llm/vendor/claude.md:11892:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/output/044.txt:397:./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:398:./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:399:./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:400:./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:401:./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:402:./docs/llm/vendor/claude.md:12037:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/output/044.txt:403:./docs/llm/vendor/claude.md:12718:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:404:./docs/llm/vendor/claude.md:12730:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/output/044.txt:405:./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:406:./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:407:./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:408:./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:409:./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:410:./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:411:./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:412:./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:413:./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:414:./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:415:./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:416:./docs/llm/vendor/claude.md:12958:                Dsn = "https://potato@example.com/2",
+./docs/llm/vendor/output/044.txt:417:./docs/llm/vendor/claude.md:13626:- DSN: `https://potato@example.com/9`
+./docs/llm/vendor/output/044.txt:418:./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://potato@example.com/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+./docs/llm/vendor/output/044.txt:423:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:424:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://potato@example.com")]          // no project id
+./docs/llm/vendor/output/044.txt:425:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:426:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:427:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:428:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:429:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:430:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://potato@example.com/9";
+./docs/llm/vendor/output/044.txt:431:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:432:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./docs/llm/vendor/output/044.txt:433:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./docs/llm/vendor/output/044.txt:434:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:435:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./docs/llm/vendor/output/044.txt:436:./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://potato@example.com/2",
 grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/refint/MyAdventure.Integration.Tests.dll: binary file matches
 grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/ref/MyAdventure.Integration.Tests.dll: binary file matches
 grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/MyAdventure.Integration.Tests.dll: binary file matches
 grep: ./tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll: binary file matches
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://pubkey:[email protected]/9";
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://[email protected]")]          // no project id
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://[email protected]/9";
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
-./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://[email protected]/2",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://pubkey:potato@example.com/9";
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://potato@example.com")]          // no project id
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://potato@example.com/9";
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://potato@example.com/2",
 kushal@fedora:~/src/dotnet/MyAdventure$ 
 kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet format; time sh export.sh;
 
