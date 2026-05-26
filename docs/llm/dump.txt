@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue May 26 06:16:26 PM EDT 2026
+Generated: Tue May 26 06:25:34 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -85,7 +85,8 @@ DIRECTORY STRUCTURE:
 │               ├── 037.txt
 │               ├── 038.txt
 │               ├── 039.txt
-│               └── 040.txt
+│               ├── 040.txt
+│               └── 041.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -5570,7 +5571,7 @@ public static class DependencyInjection
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
-SIZE: 1.54 KB
+SIZE: 2.11 KB
 ================================================================================
 
 <Project Sdk="Microsoft.NET.Sdk">
@@ -5604,6 +5605,19 @@ SIZE: 1.54 KB
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+  </ItemGroup>
+
+  <!--
+    Grant the integration test assembly access to internal types like
+    TelemetryDefaults and the test-friendly internal overloads of
+    TelemetryConfigurationLoader.LoadFromEnvironment(string) and
+    LoadFromConfiguration(IConfiguration, string). Production callers
+    continue to use the public parameterless overloads; the internals are
+    only there so tests can pin both "fallback present" and "fallback empty"
+    behaviour without rebuilding the assembly.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="MyAdventure.Integration.Tests" />
   </ItemGroup>
 
 </Project>
@@ -5673,7 +5687,7 @@ public class GameStateRepository(
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
-SIZE: 3.53 KB
+SIZE: 3.88 KB
 ================================================================================
 
 using System;
@@ -5714,8 +5728,15 @@ public sealed class SentryDsn
         AuthHeaderValue = authHeaderValue;
     }
 
+    /// <summary>
+    /// Non-throwing parser. Accepts <see langword="null"/> and whitespace
+    /// alongside the obvious malformed-string cases — they all return
+    /// <see langword="false"/> with a populated <paramref name="error"/>.
+    /// This is the standard TryParse contract: never throw, always
+    /// produce a verdict.
+    /// </summary>
     public static bool TryParse(
-        string dsn,
+        string? dsn,
         out SentryDsn? parsed,
         out string? error)
     {
