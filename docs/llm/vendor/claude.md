@@ -15284,3 +15284,71 @@ fi
 The exclusions matter: `docs/llm/vendor/*` holds your archived LLM transcripts which legitimately contain the placeholder, and `*.md` may carry it inside backtick-quoted example text without breaking anything. The check is tight on `.cs`, `.json`, scripts, and other live source.
 
 Once the seds are run and the tests are green, you're also free of the underlying Sentry-not-receiving-events problem from the earlier rounds — the parser changes, the `x-sentry-auth=` header fix on the traces branch, and now the correctly-formed test data all stack to make that pipeline work end-to-end.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+36
+24
+
+alright tests pass and logs are now showing 
+May 26, 7:26:09.691 PM
+	
+Bulk bought 1 of Car Wash for 6.195800735488668e4 (now 35)
+info
+	
+May 26, 7:26:07.521 PM
+	
+Bulk bought 3 of Car Wash for 1.4384369421216536e5 (now 34)
+info
+	
+May 26, 7:26:05.735 PM
+	
+Bought manager for Car Wash
+info
+	
+May 26, 7:25:33.198 PM
+	
+Bulk bought 3 of Car Wash for 9.709039637848447e4 (now 31)
+info
+	
+May 26, 7:25:29.174 PM
+	
+Bulk bought 3 of Car Wash for 6.553325205224042e4 (now 28)
+info
+	
+May 26, 7:25:27.668 PM
+	
+Bulk bought 6 of Car Wash for 7.408914656033848e4 (now 25)
+info
+	
+May 26, 7:25:21.708 PM
+	
+Bulk bought 19 of Car Wash for 5.685784904596229e4 (now 19)
+info
+	
+May 26, 7:25:18.686 PM
+	
+Bulk bought 1 of Newspaper Route for 5.653864912611928e4 (now 50)
+info
+	
+May 26, 7:25:07.080 PM
+	
+Bulk bought 1 of Newspaper Route for 4.9164042718364644e4 (now 49)
+info
+	
+May 26, 7:25:01.308 PM
+	
+Bulk bought 1 of Newspaper Route for 4.27513414942301e4 (now 48)
+
+I ran it on the desktop with the desktop.sh 
