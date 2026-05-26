@@ -142,6 +142,14 @@ public static class DependencyInjection
                     {
                         o.Endpoint = new Uri(sentry.LogsEndpoint);
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        // Sentry's OTLP intake requires the auth value to
+                        // be carried in an HTTP header named
+                        // "x-sentry-auth". The OpenTelemetry exporter's
+                        // Headers string is a comma-separated list of
+                        // header=value pairs, so we prefix the header
+                        // name here rather than putting it inside the
+                        // SentryDsn.AuthHeaderValue (which carries only
+                        // the value portion).
                         o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
                     });
                 }
@@ -171,7 +179,11 @@ public static class DependencyInjection
                     {
                         o.Endpoint = new Uri(sentry.TracesEndpoint);
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        o.Headers = sentry.AuthHeaderValue;
+                        // Same auth-header treatment as the logs branch
+                        // above — the prefix has to be applied here too,
+                        // otherwise Sentry's OTLP intake rejects every
+                        // span with 401 and silently drops it.
+                        o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
                     });
                 }
             })

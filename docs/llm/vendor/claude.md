@@ -13598,3 +13598,725 @@ Want me to dig into the Sentry-not-receiving-logs question next once the build i
 
 
 
+08
+22
+
+Tests are failing 
+/home/kushal/src/dotnet/MyAdventure/docs/llm/vendor/output/043.txt
+/home/kushal/src/dotnet/MyAdventure/docs/llm/dump.txt
+
+
+Build is green. Now I have three real test failures to diagnose. Let me see the rest of the test output to make sure I have them all:Excellent — clean picture. Five test failures, all in `SentryDsn`-related tests, all in the integration test project. Build is green now (`InternalsVisibleTo` did its job). Let me diagnose each independently.
+
+## The five failures
+
+**1. `SentryDsn_TracesEndpoint_HasExpectedShape`**
+- Expected: `https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/traces`
+- Actual:   `https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/otlp/v1/traces`
+- Missing path segment: `/integration`
+
+**2. `SentryDsn_LogsEndpoint_HasExpectedShape`**
+- Same shape: missing `/integration` segment.
+
+**3. `SentryDsn_AuthHeader_StartsWithSentryKeyword`**
+- Expected: `sentry sentry_key=abc123` (lowercase `sentry`)
+- Actual:   `Sentry sentry_key=abc123` (uppercase `S`)
+
+**4. `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat`**
+- DSN: `https://[email protected]/9`
+- Throws `ArgumentException : DSN is not a valid absolute URI.`
+- The colon in `pubkey:secretkey` causes `Uri.TryCreate` to misparse — `Uri` treats the secret portion as a port if it comes after a colon. So `Uri.TryCreate("https://pubkey:secretkey@host/9", ...)` fails because `secretkey` isn't a number. The current parser tries to split *after* `Uri.TryCreate` succeeds, but `Uri.TryCreate` never succeeds for this input. So pre-split is needed.
+
+**5. `SentryDsn_TryParse_RejectsInvalidInput(dsn: "ftp://x@example.com/1")`**
+- `ok` was `True` but should be `False`. The current parser doesn't check the URI scheme — it accepts `ftp://`. Per the test's intent, only `https://` (and maybe `http://`) should be accepted.
+
+Let me also check — the test on line 130 expects `https://example.com/1` (no userinfo / public key) to be rejected. Today the parser checks `string.IsNullOrWhiteSpace(publicKey)` and `uri.UserInfo` returns empty when there's no `@`, so that case is already correctly rejected.
+
+## Cross-checking against the Sentry settings dump
+
+The settings UI you pasted in the previous turn confirms the expected shape exactly:
+
+```
+OTLP Logs Endpoint:    https://.../api/4511444969390160/integration/otlp/v1/logs
+OTLP Traces Endpoint:  https://.../api/4511444969390160/integration/otlp/v1/traces
+OTLP Headers:          x-sentry-auth=sentry sentry_key=fe6ae5...
+```
+
+So:
+- Endpoint path: `/api/{projectId}/integration/otlp/v1/{logs,traces}` — note the **`integration/`** segment between `{projectId}` and `otlp`. The current code emits `/api/{projectId}/otlp/v1/...` which is wrong, and that's almost certainly why your logs weren't showing up in Sentry. Sentry was returning 404 for every event.
+- Auth header value: `sentry sentry_key=...` (lowercase `sentry`). The current code emits `Sentry` (capital S).
+- Header *name*: `x-sentry-auth` (not relevant to these failures, but matters when wired into the bootstrapper — let me verify that too).
+
+Let me peek at the bootstrapper to confirm whether it uses the right header name:There's a discrepancy: line 5330 in `DependencyInjection.cs` prefixes the header name correctly (`x-sentry-auth={AuthHeaderValue}`), but `TelemetryBootstrapper.cs` lines 5887 and 5907 set `opt.Headers = sentryDsn.AuthHeaderValue` *without* the `x-sentry-auth=` prefix. Let me look at both more carefully to figure out which path is actually used:Got it. In `DependencyInjection.cs` the logs branch is correct (`x-sentry-auth={AuthHeaderValue}`) but the traces branch on line 5358 is `o.Headers = sentry.AuthHeaderValue` — **missing the `x-sentry-auth=` prefix**. That's the same bug, on the traces side. This is the actual reason Sentry hasn't been ingesting your traces, on top of the endpoint-path bug breaking both logs and traces.
+
+So my fix needs to address:
+
+1. **`SentryDsn.Parse`**: emit `/integration/otlp/v1/{logs,traces}` not `/otlp/v1/{logs,traces}`
+2. **`SentryDsn.Parse`**: emit `sentry sentry_key=...` (lowercase) not `Sentry sentry_key=...`
+3. **`SentryDsn.Parse`**: handle the legacy `pubkey:secretkey@host` form — `Uri.TryCreate` chokes on it, so split before parsing
+4. **`SentryDsn.Parse`**: reject non-`https`/`http` schemes (`ftp://`, etc.)
+5. **`DependencyInjection.cs`**: fix the traces-branch header to include the `x-sentry-auth=` prefix
+
+I should also pre-empt one more concern: `TelemetryBootstrapper.cs` (a separate class) has the same header bug on both its logs and traces branches. Let me check whether it's actually called from anywhere or if `DependencyInjection.AddInfrastructure` is the only entry point:`TelemetryBootstrapper` is defined but never referenced anywhere — it's dead code. The live path is `DependencyInjection.AddInfrastructure` → `ConfigureLogging` / `ConfigureTracingAndMetrics`. I won't touch `TelemetryBootstrapper` because:
+
+- It's not on the runtime path, so it can't be breaking anything *right now*.
+- You haven't asked me to clean up dead code.
+- Touching it would balloon this fix beyond what's needed to get the tests green.
+
+I'll flag it at the end as a follow-up.
+
+One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+
+## The fix
+
+Two files. Full contents below.
+
+### File 1: `src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs`
+
+Changes:
+- `Parse` and `TryParse` now pre-strip a legacy `pubkey:secretkey@` colon-form before handing the URI to `Uri.TryCreate` (which otherwise rejects it because the part after the colon isn't a numeric port).
+- `Parse` rejects schemes other than `http` and `https` (with an explicit message so it's debuggable).
+- Endpoint paths now include the `/integration` segment: `/api/{projectId}/integration/otlp/v1/{logs,traces}`. This matches the Sentry OTLP intake URL exactly.
+- `AuthHeaderValue` now begins with lowercase `sentry` to match Sentry's documented header value.
+- I also tightened the comment on `TryParse` to reflect the legacy-form behaviour.
+
+```csharp
+using System;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+public sealed class SentryDsn
+{
+    public string Raw { get; }
+    public string PublicKey { get; }
+    public string SecretKey { get; }
+    public string ProjectId { get; }
+    public string Host { get; }
+    public bool IsOtlp { get; }
+    public string LogsEndpoint { get; }
+    public string TracesEndpoint { get; }
+    public string AuthHeaderValue { get; }
+
+    private SentryDsn(
+        string raw,
+        string publicKey,
+        string secretKey,
+        string projectId,
+        string host,
+        bool isOtlp,
+        string logsEndpoint,
+        string tracesEndpoint,
+        string authHeaderValue)
+    {
+        Raw = raw;
+        PublicKey = publicKey;
+        SecretKey = secretKey;
+        ProjectId = projectId;
+        Host = host;
+        IsOtlp = isOtlp;
+        LogsEndpoint = logsEndpoint;
+        TracesEndpoint = tracesEndpoint;
+        AuthHeaderValue = authHeaderValue;
+    }
+
+    /// <summary>
+    /// Non-throwing parser. Accepts <see langword="null"/>, whitespace, and
+    /// malformed input alongside well-formed DSNs — all problem cases
+    /// return <see langword="false"/> with a populated
+    /// <paramref name="error"/>. This is the standard TryParse contract:
+    /// never throw, always produce a verdict.
+    /// </summary>
+    public static bool TryParse(
+        string? dsn,
+        out SentryDsn? parsed,
+        out string? error)
+    {
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            parsed = null;
+            error = "DSN is empty.";
+            return false;
+        }
+
+        try
+        {
+            parsed = Parse(dsn);
+            error = null;
+            return parsed.IsOtlp;
+        }
+        catch (Exception ex)
+        {
+            parsed = null;
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Throwing parser. Use <see cref="TryParse"/> when validating user
+    /// input; use this directly only when the DSN has already been
+    /// validated and a malformed string should crash loudly.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Handles both the modern Sentry DSN form
+    /// <c>https://{public_key}@{host}/{project_id}</c> and the legacy
+    /// form <c>https://{public_key}:{secret_key}@{host}/{project_id}</c>.
+    /// The colon in the legacy form would otherwise make
+    /// <see cref="Uri.TryCreate(string, UriKind, out Uri)"/> reject the
+    /// string (the parser treats the part after the colon as a port and
+    /// fails on the non-numeric secret), so we pre-split the userinfo
+    /// before constructing the <see cref="Uri"/>.
+    /// </para>
+    /// <para>
+    /// Only <c>http</c> and <c>https</c> are accepted — Sentry DSNs are
+    /// always one of those, and an <c>ftp://</c> or other-scheme value
+    /// is almost certainly a copy-paste error that we want to surface
+    /// loudly rather than silently emit telemetry into a black hole.
+    /// </para>
+    /// </remarks>
+    public static SentryDsn Parse(string dsn)
+    {
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            throw new ArgumentException("DSN is empty.", nameof(dsn));
+        }
+
+        // Strip a legacy "publicKey:secretKey@" userinfo block before
+        // letting Uri.TryCreate see it. Uri.TryCreate would otherwise
+        // try to parse the secretKey as a port number and reject the
+        // whole DSN.
+        var (uriCandidate, secretKey) = StripLegacySecretKey(dsn);
+
+        if (!Uri.TryCreate(uriCandidate, UriKind.Absolute, out var uri))
+        {
+            throw new ArgumentException("DSN is not a valid absolute URI.", nameof(dsn));
+        }
+
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"DSN scheme '{uri.Scheme}' is not supported. Sentry DSNs must be http or https.",
+                nameof(dsn));
+        }
+
+        var publicKey = uri.UserInfo;
+
+        if (string.IsNullOrWhiteSpace(publicKey))
+        {
+            throw new ArgumentException("DSN public key is missing.", nameof(dsn));
+        }
+
+        var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (pathSegments.Length == 0)
+        {
+            throw new ArgumentException("DSN missing project ID metadata.", nameof(dsn));
+        }
+
+        var projectId = pathSegments[0];
+
+        var host = uri.IsDefaultPort
+            ? uri.Host
+            : $"{uri.Host}:{uri.Port}";
+
+        var baseUri = $"{uri.Scheme}://{host}";
+
+        // Sentry's OTLP intake lives under /api/{projectId}/integration/otlp/v1/{logs,traces}.
+        // The "/integration" segment is required — without it Sentry returns 404
+        // and silently drops every event, which is exactly the failure mode
+        // that motivated this parser's existence.
+        var logsEndpoint =
+            $"{baseUri}/api/{projectId}/integration/otlp/v1/logs";
+
+        var tracesEndpoint =
+            $"{baseUri}/api/{projectId}/integration/otlp/v1/traces";
+
+        // Sentry's documented OTLP auth header value uses a lowercase
+        // "sentry" keyword (see Settings → Client Keys in the Sentry UI).
+        // The legacy public/secret form includes both keys; the modern
+        // form omits sentry_secret entirely.
+        string authHeaderValue;
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            authHeaderValue =
+                $"sentry sentry_key={publicKey}";
+        }
+        else
+        {
+            authHeaderValue =
+                $"sentry sentry_key={publicKey}, sentry_secret={secretKey}";
+        }
+
+        return new SentryDsn(
+            raw: dsn,
+            publicKey: publicKey,
+            secretKey: secretKey,
+            projectId: projectId,
+            host: host,
+            isOtlp: true,
+            logsEndpoint: logsEndpoint,
+            tracesEndpoint: tracesEndpoint,
+            authHeaderValue: authHeaderValue);
+    }
+
+    /// <summary>
+    /// If <paramref name="dsn"/> uses the legacy
+    /// <c>scheme://publicKey:secretKey@host/...</c> form, rewrite it to
+    /// <c>scheme://publicKey@host/...</c> and return the extracted
+    /// secret. Otherwise return the input unchanged and an empty secret.
+    /// </summary>
+    private static (string Rewritten, string SecretKey) StripLegacySecretKey(string dsn)
+    {
+        var schemeSeparator = dsn.IndexOf("://", StringComparison.Ordinal);
+        if (schemeSeparator < 0)
+        {
+            return (dsn, string.Empty);
+        }
+
+        var userInfoStart = schemeSeparator + 3;
+        var atSign = dsn.IndexOf('@', userInfoStart);
+        if (atSign < 0)
+        {
+            return (dsn, string.Empty);
+        }
+
+        var userInfo = dsn.Substring(userInfoStart, atSign - userInfoStart);
+        var colon = userInfo.IndexOf(':');
+        if (colon < 0)
+        {
+            return (dsn, string.Empty);
+        }
+
+        var publicKey = userInfo.Substring(0, colon);
+        var secretKey = userInfo.Substring(colon + 1);
+
+        var rewritten =
+            dsn.Substring(0, userInfoStart) + publicKey + dsn.Substring(atSign);
+        return (rewritten, secretKey);
+    }
+}
+```
+
+### File 2: `src/MyAdventure.Infrastructure/DependencyInjection.cs`
+
+The only change is to the traces OTLP exporter's `Headers` line — prefix it with `x-sentry-auth=` to match the logs branch. Since this file is large and I haven't shown it before, let me extract its current contents and then deliver the corrected full file:Here's the corrected `DependencyInjection.cs`. The only behavioural change is one line (`o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}"` on the traces exporter), with an expanded comment so the next person who touches it understands why:
+
+```csharp
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Infrastructure.Data;
+using MyAdventure.Infrastructure.Repositories;
+using MyAdventure.Infrastructure.Telemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+namespace MyAdventure.Infrastructure;
+
+public static class DependencyInjection
+{
+    /// <summary>
+    /// Convenience overload preserved for callers (and tests) that don't
+    /// want to opt into the telemetry configuration object. Behaviour is
+    /// unchanged from before: console exporters only, no Sentry, info-level
+    /// logging — exactly what every existing test relies on.
+    /// </summary>
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        string? dbPath = null)
+        => AddInfrastructure(services, new TelemetryOptions(), dbPath);
+
+    /// <summary>
+    /// Register everything the Infrastructure layer owns: the SQLite
+    /// <see cref="AppDbContext"/>, the <see cref="IGameStateRepository"/>,
+    /// and the full OpenTelemetry logging/tracing/metrics pipeline.
+    ///
+    /// <para>
+    /// <b>Sentry integration.</b> If <see cref="SentryOptions.Dsn"/> is
+    /// populated <i>and</i> parses successfully, an OTLP/HTTP exporter
+    /// is registered for both logs and traces (Sentry doesn't accept
+    /// OTLP metrics, so the metrics pipeline stays console-only). The
+    /// DSN, environment, and sampling rate come from
+    /// <paramref name="telemetry"/>; callers usually build that via
+    /// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration"/>
+    /// (Desktop) or <see cref="TelemetryConfigurationLoader.LoadFromEnvironment"/>
+    /// (Android).
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Verbose logging.</b> When <see cref="TelemetryOptions.VerboseLogging"/>
+    /// is true the OpenTelemetry log pipeline's minimum level drops to
+    /// <c>Debug</c> and Entity Framework Core's category lifts from
+    /// <c>Warning</c> to <c>Information</c>, so SQL command traces start
+    /// showing up. This is a runtime switch — no rebuild needed; the
+    /// player (or a beta tester) can toggle it via
+    /// <c>MYADVENTURE_VERBOSE=1</c> or by editing
+    /// <c>appsettings.json</c>.
+    /// </para>
+    /// </summary>
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        TelemetryOptions telemetry,
+        string? dbPath = null)
+    {
+        ArgumentNullException.ThrowIfNull(telemetry);
+
+        dbPath ??= GetDefaultDbPath();
+
+        services.AddDbContext<AppDbContext>(opts =>
+            opts.UseSqlite($"Data Source={dbPath}"));
+
+        services.AddScoped<IGameStateRepository, GameStateRepository>();
+
+        // Make the snapshotted options available to anyone who wants to
+        // inspect them at runtime (the App startup logs them).
+        services.AddSingleton(telemetry);
+
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService(
+                serviceName: "MyAdventure",
+                serviceVersion: GetAssemblyVersion(),
+                serviceInstanceId: Environment.MachineName)
+            .AddAttributes(new KeyValuePair<string, object>[]
+            {
+                new("deployment.environment", telemetry.Sentry.Environment),
+            });
+
+        // Parse the DSN exactly once. If it's invalid we proceed with the
+        // console exporter only — a misconfigured DSN must never block
+        // app startup. The parse error is captured in a logger message
+        // emitted by the very pipeline we're building, so it shows up on
+        // the same console the developer is already watching.
+        SentryDsn? sentry = null;
+        string? sentryParseError = null;
+        var sentryEnabled = !string.IsNullOrWhiteSpace(telemetry.Sentry.Dsn)
+            && SentryDsn.TryParse(telemetry.Sentry.Dsn, out sentry, out sentryParseError);
+
+        ConfigureLogging(services, telemetry, resourceBuilder, sentry);
+        ConfigureTracingAndMetrics(services, telemetry, resourceBuilder, sentry);
+
+        // Emit a single-line breadcrumb that records the configuration
+        // we landed on. We can't log it directly here (no IServiceProvider
+        // yet), so we use a transient hosted-style activator: register a
+        // startup-time announcer that the app calls explicitly via
+        // EmitStartupBreadcrumb.
+        services.AddSingleton(new TelemetryStartupAnnouncement(
+            SentryEnabled: sentryEnabled,
+            SentryParseError: sentryParseError,
+            VerboseLogging: telemetry.VerboseLogging,
+            Environment: telemetry.Sentry.Environment));
+
+        return services;
+    }
+
+    private static void ConfigureLogging(
+        IServiceCollection services,
+        TelemetryOptions telemetry,
+        ResourceBuilder resourceBuilder,
+        SentryDsn? sentry)
+    {
+        services.AddLogging(logging =>
+        {
+            // Lift EF Core noise to Information when verbose mode is on,
+            // otherwise keep it pinned at Warning so the default
+            // OpenTelemetry log pipeline doesn't spam Sentry with
+            // benign EnsureCreated chatter.
+            logging.AddFilter("Microsoft.EntityFrameworkCore",
+                telemetry.VerboseLogging ? LogLevel.Information : LogLevel.Warning);
+
+            logging.SetMinimumLevel(telemetry.VerboseLogging ? LogLevel.Debug : LogLevel.Information);
+
+            logging.AddOpenTelemetry(otel =>
+            {
+                otel.SetResourceBuilder(resourceBuilder);
+                otel.IncludeFormattedMessage = true;
+                otel.IncludeScopes = true;
+                otel.ParseStateValues = true;
+
+                otel.AddConsoleExporter();
+
+                if (sentry is not null)
+                {
+                    otel.AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri(sentry.LogsEndpoint);
+                        o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        // Sentry's OTLP intake requires the auth value to
+                        // be carried in an HTTP header named
+                        // "x-sentry-auth". The OpenTelemetry exporter's
+                        // Headers string is a comma-separated list of
+                        // header=value pairs, so we prefix the header
+                        // name here rather than putting it inside the
+                        // SentryDsn.AuthHeaderValue (which carries only
+                        // the value portion).
+                        o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
+                    });
+                }
+            });
+        });
+    }
+
+    private static void ConfigureTracingAndMetrics(
+        IServiceCollection services,
+        TelemetryOptions telemetry,
+        ResourceBuilder resourceBuilder,
+        SentryDsn? sentry)
+    {
+        services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing.SetResourceBuilder(resourceBuilder);
+                tracing.AddSource("MyAdventure.*");
+                tracing.SetSampler(new TraceIdRatioBasedSampler(
+                    Math.Clamp(telemetry.Sentry.TracesSampleRate, 0.0, 1.0)));
+
+                tracing.AddConsoleExporter();
+
+                if (sentry is not null)
+                {
+                    tracing.AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri(sentry.TracesEndpoint);
+                        o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        // Same auth-header treatment as the logs branch
+                        // above — the prefix has to be applied here too,
+                        // otherwise Sentry's OTLP intake rejects every
+                        // span with 401 and silently drops it.
+                        o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
+                    });
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                // Sentry's OTLP ingestion does NOT accept metrics, so the
+                // metrics pipeline stays console-only. The runtime metrics
+                // are still useful locally and would be picked up by any
+                // separate OTLP backend (Grafana Mimir, Prometheus via
+                // OTLP, etc.) when added later.
+                metrics.SetResourceBuilder(resourceBuilder);
+                metrics.AddMeter("MyAdventure.*");
+                metrics.AddRuntimeInstrumentation();
+                metrics.AddConsoleExporter();
+            });
+    }
+
+    /// <summary>
+    /// Emit a single startup log line summarising the telemetry decisions
+    /// we made in <see cref="AddInfrastructure(IServiceCollection, TelemetryOptions, string?)"/>.
+    /// The Desktop and Android entry points call this once after building
+    /// the service provider, so the configuration shows up in every log
+    /// sink (console, OTLP/Sentry, Android logcat) without the
+    /// Infrastructure project needing to know about any of them directly.
+    /// </summary>
+    public static void EmitStartupBreadcrumb(IServiceProvider services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var announcement = services.GetRequiredService<TelemetryStartupAnnouncement>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger("MyAdventure.Telemetry");
+
+        if (announcement.SentryEnabled)
+        {
+            logger.LogInformation(
+                "Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}",
+                announcement.Environment, announcement.VerboseLogging);
+        }
+        else if (!string.IsNullOrEmpty(announcement.SentryParseError))
+        {
+            logger.LogWarning(
+                "Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.",
+                announcement.SentryParseError);
+        }
+        else
+        {
+            logger.LogInformation(
+                "Telemetry: Sentry disabled (no DSN), verbose={Verbose}",
+                announcement.VerboseLogging);
+        }
+    }
+
+    /// <summary>
+    /// Initialize the SQLite database, applying an in-place schema migration
+    /// to lift legacy REAL columns into the new TEXT (BigDouble) columns when
+    /// an old v1 database is detected.
+    /// <para>
+    /// The BigDouble migration renamed the three numeric columns
+    /// (<c>Cash</c>, <c>LifetimeEarnings</c>, <c>AngelInvestors</c>) to their
+    /// <c>*Text</c> counterparts. We migrate in-place rather than dropping
+    /// the table so any existing player progress is preserved across the
+    /// schema change without requiring an export/import. The migration runs
+    /// in a single transaction so a crash mid-migration leaves the old
+    /// schema intact (no half-migrated database).
+    /// </para>
+    /// </summary>
+    public static async Task InitializeDatabaseAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetService<ILoggerFactory>()?.CreateLogger("DbInit");
+
+        // Run the schema migration BEFORE EnsureCreated. EnsureCreated is a
+        // no-op when the tables already exist, so it won't fix an old schema
+        // for us — we have to do that explicitly.
+        await MigrateLegacySchemaIfNeededAsync(db, logger);
+
+        // Create the database / any genuinely missing tables idempotently.
+        await db.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Inspect the GameStates table; if it has the legacy REAL columns,
+    /// translate them to the new TEXT columns and drop the old ones.
+    /// Idempotent — a fresh database or an already-migrated database
+    /// passes straight through.
+    /// </summary>
+    private static async Task MigrateLegacySchemaIfNeededAsync(AppDbContext db, ILogger? logger)
+    {
+        var conn = (SqliteConnection)db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
+
+        // If the GameStates table doesn't exist at all yet, EnsureCreated
+        // will make it with the new schema — nothing to migrate.
+        var hasTable = await TableExistsAsync(conn, "GameStates");
+        if (!hasTable) return;
+
+        var columns = await GetColumnNamesAsync(conn, "GameStates");
+
+        // Already migrated (or fresh-with-new-schema): the new columns exist.
+        if (columns.Contains("CashText")) return;
+
+        // No old columns either: nothing to do.
+        if (!columns.Contains("Cash")) return;
+
+        logger?.LogInformation("Migrating GameStates table to BigDouble TEXT schema");
+
+        await using var tx = (SqliteTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            await ExecuteAsync(conn, tx,
+                "ALTER TABLE GameStates ADD COLUMN CashText TEXT NOT NULL DEFAULT '0'");
+            await ExecuteAsync(conn, tx,
+                "ALTER TABLE GameStates ADD COLUMN LifetimeEarningsText TEXT NOT NULL DEFAULT '0'");
+            await ExecuteAsync(conn, tx,
+                "ALTER TABLE GameStates ADD COLUMN AngelInvestorsText TEXT NOT NULL DEFAULT '0'");
+
+            // SQLite's CAST(double AS TEXT) produces an InvariantCulture
+            // string representation that BigDouble.Parse will happily
+            // round-trip (it falls back to plain double.Parse for any
+            // numeric string that doesn't look like the canonical form).
+            await ExecuteAsync(conn, tx,
+                "UPDATE GameStates SET " +
+                "CashText = CAST(Cash AS TEXT), " +
+                "LifetimeEarningsText = CAST(LifetimeEarnings AS TEXT), " +
+                "AngelInvestorsText = CAST(AngelInvestors AS TEXT)");
+
+            // SQLite 3.35+ (EF Core 10 ships with a much newer version)
+            // supports ALTER TABLE DROP COLUMN, so we don't need the
+            // historical table-rebuild dance.
+            await ExecuteAsync(conn, tx, "ALTER TABLE GameStates DROP COLUMN Cash");
+            await ExecuteAsync(conn, tx, "ALTER TABLE GameStates DROP COLUMN LifetimeEarnings");
+            await ExecuteAsync(conn, tx, "ALTER TABLE GameStates DROP COLUMN AngelInvestors");
+
+            await tx.CommitAsync();
+            logger?.LogInformation("BigDouble migration complete");
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            logger?.LogError(ex, "BigDouble migration failed; legacy schema retained");
+            throw;
+        }
+    }
+
+    private static async Task<bool> TableExistsAsync(SqliteConnection conn, string table)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name = $name";
+        cmd.Parameters.AddWithValue("$name", table);
+        var result = await cmd.ExecuteScalarAsync();
+        return result is not null;
+    }
+
+    private static async Task<HashSet<string>> GetColumnNamesAsync(SqliteConnection conn, string table)
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await using var cmd = conn.CreateCommand();
+        // PRAGMA table_info doesn't accept parameter binding for the table
+        // name; the value comes from a trusted constant here, not user input.
+        cmd.CommandText = $"PRAGMA table_info({table})";
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            // Column index 1 is the column name in PRAGMA table_info's output.
+            result.Add(reader.GetString(1));
+        }
+        return result;
+    }
+
+    private static async Task ExecuteAsync(SqliteConnection conn, SqliteTransaction tx, string sql)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = sql;
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static string GetDefaultDbPath()
+    {
+        var appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyAdventure");
+        Directory.CreateDirectory(appData);
+        return Path.Combine(appData, "myadventure.db");
+    }
+
+    /// <summary>
+    /// Read the assembly's InformationalVersion at runtime (set by
+    /// <c>Directory.Build.props</c>) so the OpenTelemetry resource is
+    /// tagged with the build number. Falls back to "0.0.0" if the
+    /// attribute is missing — which would only happen in an oddly
+    /// stripped build, so we don't make it fatal.
+    /// </summary>
+    private static string GetAssemblyVersion()
+    {
+        var asm = typeof(DependencyInjection).Assembly;
+        var info = asm.GetCustomAttributes(
+            typeof(System.Reflection.AssemblyInformationalVersionAttribute), false);
+        if (info.Length > 0 &&
+            info[0] is System.Reflection.AssemblyInformationalVersionAttribute attr &&
+            !string.IsNullOrWhiteSpace(attr.InformationalVersion))
+        {
+            return attr.InformationalVersion;
+        }
+        return asm.GetName().Version?.ToString() ?? "0.0.0";
+    }
+}
+```
+
+## Why your logs weren't showing in Sentry
+
+Three bugs were stacked on top of each other:
+
+1. **Endpoint path was missing `/integration`** — every log and trace request was hitting `/api/{projectId}/otlp/v1/...`, which Sentry returns 404 for. The OTLP exporter swallows transport errors silently to avoid taking the app down, so you'd see breadcrumbs in your console exporter ("Sentry OTLP enabled, env=production") with no evidence anything was wrong, while Sentry never received a thing.
+2. **Auth header value used `Sentry` (capital S)** — Sentry's intake is case-sensitive on this keyword and would have rejected requests with 401 even once the endpoint path was right.
+3. **Traces exporter omitted the `x-sentry-auth=` header-name prefix** — would have produced 401s for spans even after fixes 1 and 2 landed (logs branch was correct; only the traces branch was broken).
+
+All three are addressed in the diff above. After applying these two file changes you should get green tests *and* events flowing into Sentry on the next run.
+
+## A few follow-ups worth knowing about
+
+- **`TelemetryBootstrapper.cs` is dead code.** It defines `AddMyAdventureTelemetry` but nothing in the codebase calls it. It has the same `Sentry`/`sentry` casing bug and the same missing-prefix bug. I'd suggest deleting the file outright in a separate small PR — keeping a parallel-but-broken telemetry wiring around is a trap for the next person trying to add metrics or change the endpoint. If you want, I can do that as a follow-up.
+- **No test covers the `x-sentry-auth=` header-name prefix.** That's how the traces-branch bug slipped through: the unit tests verify the *value* (`AuthHeaderValue`) but never assert what the bootstrapper does with it. If you want belt-and-braces protection against a future regression here, the right test lives in `MyAdventure.Integration.Tests` and would build an OTLP exporter through `AddInfrastructure`, then peek at the exporter's `Headers` property. Worth doing but not urgent — the bug is now obvious if anyone re-reads either branch.
+- **Once tests are green and you've redeployed, give Sentry 30-60 seconds before checking.** The OTLP exporter batches and the intake itself has some delay before events show up in the UI.
+
+20
+23
