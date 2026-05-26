@@ -123,7 +123,7 @@ public class TelemetryConfigurationTests : IDisposable
         // OTLP only wants the public key — the parser must strip the
         // secret portion silently rather than treating it as part of the
         // key.
-        const string dsn = "https://pubkey:[email protected]/9";
+        const string dsn = "https://pubkey:potato@example.com/9";
         var parsed = SentryDsn.Parse(dsn);
         parsed.PublicKey.ShouldBe("pubkey");
     }
@@ -135,7 +135,7 @@ public class TelemetryConfigurationTests : IDisposable
     [InlineData("not-a-url")]
     [InlineData("ftp://x@example.com/1")]            // wrong scheme
     [InlineData("https://example.com/1")]            // no public key
-    [InlineData("https://[email protected]")]          // no project id
+    [InlineData("https://potato@example.com")]          // no project id
     public void SentryDsn_TryParse_RejectsInvalidInput(string? dsn)
     {
         var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
@@ -194,7 +194,7 @@ public class TelemetryConfigurationTests : IDisposable
         var json = new Dictionary<string, string?>
         {
             ["Telemetry:VerboseLogging"] = "true",
-            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
             ["Telemetry:Sentry:Environment"] = "staging",
             ["Telemetry:Sentry:TracesSampleRate"] = "0.25",
         };
@@ -203,7 +203,7 @@ public class TelemetryConfigurationTests : IDisposable
         var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, fallbackDsn: "");
 
         options.VerboseLogging.ShouldBeTrue();
-        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
         options.Sentry.Environment.ShouldBe("staging");
         options.Sentry.TracesSampleRate.ShouldBe(0.25);
     }
@@ -214,16 +214,16 @@ public class TelemetryConfigurationTests : IDisposable
         var json = new Dictionary<string, string?>
         {
             ["Telemetry:VerboseLogging"] = "false",
-            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
 
-        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
 
         var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, fallbackDsn: "");
 
-        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
         options.VerboseLogging.ShouldBeTrue();
     }
 
@@ -234,7 +234,7 @@ public class TelemetryConfigurationTests : IDisposable
     // the absence of every source should fall back to the constant in
     // TelemetryDefaults rather than disabling Sentry entirely.
 
-    private const string TestFallback = "https://[email protected]/9";
+    private const string TestFallback = "https://potato@example.com/9";
 
     [Fact]
     public void Loader_WithFallback_NoVarsSet_UsesFallbackDsn()
@@ -265,13 +265,13 @@ public class TelemetryConfigurationTests : IDisposable
     {
         var json = new Dictionary<string, string?>
         {
-            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
 
         var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
 
-        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+        options.Sentry.Dsn.ShouldBe("https://potato@example.com/1");
     }
 
     [Fact]
@@ -279,15 +279,15 @@ public class TelemetryConfigurationTests : IDisposable
     {
         var json = new Dictionary<string, string?>
         {
-            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+            ["Telemetry:Sentry:Dsn"] = "https://potato@example.com/1",
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(json).Build();
 
-        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://potato@example.com/2");
 
         var options = TelemetryConfigurationLoader.LoadFromConfiguration(config, TestFallback);
 
-        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+        options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
     }
 
     // --- Production compile-time fallback (TelemetryDefaults) ---------------
@@ -363,7 +363,7 @@ public class TelemetryConfigurationTests : IDisposable
             VerboseLogging = false,
             Sentry =
             {
-                Dsn = "https://[email protected]/2",
+                Dsn = "https://potato@example.com/2",
                 Environment = "test",
                 TracesSampleRate = 1.0,
             },

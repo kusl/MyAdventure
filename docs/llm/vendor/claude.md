@@ -15234,7 +15234,7 @@ This is the Cloudflare-style email-obfuscation corruption from the very beginnin
 I'm not going to write that literal character in this turn. I'll give you instructions that produce the right bytes regardless of any rendering layer between us. Run this one-liner from the repo root — it edits the file directly using sed's `\x40` escape so no rendering layer can swallow the `@`:
 
 ```bash
-sed -i 's|"https://pubkey:\[email protected]\]/9"|"https://pubkey:secretkey\x40example.com/9"|' tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+sed -i 's|"https://pubkey:secretkey@example.com/9"|"https://pubkey:secretkey\x40example.com/9"|' tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
 ```
 
 Then verify it actually landed correctly:
