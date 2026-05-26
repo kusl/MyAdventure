@@ -14398,3 +14398,176 @@ All three are addressed in the diff above. After applying these two file changes
 
 
 
+20
+23
+
+New test is failing? 
+[xUnit.net 00:00:01.17]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 failed with 1 error(s) (2.1s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs(110): error TESTERROR: 
+      MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat (< 1ms): Error Message: System.ArgumentException : DSN is not a valid absolute URI. (Parameter
+       'dsn')
+      Stack Trace:
+         at MyAdventure.Infrastructure.Telemetry.SentryDsn.Parse(String dsn) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs:line 110
+         at MyAdventure.Integration.Tests.TelemetryConfigurationTests.SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat() in /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryCo
+      nfigurationTests.cs:line 127
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test summary: total: 358, failed: 1, succeeded: 357, skipped: 0, duration: 2.2s
+Build failed with 1 error(s) in 3.6s
+
+Let me see the current state — only one test is failing, the legacy DSN one. Let me check the latest dump to see how my previous fix landed:Good — my fix landed exactly as written. Now let me trace through what's happening with the failing test input independently to find the bug in my own logic.
+
+The test DSN is `https://[email protected]/9`.
+
+Let me trace `StripLegacySecretKey` step by step on this input:
+
+- `schemeSeparator = dsn.IndexOf("://")` → `5` (the `://` after `https`)
+- `userInfoStart = 5 + 3 = 8`
+- `atSign = dsn.IndexOf('@', 8)` — looking for `@` starting at index 8 in `https://pubkey:secretkey@host/9`. Position 8 is `p` (start of `pubkey`). The `@` is between `secretkey` and `host`, so `atSign = 23` (counting: `pubkey` 6 chars + `:` + `secretkey` 9 chars = 16, so `8 + 16 = 24`... let me just be careful).
+
+Let me just compute this precisely:Found the bug. **There is no `@` in `pubkey:secretkey@example.com/9`.** I had misread the test DSN. Let me look at it again:
+
+```
+"https://[email protected]/9"
+```
+
+The `@` is part of `secretkey@example`, but that's how I see it visually. The actual structure here is:
+
+- `https://` (scheme + `://`)
+- `pubkey:secretkey` (the userinfo, no `@`)
+- `example` 
+- `.com/9`
+
+Wait, that can't be right either — every URL needs `@` to separate userinfo from host. Let me check the raw bytes:Mystery solved. The string was email-obfuscated somewhere in transit — `[email protected]` was rendered as `[email protected]` literally. This is *not* the actual test source. Let me look at the actual source file as it sits on disk in the test:The test source on disk is `"https://[email protected]/9"` — that's the literal string in the test. The `[email protected]` is markdown email obfuscation that exists *only in your dump.txt export script's rendering*, but the actual `.cs` file on disk has the real `pubkey:secretkey@example.com/9` form. The compiler is reading the *real* file, so the test really is parsing `https://[email protected]/9`.
+
+Let me re-trace my `StripLegacySecretKey` on the actual input:Wait — Python is *also* email-obfuscating? Let me look at the raw bytes again, but this time I'll search for `\x40` (the `@` character) in the source file rendering:**Confirmed: the source file on disk literally contains the string `https://[email protected]/9`.** The dump export script isn't obfuscating anything — that's the actual content of `TelemetryConfigurationTests.cs`. Something earlier in this project's pipeline replaced what was meant to be `pubkey:[email protected]` (or `pubkey@[email protected]/9` if the test author intended a different scheme) with the literal Cloudflare-style email-protection marker `[email protected]`.
+
+Now the picture is much clearer. The test compiles fine — `"https://[email protected]/9"` is a valid C# string literal. When passed to my parser:
+
+1. `Uri.TryCreate("https://[email protected]/9", Absolute, out uri)` — let me check what `Uri` does with that.No dotnet here. Let me just reason through it. I can verify the behaviour by checking the failure message from the test run — that gives me the definitive answer about what `Uri.TryCreate` does with this string:
+
+> `at MyAdventure.Infrastructure.Telemetry.SentryDsn.Parse(String dsn) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs:line 110`
+> `System.ArgumentException : DSN is not a valid absolute URI. (Parameter 'dsn')`
+
+Line 110 is exactly the `throw` on the failure branch of `Uri.TryCreate`. So `Uri.TryCreate("https://[email protected]/9", Absolute, …)` is returning **false** on the Fedora .NET 10 runtime, *and* my `StripLegacySecretKey` is returning the input unchanged (no `@`, no colon-in-userinfo, so it short-circuits). Result: parser dies.
+
+**Why does `Uri.TryCreate` reject `https://[email protected]/9`?** Because the bracket `[` in `[email]` triggers `Uri`'s IPv6 address parser. `https://[...]` is the syntax for `https://[2001:db8::1]/...`. The contents of the brackets must look like a valid IPv6 address, and `email protected` doesn't, so `Uri.TryCreate` rejects the whole string.
+
+So the test as written, with this literal string, has no path through the parser unless I either:
+
+1. **Pre-validate the test input differently** — but I shouldn't carve out special handling for what is clearly garbled data.
+2. **Recognise this for what it is: an upstream data corruption issue.** The dump export script (or whatever processed the original test file) replaced an email-like substring with the Cloudflare email-obfuscation placeholder `[email protected]`. This same corruption is now in the actual test source on disk. The test was originally meant to verify legacy `pubkey:[email protected]` parsing. After corruption it's now a different test that parses an invalid URL.
+
+## Where the corruption came from
+
+Look at the README in your project — that's the script doing it:OK — `export.sh` itself isn't doing the obfuscation. So the corruption is *already in the source file on disk*. That's where the bug lives. Most likely scenario: some web tool (a Cloudflare-protected viewer, or a chat platform's preview-renderer, or a clipboard paste from a browser) rendered an actual `pubkey:[email protected]/9` style URL with the literal `[email protected]` substitution at some earlier point, and that corrupted output got committed to the test source.
+
+You should verify this directly — open `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs` in your editor and look at line 126. If it really says `https://[email protected]/9` rather than something with a real `@` or colon, then that's the corruption.
+
+## The fix
+
+The right fix is to **restore the test's intended DSN** rather than warp the parser to accept Cloudflare email-protection placeholders. The test's docstring is clear about what it's testing: *"Old-style DSNs included a secret key after a colon. Sentry's OTLP only wants the public key — the parser must strip the secret portion silently rather than treating it as part of the key."*
+
+So the literal must contain a `:` and an `@` in the right places: `pubkey:secretkey@host/projectId`. Here's the one-line correction:
+
+### File: `tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs`
+
+Replace line 126 (the `const string dsn = …` inside `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat`) with:
+
+```csharp
+        const string dsn = "https://pubkey:[email protected]/9";
+```
+
+That's the entire fix. After this change:
+
+- `StripLegacySecretKey` sees `://` at position 5, `@` at position 23, finds the colon between `pubkey` and `secretkey` inside the userinfo, returns `("https://[email protected]/9", "secretkey")`.
+- `Uri.TryCreate` accepts the rewritten string.
+- `uri.UserInfo` is `pubkey`.
+- The test's `parsed.PublicKey.ShouldBe("pubkey")` passes.
+
+I'm giving you just the one-line patch rather than a full file rewrite because the rest of the test file is fine — only that single string literal needs to change. If you'd prefer the whole file regardless, say the word and I'll dump it.
+
+## How to check if other tests are similarly corrupted
+
+It's worth grepping for the placeholder across the whole repository in case the same paste-corruption hit other files:
+
+```sh
+grep -rn '\[email\xc2\xa0protected\]\|\[email protected\]' .
+```
+
+(That checks for both the non-breaking-space and ordinary-space variants of the Cloudflare placeholder.) If anything else turns up — README examples, other test DSNs, comments — fix the same way: replace `[email protected]` with what the original text should have been. Inside this codebase the original was almost certainly a literal `name@host`-style email or DSN.
+
+## Why I'm not "fixing" the parser instead
+
+It would be possible to harden `StripLegacySecretKey` to also detect `[email protected]`-style corruption and rewrite it back, but that's exactly the kind of bandaid your project policy explicitly forbids: papering over data corruption inside a URL parser that has no business knowing what Cloudflare's email-obfuscation widget looks like. The parser is correct; the test data is wrong. Fix the test data.
+
+Once that one-liner lands you should be back to 358/358 passing, with Sentry actually receiving events too thanks to the previous round of fixes.
+
+
+kushal@fedora:~/src/dotnet/MyAdventure$ grep -rn '\[email\xc2\xa0protected\]\|\[email protected\]' .
+grep: warning: stray \ before x
+grep: warning: stray \ before x
+./docs/llm/dump.txt:10826:        const string dsn = "https://[email protected]/9";
+./docs/llm/dump.txt:10838:    [InlineData("https://[email protected]")]          // no project id
+./docs/llm/dump.txt:10897:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10906:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/dump.txt:10917:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10921:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/dump.txt:10926:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/dump.txt:10937:    private const string TestFallback = "https://[email protected]/9";
+./docs/llm/dump.txt:10968:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10974:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/dump.txt:10982:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/dump.txt:10986:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/dump.txt:10990:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/dump.txt:11066:                Dsn = "https://[email protected]/2",
+./docs/llm/vendor/claude.md:10595:Now let me also look at an issue I forgot: my test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` has a DSN `https://[email protected]/2`. The OTLP exporter will try to flush spans/logs on shutdown. **Network calls happen on dispose** — and `Dispose` runs via the service provider GC. In my test, I don't dispose the provider explicitly, so it lives until the test class is collected. But xUnit calls `IDisposable.Dispose` on my test class, and the service provider is local to the test method (not stored on `this`), so it's also subject to GC.
+./docs/llm/vendor/claude.md:10603:Wait, I should also check whether my DSN parser is too strict. Looking at `[InlineData("https://[email protected]")]` (no project id) — `Uri.AbsolutePath` of `https://[email protected]` is `/`. So `Trim('/')` produces `""`. Split by `'/'` produces `[""]`. First element is `""`. So `IsNullOrWhiteSpace("")` is true. Error returned. ✅
+./docs/llm/vendor/claude.md:11880:        const string dsn = "https://[email protected]/9";
+./docs/llm/vendor/claude.md:11892:    [InlineData("https://[email protected]")]          // no project id
+./docs/llm/vendor/claude.md:11951:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:11965:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/vendor/claude.md:11976:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:11980:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/vendor/claude.md:11985:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/vendor/claude.md:12037:                Dsn = "https://[email protected]/2",
+./docs/llm/vendor/claude.md:12718:        const string dsn = "https://[email protected]/9";
+./docs/llm/vendor/claude.md:12730:    [InlineData("https://[email protected]")]          // no project id
+./docs/llm/vendor/claude.md:12789:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12798:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/vendor/claude.md:12809:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12813:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/vendor/claude.md:12818:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/vendor/claude.md:12829:    private const string TestFallback = "https://[email protected]/9";
+./docs/llm/vendor/claude.md:12860:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12866:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./docs/llm/vendor/claude.md:12874:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./docs/llm/vendor/claude.md:12878:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./docs/llm/vendor/claude.md:12882:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./docs/llm/vendor/claude.md:12958:                Dsn = "https://[email protected]/2",
+./docs/llm/vendor/claude.md:13626:- DSN: `https://[email protected]/9`
+./docs/llm/vendor/claude.md:13668:One last thing to verify before writing the fix: the test `SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat` expects `PublicKey = "pubkey"` from `https://[email protected]/9`. My fix needs to split the colon-form *before* handing the string to `Uri.TryCreate`. Let me also double-check what `Uri` returns for `UserInfo` when there *is* an `@` but no colon — it returns the whole left side, so the existing post-split logic is fine for the modern single-key form. The pre-split only needs to handle the legacy form.
+grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/refint/MyAdventure.Integration.Tests.dll: binary file matches
+grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/ref/MyAdventure.Integration.Tests.dll: binary file matches
+grep: ./tests/MyAdventure.Integration.Tests/obj/Debug/net10.0/MyAdventure.Integration.Tests.dll: binary file matches
+grep: ./tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll: binary file matches
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:126:        const string dsn = "https://[email protected]/9";
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:138:    [InlineData("https://[email protected]")]          // no project id
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:197:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:206:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:217:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:221:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:226:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:237:    private const string TestFallback = "https://[email protected]/9";
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:268:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:274:        options.Sentry.Dsn.ShouldBe("https://[email protected]/1");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:282:            ["Telemetry:Sentry:Dsn"] = "https://[email protected]/1",
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:286:        SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, "https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:290:        options.Sentry.Dsn.ShouldBe("https://[email protected]/2");
+./tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs:366:                Dsn = "https://[email protected]/2",
+kushal@fedora:~/src/dotnet/MyAdventure$ 
+
+25
+24
