@@ -13017,3 +13017,211 @@ The full README is in the attached files. The changes vs the previous version ar
 
 100
 10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+00
+22
+
+I tried to fix things because I didn't see the logs show up in sentry but I think I made it worse. 
+  MyAdventure.Core net10.0 succeeded (4.2s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.9s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (1.0s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net10.0 failed with 11 error(s) and 1 warning(s) (0.4s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(141,37): warning CS8604: Possible null reference argument for parameter 'dsn' in 'bool SentryDsn.TryParse(string dsn, out SentryDsn? parsed, out string? error)'.
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(156,72): error CS1739: The best overload for 'LoadFromEnvironment' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(169,72): error CS1739: The best overload for 'LoadFromEnvironment' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(187,72): error CS1739: The best overload for 'LoadFromEnvironment' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(203,82): error CS1739: The best overload for 'LoadFromConfiguration' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(224,82): error CS1739: The best overload for 'LoadFromConfiguration' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(242,52): error CS1501: No overload for method 'LoadFromEnvironment' takes 1 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(258,52): error CS1501: No overload for method 'LoadFromConfiguration' takes 2 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(272,52): error CS1501: No overload for method 'LoadFromConfiguration' takes 2 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(288,52): error CS1501: No overload for method 'LoadFromConfiguration' takes 2 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(302,39): error CS0122: 'TelemetryDefaults' is inaccessible due to its protection level
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(309,37): error CS0122: 'TelemetryDefaults' is inaccessible due to its protection level
+  MyAdventure.Shared net10.0 succeeded (1.6s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.7s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (1.9s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Android net10.0-android succeeded (36.5s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+
+Build failed with 11 error(s) and 1 warning(s) in 44.9s
+
+real	0m45.262s
+user	2m16.937s
+sys	0m6.437s
+Restore complete (1.0s)
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Integration.Tests net10.0 failed with 11 error(s) and 1 warning(s) (0.3s)
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(141,37): warning CS8604: Possible null reference argument for parameter 'dsn' in 'bool SentryDsn.TryParse(string dsn, out SentryDsn? parsed, out string? error)'.
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(156,72): error CS1739: The best overload for 'LoadFromEnvironment' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(169,72): error CS1739: The best overload for 'LoadFromEnvironment' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(187,72): error CS1739: The best overload for 'LoadFromEnvironment' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(203,82): error CS1739: The best overload for 'LoadFromConfiguration' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(224,82): error CS1739: The best overload for 'LoadFromConfiguration' does not have a parameter named 'fallbackDsn'
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(242,52): error CS1501: No overload for method 'LoadFromEnvironment' takes 1 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(258,52): error CS1501: No overload for method 'LoadFromConfiguration' takes 2 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(272,52): error CS1501: No overload for method 'LoadFromConfiguration' takes 2 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(288,52): error CS1501: No overload for method 'LoadFromConfiguration' takes 2 arguments
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(302,39): error CS0122: 'TelemetryDefaults' is inaccessible due to its protection level
+    /home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs(309,37): error CS0122: 'TelemetryDefaults' is inaccessible due to its protection level
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.11]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.23]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.31]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.12]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.17]   Discovered:  MyAdventure.UI.Tests
+[xUnit.net 00:00:00.20]   Starting:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.42]   Finished:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.74]   Finished:    MyAdventure.Core.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (1.3s)
+  MyAdventure.Core.Tests test net10.0 succeeded (1.7s)
+
+Test summary: total: 316, failed: 0, succeeded: 316, skipped: 0, duration: 1.7s
+Build failed with 11 error(s) and 1 warning(s) in 3.2s
+
+real	0m3.450s
+user	0m2.371s
+sys	0m0.555s
+Restore complete (0.9s)
+
+Build succeeded in 1.1s
+
+
+Skip to main content
+Settings
+Client Keys
+To send data to Sentry you will need to configure an SDK with a client key (usually referred to as the SENTRY_DSN value). For more information on integrating Sentry with your application take a look at our documentation.
+Default
+Configure
+DSN
+The DSN tells the SDK where to send the events to. Show deprecated DSN
+https://fe6ae5ee15285c313b8171bb7a5a4ad0@o4511444968079360.ingest.de.sentry.io/4511444969390160
+    OpenTelemetry (OTLP)
+    Security Header
+    Minidump
+    Unreal Engine
+    Vercel Drains
+
+OTLP Endpoint
+The base OTLP endpoint for your project.
+https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp
+
+OTLP Logs Endpoint
+Set this URL as your OTLP exporter's log endpoint. Learn more
+https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/logs
+
+OTLP Logs Endpoint Headers
+Set these security headers when configuring your OTLP exporter.
+x-sentry-auth=sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0
+
+OTLP Traces Endpoint
+Set this URL as your OTLP exporter's trace endpoint. Learn more
+https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/traces
+
+OTLP Traces Endpoint Headers
+Set these security headers when configuring your OTLP exporter.
+
+x-sentry-auth=sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0
+
+
+OpenTelemetry Collector Exporter Configuration
+Use this example configuration in your OpenTelemetry Collector config file to export OTLP data to Sentry.
+config.yaml
+
+exporters:
+  otlphttp:
+    logs_endpoint: https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/logs
+    traces_endpoint: https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/integration/otlp/v1/traces
+    headers:
+      x-sentry-auth: "sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0"
+    compression: gzip
+    encoding: proto
+    timeout: 30s
+
