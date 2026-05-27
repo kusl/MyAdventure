@@ -3,6 +3,15 @@ namespace MyAdventure.Core.Entities;
 /// <summary>
 /// A milestone threshold that grants a revenue multiplier when reached.
 /// Adventure Capitalist style: owning X units of a business multiplies its revenue.
+/// <para>
+/// <b>Owned-parameter widening:</b> all milestone helpers accept
+/// <see cref="long"/> for the owned count to match
+/// <see cref="Business.Owned"/>'s widened type. The thresholds themselves
+/// stay <see cref="int"/> — they are small, bounded constants — but the
+/// caller-supplied count can be arbitrarily large. <c>int</c>-typed
+/// arguments at call sites widen implicitly, so the existing test suite
+/// continues to compile without edits.
+/// </para>
 /// </summary>
 public record Milestone(int Threshold, double Multiplier, string Label)
 {
@@ -27,7 +36,7 @@ public record Milestone(int Threshold, double Multiplier, string Label)
     /// Calculate the combined multiplier for a given ownership count.
     /// Each milestone compounds multiplicatively.
     /// </summary>
-    public static double CalculateMultiplier(int owned, IReadOnlyList<Milestone>? milestones = null)
+    public static double CalculateMultiplier(long owned, IReadOnlyList<Milestone>? milestones = null)
     {
         milestones ??= Defaults;
         var mult = 1.0;
@@ -43,7 +52,7 @@ public record Milestone(int Threshold, double Multiplier, string Label)
     /// Find the next milestone the player hasn't reached yet.
     /// Returns null if all milestones are reached.
     /// </summary>
-    public static Milestone? NextMilestone(int owned, IReadOnlyList<Milestone>? milestones = null)
+    public static Milestone? NextMilestone(long owned, IReadOnlyList<Milestone>? milestones = null)
     {
         milestones ??= Defaults;
         foreach (var m in milestones)
@@ -54,11 +63,16 @@ public record Milestone(int Threshold, double Multiplier, string Label)
         return null;
     }
 
-    /// <summary>How many more units needed to reach the next milestone.</summary>
-    public static int UnitsToNext(int owned, IReadOnlyList<Milestone>? milestones = null)
+    /// <summary>
+    /// How many more units needed to reach the next milestone. Returns 0
+    /// when no milestones remain. Returns a non-negative value even when
+    /// <paramref name="owned"/> happens to land exactly on a threshold
+    /// (in which case the "next" milestone is the one AFTER that).
+    /// </summary>
+    public static long UnitsToNext(long owned, IReadOnlyList<Milestone>? milestones = null)
     {
         var next = NextMilestone(owned, milestones);
-        return next is null ? 0 : next.Threshold - owned;
+        return next is null ? 0L : next.Threshold - owned;
     }
 }
 
@@ -85,7 +99,7 @@ public record Milestone(int Threshold, double Multiplier, string Label)
 /// (<see cref="Business.CycleTimeSeconds"/>) and further halvings would
 /// quickly underflow when combined with a small base time. The
 /// second-axis cross-business bonus (<see cref="CrossBusinessSpeedBonus"/>)
-/// is what scales without bound — it's a <see cref="BigDouble"/>
+/// is what scales without bound — it's a <see cref="MyAdventure.Core.Numerics.BigDouble"/>
 /// revenue multiplier and has no ceiling.
 /// </para>
 ///
@@ -99,6 +113,13 @@ public record Milestone(int Threshold, double Multiplier, string Label)
 /// the next tick via <c>ProgressPercent %= 100.0</c>. The
 /// <c>SubFrameCycleTests</c> invariants pin this behavior so future
 /// refactors can't break it.
+/// </para>
+///
+/// <para>
+/// <b>Owned-parameter widening (matching <see cref="Milestone"/>):</b>
+/// all speed-milestone helpers accept <see cref="long"/>. The defaults'
+/// <see cref="Threshold"/> field stays <see cref="int"/> since the table
+/// is bounded; only the caller-supplied owned count widens.
 /// </para>
 /// </summary>
 public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string Label)
@@ -127,7 +148,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
     /// below the first threshold this is exactly 1.0, leaving early-game
     /// balance untouched.
     /// </summary>
-    public static double CalculateCycleTimeMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    public static double CalculateCycleTimeMultiplier(long owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
         milestones ??= Defaults;
         var mult = 1.0;
@@ -143,7 +164,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
     /// Convenience: cumulative speed multiplier (the reciprocal of the
     /// cycle-time multiplier). Useful for UI display ("×64 Speed").
     /// </summary>
-    public static double CalculateSpeedMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    public static double CalculateSpeedMultiplier(long owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
         var cycleMult = CalculateCycleTimeMultiplier(owned, milestones);
         return cycleMult > 0 ? 1.0 / cycleMult : 1.0;
@@ -153,7 +174,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
     /// Find the next speed milestone the player hasn't reached yet.
     /// Returns null if all speed milestones are reached.
     /// </summary>
-    public static SpeedMilestone? NextSpeedMilestone(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    public static SpeedMilestone? NextSpeedMilestone(long owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
         milestones ??= Defaults;
         foreach (var m in milestones)

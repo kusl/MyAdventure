@@ -17,6 +17,27 @@ namespace MyAdventure.Core.Entities;
 /// player saturated cash. They are now <see cref="BigDouble"/>, which has
 /// no practical ceiling and lets growth continue forever.
 /// </para>
+///
+/// <para>
+/// <b>Owned is a <see cref="long"/>, not an <see cref="int"/>.</b> Ownership
+/// counts in this game can and do exceed 2³¹. A player who lets prestige
+/// stack and bulk-buys at scale will hit ~4 billion units of a single
+/// business within an afternoon. Under the prior <c>int</c> field,
+/// <see cref="GameEngine.BuyMultiple"/> wrapped at 2³¹: a +1B purchase on
+/// top of 3B owned silently became −294,966,296 — corrupting every
+/// downstream calculation (revenue went negative, <see cref="NextCost"/>
+/// collapsed to <c>BaseCost × CostMultiplier^(huge negative)</c>, i.e. a
+/// vanishingly tiny positive, which made every subsequent bulk-buy
+/// "free" and accelerated the corruption). <see cref="long"/> gives us
+/// 9.2 × 10¹⁸ — at one purchase per microsecond, ~292,000 years. The same
+/// "you won't reach this from the Big Bang" criterion the BigDouble
+/// comments hold themselves to. Saves are JSON-encoded so the on-disk
+/// format absorbs the widening transparently; old saves with int-range
+/// values round-trip into <c>long</c> without migration. Hand-edited
+/// saves with values past <c>int.MaxValue</c> now load correctly instead
+/// of throwing inside <c>JsonElement.GetInt32</c>.
+/// </para>
+///
 /// <para>
 /// Definitional inputs (<see cref="BaseCost"/>, <see cref="BaseRevenue"/>,
 /// <see cref="BaseTimeSeconds"/>, <see cref="CostMultiplier"/>) stay as
@@ -59,7 +80,13 @@ public record Business
     /// <summary>Geometric scaling factor on cost per additional unit (e.g. 1.07).</summary>
     public required double CostMultiplier { get; init; }
 
-    public int Owned { get; set; }
+    /// <summary>
+    /// Number of units owned. <see cref="long"/>, not <see cref="int"/> —
+    /// see the type-level remark on this record for the overflow history
+    /// that drove the widening.
+    /// </summary>
+    public long Owned { get; set; }
+
     public bool HasManager { get; set; }
     public double ProgressPercent { get; set; }
     public bool IsRunning { get; set; }
@@ -71,9 +98,16 @@ public record Business
     /// representable value (the prior <c>Math.Pow</c>-based formulation
     /// overflowed to <see cref="double.PositiveInfinity"/> around
     /// <c>1.11^7000</c> and forced an artificial clamp).
+    /// <para>
+    /// <see cref="Owned"/> is widened to <see cref="double"/> for the
+    /// exponent because <see cref="BigDouble.Pow(double)"/> takes a
+    /// double. Precision loss in that conversion only matters past
+    /// 2⁵³ ≈ 9 × 10¹⁵ owned, at which point unit-level cost precision is
+    /// already invisible relative to the geometric growth.
+    /// </para>
     /// </summary>
     public BigDouble NextCost =>
-        new BigDouble(BaseCost) * new BigDouble(CostMultiplier).Pow(Owned);
+        new BigDouble(BaseCost) * new BigDouble(CostMultiplier).Pow((double)Owned);
 
     /// <summary>
     /// Revenue per cycle with current units owned, including the
@@ -113,7 +147,11 @@ public record Business
         get
         {
             if (Owned <= 1000) return BigDouble.One;
-            return new BigDouble(CostMultiplier).Pow((Owned - 1000) / 2.0);
+            // (Owned - 1000) / 2.0 widens to double via Owned cast. Even
+            // at long.MaxValue this is well within double's exponent
+            // range; precision past 2⁵³ doesn't matter for the same
+            // reason it doesn't matter in NextCost.
+            return new BigDouble(CostMultiplier).Pow((Owned - 1000L) / 2.0);
         }
     }
 
@@ -149,16 +187,30 @@ public record Business
     /// then). The closed form is O(1) regardless of how many units the
     /// player can afford.
     /// </para>
+    /// <para>
+    /// <b>Return type is <see cref="long"/>.</b> The prior <c>int</c>
+    /// return type and 1-billion safety cap were the proximate cause of
+    /// the wraparound exploit: a player with ~3B units of a business
+    /// would request a billion more, the call would succeed, and
+    /// <see cref="GameEngine.BuyMultiple"/> would add it to an int Owned
+    /// field that promptly overflowed to negative. The cap is still
+    /// here — long-range arithmetic is happy to compute arbitrary
+    /// affordable counts, but we don't want a single batch purchase to
+    /// take ten billion units in one go for UX/observability reasons.
+    /// The cap is now <c>long.MaxValue / 4</c>, far past any reasonable
+    /// batch, while still leaving headroom for downstream arithmetic
+    /// (<c>Owned + cap</c>) to never overflow.
+    /// </para>
     /// </summary>
-    public int AffordableCount(BigDouble cash)
+    public long AffordableCount(BigDouble cash)
     {
-        if (cash.IsNaN || cash.Sign <= 0) return 0;
+        if (cash.IsNaN || cash.Sign <= 0) return 0L;
         // Infinite cash: return the practical cap. This shouldn't appear
         // in normal gameplay (the engine sanitizes Infinity → 0 on every
         // monetary path), but a defensive answer beats returning 0 from
         // the log-based formula below, which would interpret +∞ → log10(+∞) → +∞
         // → !IsFinite → return 0.
-        if (cash.IsInfinity) return 1_000_000_000;
+        if (cash.IsInfinity) return PracticalBatchCap;
 
         if (BaseCost <= 0 || CostMultiplier <= 1.0)
         {
@@ -166,23 +218,22 @@ public record Business
             // multiplier would make the analytic formula misbehave. The
             // production balance table never hits these cases, but tests
             // exercising "free" or unusual businesses can.
-            if (BaseCost <= 0) return int.MaxValue / 2;
+            if (BaseCost <= 0) return PracticalBatchCap;
 
             // CostMultiplier == 1.0: every unit costs the same as the
             // first, so affordable count is plain floor(cash / NextCost).
             var perUnit = NextCost;
-            if (perUnit.IsZero) return int.MaxValue / 2;
+            if (perUnit.IsZero) return PracticalBatchCap;
             var rawCount = cash / perUnit;
             var asDouble = rawCount.ToDouble();
-            return double.IsFinite(asDouble) && asDouble > 0
-                ? (int)Math.Min(asDouble, int.MaxValue / 2)
-                : 0;
+            if (!double.IsFinite(asDouble) || asDouble <= 0) return 0L;
+            return (long)Math.Min(asDouble, (double)PracticalBatchCap);
         }
 
         // First-unit cost at the current owned count.
         var c0 = NextCost;
-        if (c0.IsZero) return int.MaxValue / 2;
-        if (cash < c0) return 0;
+        if (c0.IsZero) return PracticalBatchCap;
+        if (cash < c0) return 0L;
 
         // Maximum n satisfying c0 × (r^n - 1) / (r - 1) ≤ cash, i.e.
         //   r^n ≤ 1 + cash × (r - 1) / c0
@@ -196,14 +247,26 @@ public record Business
         // Convert to a double for the final log; log10 of a BigDouble
         // is always representable as a double (it's just an exponent + a tiny mantissa log).
         var logThreshold = threshold.Log10();
-        if (!double.IsFinite(logThreshold) || logThreshold <= 0) return 0;
+        if (!double.IsFinite(logThreshold) || logThreshold <= 0) return 0L;
 
         var n = Math.Floor(logThreshold / Math.Log10(r));
 
-        // Cap at a sensible int range. 1e9 affordable units is already
-        // far past any reasonable purchase batch.
-        if (n <= 0) return 0;
-        if (n > 1_000_000_000) return 1_000_000_000;
-        return (int)n;
+        // Cap at the practical batch limit (still long-range; see remarks
+        // on the property). 1e9 used to be the cap and is well past any
+        // human "buy max" intent for a single batch.
+        if (n <= 0) return 0L;
+        if (n >= (double)PracticalBatchCap) return PracticalBatchCap;
+        return (long)n;
     }
+
+    /// <summary>
+    /// Per-call cap on <see cref="AffordableCount"/> and
+    /// <see cref="GameEngine.BuyMultiple"/>. Kept well below
+    /// <see cref="long.MaxValue"/> so that <c>Owned + cap</c> can never
+    /// overflow even when called repeatedly against an already-huge
+    /// ownership count. <c>long.MaxValue / 4</c> ≈ 2.3 × 10¹⁸ — at one
+    /// batch per microsecond, ~73,000 years to overflow even by
+    /// chaining max-cap batches back to back.
+    /// </summary>
+    public const long PracticalBatchCap = long.MaxValue / 4;
 }

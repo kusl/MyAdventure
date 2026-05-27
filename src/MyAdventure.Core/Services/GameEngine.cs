@@ -263,21 +263,41 @@ public class GameEngine(
     ///         safety loop would silently cap at.</item>
     ///   <item>Uses <see cref="Business.AffordableCount(BigDouble)"/> to make
     ///         "buy as many as you can afford" trivial — the buy-max path
-    ///         passes <see cref="int.MaxValue"/>.</item>
+    ///         passes <see cref="long.MaxValue"/>.</item>
     /// </list>
+    /// <para>
+    /// <b>Why <see cref="long"/> count/return (not <see cref="int"/>):</b>
+    /// the prior <c>int</c> signature was the proximate cause of the
+    /// production wraparound bug. A player with ~3 billion units of a
+    /// business and a +1B bulk-buy request would land at
+    /// <c>biz.Owned + toBuy = 4,000,000,000</c> — which silently wrapped
+    /// the int32 sum to <c>-294,966,296</c>, corrupting every downstream
+    /// calculation (revenue went negative, <see cref="Business.NextCost"/>
+    /// collapsed to a sub-attorobust value, the next "buy max" looked
+    /// free). Widening to <c>long</c> end-to-end — Business.Owned,
+    /// AffordableCount return, this method's parameter and return — makes
+    /// the overflow unreachable from gameplay.
+    /// </para>
     /// </summary>
-    public int BuyMultiple(string businessId, int count)
+    public long BuyMultiple(string businessId, long count)
     {
         var biz = Businesses.FirstOrDefault(b => b.Id == businessId);
-        if (biz is null || count <= 0) return 0;
+        if (biz is null || count <= 0L) return 0L;
 
-        // Cap by affordability so the call can never overspend.
+        // Cap by affordability so the call can never overspend. Both
+        // sides are long; AffordableCount already enforces an internal
+        // per-call cap (Business.PracticalBatchCap) chosen so that
+        // Owned + cap never overflows long even when chained.
         var affordable = biz.AffordableCount(Cash);
         var toBuy = Math.Min(count, affordable);
-        if (toBuy <= 0) return 0;
+        if (toBuy <= 0L) return 0L;
 
         // Cumulative geometric cost: c₀ × (rⁿ - 1) / (r - 1).
         // r and (r - 1) are doubles in the balance table; the result is BigDouble.
+        // toBuy widens to double inside Pow — the same precision argument
+        // that lets NextCost use Math.Pow(CostMultiplier, Owned) applies
+        // here (only matters past 2⁵³, far past where the analytic formula
+        // would have already been bound by AffordableCount).
         var r = biz.CostMultiplier;
         BigDouble totalCost;
         if (r == 1.0)
@@ -287,30 +307,42 @@ public class GameEngine(
         }
         else
         {
-            var rPowN = new BigDouble(r).Pow(toBuy);
+            var rPowN = new BigDouble(r).Pow((double)toBuy);
             totalCost = biz.NextCost * (rPowN - BigDouble.One) / new BigDouble(r - 1.0);
         }
 
         // Defensive: if the geometric-series math somehow produced a
         // larger total than cash (e.g. rounding pushed the boundary), back
         // off by one. This protects the player from a transient overdraft
-        // due to floating-point noise.
-        while (toBuy > 0 && Cash < totalCost)
+        // due to floating-point noise. The analytic formula is correct to
+        // within a unit or two, so this loop runs at most a small handful
+        // of iterations — a SafetyBound caps it absolutely to prevent
+        // any pathological case from spinning at huge counts.
+        const int BackoffSafetyBound = 32;
+        var backoffSteps = 0;
+        while (toBuy > 0L && Cash < totalCost && backoffSteps < BackoffSafetyBound)
         {
             toBuy--;
-            if (toBuy == 0) { totalCost = BigDouble.Zero; break; }
+            backoffSteps++;
+            if (toBuy == 0L) { totalCost = BigDouble.Zero; break; }
             if (r == 1.0)
             {
                 totalCost = biz.NextCost * toBuy;
             }
             else
             {
-                var rPowN = new BigDouble(r).Pow(toBuy);
+                var rPowN = new BigDouble(r).Pow((double)toBuy);
                 totalCost = biz.NextCost * (rPowN - BigDouble.One) / new BigDouble(r - 1.0);
             }
         }
 
-        if (toBuy <= 0) return 0;
+        if (toBuy <= 0L) return 0L;
+        // If we exited via the safety bound rather than satisfying the
+        // affordability constraint, refuse the purchase rather than risk
+        // overspending. This branch is effectively unreachable with the
+        // analytic AffordableCount formula but exists so a future bug in
+        // that formula cannot lead to silent overdraft.
+        if (Cash < totalCost) return 0L;
 
         Cash = SanitizeMoney(Cash - totalCost);
         biz.Owned += toBuy;
@@ -329,10 +361,14 @@ public class GameEngine(
 
     /// <summary>
     /// Buy as many units of a business as the player can afford right now.
-    /// Equivalent to <see cref="BuyMultiple"/> with <see cref="int.MaxValue"/>
-    /// but reads more clearly at the call site.
+    /// Equivalent to <see cref="BuyMultiple"/> with <see cref="long.MaxValue"/>
+    /// but reads more clearly at the call site. The per-call cap inside
+    /// <see cref="Business.AffordableCount"/> means the actual upper
+    /// bound is <see cref="Business.PracticalBatchCap"/>, well below
+    /// long.MaxValue — leaving headroom so that <c>Owned + bought</c>
+    /// can never overflow even if a player chains buy-max calls.
     /// </summary>
-    public int BuyMax(string businessId) => BuyMultiple(businessId, int.MaxValue);
+    public long BuyMax(string businessId) => BuyMultiple(businessId, long.MaxValue);
 
     /// <summary>Buy a manager for a business. Cost = 1000x base cost.</summary>
     public bool BuyManager(string businessId)
@@ -457,12 +493,12 @@ public class GameEngine(
         get
         {
             if (Businesses.Count == 0) return BigDouble.One;
-            var minOwned = int.MaxValue;
+            var minOwned = long.MaxValue;
             foreach (var biz in Businesses)
             {
                 if (biz.Owned < minOwned) minOwned = biz.Owned;
             }
-            if (minOwned < 0) minOwned = 0; // defensive: corrupted save
+            if (minOwned < 0L) minOwned = 0L; // defensive: corrupted save
             return CrossBusinessSpeedBonus.CalculateSpeedMultiplier(minOwned);
         }
     }
@@ -471,18 +507,24 @@ public class GameEngine(
     /// The minimum ownership count across all businesses — the input to
     /// the cross-business bonus. Exposed for the UI's "next threshold"
     /// hint so the player can see which business is gating progression.
+    /// <para>
+    /// Returns <see cref="long"/> to match <see cref="Business.Owned"/>'s
+    /// widened type. Negative inputs (corrupted save state) are clamped
+    /// to zero — see CrossBusinessSpeedMultiplier for the same clamp on
+    /// the multiplier path.
+    /// </para>
     /// </summary>
-    public int MinOwnedAcrossBusinesses
+    public long MinOwnedAcrossBusinesses
     {
         get
         {
-            if (Businesses.Count == 0) return 0;
-            var minOwned = int.MaxValue;
+            if (Businesses.Count == 0) return 0L;
+            var minOwned = long.MaxValue;
             foreach (var biz in Businesses)
             {
                 if (biz.Owned < minOwned) minOwned = biz.Owned;
             }
-            return minOwned < 0 ? 0 : minOwned;
+            return minOwned < 0L ? 0L : minOwned;
         }
     }
 
@@ -578,10 +620,15 @@ public class GameEngine(
         if (string.IsNullOrWhiteSpace(json) || json == "{}") return;
         try
         {
-            var data = JsonSerializer.Deserialize<Dictionary<string, int>>(json) ?? [];
+            // Deserialize as long, not int. Old saves with int-range
+            // values widen cleanly; hand-edited saves with values past
+            // int.MaxValue now load correctly instead of throwing
+            // inside the JSON reader. Math.Max(0, owned) clamps any
+            // negative-corrupted historical save to a playable zero.
+            var data = JsonSerializer.Deserialize<Dictionary<string, long>>(json) ?? [];
             foreach (var biz in Businesses)
                 if (data.TryGetValue(biz.Id, out var owned))
-                    biz.Owned = Math.Max(0, owned);
+                    biz.Owned = Math.Max(0L, owned);
         }
         catch (JsonException ex)
         {
@@ -690,10 +737,14 @@ public class GameEngine(
 
             if (data.TryGetValue("businesses", out var bizEl))
             {
-                var bizData = JsonSerializer.Deserialize<Dictionary<string, int>>(bizEl.GetRawText()) ?? [];
+                // Deserialize as long for the same reason as
+                // ApplyBusinessData — hand-edited saves with values past
+                // int.MaxValue must load correctly, and old saves with
+                // int-range values widen cleanly with no migration.
+                var bizData = JsonSerializer.Deserialize<Dictionary<string, long>>(bizEl.GetRawText()) ?? [];
                 foreach (var biz in Businesses)
                     if (bizData.TryGetValue(biz.Id, out var owned))
-                        biz.Owned = Math.Max(0, owned);
+                        biz.Owned = Math.Max(0L, owned);
             }
 
             if (data.TryGetValue("managers", out var mgrEl))

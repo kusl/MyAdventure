@@ -70,9 +70,35 @@ namespace MyAdventure.Core.Entities;
 /// non-finite values to safe defaults. There is no path by which a
 /// finite ownership count can produce a non-finite cash value.
 /// </para>
+///
+/// <para>
+/// <b>Owned-parameter widening (matching <see cref="Business.Owned"/>):</b>
+/// every method takes <see cref="long"/> for the minimum-owned input,
+/// because the minimum across the business roster is itself a
+/// <see cref="long"/> now. <see cref="BonusCount"/> still returns
+/// <see cref="long"/> — at <c>minOwned = long.MaxValue</c> the count is
+/// ~9 × 10¹⁶ which is still well below <see cref="long.MaxValue"/>, and
+/// we additionally clamp at <see cref="MaxStacks"/> to keep the
+/// downstream <see cref="BigDouble.Pow(double)"/> in a regime where its
+/// exponent fits a <see cref="long"/>. Negative inputs (corrupted save
+/// state) are treated as zero in <see cref="BonusCount"/> itself, so a
+/// caller is freed from defensive clamping.
+/// </para>
 /// </summary>
 public static class CrossBusinessSpeedBonus
 {
+    /// <summary>
+    /// Saturation cap on the number of cross-business stacks. At this
+    /// many stacks the multiplier is <c>2^MaxStacks</c>, which translates
+    /// to a BigDouble exponent of <c>MaxStacks × log10(2) ≈ 3 × 10¹⁴</c>
+    /// — large but well within <see cref="long"/>. The cap exists purely
+    /// to keep <see cref="BigDouble.Pow(double)"/> in a regime where its
+    /// own exponent never overflows <see cref="long"/>, even with a
+    /// hand-edited save claiming minimum-owned in the quintillions. No
+    /// real player will ever notice it.
+    /// </summary>
+    public const long MaxStacks = 1_000_000_000_000_000L; // 10^15
+
     /// <summary>
     /// How many cross-business bonus stacks the player has earned for a
     /// given minimum ownership count across all businesses. The first
@@ -88,21 +114,30 @@ public static class CrossBusinessSpeedBonus
     /// <returns>
     /// The number of ×2 stacks granted (0 at minOwned &lt; 25; 1 at
     /// 25–49; 2 at 50–99; …; 6 at 400–499; 7 at 500–599; …). Grows
-    /// linearly past 400 with one stack per +100 owned, forever.
+    /// linearly past 400 with one stack per +100 owned, forever, but
+    /// saturates at <see cref="MaxStacks"/>.
     /// </returns>
-    public static int BonusCount(int minOwnedAcrossBusinesses)
+    public static long BonusCount(long minOwnedAcrossBusinesses)
     {
-        if (minOwnedAcrossBusinesses < 25) return 0;
-        if (minOwnedAcrossBusinesses < 50) return 1;
-        if (minOwnedAcrossBusinesses < 100) return 2;
-        if (minOwnedAcrossBusinesses < 200) return 3;
-        if (minOwnedAcrossBusinesses < 300) return 4;
-        if (minOwnedAcrossBusinesses < 400) return 5;
+        if (minOwnedAcrossBusinesses < 25) return 0L;
+        if (minOwnedAcrossBusinesses < 50) return 1L;
+        if (minOwnedAcrossBusinesses < 100) return 2L;
+        if (minOwnedAcrossBusinesses < 200) return 3L;
+        if (minOwnedAcrossBusinesses < 300) return 4L;
+        if (minOwnedAcrossBusinesses < 400) return 5L;
         // Past 400: 6 base stacks plus one per full +100 owned.
         // Integer division floors toward zero, which is exactly what
         // we want — a player at 499 has the same 6 stacks as one at 400,
         // and only crossing into 500 grants the 7th stack.
-        return 6 + (minOwnedAcrossBusinesses - 400) / 100;
+        //
+        // Saturate at MaxStacks. (minOwned - 400) / 100 is at most
+        // (long.MaxValue - 400) / 100 ≈ 9.2 × 10¹⁶, still inside long,
+        // but past MaxStacks the BigDouble exponent in
+        // CalculateSpeedMultiplier would saturate anyway — capping here
+        // is purely so the saturation is observable and predictable.
+        var extra = (minOwnedAcrossBusinesses - 400L) / 100L;
+        var total = 6L + extra;
+        return total > MaxStacks ? MaxStacks : total;
     }
 
     /// <summary>
@@ -113,20 +148,22 @@ public static class CrossBusinessSpeedBonus
     /// Returns <see cref="BigDouble.One"/> when no stacks have been
     /// earned (early game), guaranteeing exact-1.0 semantics for tests
     /// that pin "no cross-business effect below 25 owned of every
-    /// business". Past that, climbs without bound.
+    /// business". Past that, climbs without bound (up to the
+    /// <see cref="MaxStacks"/> saturation cap, which is practically
+    /// unreachable).
     /// </para>
     /// </summary>
-    public static BigDouble CalculateSpeedMultiplier(int minOwnedAcrossBusinesses)
+    public static BigDouble CalculateSpeedMultiplier(long minOwnedAcrossBusinesses)
     {
         var count = BonusCount(minOwnedAcrossBusinesses);
-        if (count == 0) return BigDouble.One;
+        if (count == 0L) return BigDouble.One;
 
         // BigDouble.Pow uses a log-based formulation (10^(power × log10(this))),
         // so even huge exponents stay representable without iterative
-        // multiplication. At absurdly large counts it saturates to
-        // BigDouble.PositiveInfinity rather than wrapping; the engine's
-        // SanitizeMoney layer catches that defensively.
-        return new BigDouble(2.0).Pow(count);
+        // multiplication. The MaxStacks cap keeps the exponent within
+        // long-range; the engine's SanitizeMoney layer catches anything
+        // anomalous further downstream.
+        return new BigDouble(2.0).Pow((double)count);
     }
 
     /// <summary>
@@ -138,31 +175,31 @@ public static class CrossBusinessSpeedBonus
     /// The next threshold (25, 50, 100, 200, 300, 400, then 500, 600, …).
     /// There is no "null" return — the curve continues forever.
     /// </returns>
-    public static int NextThreshold(int minOwnedAcrossBusinesses)
+    public static long NextThreshold(long minOwnedAcrossBusinesses)
     {
-        if (minOwnedAcrossBusinesses < 25) return 25;
-        if (minOwnedAcrossBusinesses < 50) return 50;
-        if (minOwnedAcrossBusinesses < 100) return 100;
-        if (minOwnedAcrossBusinesses < 200) return 200;
-        if (minOwnedAcrossBusinesses < 300) return 300;
-        if (minOwnedAcrossBusinesses < 400) return 400;
+        if (minOwnedAcrossBusinesses < 25) return 25L;
+        if (minOwnedAcrossBusinesses < 50) return 50L;
+        if (minOwnedAcrossBusinesses < 100) return 100L;
+        if (minOwnedAcrossBusinesses < 200) return 200L;
+        if (minOwnedAcrossBusinesses < 300) return 300L;
+        if (minOwnedAcrossBusinesses < 400) return 400L;
         // Past 400: next +100 boundary. Integer division then × 100
         // snaps to the next round 100. At 400 → 500; at 450 → 500;
         // at 499 → 500; at 500 → 600.
-        return ((minOwnedAcrossBusinesses / 100) + 1) * 100;
+        return ((minOwnedAcrossBusinesses / 100L) + 1L) * 100L;
     }
 
     /// <summary>
     /// How many more units the player needs (of the lowest-owned
     /// business) to reach the next cross-business threshold. Returned
-    /// as a non-negative int; zero only when the player is exactly at
+    /// as a non-negative long; zero only when the player is exactly at
     /// a threshold boundary (in which case <see cref="NextThreshold"/>
     /// already points to the boundary after that).
     /// </summary>
-    public static int UnitsToNext(int minOwnedAcrossBusinesses)
+    public static long UnitsToNext(long minOwnedAcrossBusinesses)
     {
         var next = NextThreshold(minOwnedAcrossBusinesses);
         var diff = next - minOwnedAcrossBusinesses;
-        return diff < 0 ? 0 : diff;
+        return diff < 0L ? 0L : diff;
     }
 }

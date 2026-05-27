@@ -67,7 +67,13 @@ public partial class BusinessViewModel(
     public string Color => model.Color;
 
     // --- Core display ---
-    [ObservableProperty] private int _owned;
+    /// <summary>
+    /// Mirror of <see cref="Business.Owned"/>. Widened to <see cref="long"/>
+    /// alongside the model so the View can bind to player ownership counts
+    /// that exceed 2³¹ — see the type-level remark on <see cref="Business"/>
+    /// for the overflow story that drove the widening.
+    /// </summary>
+    [ObservableProperty] private long _owned;
     [ObservableProperty] private double _progressPercent;
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private bool _hasManager;
@@ -80,12 +86,24 @@ public partial class BusinessViewModel(
     // --- Extended detail properties ---
     [ObservableProperty] private string _cycleTimeText = "";
     [ObservableProperty] private string _revenuePerSecondText = "";
-    [ObservableProperty] private int _affordableCount;
+    /// <summary>
+    /// Mirror of <see cref="Business.AffordableCount(MyAdventure.Core.Numerics.BigDouble)"/>.
+    /// Widened to <see cref="long"/> alongside the engine so the "buy max"
+    /// label can display the analytic affordable count even past 2³¹.
+    /// </summary>
+    [ObservableProperty] private long _affordableCount;
     [ObservableProperty] private string _affordableCountText = "";
     [ObservableProperty] private double _milestoneMultiplier = 1.0;
     [ObservableProperty] private string _milestoneMultiplierText = "×1";
     [ObservableProperty] private string _nextMilestoneText = "";
-    [ObservableProperty] private int _unitsToNextMilestone;
+    /// <summary>
+    /// Units remaining to reach the next revenue milestone. Widened to
+    /// <see cref="long"/> because <see cref="Business.Owned"/> is now
+    /// <see cref="long"/>; while the milestone thresholds themselves
+    /// stay <see cref="int"/>, the gap <c>Threshold − Owned</c> is
+    /// computed in long-space to match.
+    /// </summary>
+    [ObservableProperty] private long _unitsToNextMilestone;
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
 
