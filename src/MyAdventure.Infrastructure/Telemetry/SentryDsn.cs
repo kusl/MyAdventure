@@ -158,13 +158,11 @@ public sealed class SentryDsn
 
         if (string.IsNullOrWhiteSpace(secretKey))
         {
-            authHeaderValue =
-                $"sentry sentry_key={publicKey}";
+            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}";
         }
         else
         {
-            authHeaderValue =
-                $"sentry sentry_key={publicKey}, sentry_secret={secretKey}";
+            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}, sentry_secret={secretKey}";
         }
 
         return new SentryDsn(
