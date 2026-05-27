@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Wed May 27 09:42:45 AM EDT 2026
+Generated: Wed May 27 10:18:07 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -46,6 +46,7 @@ DIRECTORY STRUCTURE:
 │           │   ├── 2026-05-26-19-14-19.txt
 │           │   ├── 2026-05-27-07-21-30.txt
 │           │   ├── 2026-05-27-09-11-49.txt
+│           │   ├── 2026-05-27-09-42-02.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -4680,7 +4681,7 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/App.axaml.cs
-SIZE: 2.66 KB
+SIZE: 3.72 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
@@ -4744,6 +4745,27 @@ public partial class App : Avalonia.Application
             var vm = Services.GetRequiredService<GameViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = vm };
             AppLifecycleManager.Attach(vm);
+
+            // Flush telemetry on shutdown.
+            //
+            // The OpenTelemetry batch log/trace processors buffer records
+            // and flush them on a 1-second timer (or when their internal
+            // queue saturates). On a clean Desktop shutdown the process
+            // can exit while a partial batch is still sitting in memory,
+            // so the last few seconds of telemetry never reaches Sentry.
+            // Disposing the ServiceProvider runs each provider's Dispose()
+            // — which for OpenTelemetry's loggers and tracer providers
+            // means a synchronous final flush. The Avalonia lifetime fires
+            // ShutdownRequested before the message loop tears down, so
+            // there is still time for the HTTP POST to land.
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                if (Services is IDisposable disposable)
+                {
+                    try { disposable.Dispose(); }
+                    catch { /* best-effort flush; never block shutdown */ }
+                }
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -5917,7 +5939,7 @@ public class GameStateRepository(
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
-SIZE: 9.55 KB
+SIZE: 11.21 KB
 ================================================================================
 
 using System;
@@ -5970,6 +5992,35 @@ public sealed class SentryDsn
     /// </summary>
     public string EnvelopeEndpoint { get; }
 
+    /// <summary>
+    /// The value for the <c>x-sentry-auth</c> HTTP header. Sentry's
+    /// documented OTLP intake format is
+    /// <c>sentry sentry_key={publicKey}</c> — a single space-separated
+    /// token list, <b>no commas</b>. This is also accepted at the
+    /// classic envelope endpoint.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The comma matters.</b> The OpenTelemetry .NET OTLP exporter
+    /// parses its <c>Headers</c> string by splitting on <c>','</c> to
+    /// support setting multiple headers in one go (per the
+    /// OpenTelemetry spec). If we embed a comma inside the auth value,
+    /// the exporter mis-splits it and the project key gets sent under
+    /// a header named "sentry_key" while <c>x-sentry-auth</c> arrives
+    /// without it. Sentry then drops the event silently — no 4xx, no
+    /// log line, no Issue. This is exactly the failure mode that left
+    /// the project's Sentry dashboard empty in May 2026.
+    /// </para>
+    /// <para>
+    /// Earlier versions of this code emitted
+    /// <c>sentry sentry_version=7, sentry_key={publicKey}</c> from
+    /// a misreading of legacy Sentry SDK auth-header docs. The
+    /// <c>sentry_version</c> field belongs to the deprecated
+    /// <c>/store/</c> endpoint and is not required (or honoured) by
+    /// the OTLP intake or the modern envelope intake; dropping it
+    /// also removes the comma that was breaking OTLP delivery.
+    /// </para>
+    /// </remarks>
     public string AuthHeaderValue { get; }
 
     private SentryDsn(
@@ -6117,23 +6168,25 @@ public sealed class SentryDsn
         var envelopeEndpoint =
             $"{baseUri}/api/{projectId}/envelope/";
 
-        // Sentry's documented OTLP auth header value uses a lowercase
-        // "sentry" keyword (see Settings → Client Keys in the Sentry UI).
-        // The legacy public/secret form includes both keys; the modern
-        // form omits sentry_secret entirely. The same header value is
-        // accepted by both the OTLP intake and the envelope endpoint —
-        // Sentry uses it as the single source of truth for routing the
-        // event to the correct project.
-        string authHeaderValue;
-
-        if (string.IsNullOrWhiteSpace(secretKey))
-        {
-            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}";
-        }
-        else
-        {
-            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}, sentry_secret={secretKey}";
-        }
+        // Sentry's documented OTLP auth header value (see
+        // docs.sentry.io/concepts/otlp/direct/logs and
+        // .../direct/traces) is the space-separated form:
+        //
+        //     sentry sentry_key={publicKey}
+        //
+        // — NO commas, NO sentry_version field. We honoured the legacy
+        // secret key from the colon-form DSN by appending it as
+        // `sentry_secret={secret}`, also space-separated. Sentry's
+        // intake accepts the secret if present but does not require
+        // it for modern DSNs.
+        //
+        // The single space between tokens is what the documented format
+        // uses; the absence of commas is what keeps the OpenTelemetry
+        // .NET OTLP exporter from mis-splitting the value on its way
+        // into the HTTP request (see AuthHeaderValue XML doc).
+        var authHeaderValue = string.IsNullOrWhiteSpace(secretKey)
+            ? $"sentry sentry_key={publicKey}"
+            : $"sentry sentry_key={publicKey} sentry_secret={secretKey}";
 
         return new SentryDsn(
             raw: dsn,
@@ -12416,7 +12469,7 @@ public class SentryEnvelopeTests
 
 ================================================================================
 FILE: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
-SIZE: 16.00 KB
+SIZE: 18.16 KB
 ================================================================================
 
 using Microsoft.Extensions.Configuration;
@@ -12529,15 +12582,64 @@ public class TelemetryConfigurationTests : IDisposable
     }
 
     [Fact]
-    public void SentryDsn_AuthHeader_StartsWithSentryKeyword()
+    public void SentryDsn_AuthHeader_MatchesSentryDocumentedFormat()
     {
+        // Per Sentry's documented OTLP setup (docs.sentry.io/concepts/otlp/direct/logs):
+        //
+        //   OTEL_EXPORTER_OTLP_LOGS_HEADERS="x-sentry-auth=sentry sentry_key=<PUBLIC_KEY>"
+        //
+        // The header value is the space-separated token list
+        // `sentry sentry_key=<public_key>`. No commas, no sentry_version.
+        // Earlier versions of this code emitted the legacy
+        // `sentry sentry_version=7, sentry_key=...` form by misreading
+        // the docs for the deprecated /store/ endpoint — see the next
+        // test for why the comma in that form silently broke everything.
         const string dsn =
             "https://abc123@o123.ingest.us.sentry.io/456";
+
         var parsed = SentryDsn.Parse(dsn);
-        // Sentry's OTLP intake requires sentry_version=7 to be present in
-        // the x-sentry-auth header value, otherwise events are accepted at
-        // the HTTP level but silently dropped server-side.
-        parsed.AuthHeaderValue.ShouldBe("sentry sentry_version=7, sentry_key=abc123");
+
+        parsed.AuthHeaderValue.ShouldBe("sentry sentry_key=abc123");
+    }
+
+    [Fact]
+    public void SentryDsn_AuthHeader_ContainsNoComma_RegressionForOtlpHeaderSplit()
+    {
+        // REGRESSION TEST. The OpenTelemetry .NET OTLP exporter's
+        // Headers property is a comma-separated list of header=value
+        // pairs (per the OpenTelemetry spec for OTEL_EXPORTER_OTLP_HEADERS).
+        // The exporter parses it by splitting on ',' and then on the
+        // first '='. So if our AuthHeaderValue contains a comma, the
+        // exporter mis-splits it: the project key ends up under a header
+        // named `sentry_key` while `x-sentry-auth` arrives without it,
+        // and Sentry silently drops every event we send. This is the
+        // exact failure mode that left the project's Sentry dashboard
+        // empty in May 2026.
+        //
+        // No comma in the value, ever. Including the legacy public:secret
+        // DSN form — we space-separate sentry_secret too.
+        const string modernDsn =
+            "https://abc123@o123.ingest.us.sentry.io/456";
+        const string legacyDsn =
+            "https://abc123:secret456@o123.ingest.us.sentry.io/789";
+
+        SentryDsn.Parse(modernDsn).AuthHeaderValue.ShouldNotContain(",");
+        SentryDsn.Parse(legacyDsn).AuthHeaderValue.ShouldNotContain(",");
+    }
+
+    [Fact]
+    public void SentryDsn_AuthHeader_LegacySecretKeyIncluded()
+    {
+        // The legacy public:secret DSN form survives parsing (we don't
+        // reject it — see the existing legacy-format test) and the
+        // secret key, when present, is appended space-separated rather
+        // than comma-separated.
+        const string dsn = "https://pubkey:secret@example.com/9";
+
+        var parsed = SentryDsn.Parse(dsn);
+
+        parsed.AuthHeaderValue.ShouldBe(
+            "sentry sentry_key=pubkey sentry_secret=secret");
     }
 
     [Fact]
