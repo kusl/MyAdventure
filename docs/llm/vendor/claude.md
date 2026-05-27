@@ -16200,3 +16200,103 @@ I didn't run the suite (no .NET SDK in the sandbox). But the four failures all s
 
 97
 30
+
+is sentry / opentelemetry configured correctly? I see logs but no errors or anything else?
+
+Now I have a clear picture. Let me check what's actually being called at startup:Now I have the full picture. Here's a thorough diagnosis:
+
+---
+
+## Two problems, one root cause: `TelemetryBootstrapper.cs` is a dead file that contradicts the live code
+
+### What you're seeing
+
+You see **logs** (console exporter works), but **no errors/exceptions in Sentry** and probably no traces either. This is the classic "Sentry is configured but nothing meaningful reaches it" failure.
+
+### The actual bugs
+
+**Bug 1: `TelemetryBootstrapper.cs` has a broken auth header**
+
+The live code in `DependencyInjection.cs` correctly prefixes the header name:
+```csharp
+o.Headers = $"x-sentry-auth={sentry.AuthHeaderValue}";
+// ↑ produces:  x-sentry-auth=sentry sentry_key=fe6ae5ee...
+```
+
+But `TelemetryBootstrapper.cs` sets it wrong — it sends the raw `AuthHeaderValue` as the *entire* header string, without the header name:
+```csharp
+opt.Headers = sentryDsn.AuthHeaderValue;
+// ↑ produces:  sentry sentry_key=fe6ae5ee...
+// ↑ This is NOT a valid header=value pair — the OTLP exporter treats
+//   the whole string as the header name, sending no auth at all.
+//   Sentry returns 401 and silently drops every event.
+```
+
+**But wait — is `TelemetryBootstrapper` even being called?** No. Android calls `TelemetryConfigurationLoader.LoadFromEnvironment()` → `AddInfrastructure(telemetry)`, and Desktop calls `LoadFromConfiguration()` → `AddInfrastructure(telemetry)`. `TelemetryBootstrapper.AddMyAdventureTelemetry` is never invoked by any startup path. It's a dead file from an older iteration of the telemetry code.
+
+**Bug 2: The log pipeline minimum level filter is insufficient — exceptions may not reach Sentry**
+
+`DependencyInjection.ConfigureLogging` sets `SetMinimumLevel(LogLevel.Information)` — that's fine — but `AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning)` is called **before** the level is set. More critically: the `AddOpenTelemetry` pipeline processes logs, but there's **no explicit filter ensuring `LogLevel.Error` and above pass through even if other filters would block them**. 
+
+More importantly: look at what the OpenTelemetry log bridge does with unhandled exceptions. `LogError(ex, ...)` calls go through `ILogger`, not through the activity/span pipeline. So if your code throws and nobody catches+logs it, there's no automatic exception capture — unlike the Sentry .NET SDK which hooks `AppDomain.UnhandledException`. **The OTLP exporter only sends what `ILogger` is explicitly told.** Unhandled crashes are silently lost.
+
+**Bug 3: `TracesSampleRate` defaults to 1.0 but `SetSampler(new TraceIdRatioBasedSampler(...))` is only applied in `ConfigureTracingAndMetrics`, not in `TelemetryBootstrapper`'s tracing setup.** Again, dead code, but it means there are two different implementations of the tracing pipeline that could cause confusion.
+
+---
+
+### The real fix: delete `TelemetryBootstrapper.cs` and wire up unhandled exception logging
+
+The `DependencyInjection.cs` code is correct for what it does. The two gaps to fix:
+
+1. **Delete `TelemetryBootstrapper.cs`** — it's dead, it's wrong, and it will confuse the next person reading the code.
+
+2. **Hook unhandled exceptions** so crashes actually reach Sentry via `ILogger`. In both Desktop and Android startup, after the service provider is built:
+
+```csharp
+// Desktop: in App.axaml.cs or the AppBuilder startup
+AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+{
+    var logger = Services.GetRequiredService<ILogger<App>>();
+    logger.LogCritical(e.ExceptionObject as Exception,
+        "Unhandled exception (terminating={IsTerminating})", e.IsTerminating);
+    // Give the OTLP exporter time to flush before the process dies
+    Thread.Sleep(2000);
+};
+
+TaskScheduler.UnobservedTaskException += (_, e) =>
+{
+    var logger = Services.GetRequiredService<ILogger<App>>();
+    logger.LogError(e.Exception, "Unobserved task exception");
+    e.SetObserved();
+};
+```
+
+3. **Ensure the OTLP exporter flushes on shutdown.** The OpenTelemetry SDK batches and exports asynchronously. On a clean shutdown you need to call `ForceFlush` or let the `IHostedService` lifecycle do it. If the app exits before the batch timer fires, events are silently dropped. The fix is to ensure the `IServiceProvider` is disposed before process exit:
+
+```csharp
+// In Desktop shutdown path
+if (Services is IDisposable d) d.Dispose();
+```
+
+The `OpenTelemetryLoggerProvider` implements `IDisposable` and flushes on dispose.
+
+---
+
+### Summary
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| `TelemetryBootstrapper.cs` is dead code with a broken auth header | Medium (confusing, wrong if ever called) | Delete the file |
+| Unhandled exceptions bypass `ILogger` entirely — no automatic capture | High (this is why you see no errors) | Hook `AppDomain.UnhandledException` + `TaskScheduler.UnobservedTaskException` |
+| OTLP exporter may not flush before process exit | Medium (events silently dropped on crash) | Dispose `IServiceProvider` on shutdown; add `Thread.Sleep(2000)` in the unhandled exception handler as a safety net |
+
+The short answer: **you're seeing logs because console output is synchronous and immediate; you're not seeing errors because (a) there's no hook capturing unhandled exceptions into `ILogger`, and (b) even when `LogError` is called, the async OTLP batch exporter may exit before flushing if the app crashes.**
+
+Want me to generate the corrected files?
+
+100
+30
+
+
+100
+30
