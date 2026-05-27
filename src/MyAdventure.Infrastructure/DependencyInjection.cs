@@ -33,15 +33,27 @@ public static class DependencyInjection
     /// and the full OpenTelemetry logging/tracing/metrics pipeline.
     ///
     /// <para>
-    /// <b>Sentry integration.</b> If <see cref="SentryOptions.Dsn"/> is
-    /// populated <i>and</i> parses successfully, an OTLP/HTTP exporter
-    /// is registered for both logs and traces (Sentry doesn't accept
-    /// OTLP metrics, so the metrics pipeline stays console-only). The
-    /// DSN, environment, and sampling rate come from
-    /// <paramref name="telemetry"/>; callers usually build that via
-    /// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration"/>
-    /// (Desktop) or <see cref="TelemetryConfigurationLoader.LoadFromEnvironment"/>
-    /// (Android).
+    /// <b>Sentry integration: three pipelines.</b> When the configured
+    /// DSN parses successfully we wire <i>three</i> Sentry outputs in
+    /// parallel:
+    /// <list type="bullet">
+    ///   <item>An OTLP/HTTP exporter for <b>logs</b>, pointing at
+    ///   Sentry's logs ingestion endpoint. This populates the Sentry
+    ///   <i>Logs</i> panel with every log record the app emits.</item>
+    ///   <item>An OTLP/HTTP exporter for <b>traces</b>, pointing at
+    ///   Sentry's traces ingestion endpoint. This populates the
+    ///   Sentry <i>Traces</i> panel.</item>
+    ///   <item>A custom <see cref="SentryEventLoggerProvider"/> that
+    ///   POSTs every log record carrying an exception to Sentry's
+    ///   <i>envelope</i> endpoint. This is the only one of the three
+    ///   that creates a Sentry <b>Issue</b> — Sentry's OTLP intake is
+    ///   in open beta and explicitly does not generate Issues from
+    ///   OTLP logs or from span exception events. Without this third
+    ///   provider, exceptions show up as plain logs in the Logs panel
+    ///   and never get triaged through the Issues workflow.</item>
+    /// </list>
+    /// Sentry doesn't accept OTLP metrics, so the metrics pipeline
+    /// stays console-only.
     /// </para>
     ///
     /// <para>
@@ -73,10 +85,12 @@ public static class DependencyInjection
         // inspect them at runtime (the App startup logs them).
         services.AddSingleton(telemetry);
 
+        var serviceVersion = GetAssemblyVersion();
+
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(
                 serviceName: "MyAdventure",
-                serviceVersion: GetAssemblyVersion(),
+                serviceVersion: serviceVersion,
                 serviceInstanceId: Environment.MachineName)
             .AddAttributes(new KeyValuePair<string, object>[]
             {
@@ -93,7 +107,7 @@ public static class DependencyInjection
         var sentryEnabled = !string.IsNullOrWhiteSpace(telemetry.Sentry.Dsn)
             && SentryDsn.TryParse(telemetry.Sentry.Dsn, out sentry, out sentryParseError);
 
-        ConfigureLogging(services, telemetry, resourceBuilder, sentry);
+        ConfigureLogging(services, telemetry, resourceBuilder, sentry, serviceVersion);
         ConfigureTracingAndMetrics(services, telemetry, resourceBuilder, sentry);
 
         // Emit a single-line breadcrumb that records the configuration
@@ -114,7 +128,8 @@ public static class DependencyInjection
         IServiceCollection services,
         TelemetryOptions telemetry,
         ResourceBuilder resourceBuilder,
-        SentryDsn? sentry)
+        SentryDsn? sentry,
+        string serviceVersion)
     {
         services.AddLogging(logging =>
         {
@@ -154,6 +169,21 @@ public static class DependencyInjection
                     });
                 }
             });
+
+            // Side-channel for exceptions: post them to Sentry's classic
+            // envelope endpoint so they become Issues. This is parallel
+            // to (not a replacement for) the OTLP logs exporter above —
+            // the OTLP exporter populates Sentry's Logs panel for every
+            // log record; this provider populates Sentry's Issues panel
+            // for the subset that carry an exception.
+            if (sentry is not null)
+            {
+                logging.AddProvider(new SentryEventLoggerProvider(
+                    sentry,
+                    serviceName: "MyAdventure",
+                    serviceVersion: serviceVersion,
+                    environment: telemetry.Sentry.Environment));
+            }
         });
     }
 
@@ -220,7 +250,7 @@ public static class DependencyInjection
         if (announcement.SentryEnabled)
         {
             logger.LogInformation(
-                "Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}",
+                "Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}",
                 announcement.Environment, announcement.VerboseLogging);
         }
         else if (!string.IsNullOrEmpty(announcement.SentryParseError))

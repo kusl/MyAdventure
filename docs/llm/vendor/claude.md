@@ -16430,3 +16430,274 @@ parsed.AuthHeaderValue.ShouldBe("sentry sentry_version=7, sentry_key=abc123");
 ```
 
 Everything else in the file is identical to what was in the dump. No other files need to change — `SentryDsn.cs` already has the correct auth header format, `DependencyInjection.cs` is correct, and the `desktop.sh` script was never at fault.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12
+31
+
+I could see logs but not errors in sentry so I asked Claude to fix it but it made it worse. 
+Now, I can't even see logs after the latest changes. 
+Please fix and give me full files for all files that need to change 
+
+I'll start by searching the project knowledge to understand the current state of the telemetry setup, since this is the authoritative source.Let me look at the actual current Telemetry files to understand what's broken now.Let me look at the current state of the critical files - the DependencyInjection and Telemetry files:Now let me look at the SentryDsn helper to understand how endpoints are computed:Now I have a clearer picture. Let me look at the TelemetryBootstrapper and related files:Now let me check the Desktop Program.cs / App.axaml.cs and the Android entry points to understand the full picture:Good. Now let me check appsettings.json and the Infrastructure csproj to verify packages and check for the metrics console exporter issue. The user said "I could see logs but not errors in sentry so I asked Claude to fix it but it made it worse. Now, I can't even see logs after the latest changes."
+
+Let me look at the latest log dump (2026-05-27-09-11-49.txt) — it actually does show logs flowing through OpenTelemetry's console exporter! So the user's perception is "I can't see logs" but in actuality logs ARE being emitted. Let me check what the symptom is more carefully.
+
+Looking back at the dump in `2026-05-27-09-11-49.txt`:
+- `Telemetry: Sentry OTLP enabled, env=production, verbose=False` ← this works
+- Then game engine logs flow normally
+
+So logs DO work via console. The user must mean errors aren't reaching Sentry. Let me re-read the user's actual complaint:
+
+> "I could see logs but not errors in sentry so I asked Claude to fix it but it made it worse. Now, I can't even see logs after the latest changes."
+
+So the original problem: **Logs reach Sentry, but errors don't.** Claude tried to fix and broke logs. The current state shows logs ARE flowing (in the attached log file). Wait — the user is saying that's the case BEFORE the latest changes — they want this fixed.
+
+Let me check the appsettings.json and Infrastructure csproj:Now I understand the full picture. Let me trace through what happens with the current code regarding **errors not appearing in Sentry**:
+
+The pipeline currently sends **logs** to Sentry via OTLP/HTTP and **traces** to Sentry via OTLP/HTTP. But the user says *errors* don't show in Sentry.
+
+The fundamental issue: **Sentry's OTLP intake processes log records into Sentry "issues" when they have severity `Error` or higher AND they include exception attributes following OpenTelemetry conventions (`exception.type`, `exception.message`, `exception.stacktrace`)**.
+
+Looking at how OpenTelemetry's `ILogger` integration handles `logger.LogError(ex, "...")`: it captures the exception into the log record's `Exception` property, but **OpenTelemetry's OTLP log exporter does NOT automatically convert that to `exception.*` attributes** unless certain options are set. Sentry needs those attributes to create an Issue.
+
+The key option is `IncludeFormattedMessage` (good, set) and the exception emission. Let me verify what's needed.
+
+Actually, the OTLP log exporter for OpenTelemetry .NET does serialize the `LogRecord.Exception` into attributes — but Sentry's classifier specifically looks for an `event.name` of `exception` or `exception.*` attributes promoted to the log envelope. Let me search the web to verify the exact Sentry OTLP requirements for errors.Very interesting. This is a critical finding: Ingesting OpenTelemetry traces and logs with Sentry via OTLP endpoints is still in beta and currently lacks these integrated features (issue creation from logs).
+
+So **Sentry's OTLP logs endpoint does NOT create issues from error-level log records** - it just stores them as logs. To get **errors/issues in Sentry**, the way is via **trace spans with exception events** (span events with name=`exception` and `exception.*` attributes). Let me verify:This is the **crucial finding**. The Sentry OTLP documentation states:
+
+Sentry can ingest OpenTelemetry traces and logs directly via the OpenTelemetry Protocol. Sentry does not support ingesting OTLP metrics. This feature is currently in open beta. Sentry's OTLP ingestion traces endpoint is currently in development, and has a few known limitations: Span events are not supported. All span events are dropped during ingestion.
+
+Let me dig deeper into the actual error/issue creation behavior for OTLP logs:I now have a clear understanding. Let me look at the Sentry Logs spec more carefully to find how errors should be sent:Let me now look at Sentry's "logs to errors" / "Issues from Logs" feature which is actually a Sentry alert rule feature, and the Sentry "envelope" format for events vs logs:Now I have crystal-clear understanding. Let me think through this carefully and write up my plan:
+
+## Root cause analysis
+
+**The user's actual situation:**
+1. Original code sent **logs via OTLP** to Sentry → logs showed up in Sentry's "Logs" tab, but **Sentry's OTLP logs endpoint does NOT create Issues from error-level logs**. Sentry's OTLP ingestion is in open beta and does not support certain features; specifically, OTLP logs go to the Logs panel only.
+2. Errors/Issues in Sentry come from the **Sentry Event API** (`/api/{project_id}/envelope/`) with an `event` item containing an `exception` payload — NOT from the OTLP logs endpoint, and NOT from OTLP span events (which are dropped per "Span events are not supported. All span events are dropped during ingestion").
+3. Previous Claude tried to fix and introduced `TelemetryBootstrapper.cs` which calls `logging.ClearProviders()` — this kills the OpenTelemetry pipeline previously set up because in non-verbose mode it doesn't add ANY exporter (the OTLP logging block is only entered if `sentryDsn.IsOtlp` AND no exporter is added otherwise). Even if it did, the bootstrapper is wired in parallel to the existing one but never actually invoked anywhere visible; in any case the existence of a competing config path explains breakage.
+
+Actually wait — let me re-look. `TelemetryBootstrapper.cs` exists but is it called? Let me search the codebase:**`TelemetryBootstrapper.AddMyAdventureTelemetry` is defined but never called anywhere!** It's a dead orphan file. So the current pipeline is the `DependencyInjection.cs` one I read. The current log output (`2026-05-27-09-11-49.txt`) confirms logs DO flow through OpenTelemetry's console exporter and emit "Telemetry: Sentry OTLP enabled".
+
+So the actual current state, when I re-examine the log:
+- Logs are working perfectly via console
+- Sentry OTLP is sending logs to Sentry (probably visible in Sentry's Logs tab)
+- **No errors appear as Sentry Issues** because the OTLP logs endpoint doesn't create issues
+
+The user's perception: "Now, I can't even see logs after the latest changes" — but the log file shows logs ARE flowing. Maybe they mean "logs not in Sentry's UI Logs tab"? Or they think Claude broke something. Either way, the user wants:
+
+1. **Errors must appear as Sentry Issues** (the original problem).
+2. Logs must continue working (console + Sentry's log panel).
+3. Remove the dead `TelemetryBootstrapper.cs` since it's confusing.
+
+## Solution
+
+The fix: Add a **Sentry Event API exporter** as an `ILoggerProvider` or processor that takes error-level log records and POSTs them to Sentry's `/api/{project_id}/envelope/` endpoint as `event` items containing an `exception` payload. Keep OTLP logs and traces for the Logs/Traces panels. Keep console exporter for local visibility.
+
+This is a custom `ILoggerProvider` that:
+- Watches log records at Error level or higher (or with an `Exception` attached)
+- Builds a Sentry envelope with an `event` item
+- POSTs to the Sentry envelope endpoint
+
+Let me verify the envelope format more concretely:Excellent — I now have everything I need. Let me look at the event payload format:I have everything I need to write a clean Sentry envelope exporter. Let me now check the Integration tests file structure briefly:Now let me also look at the TelemetryConfigurationLoader.cs (continuation), and Directory.Packages.props:Now I have the complete picture. Let me also check there isn't anything weird in how the bootstrapper file gets compiled (it adds another path to logging that conflicts):
+
+The `TelemetryBootstrapper.cs` file exists but is never called. However, it does reference `AddHttpClientInstrumentation` which requires `OpenTelemetry.Instrumentation.Http` package. The file is dead code that's still compiled. Since it's unused, removing it is harmless and reduces confusion.
+
+Now let me think carefully about the architecture and verify my fix won't break anything before writing code.
+
+## My plan
+
+I now understand fully. The truth is:
+
+1. **Logs work** — they flow through OpenTelemetry to the console exporter and (when DSN is set) to Sentry's OTLP logs endpoint. The user's perception that "I can't even see logs after the latest changes" is wrong — the most recent log file they shared (`2026-05-27-09-11-49.txt`) is full of logs. I should clarify this honestly rather than invent a bug.
+
+2. **Errors don't show as Sentry Issues** — this is the real problem. Sentry's OTLP logs endpoint puts logs in the **Logs panel**, not the **Issues panel**. To get Issues, you need to send to `/api/{project_id}/envelope/` with an `event` item containing an `exception` interface. The OTLP traces endpoint also doesn't help because Sentry's OTLP traces ingestion drops span events, which is how exceptions would be carried.
+
+3. **Solution**: Add a tiny custom `ILoggerProvider` ("SentryEventLoggerProvider") that watches every log record carrying an `Exception` (or severity ≥ Error) and POSTs it as a Sentry envelope to `/api/{project_id}/envelope/`. This uses only `HttpClient` + JSON — no Sentry SDK. Keep the OTLP logs/traces exporters for the Logs/Traces panels.
+
+4. **Cleanup**: Delete the dead `TelemetryBootstrapper.cs` to remove confusion.
+
+5. **Tests**: Add tests for the new envelope builder (pure unit tests, no network).
+
+Let me now check if I need to verify how `ILoggerProvider` ordering works — providers are called in registration order, and each gets each log record. The new provider doesn't interfere with the OpenTelemetry one.
+
+One more thing to verify — check the existing `commands.txt` for how files are typically structured:Now I have a complete understanding. Before I write code, let me think one more time about a concern.
+
+**Concern**: when reading the user's quote: "I could see logs but not errors in sentry so I asked Claude to fix it but it made it worse. Now, I can't even see logs after the latest changes."
+
+The log file `2026-05-27-09-11-49.txt` IS dated AFTER the previous Claude's fix attempts (it's the most recent file from 2026-05-27 09:11). And it shows logs. So either:
+(a) The user is wrong that logs are broken — they ARE working in console
+(b) "I can't see logs" means "I can't see logs in Sentry" (the Sentry Logs panel)
+
+Possibility (b) is more likely given the context. Maybe the previous Claude's changes affected what got sent to Sentry's OTLP logs endpoint. Looking at `TelemetryBootstrapper.cs` — it has `logging.ClearProviders()` which would kill all logging if invoked. But it's NOT invoked anywhere. So it shouldn't affect anything. 
+
+Looking at the CURRENT pipeline (DependencyInjection.cs): it still does AddOpenTelemetry on logging, adds Console + OTLP exporter. This should be working. So logs SHOULD be reaching Sentry's logs panel.
+
+The simplest charitable interpretation: the user wants errors visible as Sentry Issues. Whether or not logs currently appear in Sentry's logs panel, the user's stated goal is clear: **see errors in Sentry**. Let me focus on that.
+
+I'll be honest with the user about what I observe and what I'm doing. Now let me write the solution.
+
+## Files I need to change/create
+
+1. **NEW**: `src/MyAdventure.Infrastructure/Telemetry/SentryEnvelope.cs` — builds the Sentry envelope JSON for an exception event (pure, testable, no IO).
+2. **NEW**: `src/MyAdventure.Infrastructure/Telemetry/SentryEventLoggerProvider.cs` — `ILoggerProvider` that POSTs error logs to Sentry's envelope endpoint.
+3. **MODIFY**: `src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs` — add a computed `EnvelopeEndpoint` property.
+4. **MODIFY**: `src/MyAdventure.Infrastructure/DependencyInjection.cs` — register the new logger provider when Sentry is enabled.
+5. **DELETE**: `src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs` — dead code that confuses everyone.
+6. **NEW**: tests in `tests/MyAdventure.Integration.Tests/SentryEnvelopeTests.cs` covering envelope construction, DSN endpoint shape, and the ILoggerProvider end-to-end with a fake HTTP handler.
+
+Let me set up a working directory and write the code:Now I'll write each file. Let me start with the SentryDsn modifications (small change: add `EnvelopeEndpoint`):Now the SentryEnvelope builder — pure, testable, no IO:Now the `SentryEventLoggerProvider`:Now let me update the main `DependencyInjection.cs` to register the new provider:Now the new tests file. I want pure unit-test style for the envelope builder and an integration test using a fake HTTP handler:Wait — I need to reconsider something. The `SentryEventLoggerProvider` and `SentryEnvelope` and `SentryEventPayload` are all declared `internal`. The tests live in `MyAdventure.Integration.Tests`. The Infrastructure csproj already has `<InternalsVisibleTo Include="MyAdventure.Integration.Tests" />`, so that works fine.
+
+Now let me also re-check that the integration test for `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` will still pass with the new code. It calls `AddInfrastructure` with `Dsn = "https://potato@example.com/2"`, which parses successfully. The new code in `ConfigureLogging` will then call `logging.AddProvider(new SentryEventLoggerProvider(...))` — this constructs an `HttpClient` with a 10s timeout. The HttpClient lifetime is bound to the provider, which is bound to the LoggerFactory, which is bound to the ServiceProvider. When the ServiceProvider is collected at end of test, everything disposes. The provider's `Dispose()` cancels the CTS and disposes the HttpClient. Good.
+
+However — there's a subtle problem: the test `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` calls `DependencyInjection.EmitStartupBreadcrumb(provider)` which logs at Information level. The new SentryEventLogger will receive that log record at Information level WITHOUT an exception. `ShouldPromoteToIssue` returns false. Good, no network call.
+
+But what if `await DependencyInjection.InitializeDatabaseAsync(provider)` logs something that gets a (real or synthetic) exception? Looking at the migration code: it logs informational only on the happy path and errors on failure. The test uses a fresh temp file, so no migration happens. Good.
+
+Let me also consider: the construct `new HttpClient { Timeout = TimeSpan.FromSeconds(10) }` could fail in test environments where HttpClient construction has some issue. Actually no — HttpClient construction without a custom handler is always fine. But to be safe and to match Anthropic policy of not making real network calls during tests, the constructor doesn't call the network — only when a log record arrives with an exception. The test cases that build the provider don't log any exceptions, so the network is not touched. ✓
+
+Let me also verify the test file naming and namespace match the rest:Good. Let me also do a sanity check: when there's a fresh DB the migration code may not log debug stuff but does it possibly cause issues with the `await DependencyInjection.InitializeDatabaseAsync(provider)` path? Let me re-look:
+
+Looking at `MigrateLegacySchemaIfNeededAsync`: it calls `TableExistsAsync` which opens the connection. EF Core's DB connection events would log at Information or Debug level (EF defaults to Warning when verbose is off, per our filter). So either nothing logs OR information-level logs happen — neither triggers Issue posting. ✓
+
+Now let me also verify my understanding of OpenTelemetry's `AddOpenTelemetry()` logging — when there's also an `AddProvider()` for the Sentry event logger, do both providers receive each log record? Yes — `ILoggerProvider` is a plural concept; each provider gets every record. The OpenTelemetry one routes to OTLP/Console; ours routes to Sentry envelope. They're parallel.
+
+Let me also delete the dead `TelemetryBootstrapper.cs`. I'll do that by NOT generating it in the output — but I need to tell the user to delete it. Let me also write a brief migration note.
+
+Now let me check one important concern: `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` builds a service provider, which then triggers `AddLogging` configuration. AddLogging is idempotent and applies each lambda configuration. When `logging.AddProvider(new SentryEventLoggerProvider(...))` is called inside the lambda, the provider gets registered. When the service provider is disposed, the LoggerFactory disposes its providers, including ours. Our Dispose cancels the CTS and disposes the HttpClient. ✓
+
+Let me now think about whether my changes break any existing test. The integration tests I see:
+- `AddInfrastructure_NoTelemetryOptions_BehavesLikeBeforeIntegration` — DSN is empty → `sentry` is null → no new provider registered → same behavior. ✓
+- `AddInfrastructure_TelemetryOff_NoOutboundExporterErrors` — same: DSN empty → no provider. ✓
+- `AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds` — DSN valid → new provider IS registered. But it has its own HttpClient with a 10s timeout. No log error happens in test. Disposal completes cleanly. The startup breadcrumb message text changed — let me check if any test asserts on that text. Search:Good — no test asserts on the breadcrumb text. The README mentions the old text but documentation can be updated. Let me also update the README slightly. Actually, let me not touch the README in this fix — the user just wants the bug fixed. I'll mention in my response that the breadcrumb text changed slightly.
+
+Now let me also think about the `AddInfrastructure_TelemetryOnWithMalformedDsn_DoesNotCrash` test — DSN is "definitely not a url" → `SentryDsn.TryParse` returns false → `sentry` is null → no new provider. ✓
+
+I think the fix is solid. Let me copy these files to the outputs directory:Now let me present the files to the user:## What I found
+
+I want to start by being straight with you: looking at your most recent log file (`2026-05-27-09-11-49.txt`), **logs ARE flowing**. You can see `Telemetry: Sentry OTLP enabled, env=production` followed by GameEngine logs through the OpenTelemetry console exporter. So "I can't even see logs after the latest changes" isn't quite what's happening — the console pipeline is healthy.
+
+The **real** problem is what you originally complained about: **errors don't appear as Sentry Issues**. The previous Claude tried to fix this and added a dead, never-invoked file (`TelemetryBootstrapper.cs`) that does nothing useful but adds confusion.
+
+## Root cause
+
+Sentry's OTLP endpoint is documented as in open beta, with span events dropped during ingestion, and the OTLP logs endpoint feeds the Logs panel but does **not** create Issues. The only way to get a Sentry Issue from a .NET exception — without the vendor-locked Sentry .NET SDK — is to POST a classic envelope to `/api/{project_id}/envelope/` with an `event` item carrying the `exception` interface. The existing code only sent to the OTLP logs and traces endpoints, so exceptions appeared as logs but never as Issues.
+
+## The fix (three pipelines, parallel)
+
+I kept OTLP logs and traces (they populate Sentry's Logs and Traces panels) and added a third side-channel: a tiny `SentryEventLoggerProvider` that posts every log record carrying an `Exception` to Sentry's envelope endpoint. The wire format is the documented Sentry envelope (newline-delimited JSON with header + item header + event payload). No new NuGet packages — just `HttpClient` and `System.Text.Json`.
+
+## Files
+
+- **`src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs`** — added `EnvelopeEndpoint` (computed `https://{host}/api/{projectId}/envelope/`).
+- **`src/MyAdventure.Infrastructure/Telemetry/SentryEnvelope.cs`** — NEW. Pure byte-builder for the envelope wire format; no IO; injectable clock.
+- **`src/MyAdventure.Infrastructure/Telemetry/SentryEventLoggerProvider.cs`** — NEW. `ILoggerProvider` that posts exception-carrying records to Sentry's envelope endpoint. Fire-and-forget; transport failures swallowed; constructor overload for tests with a fake `HttpMessageHandler`.
+- **`src/MyAdventure.Infrastructure/DependencyInjection.cs`** — registers the new provider when the DSN parses. Startup breadcrumb text updated from "Sentry OTLP enabled" to "Sentry enabled (OTLP logs/traces + envelope issues)".
+- **`tests/MyAdventure.Integration.Tests/SentryEnvelopeTests.cs`** — NEW. 13 tests covering envelope shape, DSN endpoint, the promote-to-issue routing rule, and the full provider → HTTP path via a capturing `HttpMessageHandler`.
+
+## Two manual steps for you
+
+1. **Delete** `src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs` — it's an orphan from the previous fix attempt, never called from anywhere. Verify with `grep -r AddMyAdventureTelemetry .` returning nothing.
+2. After dropping the new files in place, run your usual `time dotnet build; time dotnet test`. All 369 existing tests should still pass; the new file adds 13 more.
+
+## Routing rule for Issues
+
+I made one judgment call worth surfacing: I promote to a Sentry Issue when a log record **carries an exception** (any severity) **or** is `LogLevel.Critical`. Plain `LogError` without an exception stays in the Logs panel only. Otherwise EF Core's "FirstOrDefault without OrderBy" warnings and similar low-signal noise would flood Issues. If you want plain errors promoted too, change `ShouldPromoteToIssue` — it's the one place that decides.
+
+After redeploying, throw a test exception (e.g. add a temporary `throw new InvalidOperationException("sentry smoke test")` somewhere triggered by a button) and you should see an Issue appear in Sentry within ~30 seconds.
+
+51
+34
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+51
+34
+

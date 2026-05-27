@@ -2,6 +2,30 @@ using System;
 
 namespace MyAdventure.Infrastructure.Telemetry;
 
+/// <summary>
+/// A parsed Sentry DSN with the three endpoint URLs the project needs
+/// derived from it:
+///
+/// <list type="bullet">
+///   <item><see cref="LogsEndpoint"/> — Sentry's OTLP/HTTP logs intake
+///   (populates the project's "Logs" panel).</item>
+///   <item><see cref="TracesEndpoint"/> — Sentry's OTLP/HTTP traces
+///   intake (populates the project's "Traces" panel).</item>
+///   <item><see cref="EnvelopeEndpoint"/> — Sentry's classic envelope
+///   intake (populates the project's "Issues" panel; this is the only
+///   one of the three that creates Issues from exceptions).</item>
+/// </list>
+///
+/// <para>
+/// <b>Why all three.</b> Sentry's OTLP intake is documented as
+/// "open beta" and does not generate Issues from OTLP logs nor from
+/// span exception events (those events are dropped during ingestion).
+/// To get an error to show up under "Issues" we have to send it as a
+/// classic Sentry event envelope to <see cref="EnvelopeEndpoint"/>. The
+/// OTLP endpoints are still useful for the Logs and Traces panels, so
+/// we register both side-by-side rather than picking one.
+/// </para>
+/// </summary>
 public sealed class SentryDsn
 {
     public string Raw { get; }
@@ -12,6 +36,18 @@ public sealed class SentryDsn
     public bool IsOtlp { get; }
     public string LogsEndpoint { get; }
     public string TracesEndpoint { get; }
+
+    /// <summary>
+    /// Sentry's classic envelope endpoint:
+    /// <c>{scheme}://{host}/api/{projectId}/envelope/</c>. Posting an
+    /// envelope with an <c>event</c> item carrying an <c>exception</c>
+    /// interface creates an Issue under "Issues" in the Sentry UI. This
+    /// is the route the project uses for surfacing exceptions; the OTLP
+    /// logs endpoint is unsuitable for that purpose (per Sentry's docs
+    /// it does not create Issues).
+    /// </summary>
+    public string EnvelopeEndpoint { get; }
+
     public string AuthHeaderValue { get; }
 
     private SentryDsn(
@@ -23,6 +59,7 @@ public sealed class SentryDsn
         bool isOtlp,
         string logsEndpoint,
         string tracesEndpoint,
+        string envelopeEndpoint,
         string authHeaderValue)
     {
         Raw = raw;
@@ -33,6 +70,7 @@ public sealed class SentryDsn
         IsOtlp = isOtlp;
         LogsEndpoint = logsEndpoint;
         TracesEndpoint = tracesEndpoint;
+        EnvelopeEndpoint = envelopeEndpoint;
         AuthHeaderValue = authHeaderValue;
     }
 
@@ -150,10 +188,20 @@ public sealed class SentryDsn
         var tracesEndpoint =
             $"{baseUri}/api/{projectId}/integration/otlp/v1/traces";
 
+        // Sentry's classic envelope endpoint lives under /api/{projectId}/envelope/
+        // — note the trailing slash, which is part of the documented URL shape
+        // (omitting it triggers a 308 redirect on some Sentry deployments and
+        // a hard 404 on others; we don't want to depend on either behaviour).
+        var envelopeEndpoint =
+            $"{baseUri}/api/{projectId}/envelope/";
+
         // Sentry's documented OTLP auth header value uses a lowercase
         // "sentry" keyword (see Settings → Client Keys in the Sentry UI).
         // The legacy public/secret form includes both keys; the modern
-        // form omits sentry_secret entirely.
+        // form omits sentry_secret entirely. The same header value is
+        // accepted by both the OTLP intake and the envelope endpoint —
+        // Sentry uses it as the single source of truth for routing the
+        // event to the correct project.
         string authHeaderValue;
 
         if (string.IsNullOrWhiteSpace(secretKey))
@@ -174,6 +222,7 @@ public sealed class SentryDsn
             isOtlp: true,
             logsEndpoint: logsEndpoint,
             tracesEndpoint: tracesEndpoint,
+            envelopeEndpoint: envelopeEndpoint,
             authHeaderValue: authHeaderValue);
     }
 
