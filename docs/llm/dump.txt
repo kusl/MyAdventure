@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue May 26 07:15:26 PM EDT 2026
+Generated: Tue May 26 08:54:29 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -43,6 +43,7 @@ DIRECTORY STRUCTURE:
 │           │   ├── 2026-05-24-11-17-21.txt
 │           │   ├── 2026-05-24-11-32-59.txt
 │           │   ├── 2026-05-24-11-38-47.txt
+│           │   ├── 2026-05-26-19-14-19.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -92,7 +93,8 @@ DIRECTORY STRUCTURE:
 │               ├── 044.txt
 │               ├── 045.txt
 │               ├── 046.txt
-│               └── 047.txt
+│               ├── 047.txt
+│               └── 048.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -183,6 +185,7 @@ DIRECTORY STRUCTURE:
     │   ├── MilestoneTests.cs
     │   ├── MyAdventure.Core.Tests.csproj
     │   ├── NumberFormatterTests.cs
+    │   ├── OverflowRegressionTests.cs
     │   ├── SpeedMilestoneTests.cs
     │   └── SubFrameCycleTests.cs
     ├── MyAdventure.Integration.Tests
@@ -2273,7 +2276,7 @@ public partial class MainView : UserControl
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Business.cs
-SIZE: 9.51 KB
+SIZE: 13.08 KB
 ================================================================================
 
 using MyAdventure.Core.Numerics;
@@ -2295,6 +2298,27 @@ namespace MyAdventure.Core.Entities;
 /// player saturated cash. They are now <see cref="BigDouble"/>, which has
 /// no practical ceiling and lets growth continue forever.
 /// </para>
+///
+/// <para>
+/// <b>Owned is a <see cref="long"/>, not an <see cref="int"/>.</b> Ownership
+/// counts in this game can and do exceed 2³¹. A player who lets prestige
+/// stack and bulk-buys at scale will hit ~4 billion units of a single
+/// business within an afternoon. Under the prior <c>int</c> field,
+/// <see cref="GameEngine.BuyMultiple"/> wrapped at 2³¹: a +1B purchase on
+/// top of 3B owned silently became −294,966,296 — corrupting every
+/// downstream calculation (revenue went negative, <see cref="NextCost"/>
+/// collapsed to <c>BaseCost × CostMultiplier^(huge negative)</c>, i.e. a
+/// vanishingly tiny positive, which made every subsequent bulk-buy
+/// "free" and accelerated the corruption). <see cref="long"/> gives us
+/// 9.2 × 10¹⁸ — at one purchase per microsecond, ~292,000 years. The same
+/// "you won't reach this from the Big Bang" criterion the BigDouble
+/// comments hold themselves to. Saves are JSON-encoded so the on-disk
+/// format absorbs the widening transparently; old saves with int-range
+/// values round-trip into <c>long</c> without migration. Hand-edited
+/// saves with values past <c>int.MaxValue</c> now load correctly instead
+/// of throwing inside <c>JsonElement.GetInt32</c>.
+/// </para>
+///
 /// <para>
 /// Definitional inputs (<see cref="BaseCost"/>, <see cref="BaseRevenue"/>,
 /// <see cref="BaseTimeSeconds"/>, <see cref="CostMultiplier"/>) stay as
@@ -2337,7 +2361,13 @@ public record Business
     /// <summary>Geometric scaling factor on cost per additional unit (e.g. 1.07).</summary>
     public required double CostMultiplier { get; init; }
 
-    public int Owned { get; set; }
+    /// <summary>
+    /// Number of units owned. <see cref="long"/>, not <see cref="int"/> —
+    /// see the type-level remark on this record for the overflow history
+    /// that drove the widening.
+    /// </summary>
+    public long Owned { get; set; }
+
     public bool HasManager { get; set; }
     public double ProgressPercent { get; set; }
     public bool IsRunning { get; set; }
@@ -2349,9 +2379,16 @@ public record Business
     /// representable value (the prior <c>Math.Pow</c>-based formulation
     /// overflowed to <see cref="double.PositiveInfinity"/> around
     /// <c>1.11^7000</c> and forced an artificial clamp).
+    /// <para>
+    /// <see cref="Owned"/> is widened to <see cref="double"/> for the
+    /// exponent because <see cref="BigDouble.Pow(double)"/> takes a
+    /// double. Precision loss in that conversion only matters past
+    /// 2⁵³ ≈ 9 × 10¹⁵ owned, at which point unit-level cost precision is
+    /// already invisible relative to the geometric growth.
+    /// </para>
     /// </summary>
     public BigDouble NextCost =>
-        new BigDouble(BaseCost) * new BigDouble(CostMultiplier).Pow(Owned);
+        new BigDouble(BaseCost) * new BigDouble(CostMultiplier).Pow((double)Owned);
 
     /// <summary>
     /// Revenue per cycle with current units owned, including the
@@ -2391,7 +2428,11 @@ public record Business
         get
         {
             if (Owned <= 1000) return BigDouble.One;
-            return new BigDouble(CostMultiplier).Pow((Owned - 1000) / 2.0);
+            // (Owned - 1000) / 2.0 widens to double via Owned cast. Even
+            // at long.MaxValue this is well within double's exponent
+            // range; precision past 2⁵³ doesn't matter for the same
+            // reason it doesn't matter in NextCost.
+            return new BigDouble(CostMultiplier).Pow((Owned - 1000L) / 2.0);
         }
     }
 
@@ -2427,16 +2468,30 @@ public record Business
     /// then). The closed form is O(1) regardless of how many units the
     /// player can afford.
     /// </para>
+    /// <para>
+    /// <b>Return type is <see cref="long"/>.</b> The prior <c>int</c>
+    /// return type and 1-billion safety cap were the proximate cause of
+    /// the wraparound exploit: a player with ~3B units of a business
+    /// would request a billion more, the call would succeed, and
+    /// <see cref="GameEngine.BuyMultiple"/> would add it to an int Owned
+    /// field that promptly overflowed to negative. The cap is still
+    /// here — long-range arithmetic is happy to compute arbitrary
+    /// affordable counts, but we don't want a single batch purchase to
+    /// take ten billion units in one go for UX/observability reasons.
+    /// The cap is now <c>long.MaxValue / 4</c>, far past any reasonable
+    /// batch, while still leaving headroom for downstream arithmetic
+    /// (<c>Owned + cap</c>) to never overflow.
+    /// </para>
     /// </summary>
-    public int AffordableCount(BigDouble cash)
+    public long AffordableCount(BigDouble cash)
     {
-        if (cash.IsNaN || cash.Sign <= 0) return 0;
+        if (cash.IsNaN || cash.Sign <= 0) return 0L;
         // Infinite cash: return the practical cap. This shouldn't appear
         // in normal gameplay (the engine sanitizes Infinity → 0 on every
         // monetary path), but a defensive answer beats returning 0 from
         // the log-based formula below, which would interpret +∞ → log10(+∞) → +∞
         // → !IsFinite → return 0.
-        if (cash.IsInfinity) return 1_000_000_000;
+        if (cash.IsInfinity) return PracticalBatchCap;
 
         if (BaseCost <= 0 || CostMultiplier <= 1.0)
         {
@@ -2444,23 +2499,22 @@ public record Business
             // multiplier would make the analytic formula misbehave. The
             // production balance table never hits these cases, but tests
             // exercising "free" or unusual businesses can.
-            if (BaseCost <= 0) return int.MaxValue / 2;
+            if (BaseCost <= 0) return PracticalBatchCap;
 
             // CostMultiplier == 1.0: every unit costs the same as the
             // first, so affordable count is plain floor(cash / NextCost).
             var perUnit = NextCost;
-            if (perUnit.IsZero) return int.MaxValue / 2;
+            if (perUnit.IsZero) return PracticalBatchCap;
             var rawCount = cash / perUnit;
             var asDouble = rawCount.ToDouble();
-            return double.IsFinite(asDouble) && asDouble > 0
-                ? (int)Math.Min(asDouble, int.MaxValue / 2)
-                : 0;
+            if (!double.IsFinite(asDouble) || asDouble <= 0) return 0L;
+            return (long)Math.Min(asDouble, (double)PracticalBatchCap);
         }
 
         // First-unit cost at the current owned count.
         var c0 = NextCost;
-        if (c0.IsZero) return int.MaxValue / 2;
-        if (cash < c0) return 0;
+        if (c0.IsZero) return PracticalBatchCap;
+        if (cash < c0) return 0L;
 
         // Maximum n satisfying c0 × (r^n - 1) / (r - 1) ≤ cash, i.e.
         //   r^n ≤ 1 + cash × (r - 1) / c0
@@ -2474,16 +2528,28 @@ public record Business
         // Convert to a double for the final log; log10 of a BigDouble
         // is always representable as a double (it's just an exponent + a tiny mantissa log).
         var logThreshold = threshold.Log10();
-        if (!double.IsFinite(logThreshold) || logThreshold <= 0) return 0;
+        if (!double.IsFinite(logThreshold) || logThreshold <= 0) return 0L;
 
         var n = Math.Floor(logThreshold / Math.Log10(r));
 
-        // Cap at a sensible int range. 1e9 affordable units is already
-        // far past any reasonable purchase batch.
-        if (n <= 0) return 0;
-        if (n > 1_000_000_000) return 1_000_000_000;
-        return (int)n;
+        // Cap at the practical batch limit (still long-range; see remarks
+        // on the property). 1e9 used to be the cap and is well past any
+        // human "buy max" intent for a single batch.
+        if (n <= 0) return 0L;
+        if (n >= (double)PracticalBatchCap) return PracticalBatchCap;
+        return (long)n;
     }
+
+    /// <summary>
+    /// Per-call cap on <see cref="AffordableCount"/> and
+    /// <see cref="GameEngine.BuyMultiple"/>. Kept well below
+    /// <see cref="long.MaxValue"/> so that <c>Owned + cap</c> can never
+    /// overflow even when called repeatedly against an already-huge
+    /// ownership count. <c>long.MaxValue / 4</c> ≈ 2.3 × 10¹⁸ — at one
+    /// batch per microsecond, ~73,000 years to overflow even by
+    /// chaining max-cap batches back to back.
+    /// </summary>
+    public const long PracticalBatchCap = long.MaxValue / 4;
 }
 
 
@@ -2544,7 +2610,7 @@ public static class BusinessDefinitions
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/CrossBusinessSpeedBonus.cs
-SIZE: 8.07 KB
+SIZE: 10.08 KB
 ================================================================================
 
 using MyAdventure.Core.Numerics;
@@ -2619,9 +2685,35 @@ namespace MyAdventure.Core.Entities;
 /// non-finite values to safe defaults. There is no path by which a
 /// finite ownership count can produce a non-finite cash value.
 /// </para>
+///
+/// <para>
+/// <b>Owned-parameter widening (matching <see cref="Business.Owned"/>):</b>
+/// every method takes <see cref="long"/> for the minimum-owned input,
+/// because the minimum across the business roster is itself a
+/// <see cref="long"/> now. <see cref="BonusCount"/> still returns
+/// <see cref="long"/> — at <c>minOwned = long.MaxValue</c> the count is
+/// ~9 × 10¹⁶ which is still well below <see cref="long.MaxValue"/>, and
+/// we additionally clamp at <see cref="MaxStacks"/> to keep the
+/// downstream <see cref="BigDouble.Pow(double)"/> in a regime where its
+/// exponent fits a <see cref="long"/>. Negative inputs (corrupted save
+/// state) are treated as zero in <see cref="BonusCount"/> itself, so a
+/// caller is freed from defensive clamping.
+/// </para>
 /// </summary>
 public static class CrossBusinessSpeedBonus
 {
+    /// <summary>
+    /// Saturation cap on the number of cross-business stacks. At this
+    /// many stacks the multiplier is <c>2^MaxStacks</c>, which translates
+    /// to a BigDouble exponent of <c>MaxStacks × log10(2) ≈ 3 × 10¹⁴</c>
+    /// — large but well within <see cref="long"/>. The cap exists purely
+    /// to keep <see cref="BigDouble.Pow(double)"/> in a regime where its
+    /// own exponent never overflows <see cref="long"/>, even with a
+    /// hand-edited save claiming minimum-owned in the quintillions. No
+    /// real player will ever notice it.
+    /// </summary>
+    public const long MaxStacks = 1_000_000_000_000_000L; // 10^15
+
     /// <summary>
     /// How many cross-business bonus stacks the player has earned for a
     /// given minimum ownership count across all businesses. The first
@@ -2637,21 +2729,30 @@ public static class CrossBusinessSpeedBonus
     /// <returns>
     /// The number of ×2 stacks granted (0 at minOwned &lt; 25; 1 at
     /// 25–49; 2 at 50–99; …; 6 at 400–499; 7 at 500–599; …). Grows
-    /// linearly past 400 with one stack per +100 owned, forever.
+    /// linearly past 400 with one stack per +100 owned, forever, but
+    /// saturates at <see cref="MaxStacks"/>.
     /// </returns>
-    public static int BonusCount(int minOwnedAcrossBusinesses)
+    public static long BonusCount(long minOwnedAcrossBusinesses)
     {
-        if (minOwnedAcrossBusinesses < 25) return 0;
-        if (minOwnedAcrossBusinesses < 50) return 1;
-        if (minOwnedAcrossBusinesses < 100) return 2;
-        if (minOwnedAcrossBusinesses < 200) return 3;
-        if (minOwnedAcrossBusinesses < 300) return 4;
-        if (minOwnedAcrossBusinesses < 400) return 5;
+        if (minOwnedAcrossBusinesses < 25) return 0L;
+        if (minOwnedAcrossBusinesses < 50) return 1L;
+        if (minOwnedAcrossBusinesses < 100) return 2L;
+        if (minOwnedAcrossBusinesses < 200) return 3L;
+        if (minOwnedAcrossBusinesses < 300) return 4L;
+        if (minOwnedAcrossBusinesses < 400) return 5L;
         // Past 400: 6 base stacks plus one per full +100 owned.
         // Integer division floors toward zero, which is exactly what
         // we want — a player at 499 has the same 6 stacks as one at 400,
         // and only crossing into 500 grants the 7th stack.
-        return 6 + (minOwnedAcrossBusinesses - 400) / 100;
+        //
+        // Saturate at MaxStacks. (minOwned - 400) / 100 is at most
+        // (long.MaxValue - 400) / 100 ≈ 9.2 × 10¹⁶, still inside long,
+        // but past MaxStacks the BigDouble exponent in
+        // CalculateSpeedMultiplier would saturate anyway — capping here
+        // is purely so the saturation is observable and predictable.
+        var extra = (minOwnedAcrossBusinesses - 400L) / 100L;
+        var total = 6L + extra;
+        return total > MaxStacks ? MaxStacks : total;
     }
 
     /// <summary>
@@ -2662,20 +2763,22 @@ public static class CrossBusinessSpeedBonus
     /// Returns <see cref="BigDouble.One"/> when no stacks have been
     /// earned (early game), guaranteeing exact-1.0 semantics for tests
     /// that pin "no cross-business effect below 25 owned of every
-    /// business". Past that, climbs without bound.
+    /// business". Past that, climbs without bound (up to the
+    /// <see cref="MaxStacks"/> saturation cap, which is practically
+    /// unreachable).
     /// </para>
     /// </summary>
-    public static BigDouble CalculateSpeedMultiplier(int minOwnedAcrossBusinesses)
+    public static BigDouble CalculateSpeedMultiplier(long minOwnedAcrossBusinesses)
     {
         var count = BonusCount(minOwnedAcrossBusinesses);
-        if (count == 0) return BigDouble.One;
+        if (count == 0L) return BigDouble.One;
 
         // BigDouble.Pow uses a log-based formulation (10^(power × log10(this))),
         // so even huge exponents stay representable without iterative
-        // multiplication. At absurdly large counts it saturates to
-        // BigDouble.PositiveInfinity rather than wrapping; the engine's
-        // SanitizeMoney layer catches that defensively.
-        return new BigDouble(2.0).Pow(count);
+        // multiplication. The MaxStacks cap keeps the exponent within
+        // long-range; the engine's SanitizeMoney layer catches anything
+        // anomalous further downstream.
+        return new BigDouble(2.0).Pow((double)count);
     }
 
     /// <summary>
@@ -2687,32 +2790,32 @@ public static class CrossBusinessSpeedBonus
     /// The next threshold (25, 50, 100, 200, 300, 400, then 500, 600, …).
     /// There is no "null" return — the curve continues forever.
     /// </returns>
-    public static int NextThreshold(int minOwnedAcrossBusinesses)
+    public static long NextThreshold(long minOwnedAcrossBusinesses)
     {
-        if (minOwnedAcrossBusinesses < 25) return 25;
-        if (minOwnedAcrossBusinesses < 50) return 50;
-        if (minOwnedAcrossBusinesses < 100) return 100;
-        if (minOwnedAcrossBusinesses < 200) return 200;
-        if (minOwnedAcrossBusinesses < 300) return 300;
-        if (minOwnedAcrossBusinesses < 400) return 400;
+        if (minOwnedAcrossBusinesses < 25) return 25L;
+        if (minOwnedAcrossBusinesses < 50) return 50L;
+        if (minOwnedAcrossBusinesses < 100) return 100L;
+        if (minOwnedAcrossBusinesses < 200) return 200L;
+        if (minOwnedAcrossBusinesses < 300) return 300L;
+        if (minOwnedAcrossBusinesses < 400) return 400L;
         // Past 400: next +100 boundary. Integer division then × 100
         // snaps to the next round 100. At 400 → 500; at 450 → 500;
         // at 499 → 500; at 500 → 600.
-        return ((minOwnedAcrossBusinesses / 100) + 1) * 100;
+        return ((minOwnedAcrossBusinesses / 100L) + 1L) * 100L;
     }
 
     /// <summary>
     /// How many more units the player needs (of the lowest-owned
     /// business) to reach the next cross-business threshold. Returned
-    /// as a non-negative int; zero only when the player is exactly at
+    /// as a non-negative long; zero only when the player is exactly at
     /// a threshold boundary (in which case <see cref="NextThreshold"/>
     /// already points to the boundary after that).
     /// </summary>
-    public static int UnitsToNext(int minOwnedAcrossBusinesses)
+    public static long UnitsToNext(long minOwnedAcrossBusinesses)
     {
         var next = NextThreshold(minOwnedAcrossBusinesses);
         var diff = next - minOwnedAcrossBusinesses;
-        return diff < 0 ? 0 : diff;
+        return diff < 0L ? 0L : diff;
     }
 }
 
@@ -2789,7 +2892,7 @@ public record GameState : EntityBase
 
 ================================================================================
 FILE: src/MyAdventure.Core/Entities/Milestone.cs
-SIZE: 6.31 KB
+SIZE: 7.34 KB
 ================================================================================
 
 namespace MyAdventure.Core.Entities;
@@ -2797,6 +2900,15 @@ namespace MyAdventure.Core.Entities;
 /// <summary>
 /// A milestone threshold that grants a revenue multiplier when reached.
 /// Adventure Capitalist style: owning X units of a business multiplies its revenue.
+/// <para>
+/// <b>Owned-parameter widening:</b> all milestone helpers accept
+/// <see cref="long"/> for the owned count to match
+/// <see cref="Business.Owned"/>'s widened type. The thresholds themselves
+/// stay <see cref="int"/> — they are small, bounded constants — but the
+/// caller-supplied count can be arbitrarily large. <c>int</c>-typed
+/// arguments at call sites widen implicitly, so the existing test suite
+/// continues to compile without edits.
+/// </para>
 /// </summary>
 public record Milestone(int Threshold, double Multiplier, string Label)
 {
@@ -2821,7 +2933,7 @@ public record Milestone(int Threshold, double Multiplier, string Label)
     /// Calculate the combined multiplier for a given ownership count.
     /// Each milestone compounds multiplicatively.
     /// </summary>
-    public static double CalculateMultiplier(int owned, IReadOnlyList<Milestone>? milestones = null)
+    public static double CalculateMultiplier(long owned, IReadOnlyList<Milestone>? milestones = null)
     {
         milestones ??= Defaults;
         var mult = 1.0;
@@ -2837,7 +2949,7 @@ public record Milestone(int Threshold, double Multiplier, string Label)
     /// Find the next milestone the player hasn't reached yet.
     /// Returns null if all milestones are reached.
     /// </summary>
-    public static Milestone? NextMilestone(int owned, IReadOnlyList<Milestone>? milestones = null)
+    public static Milestone? NextMilestone(long owned, IReadOnlyList<Milestone>? milestones = null)
     {
         milestones ??= Defaults;
         foreach (var m in milestones)
@@ -2848,11 +2960,16 @@ public record Milestone(int Threshold, double Multiplier, string Label)
         return null;
     }
 
-    /// <summary>How many more units needed to reach the next milestone.</summary>
-    public static int UnitsToNext(int owned, IReadOnlyList<Milestone>? milestones = null)
+    /// <summary>
+    /// How many more units needed to reach the next milestone. Returns 0
+    /// when no milestones remain. Returns a non-negative value even when
+    /// <paramref name="owned"/> happens to land exactly on a threshold
+    /// (in which case the "next" milestone is the one AFTER that).
+    /// </summary>
+    public static long UnitsToNext(long owned, IReadOnlyList<Milestone>? milestones = null)
     {
         var next = NextMilestone(owned, milestones);
-        return next is null ? 0 : next.Threshold - owned;
+        return next is null ? 0L : next.Threshold - owned;
     }
 }
 
@@ -2879,7 +2996,7 @@ public record Milestone(int Threshold, double Multiplier, string Label)
 /// (<see cref="Business.CycleTimeSeconds"/>) and further halvings would
 /// quickly underflow when combined with a small base time. The
 /// second-axis cross-business bonus (<see cref="CrossBusinessSpeedBonus"/>)
-/// is what scales without bound — it's a <see cref="BigDouble"/>
+/// is what scales without bound — it's a <see cref="MyAdventure.Core.Numerics.BigDouble"/>
 /// revenue multiplier and has no ceiling.
 /// </para>
 ///
@@ -2893,6 +3010,13 @@ public record Milestone(int Threshold, double Multiplier, string Label)
 /// the next tick via <c>ProgressPercent %= 100.0</c>. The
 /// <c>SubFrameCycleTests</c> invariants pin this behavior so future
 /// refactors can't break it.
+/// </para>
+///
+/// <para>
+/// <b>Owned-parameter widening (matching <see cref="Milestone"/>):</b>
+/// all speed-milestone helpers accept <see cref="long"/>. The defaults'
+/// <see cref="Threshold"/> field stays <see cref="int"/> since the table
+/// is bounded; only the caller-supplied owned count widens.
 /// </para>
 /// </summary>
 public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string Label)
@@ -2921,7 +3045,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
     /// below the first threshold this is exactly 1.0, leaving early-game
     /// balance untouched.
     /// </summary>
-    public static double CalculateCycleTimeMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    public static double CalculateCycleTimeMultiplier(long owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
         milestones ??= Defaults;
         var mult = 1.0;
@@ -2937,7 +3061,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
     /// Convenience: cumulative speed multiplier (the reciprocal of the
     /// cycle-time multiplier). Useful for UI display ("×64 Speed").
     /// </summary>
-    public static double CalculateSpeedMultiplier(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    public static double CalculateSpeedMultiplier(long owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
         var cycleMult = CalculateCycleTimeMultiplier(owned, milestones);
         return cycleMult > 0 ? 1.0 / cycleMult : 1.0;
@@ -2947,7 +3071,7 @@ public record SpeedMilestone(int Threshold, double CycleTimeMultiplier, string L
     /// Find the next speed milestone the player hasn't reached yet.
     /// Returns null if all speed milestones are reached.
     /// </summary>
-    public static SpeedMilestone? NextSpeedMilestone(int owned, IReadOnlyList<SpeedMilestone>? milestones = null)
+    public static SpeedMilestone? NextSpeedMilestone(long owned, IReadOnlyList<SpeedMilestone>? milestones = null)
     {
         milestones ??= Defaults;
         foreach (var m in milestones)
@@ -3526,7 +3650,7 @@ public readonly struct BigDouble : IEquatable<BigDouble>, IComparable<BigDouble>
 
 ================================================================================
 FILE: src/MyAdventure.Core/Services/GameEngine.cs
-SIZE: 31.21 KB
+SIZE: 34.46 KB
 ================================================================================
 
 using System.Diagnostics;
@@ -3794,21 +3918,41 @@ public class GameEngine(
     ///         safety loop would silently cap at.</item>
     ///   <item>Uses <see cref="Business.AffordableCount(BigDouble)"/> to make
     ///         "buy as many as you can afford" trivial — the buy-max path
-    ///         passes <see cref="int.MaxValue"/>.</item>
+    ///         passes <see cref="long.MaxValue"/>.</item>
     /// </list>
+    /// <para>
+    /// <b>Why <see cref="long"/> count/return (not <see cref="int"/>):</b>
+    /// the prior <c>int</c> signature was the proximate cause of the
+    /// production wraparound bug. A player with ~3 billion units of a
+    /// business and a +1B bulk-buy request would land at
+    /// <c>biz.Owned + toBuy = 4,000,000,000</c> — which silently wrapped
+    /// the int32 sum to <c>-294,966,296</c>, corrupting every downstream
+    /// calculation (revenue went negative, <see cref="Business.NextCost"/>
+    /// collapsed to a sub-attorobust value, the next "buy max" looked
+    /// free). Widening to <c>long</c> end-to-end — Business.Owned,
+    /// AffordableCount return, this method's parameter and return — makes
+    /// the overflow unreachable from gameplay.
+    /// </para>
     /// </summary>
-    public int BuyMultiple(string businessId, int count)
+    public long BuyMultiple(string businessId, long count)
     {
         var biz = Businesses.FirstOrDefault(b => b.Id == businessId);
-        if (biz is null || count <= 0) return 0;
+        if (biz is null || count <= 0L) return 0L;
 
-        // Cap by affordability so the call can never overspend.
+        // Cap by affordability so the call can never overspend. Both
+        // sides are long; AffordableCount already enforces an internal
+        // per-call cap (Business.PracticalBatchCap) chosen so that
+        // Owned + cap never overflows long even when chained.
         var affordable = biz.AffordableCount(Cash);
         var toBuy = Math.Min(count, affordable);
-        if (toBuy <= 0) return 0;
+        if (toBuy <= 0L) return 0L;
 
         // Cumulative geometric cost: c₀ × (rⁿ - 1) / (r - 1).
         // r and (r - 1) are doubles in the balance table; the result is BigDouble.
+        // toBuy widens to double inside Pow — the same precision argument
+        // that lets NextCost use Math.Pow(CostMultiplier, Owned) applies
+        // here (only matters past 2⁵³, far past where the analytic formula
+        // would have already been bound by AffordableCount).
         var r = biz.CostMultiplier;
         BigDouble totalCost;
         if (r == 1.0)
@@ -3818,30 +3962,42 @@ public class GameEngine(
         }
         else
         {
-            var rPowN = new BigDouble(r).Pow(toBuy);
+            var rPowN = new BigDouble(r).Pow((double)toBuy);
             totalCost = biz.NextCost * (rPowN - BigDouble.One) / new BigDouble(r - 1.0);
         }
 
         // Defensive: if the geometric-series math somehow produced a
         // larger total than cash (e.g. rounding pushed the boundary), back
         // off by one. This protects the player from a transient overdraft
-        // due to floating-point noise.
-        while (toBuy > 0 && Cash < totalCost)
+        // due to floating-point noise. The analytic formula is correct to
+        // within a unit or two, so this loop runs at most a small handful
+        // of iterations — a SafetyBound caps it absolutely to prevent
+        // any pathological case from spinning at huge counts.
+        const int BackoffSafetyBound = 32;
+        var backoffSteps = 0;
+        while (toBuy > 0L && Cash < totalCost && backoffSteps < BackoffSafetyBound)
         {
             toBuy--;
-            if (toBuy == 0) { totalCost = BigDouble.Zero; break; }
+            backoffSteps++;
+            if (toBuy == 0L) { totalCost = BigDouble.Zero; break; }
             if (r == 1.0)
             {
                 totalCost = biz.NextCost * toBuy;
             }
             else
             {
-                var rPowN = new BigDouble(r).Pow(toBuy);
+                var rPowN = new BigDouble(r).Pow((double)toBuy);
                 totalCost = biz.NextCost * (rPowN - BigDouble.One) / new BigDouble(r - 1.0);
             }
         }
 
-        if (toBuy <= 0) return 0;
+        if (toBuy <= 0L) return 0L;
+        // If we exited via the safety bound rather than satisfying the
+        // affordability constraint, refuse the purchase rather than risk
+        // overspending. This branch is effectively unreachable with the
+        // analytic AffordableCount formula but exists so a future bug in
+        // that formula cannot lead to silent overdraft.
+        if (Cash < totalCost) return 0L;
 
         Cash = SanitizeMoney(Cash - totalCost);
         biz.Owned += toBuy;
@@ -3860,10 +4016,14 @@ public class GameEngine(
 
     /// <summary>
     /// Buy as many units of a business as the player can afford right now.
-    /// Equivalent to <see cref="BuyMultiple"/> with <see cref="int.MaxValue"/>
-    /// but reads more clearly at the call site.
+    /// Equivalent to <see cref="BuyMultiple"/> with <see cref="long.MaxValue"/>
+    /// but reads more clearly at the call site. The per-call cap inside
+    /// <see cref="Business.AffordableCount"/> means the actual upper
+    /// bound is <see cref="Business.PracticalBatchCap"/>, well below
+    /// long.MaxValue — leaving headroom so that <c>Owned + bought</c>
+    /// can never overflow even if a player chains buy-max calls.
     /// </summary>
-    public int BuyMax(string businessId) => BuyMultiple(businessId, int.MaxValue);
+    public long BuyMax(string businessId) => BuyMultiple(businessId, long.MaxValue);
 
     /// <summary>Buy a manager for a business. Cost = 1000x base cost.</summary>
     public bool BuyManager(string businessId)
@@ -3988,12 +4148,12 @@ public class GameEngine(
         get
         {
             if (Businesses.Count == 0) return BigDouble.One;
-            var minOwned = int.MaxValue;
+            var minOwned = long.MaxValue;
             foreach (var biz in Businesses)
             {
                 if (biz.Owned < minOwned) minOwned = biz.Owned;
             }
-            if (minOwned < 0) minOwned = 0; // defensive: corrupted save
+            if (minOwned < 0L) minOwned = 0L; // defensive: corrupted save
             return CrossBusinessSpeedBonus.CalculateSpeedMultiplier(minOwned);
         }
     }
@@ -4002,18 +4162,24 @@ public class GameEngine(
     /// The minimum ownership count across all businesses — the input to
     /// the cross-business bonus. Exposed for the UI's "next threshold"
     /// hint so the player can see which business is gating progression.
+    /// <para>
+    /// Returns <see cref="long"/> to match <see cref="Business.Owned"/>'s
+    /// widened type. Negative inputs (corrupted save state) are clamped
+    /// to zero — see CrossBusinessSpeedMultiplier for the same clamp on
+    /// the multiplier path.
+    /// </para>
     /// </summary>
-    public int MinOwnedAcrossBusinesses
+    public long MinOwnedAcrossBusinesses
     {
         get
         {
-            if (Businesses.Count == 0) return 0;
-            var minOwned = int.MaxValue;
+            if (Businesses.Count == 0) return 0L;
+            var minOwned = long.MaxValue;
             foreach (var biz in Businesses)
             {
                 if (biz.Owned < minOwned) minOwned = biz.Owned;
             }
-            return minOwned < 0 ? 0 : minOwned;
+            return minOwned < 0L ? 0L : minOwned;
         }
     }
 
@@ -4109,10 +4275,15 @@ public class GameEngine(
         if (string.IsNullOrWhiteSpace(json) || json == "{}") return;
         try
         {
-            var data = JsonSerializer.Deserialize<Dictionary<string, int>>(json) ?? [];
+            // Deserialize as long, not int. Old saves with int-range
+            // values widen cleanly; hand-edited saves with values past
+            // int.MaxValue now load correctly instead of throwing
+            // inside the JSON reader. Math.Max(0, owned) clamps any
+            // negative-corrupted historical save to a playable zero.
+            var data = JsonSerializer.Deserialize<Dictionary<string, long>>(json) ?? [];
             foreach (var biz in Businesses)
                 if (data.TryGetValue(biz.Id, out var owned))
-                    biz.Owned = Math.Max(0, owned);
+                    biz.Owned = Math.Max(0L, owned);
         }
         catch (JsonException ex)
         {
@@ -4221,10 +4392,14 @@ public class GameEngine(
 
             if (data.TryGetValue("businesses", out var bizEl))
             {
-                var bizData = JsonSerializer.Deserialize<Dictionary<string, int>>(bizEl.GetRawText()) ?? [];
+                // Deserialize as long for the same reason as
+                // ApplyBusinessData — hand-edited saves with values past
+                // int.MaxValue must load correctly, and old saves with
+                // int-range values widen cleanly with no migration.
+                var bizData = JsonSerializer.Deserialize<Dictionary<string, long>>(bizEl.GetRawText()) ?? [];
                 foreach (var biz in Businesses)
                     if (bizData.TryGetValue(biz.Id, out var owned))
-                        biz.Owned = Math.Max(0, owned);
+                        biz.Owned = Math.Max(0L, owned);
             }
 
             if (data.TryGetValue("managers", out var mgrEl))
@@ -6684,7 +6859,7 @@ public class ToastService
 
 ================================================================================
 FILE: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
-SIZE: 13.74 KB
+SIZE: 14.69 KB
 ================================================================================
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6756,7 +6931,13 @@ public partial class BusinessViewModel(
     public string Color => model.Color;
 
     // --- Core display ---
-    [ObservableProperty] private int _owned;
+    /// <summary>
+    /// Mirror of <see cref="Business.Owned"/>. Widened to <see cref="long"/>
+    /// alongside the model so the View can bind to player ownership counts
+    /// that exceed 2³¹ — see the type-level remark on <see cref="Business"/>
+    /// for the overflow story that drove the widening.
+    /// </summary>
+    [ObservableProperty] private long _owned;
     [ObservableProperty] private double _progressPercent;
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private bool _hasManager;
@@ -6769,12 +6950,24 @@ public partial class BusinessViewModel(
     // --- Extended detail properties ---
     [ObservableProperty] private string _cycleTimeText = "";
     [ObservableProperty] private string _revenuePerSecondText = "";
-    [ObservableProperty] private int _affordableCount;
+    /// <summary>
+    /// Mirror of <see cref="Business.AffordableCount(MyAdventure.Core.Numerics.BigDouble)"/>.
+    /// Widened to <see cref="long"/> alongside the engine so the "buy max"
+    /// label can display the analytic affordable count even past 2³¹.
+    /// </summary>
+    [ObservableProperty] private long _affordableCount;
     [ObservableProperty] private string _affordableCountText = "";
     [ObservableProperty] private double _milestoneMultiplier = 1.0;
     [ObservableProperty] private string _milestoneMultiplierText = "×1";
     [ObservableProperty] private string _nextMilestoneText = "";
-    [ObservableProperty] private int _unitsToNextMilestone;
+    /// <summary>
+    /// Units remaining to reach the next revenue milestone. Widened to
+    /// <see cref="long"/> because <see cref="Business.Owned"/> is now
+    /// <see cref="long"/>; while the milestone thresholds themselves
+    /// stay <see cref="int"/>, the gap <c>Threshold − Owned</c> is
+    /// computed in long-space to match.
+    /// </summary>
+    [ObservableProperty] private long _unitsToNextMilestone;
     [ObservableProperty] private bool _hasNextMilestone;
     [ObservableProperty] private string _nextMilestoneRewardText = "";
 
@@ -9933,6 +10126,343 @@ public class NumberFormatterTests
     {
         var result = NumberFormatter.FormatScientific(7.53e40);
         result.ShouldBe($"7.53 \u00D7 10\u2074\u2070");
+    }
+}
+
+
+================================================================================
+FILE: tests/MyAdventure.Core.Tests/OverflowRegressionTests.cs
+SIZE: 13.55 KB
+================================================================================
+
+using Microsoft.Extensions.Logging.Abstractions;
+using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Numerics;
+using MyAdventure.Core.Services;
+using NSubstitute;
+using Shouldly;
+
+namespace MyAdventure.Core.Tests;
+
+/// <summary>
+/// Regression pins for the int32-overflow bug where <see cref="Business.Owned"/>
+/// wrapped to negative after a few billion-unit bulk buys. The corrupted save
+/// captured in production had <c>shrimp.Owned = -294,966,296</c>
+/// (i.e. <c>4,000,001,000 mod 2³²</c>), and was logged as:
+///
+/// <code>Bulk bought 1000000000 of Shrimp Boat for 7.53523184641835e-13368745 (now -294966296)</code>
+///
+/// The chain of failures from that one wrap was:
+/// <list type="number">
+///   <item>A player at ~3B shrimp boats requested another 1B in bulk-buy.</item>
+///   <item><see cref="GameEngine.BuyMultiple"/> capped at
+///         <see cref="Business.AffordableCount"/> (1B) and did
+///         <c>biz.Owned += toBuy</c> on an <c>int</c> field — silently wrapping
+///         to <c>-294,966,296</c>.</item>
+///   <item>With <c>Owned</c> negative, <see cref="Business.NextCost"/> evaluated
+///         <c>BaseCost × CostMultiplier^Owned</c> where the exponent was now
+///         hugely negative — producing a vanishingly tiny cost
+///         (<c>~7.5e-13368745</c>) for the next purchase.</item>
+///   <item><see cref="Business.AffordableCount"/> happily returned the cap (1B)
+///         against that microscopic cost, and the next bulk-buy succeeded for
+///         essentially free — wrapping Owned again and accelerating the
+///         corruption.</item>
+/// </list>
+///
+/// These tests pin every link in that chain to make the wrap unreachable
+/// from gameplay. The widening of <see cref="Business.Owned"/> from
+/// <c>int</c> to <c>long</c> end-to-end is the structural fix; these tests
+/// are the contract that future refactors can't silently undo.
+/// </summary>
+public class OverflowRegressionTests
+{
+    private readonly IGameStateRepository _repo = Substitute.For<IGameStateRepository>();
+    private readonly GameEngine _engine;
+
+    public OverflowRegressionTests()
+    {
+        _repo.GetLatestAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<GameState?>(null));
+        _engine = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+    }
+
+    // ---------------- The exact production scenario ----------------
+
+    /// <summary>
+    /// Direct reproduction of the production wrap. Pre-fix: Owned += 1B
+    /// on an int field starting at 3B wrapped to -294,966,296. Post-fix:
+    /// Owned is long, the sum lands at exactly 4 billion.
+    /// </summary>
+    [Fact]
+    public async Task BuyMultiple_StartingAtThreeBillionOwned_DoesNotWrapToNegative()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1.0, 10_000_000)); // effectively infinite
+        var shrimp = _engine.Businesses.First(b => b.Id == "shrimp");
+        shrimp.Owned = 3_000_000_000L;
+
+        var bought = _engine.BuyMultiple("shrimp", 1_000_000_000L);
+
+        bought.ShouldBe(1_000_000_000L);
+        shrimp.Owned.ShouldBe(4_000_000_000L);
+        shrimp.Owned.ShouldBeGreaterThan(0L); // the contract that was violated
+    }
+
+    /// <summary>
+    /// BuyMax used to pass int.MaxValue; with Owned at 3B and infinite cash,
+    /// it would happily buy another ~2.1B units and overflow. Post-fix, the
+    /// affordable-count cap is per-call but the long range absorbs the sum.
+    /// </summary>
+    [Fact]
+    public async Task BuyMax_AtHugeOwnedCount_DoesNotProduceNegativeOwned()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1.0, 10_000_000));
+        var shrimp = _engine.Businesses.First(b => b.Id == "shrimp");
+        shrimp.Owned = 3_000_000_000L;
+
+        _engine.BuyMax("shrimp");
+
+        shrimp.Owned.ShouldBeGreaterThan(0L);
+        shrimp.Owned.ShouldBeGreaterThan(3_000_000_000L);
+    }
+
+    /// <summary>
+    /// The single-buy path (BuyBusiness, called by the user clicking once)
+    /// has the same vulnerability in principle — Owned++ on int wraps at 2³¹.
+    /// Unreachable from human clicking but exercise the long arithmetic
+    /// explicitly so a future refactor can't quietly demote the field.
+    /// </summary>
+    [Fact]
+    public async Task BuyBusiness_AtIntMaxValueOwned_DoesNotWrap()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1.0, 10_000_000));
+        var shrimp = _engine.Businesses.First(b => b.Id == "shrimp");
+        shrimp.Owned = (long)int.MaxValue;
+
+        _engine.BuyBusiness("shrimp").ShouldBeTrue();
+
+        shrimp.Owned.ShouldBe((long)int.MaxValue + 1L);
+        shrimp.Owned.ShouldBeGreaterThan(0L);
+    }
+
+    // ---------------- AffordableCount caps and contract ----------------
+
+    /// <summary>
+    /// Even at infinite cash and zero owned, AffordableCount must respect
+    /// its per-call cap. The cap is the load-bearing invariant that lets
+    /// BuyMultiple add to Owned without checking for overflow: Owned + cap
+    /// must fit in long for any reachable Owned.
+    /// </summary>
+    [Fact]
+    public void AffordableCount_NeverExceedsPracticalBatchCap()
+    {
+        var biz = new Business
+        {
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
+            CostMultiplier = 1.0001 // very slow cost growth = many affordable
+        };
+
+        // Infinite cash route.
+        biz.AffordableCount(BigDouble.PositiveInfinity)
+            .ShouldBe(Business.PracticalBatchCap);
+
+        // Astronomically large but finite cash.
+        biz.AffordableCount(new BigDouble(1.0, 100_000))
+            .ShouldBeLessThanOrEqualTo(Business.PracticalBatchCap);
+    }
+
+    /// <summary>
+    /// The cap is positioned so that even a player starting at the
+    /// maximum already-reachable Owned can buy another full cap without
+    /// overflowing long. Specifically: cap + (long.MaxValue - cap) must
+    /// not overflow. Pinning the actual value here means a future change
+    /// that raises the cap toward long.MaxValue trips this test.
+    /// </summary>
+    [Fact]
+    public void PracticalBatchCap_LeavesHeadroomForRepeatedMaxBuys()
+    {
+        // Owned at the cap plus another cap-sized buy must stay positive.
+        var sum = Business.PracticalBatchCap + Business.PracticalBatchCap;
+        sum.ShouldBeGreaterThan(0L);
+        // And, more conservatively, four caps still fit.
+        var fourCaps = Business.PracticalBatchCap * 4L;
+        fourCaps.ShouldBeGreaterThan(0L);
+    }
+
+    // ---------------- The corrupted-save defensiveness ----------------
+
+    /// <summary>
+    /// The leaked production save had <c>shrimp:-294966296</c>. We can't
+    /// un-corrupt history but the import path's <c>Math.Max(0, owned)</c>
+    /// contract must still hold under the widened type — a corrupted
+    /// save loads to a playable, non-negative state.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_ProductionCorruptSave_LoadsClampedToZero()
+    {
+        await _engine.LoadAsync();
+        var corruptJson = """
+        {"v":2,"cash":"1.0e10","lifetime":"1.0e10","angels":"100","prestige":5,
+         "businesses":{"lemonade":1000,"newspaper":1000,"carwash":1000,
+                       "pizza":1000,"donut":1000,"shrimp":-294966296},
+         "managers":{"lemonade":true,"newspaper":true,"carwash":true,
+                     "pizza":true,"donut":true,"shrimp":true},
+         "timestamp":"2026-05-26T23:50:26Z"}
+        """;
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(corruptJson));
+
+        _engine.ImportFromString(encoded).ShouldBeTrue();
+
+        _engine.Businesses.First(b => b.Id == "shrimp").Owned.ShouldBe(0L);
+        // Other businesses preserved.
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(1000L);
+    }
+
+    /// <summary>
+    /// Pre-fix the import path called <c>JsonElement.GetInt32</c> on the
+    /// per-business count, which threw on any value past
+    /// <c>int.MaxValue</c>; the exception was silently swallowed inside
+    /// a try/catch that already exists for malformed JSON, so a
+    /// legitimately-large hand-edited save would zero out without notice.
+    /// Post-fix, long-range values round-trip cleanly.
+    /// </summary>
+    [Fact]
+    public async Task ImportFromString_HandEditedSaveWithLongRangeValue_LoadsCorrectly()
+    {
+        await _engine.LoadAsync();
+        var json = """
+        {"v":2,"cash":"1.0e10","lifetime":"1.0e10","angels":"100","prestige":1,
+         "businesses":{"lemonade":5000000000,"newspaper":0,"carwash":0,
+                       "pizza":0,"donut":0,"shrimp":0},
+         "managers":{},
+         "timestamp":"2026-05-26T23:50:26Z"}
+        """;
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+
+        _engine.ImportFromString(encoded).ShouldBeTrue();
+
+        _engine.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(5_000_000_000L);
+    }
+
+    /// <summary>
+    /// Export → import round-trip of a long-range Owned. Pre-fix, the
+    /// serializer wrote a JSON number past int.MaxValue and the import
+    /// silently lost it; post-fix the value round-trips through the
+    /// canonical Base64-JSON envelope.
+    /// </summary>
+    [Fact]
+    public async Task ExportThenImport_LongRangeOwned_RoundTripsExactly()
+    {
+        await _engine.LoadAsync();
+        var lemon = _engine.Businesses.First(b => b.Id == "lemonade");
+        lemon.Owned = 7_000_000_000L;
+
+        var exported = _engine.ExportToString();
+
+        // Fresh engine — verify the imported value matches what we exported.
+        var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
+        await engine2.LoadAsync();
+        engine2.ImportFromString(exported).ShouldBeTrue();
+
+        engine2.Businesses.First(b => b.Id == "lemonade").Owned.ShouldBe(7_000_000_000L);
+    }
+
+    // ---------------- The chain-buy invariant ----------------
+
+    /// <summary>
+    /// Chain five back-to-back max-cap buys against effectively infinite
+    /// cash. Owned must stay strictly positive and monotonically increase
+    /// after every batch. This is the closure of the production scenario:
+    /// the original bug surfaced because each successive bulk-buy
+    /// compounded the corruption.
+    /// </summary>
+    [Fact]
+    public async Task BuyMultiple_RepeatedAtCap_OwnedStaysPositiveAndIncreases()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1.0, 10_000_000));
+        var biz = _engine.Businesses.First(b => b.Id == "lemonade");
+
+        var last = biz.Owned;
+        for (var i = 0; i < 5; i++)
+        {
+            _engine.BuyMultiple("lemonade", Business.PracticalBatchCap);
+            biz.Owned.ShouldBeGreaterThan(last);
+            biz.Owned.ShouldBeGreaterThan(0L);
+            last = biz.Owned;
+        }
+    }
+
+    // ---------------- Cross-business multiplier with long-range inputs ----------------
+
+    /// <summary>
+    /// The cross-business multiplier consumes the minimum across the
+    /// roster. With Owned widened to long, the minimum is also long; the
+    /// multiplier path must accept inputs past int.MaxValue without
+    /// truncating. We don't pin a specific multiplier value (it's
+    /// astronomically large past 10⁹ minimum-owned), only that the
+    /// engine reports a finite-and-positive answer rather than
+    /// degenerating to NaN/Infinity or wrapping to 1.0.
+    /// </summary>
+    [Fact]
+    public async Task CrossBusinessSpeedMultiplier_AtLongRangeMinOwned_StaysFiniteAndPositive()
+    {
+        await _engine.LoadAsync();
+        foreach (var biz in _engine.Businesses)
+            biz.Owned = 3_000_000_000L; // past int.MaxValue (2.147B)
+
+        _engine.MinOwnedAcrossBusinesses.ShouldBe(3_000_000_000L);
+        var mult = _engine.CrossBusinessSpeedMultiplier;
+        mult.IsFinite.ShouldBeTrue();
+        mult.Sign.ShouldBe(1);
+        // At this scale we should be far past the original ×64 baseline.
+        (mult > new BigDouble(1.0, 100)).ShouldBeTrue();
+    }
+
+    // ---------------- The chain that produced the original log line ----------------
+
+    /// <summary>
+    /// The synthetic version of the production log line, reconstructed:
+    /// take a business to a high Owned count, exhaust cash partway, and
+    /// confirm that the next bulk-buy reports a sensible cost (not the
+    /// <c>7.53e-13368745</c> sub-attorobust value that signaled the
+    /// corruption). The defining quality is: if any prior buy wrapped
+    /// Owned negative, NextCost would shrink to ~<c>1e-millions</c>;
+    /// here it must stay above a sane lower bound (BaseCost itself).
+    /// </summary>
+    [Fact]
+    public async Task NextCost_AfterMultipleBulkBuys_NeverCollapsesToSubAtto()
+    {
+        await _engine.LoadAsync();
+        SetCash(new BigDouble(1.0, 10_000_000));
+        var shrimp = _engine.Businesses.First(b => b.Id == "shrimp");
+
+        for (var i = 0; i < 4; i++)
+            _engine.BuyMultiple("shrimp", 1_000_000_000L);
+
+        // Owned should be well past 2³¹ by now — the wrap point. NextCost
+        // grows monotonically with Owned (CostMultiplier > 1), so any
+        // collapse would be a wrap signal.
+        shrimp.Owned.ShouldBeGreaterThan(0L);
+        shrimp.NextCost.IsFinite.ShouldBeTrue();
+        // BaseCost is 1,244,160 — the cost at zero owned. Higher Owned
+        // strictly increases NextCost.
+        (shrimp.NextCost >= new BigDouble(shrimp.BaseCost)).ShouldBeTrue();
+    }
+
+    private void SetCash(BigDouble amount)
+    {
+        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
+        prop.GetSetMethod(true)!.Invoke(_engine, [amount]);
     }
 }
 

@@ -124,8 +124,13 @@ public class OverflowRegressionTests
     {
         var biz = new Business
         {
-            Id = "test", Name = "Test", Icon = "T", Color = "#FFF",
-            BaseCost = 1, BaseRevenue = 1, BaseTimeSeconds = 1,
+            Id = "test",
+            Name = "Test",
+            Icon = "T",
+            Color = "#FFF",
+            BaseCost = 1,
+            BaseRevenue = 1,
+            BaseTimeSeconds = 1,
             CostMultiplier = 1.0001 // very slow cost growth = many affordable
         };
 
