@@ -113,7 +113,10 @@ public class TelemetryConfigurationTests : IDisposable
         const string dsn =
             "https://abc123@o123.ingest.us.sentry.io/456";
         var parsed = SentryDsn.Parse(dsn);
-        parsed.AuthHeaderValue.ShouldBe("sentry sentry_key=abc123");
+        // Sentry's OTLP intake requires sentry_version=7 to be present in
+        // the x-sentry-auth header value, otherwise events are accepted at
+        // the HTTP level but silently dropped server-side.
+        parsed.AuthHeaderValue.ShouldBe("sentry sentry_version=7, sentry_key=abc123");
     }
 
     [Fact]
