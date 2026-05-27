@@ -17346,3 +17346,58 @@ public partial class App : Avalonia.Application
 
 
 
+Good progress — logs are flowing. Two things to handle: **(1) why traces/metrics aren't showing**, and **(2) Android needs the same flush-on-shutdown treatment**. Let me address both honestly.
+
+## On Android — you're right, that's a fair call-out
+
+I should have done both at once. The "no silos" rule isn't a checklist item, it's how I should be thinking by default. Skipping Android was lazy — same telemetry pipeline, same flush requirement, same priority.
+
+For Android the dispose hook is different: `IActivatableLifetime` raises `Deactivated(ActivationKind.Background)` when the app is backgrounded (which is the Android equivalent of "about to be killed by the OS"). That's where the flush has to happen — Android doesn't really have a graceful `Exit` event; the process can be reaped at any moment after backgrounding. Flushing on every background transition is also correct because Android can kill the process while it's backgrounded and never re-enter the foreground.
+
+## On traces and metrics
+
+Three separate reasons, in priority order:
+
+**Traces:** Sentry receives the OTLP traces fine, but there's nothing to *trace*. The codebase has `ActivitySource` declared in the dead `TelemetryBootstrapper.cs` you still need to delete, but no code anywhere actually starts an `Activity`. The tracing pipeline is wired and exports correctly — it has zero spans to export. The fix is to start emitting spans from the GameEngine (e.g. around `BuyBusiness`, save/load, export/import) — that's a separate piece of work and I won't smuggle it into this fix. For now, the Traces panel will stay empty until you instrument something.
+
+**Metrics:** This one is on Sentry, not us. Per [their docs](https://docs.sentry.io/concepts/otlp/), Sentry does not support ingesting OTLP metrics. The `DependencyInjection.cs` comment already calls this out — the metrics pipeline goes to the console exporter only. They tracked it as [issue #103487](https://github.com/getsentry/sentry/issues/103487) as recently as November 2025. So metrics in Sentry are not going to happen via OTLP regardless of what we do. If you want metrics visualized, the FOSS path is Prometheus or Grafana Mimir over OTLP — that's a separate sink to add to the metrics pipeline when you want it.
+
+**Background runtime metrics:** `AddRuntimeInstrumentation()` is wired and emitting to console, so you'll see GC/CPU/etc. in the local log. They'd ship to a real metrics backend once one is configured.
+
+## The Android fix
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+00
+38
+
