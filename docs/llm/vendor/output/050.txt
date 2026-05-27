@@ -2,54 +2,54 @@ kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; 
 
 Build succeeded in 1.1s
 
-real	0m1.231s
-user	0m0.973s
-sys	0m0.308s
+real	0m1.226s
+user	0m1.005s
+sys	0m0.361s
 Restore complete (0.6s)
 
-Build succeeded in 0.8s
+Build succeeded in 0.7s
 
-real	0m0.914s
-user	0m0.994s
-sys	0m0.230s
+real	0m0.889s
+user	0m1.011s
+sys	0m0.229s
 Restore complete (0.6s)
-  MyAdventure.Core net10.0 succeeded (2.4s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.5s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core net10.0 succeeded (0.4s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.4s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Core.Tests net10.0 succeeded (0.6s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-  MyAdventure.Integration.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
-  MyAdventure.Shared net10.0 succeeded (1.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.UI.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
-  MyAdventure.Desktop net10.0 succeeded (1.2s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
-  MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
+  MyAdventure.Integration.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net10.0 succeeded (0.8s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.5s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (1.3s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
   MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.Android net10.0-android succeeded (24.0s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+  MyAdventure.Android net10.0-android succeeded (23.6s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
 
-Build succeeded in 28.9s
+Build succeeded in 26.1s
 
-real	0m29.097s
-user	1m39.152s
-sys	0m4.424s
+real	0m26.284s
+user	1m40.580s
+sys	0m4.334s
 Restore complete (0.6s)
   MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
   MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
   MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
   MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.09]   Discovering: MyAdventure.Core.Tests
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
-[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
+[xUnit.net 00:00:00.16]   Discovered:  MyAdventure.Core.Tests
 [xUnit.net 00:00:00.07]   Discovering: MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
-[xUnit.net 00:00:00.15]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.20]   Starting:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.UI.Tests
 [xUnit.net 00:00:00.12]   Discovered:  MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.19]   Starting:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
-[xUnit.net 00:00:00.15]   Starting:    MyAdventure.Integration.Tests
 [xUnit.net 00:00:00.11]   Discovered:  MyAdventure.UI.Tests
-[xUnit.net 00:00:00.14]   Starting:    MyAdventure.UI.Tests
-LogRecord.Timestamp:               2026-05-27T14:17:07.2093257Z
+[xUnit.net 00:00:00.16]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.13]   Starting:    MyAdventure.UI.Tests
+LogRecord.Timestamp:               2026-05-27T14:27:20.4750624Z
 LogRecord.CategoryName:            MyAdventure.Telemetry
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -61,16 +61,16 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-[xUnit.net 00:00:00.32]   Finished:    MyAdventure.UI.Tests
-[xUnit.net 00:00:00.53]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.33]   Finished:    MyAdventure.UI.Tests
+[xUnit.net 00:00:00.54]   Finished:    MyAdventure.Core.Tests
   MyAdventure.UI.Tests test net10.0 succeeded (0.9s)
-  MyAdventure.Core.Tests test net10.0 succeeded (1.1s)
-LogRecord.Timestamp:               2026-05-27T14:17:07.6552312Z
+  MyAdventure.Core.Tests test net10.0 succeeded (1.2s)
+LogRecord.Timestamp:               2026-05-27T14:27:20.9234205Z
 LogRecord.CategoryName:            DbInit
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -81,12 +81,12 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-LogRecord.Timestamp:               2026-05-27T14:17:07.6568710Z
+LogRecord.Timestamp:               2026-05-27T14:27:20.9249439Z
 LogRecord.CategoryName:            DbInit
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -97,12 +97,12 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-LogRecord.Timestamp:               2026-05-27T14:17:07.6716505Z
+LogRecord.Timestamp:               2026-05-27T14:27:20.9463762Z
 LogRecord.CategoryName:            MyAdventure.Telemetry
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -115,12 +115,12 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: test
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-LogRecord.Timestamp:               2026-05-27T14:17:07.6779553Z
+LogRecord.Timestamp:               2026-05-27T14:27:20.9529357Z
 LogRecord.CategoryName:            MyAdventure.Telemetry
 LogRecord.Severity:                Warn
 LogRecord.SeverityText:            Warning
@@ -132,20 +132,20 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-[xUnit.net 00:00:00.78]   Finished:    MyAdventure.Integration.Tests
-  MyAdventure.Integration.Tests test net10.0 succeeded (1.4s)
+[xUnit.net 00:00:00.81]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.5s)
 
-Test summary: total: 391, failed: 0, succeeded: 391, skipped: 0, duration: 1.4s
-Build succeeded in 2.3s
+Test summary: total: 391, failed: 0, succeeded: 391, skipped: 0, duration: 1.5s
+Build succeeded in 2.4s
 
-real	0m2.463s
-user	0m1.839s
-sys	0m0.440s
+real	0m2.566s
+user	0m1.736s
+sys	0m0.447s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -236,12 +236,12 @@ Project 'MyAdventure.UI.Tests' has the following package references
 
 (A) : Auto-referenced package.
 
-real	0m2.020s
-user	0m2.113s
-sys	0m0.467s
-Restore complete (0.5s)
+real	0m2.021s
+user	0m2.070s
+sys	0m0.533s
+Restore complete (0.6s)
 
-Build succeeded in 0.6s
+Build succeeded in 0.7s
 
 The following sources were used:
    https://api.nuget.org/v3/index.json
@@ -255,13 +255,13 @@ The given project `MyAdventure.Core.Tests` has no updates given the current sour
 The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
 The given project `MyAdventure.UI.Tests` has no updates given the current sources.
 
-real	0m4.084s
-user	0m3.426s
-sys	0m0.623s
+real	0m2.570s
+user	0m2.726s
+sys	0m0.482s
 
-real	0m9.769s
-user	0m17.963s
-sys	0m1.416s
+real	0m10.182s
+user	0m18.892s
+sys	0m1.517s
 ==============================================
   Generating Clean Project Export
 ==============================================
@@ -318,6 +318,7 @@ Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/SentryEnvelope.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/SentryEventLoggerProvider.cs
+cat: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs: No such file or directory
 Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs
@@ -359,9 +360,9 @@ Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
 
 Export Complete: docs/llm/dump.txt
 
-real	0m0.972s
-user	0m0.517s
-sys	0m0.620s
+real	0m0.997s
+user	0m0.499s
+sys	0m0.632s
 #!/bin/bash
 
 # Define paths and file names
@@ -425,56 +426,56 @@ MYADVENTURE_VERBOSE=1 \
 # OTEL_EXPORTER_OTLP_HEADERS="x-sentry-auth=Sentry sentry_key=fe6ae5ee15285c313b8171bb7a5a4ad0,sentry_version=7" \
 dotnet run --project src/MyAdventure.Desktop > "$LOG_FILE" 2>&1
 
-Build succeeded in 0.5s
+Build succeeded in 0.6s
 
-real	0m0.689s
-user	0m0.812s
-sys	0m0.235s
+real	0m0.759s
+user	0m0.826s
+sys	0m0.261s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
 
-real	0m0.868s
-user	0m0.976s
-sys	0m0.214s
+real	0m0.872s
+user	0m0.962s
+sys	0m0.204s
 Restore complete (0.6s)
   MyAdventure.Core net10.0 succeeded (0.1s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.3s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.2s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Core.Tests net10.0 succeeded (0.4s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
   MyAdventure.Integration.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
-  MyAdventure.Shared net10.0 succeeded (0.4s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.UI.Tests net10.0 succeeded (0.2s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
-  MyAdventure.Desktop net10.0 succeeded (0.6s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
+  MyAdventure.Shared net10.0 succeeded (0.5s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.UI.Tests net10.0 succeeded (0.3s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
+  MyAdventure.Desktop net10.0 succeeded (1.0s) → src/MyAdventure.Desktop/bin/Debug/net10.0/MyAdventure.Desktop.dll
   MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
   MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
-  MyAdventure.Android net10.0-android succeeded (22.8s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
+  MyAdventure.Android net10.0-android succeeded (24.4s) → src/MyAdventure.Android/bin/Debug/net10.0-android/MyAdventure.Android.dll
 
-Build succeeded in 24.5s
+Build succeeded in 26.0s
 
-real	0m24.728s
-user	1m40.908s
-sys	0m4.263s
+real	0m26.243s
+user	1m47.298s
+sys	0m4.681s
 Restore complete (0.6s)
   MyAdventure.Core net10.0 succeeded (0.0s) → src/MyAdventure.Core/bin/Debug/net10.0/MyAdventure.Core.dll
-  MyAdventure.Infrastructure net10.0 succeeded (0.0s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Infrastructure net10.0 succeeded (0.1s) → src/MyAdventure.Infrastructure/bin/Debug/net10.0/MyAdventure.Infrastructure.dll
   MyAdventure.Core.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Core.Tests/bin/Debug/net10.0/MyAdventure.Core.Tests.dll
-  MyAdventure.Shared net10.0 succeeded (0.0s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
+  MyAdventure.Shared net10.0 succeeded (0.1s) → src/MyAdventure.Shared/bin/Debug/net10.0/MyAdventure.Shared.dll
   MyAdventure.Integration.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.Integration.Tests/bin/Debug/net10.0/MyAdventure.Integration.Tests.dll
   MyAdventure.UI.Tests net10.0 succeeded (0.1s) → tests/MyAdventure.UI.Tests/bin/Debug/net10.0/MyAdventure.UI.Tests.dll
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Core.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Core.Tests
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.8)
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.Integration.Tests
-[xUnit.net 00:00:00.13]   Discovered:  MyAdventure.Core.Tests
-[xUnit.net 00:00:00.06]   Discovering: MyAdventure.UI.Tests
-[xUnit.net 00:00:00.11]   Discovered:  MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.07]   Discovering: MyAdventure.UI.Tests
+[xUnit.net 00:00:00.14]   Discovered:  MyAdventure.Core.Tests
+[xUnit.net 00:00:00.12]   Discovered:  MyAdventure.Integration.Tests
 [xUnit.net 00:00:00.10]   Discovered:  MyAdventure.UI.Tests
-[xUnit.net 00:00:00.17]   Starting:    MyAdventure.Core.Tests
-[xUnit.net 00:00:00.14]   Starting:    MyAdventure.Integration.Tests
+[xUnit.net 00:00:00.19]   Starting:    MyAdventure.Core.Tests
 [xUnit.net 00:00:00.12]   Starting:    MyAdventure.UI.Tests
-LogRecord.Timestamp:               2026-05-27T14:17:52.7380607Z
+[xUnit.net 00:00:00.16]   Starting:    MyAdventure.Integration.Tests
+LogRecord.Timestamp:               2026-05-27T14:28:06.5961596Z
 LogRecord.CategoryName:            MyAdventure.Telemetry
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -486,16 +487,16 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-[xUnit.net 00:00:00.29]   Finished:    MyAdventure.UI.Tests
-  MyAdventure.UI.Tests test net10.0 succeeded (0.8s)
-[xUnit.net 00:00:00.50]   Finished:    MyAdventure.Core.Tests
+[xUnit.net 00:00:00.31]   Finished:    MyAdventure.UI.Tests
+  MyAdventure.UI.Tests test net10.0 succeeded (0.9s)
+[xUnit.net 00:00:00.52]   Finished:    MyAdventure.Core.Tests
   MyAdventure.Core.Tests test net10.0 succeeded (1.1s)
-LogRecord.Timestamp:               2026-05-27T14:17:53.1726960Z
+LogRecord.Timestamp:               2026-05-27T14:28:07.0431802Z
 LogRecord.CategoryName:            DbInit
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -506,12 +507,12 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-LogRecord.Timestamp:               2026-05-27T14:17:53.1746790Z
+LogRecord.Timestamp:               2026-05-27T14:28:07.0447374Z
 LogRecord.CategoryName:            DbInit
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -522,12 +523,12 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-LogRecord.Timestamp:               2026-05-27T14:17:53.1842441Z
+LogRecord.Timestamp:               2026-05-27T14:28:07.0528138Z
 LogRecord.CategoryName:            MyAdventure.Telemetry
 LogRecord.Severity:                Info
 LogRecord.SeverityText:            Information
@@ -540,12 +541,12 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: test
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-LogRecord.Timestamp:               2026-05-27T14:17:53.1899775Z
+LogRecord.Timestamp:               2026-05-27T14:28:07.0590805Z
 LogRecord.CategoryName:            MyAdventure.Telemetry
 LogRecord.Severity:                Warn
 LogRecord.SeverityText:            Warning
@@ -557,20 +558,20 @@ LogRecord.Attributes (Key:Value):
 Resource associated with LogRecord:
 deployment.environment: production
 service.name: MyAdventure
-service.version: 1.0.1+817a6f38df6ea30e32f563632e8ad98c270beaa8
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
 service.instance.id: fedora
 telemetry.sdk.name: opentelemetry
 telemetry.sdk.language: dotnet
 telemetry.sdk.version: 1.15.3
-[xUnit.net 00:00:00.75]   Finished:    MyAdventure.Integration.Tests
-  MyAdventure.Integration.Tests test net10.0 succeeded (1.3s)
+[xUnit.net 00:00:00.78]   Finished:    MyAdventure.Integration.Tests
+  MyAdventure.Integration.Tests test net10.0 succeeded (1.4s)
 
-Test summary: total: 391, failed: 0, succeeded: 391, skipped: 0, duration: 1.3s
-Build succeeded in 2.2s
+Test summary: total: 391, failed: 0, succeeded: 391, skipped: 0, duration: 1.4s
+Build succeeded in 2.3s
 
-real	0m2.361s
-user	0m1.737s
-sys	0m0.402s
+real	0m2.459s
+user	0m1.703s
+sys	0m0.398s
 Restore complete (0.6s)
 
 Build succeeded in 0.7s
@@ -661,10 +662,10 @@ Project 'MyAdventure.UI.Tests' has the following package references
 
 (A) : Auto-referenced package.
 
-real	0m1.927s
-user	0m1.983s
-sys	0m0.469s
-Restore complete (0.5s)
+real	0m2.009s
+user	0m2.128s
+sys	0m0.485s
+Restore complete (0.6s)
 
 Build succeeded in 0.7s
 
@@ -680,13 +681,13 @@ The given project `MyAdventure.Core.Tests` has no updates given the current sour
 The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
 The given project `MyAdventure.UI.Tests` has no updates given the current sources.
 
-real	0m2.361s
-user	0m2.426s
-sys	0m0.505s
+real	0m3.201s
+user	0m3.333s
+sys	0m0.569s
 
-real	0m9.725s
-user	0m18.901s
-sys	0m1.477s
+real	0m10.813s
+user	0m19.828s
+sys	0m1.680s
 #!/bin/bash
 # =============================================================================
 # Clean Project Export for LLM Analysis (Final Directory Fix)
@@ -854,6 +855,7 @@ Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/SentryEnvelope.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/SentryEventLoggerProvider.cs
+cat: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs: No such file or directory
 Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
 Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs
@@ -895,11 +897,13 @@ Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
 
 Export Complete: docs/llm/dump.txt
 
-real	0m0.964s
-user	0m0.499s
-sys	0m0.625s
+real	0m1.043s
+user	0m0.500s
+sys	0m0.711s
 
-real	2m31.459s
-user	2m20.792s
-sys	0m9.440s
+real	3m19.873s
+user	2m27.470s
+sys	0m14.208s
 kushal@fedora:~/src/dotnet/MyAdventure$ 
+
+

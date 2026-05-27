@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Wed May 27 10:18:07 AM EDT 2026
+Generated: Wed May 27 10:28:23 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -47,6 +47,7 @@ DIRECTORY STRUCTURE:
 │           │   ├── 2026-05-27-07-21-30.txt
 │           │   ├── 2026-05-27-09-11-49.txt
 │           │   ├── 2026-05-27-09-42-02.txt
+│           │   ├── 2026-05-27-10-17-24.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -6859,102 +6860,9 @@ internal sealed class SentryCriticalLogException : Exception
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
-SIZE: 2.99 KB
+SIZE: 0 KB
 ================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using OpenTelemetry;
-using OpenTelemetry.Exporter;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-
-namespace MyAdventure.Infrastructure.Telemetry;
-
-public static class TelemetryBootstrapper
-{
-    public static readonly ActivitySource Source = new("MyAdventure");
-
-    public static IServiceCollection AddMyAdventureTelemetry(
-        this IServiceCollection services,
-        string environment,
-        bool verbose,
-        string sentryDsnStr)
-    {
-        var sentryDsn = SentryDsn.Parse(sentryDsnStr);
-
-        var resourceBuilder = ResourceBuilder.CreateDefault()
-            .AddService(
-                serviceName: "MyAdventure",
-                serviceVersion: typeof(TelemetryBootstrapper).Assembly.GetName().Version?.ToString() ?? "1.0.0",
-                serviceInstanceId: Environment.MachineName)
-            .AddAttributes(new[]
-            {
-                new KeyValuePair<string, object>("deployment.environment", environment)
-            });
-
-        services.AddLogging(logging =>
-        {
-            logging.ClearProviders();
-
-            if (verbose)
-            {
-                logging.AddConsole(opt =>
-                {
-                    opt.LogToStandardErrorThreshold = LogLevel.Error;
-                });
-            }
-
-            if (sentryDsn.IsOtlp)
-            {
-                Console.WriteLine($"Telemetry: Sentry OTLP enabled, env={environment}, verbose={verbose}");
-                logging.AddOpenTelemetry(options =>
-                {
-                    options.SetResourceBuilder(resourceBuilder);
-                    options.IncludeFormattedMessage = true;
-                    options.IncludeScopes = true;
-
-                    options.AddOtlpExporter(opt =>
-                    {
-                        opt.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        opt.Endpoint = new Uri(sentryDsn.LogsEndpoint);
-                        opt.Headers = sentryDsn.AuthHeaderValue;
-                    });
-                });
-            }
-        });
-
-        services.AddOpenTelemetry()
-            .WithTracing(tracing =>
-            {
-                tracing.SetResourceBuilder(resourceBuilder);
-                tracing.AddSource(Source.Name);
-                tracing.AddHttpClientInstrumentation();
-                tracing.AddSqlStatements();
-
-                if (sentryDsn.IsOtlp)
-                {
-                    tracing.AddOtlpExporter(opt =>
-                    {
-                        opt.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        opt.Endpoint = new Uri(sentryDsn.TracesEndpoint);
-                        opt.Headers = sentryDsn.AuthHeaderValue;
-                    });
-                }
-            });
-
-        return services;
-    }
-
-    private static TracerProviderBuilder AddSqlStatements(this TracerProviderBuilder builder)
-    {
-        return builder;
-    }
-}
 
 
 ================================================================================

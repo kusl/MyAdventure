@@ -1,0 +1,79 @@
+LogRecord.Timestamp:               2026-05-27T14:28:26.5937355Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env=production, verbose=False
+LogRecord.Body:                    Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Environment: production
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T14:28:27.8099653Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Applied offline earnings on load: 2.4081269457029113e11 for 512s away
+LogRecord.Body:                    Applied offline earnings on load: {Earnings} for {Seconds:F0}s away
+LogRecord.Attributes (Key:Value):
+    Earnings: 2.4081269457029113e11
+    Seconds: 511.7924854
+    OriginalFormat (a.k.a Body): Applied offline earnings on load: {Earnings} for {Seconds:F0}s away
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T14:28:27.8369827Z
+LogRecord.CategoryName:            MyAdventure.Shared.ViewModels.GameViewModel
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Game initialized with 6 businesses
+LogRecord.Body:                    Game initialized with {Count} businesses
+LogRecord.Attributes (Key:Value):
+    Count: 6
+    OriginalFormat (a.k.a Body): Game initialized with {Count} businesses
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T14:28:32.9977113Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Query
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+LogRecord.Body:                    The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+LogRecord.EventId:                 10103
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Query.FirstWithoutOrderByAndFilterWarning
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+78767801b8d045b70cfd429e53dd76c857d886c4
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
