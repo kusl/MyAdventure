@@ -16380,3 +16380,23 @@ Then within 30–60 seconds, go to Sentry → **Traces** — you should see a `g
 ## Why logs arrived but traces didn't
 
 The OpenTelemetry SDK exports logs and traces on independent pipelines with independent HTTP clients and independent retry/backoff queues. It's possible Sentry's intake was lenient enough to accept the malformed auth on log records (treating it as a known-DSN project) while rejecting traces — or that both are being dropped on Sentry's side but log records happen to hit a different (more permissive) intake path. Either way, `sentry_version=7` is required per Sentry's documented OTLP auth spec and it's the first thing to fix.
+
+04
+30
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+04
+30

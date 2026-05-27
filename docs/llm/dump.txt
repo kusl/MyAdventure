@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Tue May 26 09:08:44 PM EDT 2026
+Generated: Wed May 27 07:19:50 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -95,7 +95,8 @@ DIRECTORY STRUCTURE:
 │               ├── 046.txt
 │               ├── 047.txt
 │               ├── 048.txt
-│               └── 049.txt
+│               ├── 049.txt
+│               └── 050.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -5881,7 +5882,7 @@ public class GameStateRepository(
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
-SIZE: 7.19 KB
+SIZE: 7.20 KB
 ================================================================================
 
 using System;
@@ -6044,13 +6045,11 @@ public sealed class SentryDsn
 
         if (string.IsNullOrWhiteSpace(secretKey))
         {
-            authHeaderValue =
-                $"sentry sentry_key={publicKey}";
+            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}";
         }
         else
         {
-            authHeaderValue =
-                $"sentry sentry_key={publicKey}, sentry_secret={secretKey}";
+            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}, sentry_secret={secretKey}";
         }
 
         return new SentryDsn(
