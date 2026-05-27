@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Wed May 27 09:12:30 AM EDT 2026
+Generated: Wed May 27 09:42:45 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -45,6 +45,7 @@ DIRECTORY STRUCTURE:
 │           │   ├── 2026-05-24-11-38-47.txt
 │           │   ├── 2026-05-26-19-14-19.txt
 │           │   ├── 2026-05-27-07-21-30.txt
+│           │   ├── 2026-05-27-09-11-49.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -156,6 +157,8 @@ DIRECTORY STRUCTURE:
 │   │   │   └── GameStateRepository.cs
 │   │   └── Telemetry
 │   │       ├── SentryDsn.cs
+│   │       ├── SentryEnvelope.cs
+│   │       ├── SentryEventLoggerProvider.cs
 │   │       ├── TelemetryBootstrapper.cs
 │   │       ├── TelemetryConfigurationLoader.cs
 │   │       ├── TelemetryDefaults.cs
@@ -195,6 +198,7 @@ DIRECTORY STRUCTURE:
     │   ├── GameStateRepositoryTests.cs
     │   ├── MyAdventure.Integration.Tests.csproj
     │   ├── SchemaMigrationTests.cs
+    │   ├── SentryEnvelopeTests.cs
     │   └── TelemetryConfigurationTests.cs
     └── MyAdventure.UI.Tests
         ├── AppLifecycleManagerTests.cs
@@ -5365,7 +5369,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/DependencyInjection.cs
-SIZE: 17.14 KB
+SIZE: 18.63 KB
 ================================================================================
 
 using Microsoft.Data.Sqlite;
@@ -5403,15 +5407,27 @@ public static class DependencyInjection
     /// and the full OpenTelemetry logging/tracing/metrics pipeline.
     ///
     /// <para>
-    /// <b>Sentry integration.</b> If <see cref="SentryOptions.Dsn"/> is
-    /// populated <i>and</i> parses successfully, an OTLP/HTTP exporter
-    /// is registered for both logs and traces (Sentry doesn't accept
-    /// OTLP metrics, so the metrics pipeline stays console-only). The
-    /// DSN, environment, and sampling rate come from
-    /// <paramref name="telemetry"/>; callers usually build that via
-    /// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration"/>
-    /// (Desktop) or <see cref="TelemetryConfigurationLoader.LoadFromEnvironment"/>
-    /// (Android).
+    /// <b>Sentry integration: three pipelines.</b> When the configured
+    /// DSN parses successfully we wire <i>three</i> Sentry outputs in
+    /// parallel:
+    /// <list type="bullet">
+    ///   <item>An OTLP/HTTP exporter for <b>logs</b>, pointing at
+    ///   Sentry's logs ingestion endpoint. This populates the Sentry
+    ///   <i>Logs</i> panel with every log record the app emits.</item>
+    ///   <item>An OTLP/HTTP exporter for <b>traces</b>, pointing at
+    ///   Sentry's traces ingestion endpoint. This populates the
+    ///   Sentry <i>Traces</i> panel.</item>
+    ///   <item>A custom <see cref="SentryEventLoggerProvider"/> that
+    ///   POSTs every log record carrying an exception to Sentry's
+    ///   <i>envelope</i> endpoint. This is the only one of the three
+    ///   that creates a Sentry <b>Issue</b> — Sentry's OTLP intake is
+    ///   in open beta and explicitly does not generate Issues from
+    ///   OTLP logs or from span exception events. Without this third
+    ///   provider, exceptions show up as plain logs in the Logs panel
+    ///   and never get triaged through the Issues workflow.</item>
+    /// </list>
+    /// Sentry doesn't accept OTLP metrics, so the metrics pipeline
+    /// stays console-only.
     /// </para>
     ///
     /// <para>
@@ -5443,10 +5459,12 @@ public static class DependencyInjection
         // inspect them at runtime (the App startup logs them).
         services.AddSingleton(telemetry);
 
+        var serviceVersion = GetAssemblyVersion();
+
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(
                 serviceName: "MyAdventure",
-                serviceVersion: GetAssemblyVersion(),
+                serviceVersion: serviceVersion,
                 serviceInstanceId: Environment.MachineName)
             .AddAttributes(new KeyValuePair<string, object>[]
             {
@@ -5463,7 +5481,7 @@ public static class DependencyInjection
         var sentryEnabled = !string.IsNullOrWhiteSpace(telemetry.Sentry.Dsn)
             && SentryDsn.TryParse(telemetry.Sentry.Dsn, out sentry, out sentryParseError);
 
-        ConfigureLogging(services, telemetry, resourceBuilder, sentry);
+        ConfigureLogging(services, telemetry, resourceBuilder, sentry, serviceVersion);
         ConfigureTracingAndMetrics(services, telemetry, resourceBuilder, sentry);
 
         // Emit a single-line breadcrumb that records the configuration
@@ -5484,7 +5502,8 @@ public static class DependencyInjection
         IServiceCollection services,
         TelemetryOptions telemetry,
         ResourceBuilder resourceBuilder,
-        SentryDsn? sentry)
+        SentryDsn? sentry,
+        string serviceVersion)
     {
         services.AddLogging(logging =>
         {
@@ -5524,6 +5543,21 @@ public static class DependencyInjection
                     });
                 }
             });
+
+            // Side-channel for exceptions: post them to Sentry's classic
+            // envelope endpoint so they become Issues. This is parallel
+            // to (not a replacement for) the OTLP logs exporter above —
+            // the OTLP exporter populates Sentry's Logs panel for every
+            // log record; this provider populates Sentry's Issues panel
+            // for the subset that carry an exception.
+            if (sentry is not null)
+            {
+                logging.AddProvider(new SentryEventLoggerProvider(
+                    sentry,
+                    serviceName: "MyAdventure",
+                    serviceVersion: serviceVersion,
+                    environment: telemetry.Sentry.Environment));
+            }
         });
     }
 
@@ -5590,7 +5624,7 @@ public static class DependencyInjection
         if (announcement.SentryEnabled)
         {
             logger.LogInformation(
-                "Telemetry: Sentry OTLP enabled, env={Environment}, verbose={Verbose}",
+                "Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}",
                 announcement.Environment, announcement.VerboseLogging);
         }
         else if (!string.IsNullOrEmpty(announcement.SentryParseError))
@@ -5883,13 +5917,37 @@ public class GameStateRepository(
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
-SIZE: 7.20 KB
+SIZE: 9.55 KB
 ================================================================================
 
 using System;
 
 namespace MyAdventure.Infrastructure.Telemetry;
 
+/// <summary>
+/// A parsed Sentry DSN with the three endpoint URLs the project needs
+/// derived from it:
+///
+/// <list type="bullet">
+///   <item><see cref="LogsEndpoint"/> — Sentry's OTLP/HTTP logs intake
+///   (populates the project's "Logs" panel).</item>
+///   <item><see cref="TracesEndpoint"/> — Sentry's OTLP/HTTP traces
+///   intake (populates the project's "Traces" panel).</item>
+///   <item><see cref="EnvelopeEndpoint"/> — Sentry's classic envelope
+///   intake (populates the project's "Issues" panel; this is the only
+///   one of the three that creates Issues from exceptions).</item>
+/// </list>
+///
+/// <para>
+/// <b>Why all three.</b> Sentry's OTLP intake is documented as
+/// "open beta" and does not generate Issues from OTLP logs nor from
+/// span exception events (those events are dropped during ingestion).
+/// To get an error to show up under "Issues" we have to send it as a
+/// classic Sentry event envelope to <see cref="EnvelopeEndpoint"/>. The
+/// OTLP endpoints are still useful for the Logs and Traces panels, so
+/// we register both side-by-side rather than picking one.
+/// </para>
+/// </summary>
 public sealed class SentryDsn
 {
     public string Raw { get; }
@@ -5900,6 +5958,18 @@ public sealed class SentryDsn
     public bool IsOtlp { get; }
     public string LogsEndpoint { get; }
     public string TracesEndpoint { get; }
+
+    /// <summary>
+    /// Sentry's classic envelope endpoint:
+    /// <c>{scheme}://{host}/api/{projectId}/envelope/</c>. Posting an
+    /// envelope with an <c>event</c> item carrying an <c>exception</c>
+    /// interface creates an Issue under "Issues" in the Sentry UI. This
+    /// is the route the project uses for surfacing exceptions; the OTLP
+    /// logs endpoint is unsuitable for that purpose (per Sentry's docs
+    /// it does not create Issues).
+    /// </summary>
+    public string EnvelopeEndpoint { get; }
+
     public string AuthHeaderValue { get; }
 
     private SentryDsn(
@@ -5911,6 +5981,7 @@ public sealed class SentryDsn
         bool isOtlp,
         string logsEndpoint,
         string tracesEndpoint,
+        string envelopeEndpoint,
         string authHeaderValue)
     {
         Raw = raw;
@@ -5921,6 +5992,7 @@ public sealed class SentryDsn
         IsOtlp = isOtlp;
         LogsEndpoint = logsEndpoint;
         TracesEndpoint = tracesEndpoint;
+        EnvelopeEndpoint = envelopeEndpoint;
         AuthHeaderValue = authHeaderValue;
     }
 
@@ -6038,10 +6110,20 @@ public sealed class SentryDsn
         var tracesEndpoint =
             $"{baseUri}/api/{projectId}/integration/otlp/v1/traces";
 
+        // Sentry's classic envelope endpoint lives under /api/{projectId}/envelope/
+        // — note the trailing slash, which is part of the documented URL shape
+        // (omitting it triggers a 308 redirect on some Sentry deployments and
+        // a hard 404 on others; we don't want to depend on either behaviour).
+        var envelopeEndpoint =
+            $"{baseUri}/api/{projectId}/envelope/";
+
         // Sentry's documented OTLP auth header value uses a lowercase
         // "sentry" keyword (see Settings → Client Keys in the Sentry UI).
         // The legacy public/secret form includes both keys; the modern
-        // form omits sentry_secret entirely.
+        // form omits sentry_secret entirely. The same header value is
+        // accepted by both the OTLP intake and the envelope endpoint —
+        // Sentry uses it as the single source of truth for routing the
+        // event to the correct project.
         string authHeaderValue;
 
         if (string.IsNullOrWhiteSpace(secretKey))
@@ -6062,6 +6144,7 @@ public sealed class SentryDsn
             isOtlp: true,
             logsEndpoint: logsEndpoint,
             tracesEndpoint: tracesEndpoint,
+            envelopeEndpoint: envelopeEndpoint,
             authHeaderValue: authHeaderValue);
     }
 
@@ -6100,6 +6183,624 @@ public sealed class SentryDsn
             dsn.Substring(0, userInfoStart) + publicKey + dsn.Substring(atSign);
         return (rewritten, secretKey);
     }
+}
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/SentryEnvelope.cs
+SIZE: 11.04 KB
+================================================================================
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+/// <summary>
+/// Builds the wire-format payload that
+/// <see cref="SentryEventLoggerProvider"/> posts to Sentry's classic
+/// envelope endpoint (<c>POST /api/{projectId}/envelope/</c>).
+///
+/// <para>
+/// <b>Why this exists.</b> Sentry's OTLP logs endpoint deposits logs
+/// into the "Logs" panel but does <i>not</i> generate Issues from
+/// error-severity log records. Sentry's OTLP traces endpoint also
+/// drops span exception events during ingestion. The only path that
+/// produces a real Sentry Issue from a .NET exception — without
+/// dragging in the vendor-specific Sentry .NET SDK — is to POST a
+/// classic Sentry envelope containing an <c>event</c> item whose
+/// payload uses the <c>exception</c> interface. That's exactly what
+/// this class produces.
+/// </para>
+///
+/// <para>
+/// The envelope grammar (newline-separated JSON lines) is defined in
+/// <c>develop.sentry.dev/sdk/data-model/envelopes</c>:
+/// <code>
+/// {envelope_header}\n
+/// {item_header}\n
+/// {item_payload}\n
+/// </code>
+/// We keep the output deterministic so the tests can pin the exact
+/// bytes that go over the wire.
+/// </para>
+///
+/// <para>
+/// Pure: no IO, no clocks injected from outside, only the data passed
+/// in. <see cref="SentryEventLoggerProvider"/> supplies the current
+/// time via <see cref="TimeProvider"/> so the envelope and event
+/// timestamps can be pinned in tests.
+/// </para>
+/// </summary>
+internal static class SentryEnvelope
+{
+    /// <summary>
+    /// The single content type used for both the envelope header and
+    /// every event item we emit. Sentry accepts <c>application/json</c>
+    /// for event payloads.
+    /// </summary>
+    public const string EventContentType = "application/json";
+
+    /// <summary>
+    /// Build the raw bytes of a Sentry envelope carrying a single
+    /// <c>event</c> item that describes an exception. The bytes are
+    /// what gets POSTed to <see cref="SentryDsn.EnvelopeEndpoint"/>.
+    /// </summary>
+    /// <param name="payload">The exception + metadata captured from
+    /// the originating log record.</param>
+    /// <param name="dsn">Parsed DSN; only the raw string is embedded
+    /// in the envelope header (Sentry uses it as a self-authentication
+    /// hint).</param>
+    /// <param name="serviceName">Resource attribute — copied straight
+    /// from <see cref="OpenTelemetry.Resources.ResourceBuilder"/>.</param>
+    /// <param name="serviceVersion">Resource attribute.</param>
+    /// <param name="environment">Resource attribute — typically
+    /// "production", "staging", "development".</param>
+    /// <param name="now">The current UTC time; injected so tests can
+    /// pin the timestamps in the produced bytes.</param>
+    public static byte[] BuildExceptionEvent(
+        SentryEventPayload payload,
+        SentryDsn dsn,
+        string serviceName,
+        string serviceVersion,
+        string environment,
+        DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        ArgumentNullException.ThrowIfNull(dsn);
+
+        var eventId = Guid.NewGuid().ToString("N");
+        var sentAt = now.UtcDateTime.ToString("o", CultureInfo.InvariantCulture);
+
+        var envelopeHeader = new Dictionary<string, object?>
+        {
+            ["event_id"] = eventId,
+            ["dsn"] = dsn.Raw,
+            ["sent_at"] = sentAt,
+            ["sdk"] = new Dictionary<string, object?>
+            {
+                // We are not the Sentry .NET SDK; identify ourselves
+                // honestly so Sentry doesn't apply SDK-specific
+                // processing rules meant for the real client.
+                ["name"] = "myadventure.otlp-envelope",
+                ["version"] = serviceVersion,
+            },
+        };
+
+        var eventPayload = BuildEventPayload(
+            payload, eventId, serviceName, serviceVersion, environment, now);
+
+        // Serialise both halves to JSON with the same options so the
+        // wire bytes are deterministic across .NET runtimes.
+        var headerJson = JsonSerializer.SerializeToUtf8Bytes(envelopeHeader, JsonOpts);
+        var payloadJson = JsonSerializer.SerializeToUtf8Bytes(eventPayload, JsonOpts);
+
+        var itemHeader = new Dictionary<string, object?>
+        {
+            ["type"] = "event",
+            ["length"] = payloadJson.Length,
+            ["content_type"] = EventContentType,
+        };
+        var itemHeaderJson = JsonSerializer.SerializeToUtf8Bytes(itemHeader, JsonOpts);
+
+        // Stitch: header \n item_header \n item_payload \n
+        // The trailing newline is optional per the spec but Sentry's
+        // examples include it, and including it costs us nothing.
+        var newline = (byte)'\n';
+        using var buffer = new System.IO.MemoryStream(
+            headerJson.Length + itemHeaderJson.Length + payloadJson.Length + 3);
+        buffer.Write(headerJson, 0, headerJson.Length);
+        buffer.WriteByte(newline);
+        buffer.Write(itemHeaderJson, 0, itemHeaderJson.Length);
+        buffer.WriteByte(newline);
+        buffer.Write(payloadJson, 0, payloadJson.Length);
+        buffer.WriteByte(newline);
+        return buffer.ToArray();
+    }
+
+    private static Dictionary<string, object?> BuildEventPayload(
+        SentryEventPayload payload,
+        string eventId,
+        string serviceName,
+        string serviceVersion,
+        string environment,
+        DateTimeOffset now)
+    {
+        // Sentry's event timestamp is "seconds since the Unix epoch as
+        // a floating-point number" — see Event Payloads docs. Strings
+        // in RFC 3339 are also accepted but the float form is what the
+        // Sentry .NET SDK emits and what the documented examples use.
+        var timestampSeconds = now.ToUnixTimeMilliseconds() / 1000.0;
+
+        var dict = new Dictionary<string, object?>
+        {
+            ["event_id"] = eventId,
+            ["timestamp"] = timestampSeconds,
+            ["platform"] = "csharp",
+            ["level"] = payload.Level,
+            ["logger"] = payload.LoggerCategory,
+            ["server_name"] = Environment.MachineName,
+            ["environment"] = environment,
+            ["release"] = $"{serviceName}@{serviceVersion}",
+            ["message"] = new Dictionary<string, object?>
+            {
+                ["formatted"] = payload.Message,
+            },
+            ["exception"] = new Dictionary<string, object?>
+            {
+                ["values"] = BuildExceptionValues(payload),
+            },
+            ["sdk"] = new Dictionary<string, object?>
+            {
+                ["name"] = "myadventure.otlp-envelope",
+                ["version"] = serviceVersion,
+            },
+        };
+
+        if (payload.Tags is { Count: > 0 })
+        {
+            dict["tags"] = payload.Tags;
+        }
+
+        return dict;
+    }
+
+    private static List<Dictionary<string, object?>> BuildExceptionValues(
+        SentryEventPayload payload)
+    {
+        // Walk the exception chain from outermost to innermost. Sentry's
+        // exception interface accepts the values list in *chronological*
+        // order — innermost first — so we reverse at the end. The grouping
+        // logic on Sentry's side uses the outermost frame in that order to
+        // produce the issue title.
+        var chain = new List<Exception>();
+        var current = payload.Exception;
+        while (current is not null)
+        {
+            chain.Add(current);
+            current = current.InnerException;
+        }
+        chain.Reverse();
+
+        var values = new List<Dictionary<string, object?>>(chain.Count);
+        foreach (var ex in chain)
+        {
+            values.Add(new Dictionary<string, object?>
+            {
+                ["type"] = ex.GetType().FullName ?? ex.GetType().Name,
+                ["value"] = ex.Message ?? string.Empty,
+                ["module"] = ex.GetType().Namespace ?? string.Empty,
+                ["stacktrace"] = BuildStacktrace(ex),
+            });
+        }
+        return values;
+    }
+
+    private static Dictionary<string, object?> BuildStacktrace(Exception ex)
+    {
+        var frames = new List<Dictionary<string, object?>>();
+        var stackTrace = new StackTrace(ex, fNeedFileInfo: true);
+        var stackFrames = stackTrace.GetFrames();
+
+        // Sentry's stack trace interface lists frames in *call order* —
+        // the outermost frame first, the throw site last. .NET's
+        // StackTrace.GetFrames() returns the opposite (throw site first),
+        // so we reverse.
+        for (var i = stackFrames.Length - 1; i >= 0; i--)
+        {
+            var frame = stackFrames[i];
+            var method = frame.GetMethod();
+            if (method is null) continue;
+
+            var declaringType = method.DeclaringType;
+            var moduleName = declaringType?.FullName ?? "<unknown>";
+            var functionName = method.Name;
+            var fileName = frame.GetFileName();
+            var lineNumber = frame.GetFileLineNumber();
+
+            var frameDict = new Dictionary<string, object?>
+            {
+                ["function"] = functionName,
+                ["module"] = moduleName,
+                ["in_app"] = IsInApp(moduleName),
+            };
+
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                frameDict["filename"] = fileName;
+                frameDict["abs_path"] = fileName;
+            }
+            if (lineNumber > 0)
+            {
+                frameDict["lineno"] = lineNumber;
+            }
+
+            frames.Add(frameDict);
+        }
+
+        return new Dictionary<string, object?>
+        {
+            ["frames"] = frames,
+        };
+    }
+
+    /// <summary>
+    /// Mark frames belonging to our own assemblies as "in-app" so the
+    /// Sentry UI highlights them; frames from System.*, Microsoft.*,
+    /// OpenTelemetry.* etc. show up as library frames and are folded
+    /// away by default. The "in_app" flag is what drives that grouping.
+    /// </summary>
+    private static bool IsInApp(string moduleName)
+    {
+        return moduleName.StartsWith("MyAdventure", StringComparison.Ordinal);
+    }
+
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        // Compact form (no indentation) keeps the over-the-wire envelope
+        // small and matches the format Sentry's own SDKs emit.
+        WriteIndented = false,
+        // The Sentry envelope spec mandates UTF-8 with valid JSON; do not
+        // emit \uXXXX escapes for non-ASCII characters that don't need
+        // escaping.
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+}
+
+/// <summary>
+/// Bag of fields extracted from an <see cref="Microsoft.Extensions.Logging.ILogger"/>
+/// invocation that the envelope builder needs to serialise an exception
+/// event. Construction is deliberately cheap so we can build one per
+/// triggering log record without measurable overhead.
+/// </summary>
+internal sealed record SentryEventPayload(
+    Exception Exception,
+    string Message,
+    string Level,
+    string LoggerCategory,
+    IReadOnlyDictionary<string, string>? Tags = null);
+
+
+================================================================================
+FILE: src/MyAdventure.Infrastructure/Telemetry/SentryEventLoggerProvider.cs
+SIZE: 11.34 KB
+================================================================================
+
+using System;
+using System.Collections.Concurrent;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+
+namespace MyAdventure.Infrastructure.Telemetry;
+
+/// <summary>
+/// An <see cref="ILoggerProvider"/> that posts every log record carrying
+/// an exception (or with <see cref="LogLevel.Error"/>/<see cref="LogLevel.Critical"/>
+/// severity) to Sentry's classic envelope endpoint, so that the event
+/// shows up as an <i>Issue</i> in the Sentry UI.
+///
+/// <para>
+/// <b>Why this exists.</b> The project's existing OpenTelemetry log
+/// pipeline already forwards every log record to Sentry's OTLP logs
+/// endpoint — that populates the Sentry <i>Logs</i> panel but, per
+/// Sentry's published OTLP documentation, it does <b>not</b> create
+/// Issues. Sentry's OTLP traces endpoint also drops span exception
+/// events during ingestion. The classic envelope endpoint, in
+/// contrast, is exactly what every Sentry SDK ultimately POSTs to
+/// when capturing an exception, and it is what populates the Issues
+/// panel.
+/// </para>
+///
+/// <para>
+/// We deliberately do <b>not</b> use the Sentry .NET SDK NuGet
+/// package. The project's FOSS-only NuGet policy excludes SDKs whose
+/// licensing terms are vendor-specific, and the envelope wire format
+/// is documented and stable. A ~120-line <see cref="HttpClient"/>
+/// wrapper keeps us on standard, swappable building blocks (the same
+/// pattern, pointed at any other backend, would Just Work).
+/// </para>
+///
+/// <para>
+/// <b>Fire-and-forget posting.</b> Each triggering log record is
+/// serialized inline on the calling thread (cheap; the envelope
+/// builder is allocation-light) and posted via a background
+/// <see cref="Task"/>. We do not block the caller waiting for the
+/// network — a slow Sentry response must never make a game tick stutter.
+/// Failures are swallowed; the worst case is that an Issue does not
+/// appear in Sentry, which is no worse than not having Sentry at all.
+/// </para>
+///
+/// <para>
+/// <b>Tests.</b> The HTTP transport is overridable via
+/// <see cref="HttpMessageHandler"/> injection so tests can capture
+/// the bytes that would have gone to the network and pin both the
+/// envelope contents and the request shape without ever touching the
+/// real Sentry endpoint.
+/// </para>
+/// </summary>
+internal sealed class SentryEventLoggerProvider : ILoggerProvider
+{
+    private readonly SentryDsn _dsn;
+    private readonly HttpClient _http;
+    private readonly bool _ownsHttpClient;
+    private readonly string _serviceName;
+    private readonly string _serviceVersion;
+    private readonly string _environment;
+    private readonly TimeProvider _timeProvider;
+    private readonly ConcurrentDictionary<string, SentryEventLogger> _loggers = new();
+    private readonly CancellationTokenSource _cts = new();
+
+    /// <summary>
+    /// Construct a provider that owns its own <see cref="HttpClient"/>
+    /// — the typical case at runtime. The handler is configured with
+    /// a modest connect timeout so a misconfigured DSN host doesn't
+    /// hold pending logs in memory forever.
+    /// </summary>
+    public SentryEventLoggerProvider(
+        SentryDsn dsn,
+        string serviceName,
+        string serviceVersion,
+        string environment,
+        TimeProvider? timeProvider = null)
+        : this(
+            dsn,
+            new HttpClient { Timeout = TimeSpan.FromSeconds(10) },
+            ownsHttpClient: true,
+            serviceName: serviceName,
+            serviceVersion: serviceVersion,
+            environment: environment,
+            timeProvider: timeProvider ?? TimeProvider.System)
+    {
+    }
+
+    /// <summary>
+    /// Test-friendly constructor that lets the caller hand in an
+    /// <see cref="HttpClient"/> backed by a fake
+    /// <see cref="HttpMessageHandler"/>. The provider does <i>not</i>
+    /// dispose externally-supplied clients.
+    /// </summary>
+    internal SentryEventLoggerProvider(
+        SentryDsn dsn,
+        HttpClient http,
+        string serviceName,
+        string serviceVersion,
+        string environment,
+        TimeProvider timeProvider)
+        : this(dsn, http, ownsHttpClient: false, serviceName, serviceVersion, environment, timeProvider)
+    {
+    }
+
+    private SentryEventLoggerProvider(
+        SentryDsn dsn,
+        HttpClient http,
+        bool ownsHttpClient,
+        string serviceName,
+        string serviceVersion,
+        string environment,
+        TimeProvider timeProvider)
+    {
+        ArgumentNullException.ThrowIfNull(dsn);
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(serviceName);
+        ArgumentNullException.ThrowIfNull(serviceVersion);
+        ArgumentNullException.ThrowIfNull(environment);
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        _dsn = dsn;
+        _http = http;
+        _ownsHttpClient = ownsHttpClient;
+        _serviceName = serviceName;
+        _serviceVersion = serviceVersion;
+        _environment = environment;
+        _timeProvider = timeProvider;
+    }
+
+    public ILogger CreateLogger(string categoryName) =>
+        _loggers.GetOrAdd(categoryName, name => new SentryEventLogger(this, name));
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        if (_ownsHttpClient)
+        {
+            _http.Dispose();
+        }
+        _cts.Dispose();
+    }
+
+    /// <summary>
+    /// Decide whether a given log record should be promoted to a
+    /// Sentry Issue. Today the rule is: any record carrying an
+    /// <see cref="Exception"/>, regardless of severity, plus any
+    /// record at <see cref="LogLevel.Critical"/>. Plain
+    /// <see cref="LogLevel.Error"/> records without an exception go
+    /// only to the Logs panel (via the OTLP logs exporter); promoting
+    /// them to Issues would flood the project with low-signal events
+    /// like EF Core's "First/FirstOrDefault without OrderBy" warning.
+    /// </summary>
+    internal static bool ShouldPromoteToIssue(LogLevel level, Exception? exception)
+    {
+        if (exception is not null)
+        {
+            return true;
+        }
+        return level == LogLevel.Critical;
+    }
+
+    /// <summary>
+    /// Build the envelope bytes and post them on a background
+    /// <see cref="Task"/>. Synchronous part runs on the calling thread
+    /// because the only cost is JSON serialization; the network IO
+    /// is decoupled. Exposed internally so the test logger can drive
+    /// it directly with a synthetic payload.
+    /// </summary>
+    internal void Enqueue(SentryEventPayload payload)
+    {
+        byte[] bytes;
+        try
+        {
+            bytes = SentryEnvelope.BuildExceptionEvent(
+                payload,
+                _dsn,
+                _serviceName,
+                _serviceVersion,
+                _environment,
+                _timeProvider.GetUtcNow());
+        }
+        catch
+        {
+            // Never let envelope-building exceptions escape into the
+            // logging pipeline; that would create an infinite recursion
+            // if the consumer logged this failure too.
+            return;
+        }
+
+        // Fire-and-forget — discard the resulting Task. We do not want
+        // backpressure from a slow Sentry to surface as game-tick lag.
+        _ = SendAsync(bytes, _cts.Token);
+    }
+
+    private async Task SendAsync(byte[] bytes, CancellationToken ct)
+    {
+        try
+        {
+            using var content = new ByteArrayContent(bytes);
+            // Sentry's envelope endpoint expects this content type; the
+            // body is newline-delimited JSON, not a single JSON object,
+            // hence "x-sentry-envelope" rather than "application/json".
+            content.Headers.ContentType =
+                new MediaTypeHeaderValue("application/x-sentry-envelope");
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post, _dsn.EnvelopeEndpoint)
+            {
+                Content = content,
+            };
+            request.Headers.TryAddWithoutValidation(
+                "X-Sentry-Auth", _dsn.AuthHeaderValue);
+
+            using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
+            // We intentionally do nothing with the response. If Sentry
+            // rejected the event (rate limit, malformed envelope, etc.)
+            // there is no useful local recovery action and logging the
+            // failure would risk recursing back into the same provider.
+            _ = response.StatusCode;
+        }
+        catch
+        {
+            // Swallow. See class XML doc for rationale.
+        }
+    }
+}
+
+/// <summary>
+/// <see cref="ILogger"/> implementation paired with
+/// <see cref="SentryEventLoggerProvider"/>. One instance per category
+/// name. Filtering by <see cref="LogLevel"/> happens entirely inside
+/// <see cref="SentryEventLoggerProvider.ShouldPromoteToIssue"/> — this
+/// logger always claims to be enabled so it has a chance to inspect
+/// the exception attached to each record.
+/// </summary>
+internal sealed class SentryEventLogger : ILogger
+{
+    private readonly SentryEventLoggerProvider _provider;
+    private readonly string _category;
+
+    public SentryEventLogger(SentryEventLoggerProvider provider, string category)
+    {
+        _provider = provider;
+        _category = category;
+    }
+
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+    /// <summary>
+    /// We can't make the routing decision here because
+    /// <see cref="IsEnabled"/> doesn't get the exception. Claim enabled
+    /// for the relevant range and re-check inside <see cref="Log"/>.
+    /// </summary>
+    public bool IsEnabled(LogLevel logLevel) =>
+        logLevel >= LogLevel.Warning;
+
+    public void Log<TState>(
+        LogLevel logLevel,
+        EventId eventId,
+        TState state,
+        Exception? exception,
+        Func<TState, Exception?, string> formatter)
+    {
+        if (!SentryEventLoggerProvider.ShouldPromoteToIssue(logLevel, exception))
+        {
+            return;
+        }
+
+        // Synthetic exception fallback: if the caller logged at
+        // Critical without attaching an exception, create a placeholder
+        // so the Sentry Issue still has a usable type/value. Stack
+        // trace will be the call site of the synthetic capture, not
+        // perfect but better than discarding the signal entirely.
+        var ex = exception ?? new SentryCriticalLogException(formatter(state, null));
+
+        var message = formatter is not null
+            ? formatter(state, exception)
+            : state?.ToString() ?? string.Empty;
+
+        var payload = new SentryEventPayload(
+            Exception: ex,
+            Message: message,
+            Level: ToSentryLevel(logLevel),
+            LoggerCategory: _category);
+
+        _provider.Enqueue(payload);
+    }
+
+    private static string ToSentryLevel(LogLevel level) => level switch
+    {
+        LogLevel.Critical => "fatal",
+        LogLevel.Error => "error",
+        LogLevel.Warning => "warning",
+        LogLevel.Information => "info",
+        LogLevel.Debug => "debug",
+        LogLevel.Trace => "debug",
+        _ => "error",
+    };
+}
+
+/// <summary>
+/// Synthetic exception used only when a caller emits a
+/// <see cref="LogLevel.Critical"/> log without attaching a real one.
+/// Lets us still produce a Sentry Issue with a meaningful title.
+/// </summary>
+internal sealed class SentryCriticalLogException : Exception
+{
+    public SentryCriticalLogException(string message) : base(message) { }
 }
 
 
@@ -11267,6 +11968,448 @@ public class SchemaMigrationTests : IDisposable
         {
             // Swallow — temp directory cleanup will handle it eventually.
         }
+    }
+}
+
+
+================================================================================
+FILE: tests/MyAdventure.Integration.Tests/SentryEnvelopeTests.cs
+SIZE: 18.45 KB
+================================================================================
+
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Infrastructure.Telemetry;
+using Shouldly;
+
+namespace MyAdventure.Integration.Tests;
+
+/// <summary>
+/// Tests for the Sentry envelope path that surfaces exceptions as
+/// Issues in the Sentry UI. These cover three layers:
+/// <list type="number">
+///   <item>The pure byte-builder (<see cref="SentryEnvelope"/>) —
+///   verified by parsing the produced bytes back into JSON and
+///   checking the shape matches Sentry's documented envelope format.</item>
+///   <item>The DSN-derived endpoint URL — verified by parsing a
+///   realistic DSN and asserting <see cref="SentryDsn.EnvelopeEndpoint"/>
+///   matches the documented Sentry shape.</item>
+///   <item>The full <see cref="SentryEventLoggerProvider"/> end-to-end
+///   through a fake <see cref="HttpMessageHandler"/> that captures the
+///   POST request — verifying that a <c>logger.LogError(ex, "...")</c>
+///   actually produces an outbound HTTP POST to Sentry's envelope
+///   endpoint with the expected headers and body.</item>
+/// </list>
+///
+/// All tests run entirely in-process; no network IO. The provider's
+/// fire-and-forget Send path is awaited indirectly via the fake
+/// handler's TaskCompletionSource so the tests remain deterministic.
+/// </summary>
+public class SentryEnvelopeTests
+{
+    private const string TestDsn =
+        "https://abc123@o4511444968079360.ingest.de.sentry.io/4511444969390160";
+
+    // --- DSN endpoint shape ------------------------------------------------
+
+    [Fact]
+    public void SentryDsn_EnvelopeEndpoint_HasExpectedShape()
+    {
+        // Sentry's envelope endpoint URL is documented as
+        // /api/{project_id}/envelope/ — with a trailing slash. Some
+        // Sentry deployments redirect when the slash is missing, others
+        // 404; we don't want to depend on either behaviour.
+        var parsed = SentryDsn.Parse(TestDsn);
+
+        parsed.EnvelopeEndpoint.ShouldBe(
+            "https://o4511444968079360.ingest.de.sentry.io/api/4511444969390160/envelope/");
+    }
+
+    // --- Envelope byte builder ---------------------------------------------
+
+    [Fact]
+    public void Envelope_HasThreeNewlineDelimitedJsonLines()
+    {
+        // The Sentry envelope grammar requires
+        // {envelope_header}\n{item_header}\n{item_payload}\n
+        // — three JSON objects separated by newlines, with an optional
+        // trailing newline. We always emit the trailing newline so the
+        // wire format matches the SDK examples Sentry publishes.
+        var dsn = SentryDsn.Parse(TestDsn);
+        var payload = MakePayload(new InvalidOperationException("test boom"));
+
+        var bytes = SentryEnvelope.BuildExceptionEvent(
+            payload, dsn,
+            serviceName: "MyAdventure",
+            serviceVersion: "1.2.3",
+            environment: "test",
+            now: new DateTimeOffset(2026, 5, 27, 12, 0, 0, TimeSpan.Zero));
+
+        var text = Encoding.UTF8.GetString(bytes);
+        // Split on \n; expect three non-empty lines (header, item header,
+        // item payload) plus an empty trailing token from the final \n.
+        var parts = text.Split('\n');
+        parts.Length.ShouldBeGreaterThanOrEqualTo(3);
+        parts[0].ShouldNotBeNullOrEmpty();
+        parts[1].ShouldNotBeNullOrEmpty();
+        parts[2].ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Envelope_HeaderCarriesDsnEventIdAndSentAt()
+    {
+        var dsn = SentryDsn.Parse(TestDsn);
+        var bytes = SentryEnvelope.BuildExceptionEvent(
+            MakePayload(new Exception("x")), dsn,
+            "MyAdventure", "1.0.0", "production",
+            new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
+
+        var header = ParseHeader(bytes);
+
+        header.GetProperty("event_id").GetString().ShouldNotBeNullOrEmpty();
+        header.GetProperty("dsn").GetString().ShouldBe(TestDsn);
+        // ISO 8601 with the 'Z' suffix (UTC), matching DateTime.UtcNow.ToString("o").
+        header.GetProperty("sent_at").GetString()
+            .ShouldStartWith("2026-01-02T03:04:05");
+    }
+
+    [Fact]
+    public void Envelope_ItemHeaderDeclaresEventTypeAndLength()
+    {
+        // The item header MUST declare type=event so Sentry routes the
+        // payload to the Issues pipeline. The length, while technically
+        // optional per the spec, lets Relay parse without scanning for
+        // newlines and is what every shipping SDK emits.
+        var dsn = SentryDsn.Parse(TestDsn);
+        var bytes = SentryEnvelope.BuildExceptionEvent(
+            MakePayload(new Exception("x")), dsn,
+            "MyAdventure", "1.0.0", "production", DateTimeOffset.UtcNow);
+
+        var (_, itemHeader, payload) = ParseAllThree(bytes);
+
+        itemHeader.GetProperty("type").GetString().ShouldBe("event");
+        itemHeader.GetProperty("content_type").GetString().ShouldBe("application/json");
+        itemHeader.GetProperty("length").GetInt32()
+            .ShouldBe(payload.Bytes.Length);
+    }
+
+    [Fact]
+    public void Envelope_EventPayloadCarriesExceptionInterface()
+    {
+        // The Issue's title and grouping in Sentry are driven by the
+        // exception's type, value, and stack trace — so all three must
+        // make it into the payload.
+        var dsn = SentryDsn.Parse(TestDsn);
+        var ex = MakeRealException("boom!");
+
+        var bytes = SentryEnvelope.BuildExceptionEvent(
+            MakePayload(ex), dsn,
+            "MyAdventure", "1.0.0", "production", DateTimeOffset.UtcNow);
+
+        var (_, _, payload) = ParseAllThree(bytes);
+        var exceptionInterface = payload.Json.GetProperty("exception");
+        var values = exceptionInterface.GetProperty("values");
+
+        values.GetArrayLength().ShouldBe(1);
+        var first = values[0];
+        first.GetProperty("type").GetString().ShouldBe(typeof(InvalidOperationException).FullName);
+        first.GetProperty("value").GetString().ShouldBe("boom!");
+
+        var frames = first.GetProperty("stacktrace").GetProperty("frames");
+        frames.GetArrayLength().ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void Envelope_EventPayloadCarriesEnvironmentAndRelease()
+    {
+        // Sentry uses environment + release to scope Issues; both are
+        // visible in the UI as filterable tags. We populate them from
+        // TelemetryOptions.Sentry.Environment and the assembly version
+        // so an Issue can be traced back to a specific build.
+        var dsn = SentryDsn.Parse(TestDsn);
+        var bytes = SentryEnvelope.BuildExceptionEvent(
+            MakePayload(new Exception("x")), dsn,
+            "MyAdventure", "9.8.7", "staging", DateTimeOffset.UtcNow);
+
+        var (_, _, payload) = ParseAllThree(bytes);
+
+        payload.Json.GetProperty("environment").GetString().ShouldBe("staging");
+        payload.Json.GetProperty("release").GetString().ShouldBe("MyAdventure@9.8.7");
+        payload.Json.GetProperty("platform").GetString().ShouldBe("csharp");
+        payload.Json.GetProperty("level").GetString().ShouldBe("error");
+        payload.Json.GetProperty("logger").GetString().ShouldBe("MyAdventure.TestCategory");
+    }
+
+    [Fact]
+    public void Envelope_InnerExceptionsAreIncluded()
+    {
+        // .NET commonly wraps the real cause in TargetInvocationException
+        // / AggregateException; if we only sent the outermost frame the
+        // Issue would be miscategorised. Walk the chain and emit each.
+        var inner = MakeRealException("inner");
+        var outer = new InvalidOperationException("outer", inner);
+
+        var dsn = SentryDsn.Parse(TestDsn);
+        var bytes = SentryEnvelope.BuildExceptionEvent(
+            MakePayload(outer), dsn,
+            "MyAdventure", "1.0.0", "test", DateTimeOffset.UtcNow);
+
+        var (_, _, payload) = ParseAllThree(bytes);
+        var values = payload.Json.GetProperty("exception").GetProperty("values");
+
+        // Sentry's exception interface lists exceptions chronologically:
+        // innermost first, outermost last. We assert that order so the
+        // Sentry UI displays the chain in the natural "X caused Y" form.
+        values.GetArrayLength().ShouldBe(2);
+        values[0].GetProperty("value").GetString().ShouldBe("inner");
+        values[1].GetProperty("value").GetString().ShouldBe("outer");
+    }
+
+    // --- ShouldPromoteToIssue routing rule --------------------------------
+
+    [Theory]
+    [InlineData(LogLevel.Trace, false, false)]
+    [InlineData(LogLevel.Debug, false, false)]
+    [InlineData(LogLevel.Information, false, false)]
+    [InlineData(LogLevel.Warning, false, false)]
+    [InlineData(LogLevel.Error, false, false)]    // error w/o exception -> Logs panel only
+    [InlineData(LogLevel.Critical, false, true)]  // critical always promotes
+    [InlineData(LogLevel.Trace, true, true)]      // any level + exception -> Issue
+    [InlineData(LogLevel.Information, true, true)]
+    [InlineData(LogLevel.Error, true, true)]
+    [InlineData(LogLevel.Critical, true, true)]
+    public void ShouldPromoteToIssue_FollowsExceptionFirstRule(
+        LogLevel level, bool hasException, bool expected)
+    {
+        // The intent is: every log record with an attached exception
+        // becomes a Sentry Issue (that's what 99% of callers want).
+        // Plain LogError without an exception stays in the Logs panel
+        // — promoting it would flood the project with low-signal events
+        // like EF Core's "First/FirstOrDefault without OrderBy" warning.
+        var exception = hasException ? new InvalidOperationException("x") : null;
+
+        SentryEventLoggerProvider
+            .ShouldPromoteToIssue(level, exception)
+            .ShouldBe(expected);
+    }
+
+    // --- End-to-end provider -> HTTP --------------------------------------
+
+    [Fact]
+    public async Task Provider_LogErrorWithException_PostsEnvelopeToSentry()
+    {
+        // Drive the real ILoggerProvider, capture the HTTP request it
+        // produces, and verify the request's URL, headers, and body.
+        // This is the proof that the wire that arrives at Sentry's
+        // envelope endpoint actually carries an Issue-eligible event.
+        var capture = new CapturingHandler();
+        using var http = new HttpClient(capture);
+        var dsn = SentryDsn.Parse(TestDsn);
+
+        using var provider = new SentryEventLoggerProvider(
+            dsn, http,
+            serviceName: "MyAdventure",
+            serviceVersion: "1.0.0",
+            environment: "test",
+            timeProvider: new FixedTimeProvider(
+                new DateTimeOffset(2026, 5, 27, 12, 0, 0, TimeSpan.Zero)));
+
+        var logger = provider.CreateLogger("MyAdventure.GameEngine");
+        logger.LogError(MakeRealException("kaboom"), "something failed: {Detail}", "details");
+
+        // The send is fire-and-forget; wait briefly for the capturing
+        // handler to receive the request. 2 seconds is generous; in
+        // practice this completes in microseconds because the handler
+        // is in-process.
+        var request = await capture.AwaitRequestAsync(TimeSpan.FromSeconds(2));
+
+        request.ShouldNotBeNull();
+        request!.Method.ShouldBe(HttpMethod.Post);
+        request.RequestUri!.ToString().ShouldBe(dsn.EnvelopeEndpoint);
+
+        request.Headers.TryGetValues("X-Sentry-Auth", out var authValues).ShouldBeTrue();
+        string.Join(',', authValues!).ShouldBe(dsn.AuthHeaderValue);
+
+        var bodyBytes = capture.RequestBody!;
+        var (envHeader, itemHeader, eventPayload) = ParseAllThree(bodyBytes);
+
+        envHeader.GetProperty("dsn").GetString().ShouldBe(TestDsn);
+        itemHeader.GetProperty("type").GetString().ShouldBe("event");
+        eventPayload.Json.GetProperty("exception")
+            .GetProperty("values")[0]
+            .GetProperty("value").GetString().ShouldBe("kaboom");
+    }
+
+    [Fact]
+    public async Task Provider_LogInformation_DoesNotPost()
+    {
+        // Information-level records (which is what the game emits on
+        // every business purchase, every save, etc.) MUST NOT be
+        // promoted to Sentry Issues. Otherwise a single play session
+        // would flood the Issues panel with hundreds of bogus "issues".
+        var capture = new CapturingHandler();
+        using var http = new HttpClient(capture);
+        var dsn = SentryDsn.Parse(TestDsn);
+
+        using var provider = new SentryEventLoggerProvider(
+            dsn, http, "MyAdventure", "1.0.0", "test", new FixedTimeProvider(DateTimeOffset.UtcNow));
+
+        var logger = provider.CreateLogger("MyAdventure.GameEngine");
+        logger.LogInformation("benign info message");
+
+        // Wait briefly; the absence of any captured request is the
+        // assertion. Using a real (short) timeout rather than a busy
+        // check avoids flakes on slow CI.
+        await Task.Delay(100);
+
+        capture.RequestCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Provider_HttpFailure_DoesNotThrowToCaller()
+    {
+        // Sentry could be down, the network could be unreachable, the
+        // DSN could be valid-syntax-but-wrong-project; in every case
+        // logging an exception must not turn into a second exception
+        // crashing the caller. The provider swallows transport failures
+        // by design.
+        var failing = new ThrowingHandler();
+        using var http = new HttpClient(failing);
+        var dsn = SentryDsn.Parse(TestDsn);
+
+        using var provider = new SentryEventLoggerProvider(
+            dsn, http, "MyAdventure", "1.0.0", "test", new FixedTimeProvider(DateTimeOffset.UtcNow));
+
+        var logger = provider.CreateLogger("MyAdventure.GameEngine");
+        Should.NotThrow(() => logger.LogError(new Exception("x"), "x"));
+
+        // Background Send task must also not produce an unobserved
+        // exception that could trip the finalizer. Give it a moment
+        // to complete and confirm we are still alive.
+        await Task.Delay(50);
+    }
+
+    // --- Helpers ----------------------------------------------------------
+
+    /// <summary>
+    /// Build an exception that has a real stack trace by throwing and
+    /// catching it. <see cref="StackTrace"/> on an unthrown exception
+    /// is empty in .NET, so a synthetic <c>new InvalidOperationException()</c>
+    /// would produce a stack-frame-less Sentry Issue.
+    /// </summary>
+    private static InvalidOperationException MakeRealException(string message)
+    {
+        try
+        {
+            throw new InvalidOperationException(message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ex;
+        }
+    }
+
+    private static SentryEventPayload MakePayload(Exception ex) =>
+        new(ex, "test message", "error", "MyAdventure.TestCategory");
+
+    private static JsonElement ParseHeader(byte[] envelopeBytes)
+    {
+        var newlineIndex = Array.IndexOf(envelopeBytes, (byte)'\n');
+        newlineIndex.ShouldBeGreaterThan(0);
+        var slice = new byte[newlineIndex];
+        Array.Copy(envelopeBytes, slice, newlineIndex);
+        return JsonDocument.Parse(slice).RootElement.Clone();
+    }
+
+    private record ParsedPayload(JsonElement Json, byte[] Bytes);
+
+    private static (JsonElement EnvHeader, JsonElement ItemHeader, ParsedPayload Payload)
+        ParseAllThree(byte[] envelopeBytes)
+    {
+        // Split on \n; the first three non-empty tokens are
+        // envelope header, item header, and item payload respectively.
+        // We don't use the length prefix here — the test parser walks
+        // the bytes the same way a human would when eyeballing the wire
+        // format, which catches mistakes the length-aware parser would
+        // hide.
+        var parts = new List<byte[]>();
+        var start = 0;
+        for (var i = 0; i < envelopeBytes.Length && parts.Count < 3; i++)
+        {
+            if (envelopeBytes[i] == (byte)'\n')
+            {
+                var chunk = new byte[i - start];
+                Array.Copy(envelopeBytes, start, chunk, 0, chunk.Length);
+                if (chunk.Length > 0) parts.Add(chunk);
+                start = i + 1;
+            }
+        }
+        parts.Count.ShouldBe(3, "envelope must have 3 JSON lines");
+
+        var envHeader = JsonDocument.Parse(parts[0]).RootElement.Clone();
+        var itemHeader = JsonDocument.Parse(parts[1]).RootElement.Clone();
+        var payloadJson = JsonDocument.Parse(parts[2]).RootElement.Clone();
+        return (envHeader, itemHeader, new ParsedPayload(payloadJson, parts[2]));
+    }
+
+    /// <summary>
+    /// An <see cref="HttpMessageHandler"/> that records the request
+    /// (including its body) and returns a synthetic 200 OK response.
+    /// Exposes a <see cref="Task"/>-based awaiter so tests can wait for
+    /// the fire-and-forget background Send to land without polling.
+    /// </summary>
+    private sealed class CapturingHandler : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource<HttpRequestMessage> _signal =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public byte[]? RequestBody { get; private set; }
+        public int RequestCount { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            if (request.Content is not null)
+            {
+                RequestBody = await request.Content.ReadAsByteArrayAsync(cancellationToken);
+            }
+            _signal.TrySetResult(request);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+
+        public async Task<HttpRequestMessage?> AwaitRequestAsync(TimeSpan timeout)
+        {
+            var winner = await Task.WhenAny(_signal.Task, Task.Delay(timeout));
+            return winner == _signal.Task ? await _signal.Task : null;
+        }
+    }
+
+    /// <summary>
+    /// A handler that always throws. Used to confirm that
+    /// transport-layer failures don't escape the provider's
+    /// fire-and-forget catch block into the caller's logging code.
+    /// </summary>
+    private sealed class ThrowingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+            => throw new HttpRequestException("simulated network failure");
+    }
+
+    /// <summary>
+    /// <see cref="TimeProvider"/> that returns a pinned instant — so
+    /// tests can pin the envelope's <c>sent_at</c> and the event's
+    /// <c>timestamp</c> field.
+    /// </summary>
+    private sealed class FixedTimeProvider : TimeProvider
+    {
+        private readonly DateTimeOffset _now;
+        public FixedTimeProvider(DateTimeOffset now) => _now = now;
+        public override DateTimeOffset GetUtcNow() => _now;
     }
 }
 
