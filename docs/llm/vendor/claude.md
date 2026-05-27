@@ -16104,3 +16104,82 @@ In `BuyMultiple` I added `const int BackoffSafetyBound = 32` to cap the cost-bac
 Four tests failed 
 Test summary: total: 369, failed: 4, succeeded: 365, skipped: 0, duration: 2.2s
 Build failed with 4 error(s) in 3.7s
+
+Let me find the failing tests.Good news: the build is clean (zero errors), 365 tests pass, and my widening worked. Only my four new regression tests are failing. The failures all come from one shared root cause — and it's something I should have caught.
+
+## The failure pattern
+
+All four tests set `Owned` to a large value (3 billion or `int.MaxValue`) and then expect a single-unit or batch buy to succeed. They don't.
+
+Look at `BuyMax_AtHugeOwnedCount_DoesNotProduceNegativeOwned`: after `BuyMax`, `shrimp.Owned` is still `3,000,000,000`. Zero bought. And `BuyBusiness_AtIntMaxValueOwned_DoesNotWrap`: `BuyBusiness` returns `false`. **The player can't afford the next unit.**
+
+Why? `NextCost = BaseCost × CostMultiplier^Owned`. For shrimp boat at 3B owned: `1,244,160 × 1.11^3,000,000,000`. log₁₀(1.11) ≈ 0.0453, so the exponent is ≈ `0.0453 × 3 × 10⁹ ≈ 1.36 × 10⁸`. That's a cost of `~10^(1.36 × 10⁸)` — a number with 136 million digits.
+
+I set cash to `new BigDouble(1.0, 10_000_000)` — that's `10^10,000,000`, a number with 10 million digits. **The cost exceeds the cash by 126 million orders of magnitude.** Of course the buy fails.
+
+The implementation is correct. My test setup was wrong — I picked a cash value that *sounded* astronomical without doing the geometric-cost math. The third test (`BuyMultiple_RepeatedAtCap_OwnedStaysPositiveAndIncreases`) hits a related symptom: after one max-cap batch on lemonade, `Owned` lands at 340,323,778, then on the second iteration the cost has grown past the cash and `BuyMultiple` returns 0 — but I use `.ShouldBeGreaterThan(last)` which fails on equality.
+
+## The fix
+
+Two distinct fixes:
+
+1. **Tests that need huge Owned** — use cash of `10^(huge enough)` computed from the geometric series. For 3B shrimp boats with multiplier 1.11, I need cash exponent of at least `3 × 10⁹ × log₁₀(1.11) ≈ 1.36 × 10⁸`. I'll use `BigDouble(1.0, 200_000_000)` to leave generous headroom.
+
+2. **The chain-buy test** — when the cost outpaces cash mid-loop, `Owned` correctly *stops growing* rather than failing. The test should pin that Owned never goes negative and never decreases — `ShouldBeGreaterThanOrEqualTo(last)`, with at least one strict increase across the loop.
+
+Let me read the current test file and fix it:Let me also check the other test that uses 3B cross-business — line 287 area:The `NextCost_AfterMultipleBulkBuys_NeverCollapsesToSubAtto` test passed — it doesn't assert anything was bought, only that NextCost stays sane after the attempts. Good.
+
+Let me calculate the cash exponents I need. For each business, geometric series sum cost ≈ `BaseCost × CostMultiplier^(Owned+N) / (CostMultiplier - 1)`. Total exponent ≈ `log₁₀(BaseCost) + (Owned + N) × log₁₀(CostMultiplier)`.
+
+For **shrimp** at Owned=3e9 buying +1e9 more (so N goes from 3e9 to 4e9):
+- `log₁₀(1.11) ≈ 0.04532`
+- Final exponent ≈ `4e9 × 0.04532 ≈ 1.81e8`
+- Need cash exponent ≥ ~`2e8` for safety.
+
+For **lemonade** chain-buy starting at 0, buying `PracticalBatchCap = long.MaxValue/4 ≈ 2.3e18` (theoretical):
+- That's silly. The first batch already hits ridiculous cost. With infinite-ish cash, after one batch Owned ends up at whatever the affordable count is. From the test failure we know: after first batch lemonade Owned = 340,323,778.
+- With cash `1e10,000,000` and lemonade multiplier 1.07, log₁₀(1.07) ≈ 0.02938:
+  - Affordable when first cost (BaseCost=4) × (1.07^n - 1) / 0.07 ≤ 1e10,000,000
+  - Solving: n ≈ 10,000,000 / 0.02938 ≈ 340,367,000. Matches.
+- So after batch 1, lemonade Owned ≈ 340M. The next batch's first cost is `4 × 1.07^340M` ≈ `10^10,000,000` — exactly equal to cash. So second batch buys 0.
+- That's why `BuyMultiple_RepeatedAtCap` fails: Owned plateaus.
+
+**The test design needs rethinking.** The intent was "chain max-cap buys and confirm no wrap." But with finite cash, you can only afford one batch's worth. The defensive thing this test really wants to pin is: "Owned never decreases or wraps when batch-buying, even when cash runs out." Let me rewrite to express that contract honestly.
+
+For the **`BuyBusiness_AtIntMaxValueOwned`** test (shrimp at int.MaxValue ≈ 2.147B), the single-unit cost is `1,244,160 × 1.11^2.147e9`. Exponent ≈ `2.147e9 × 0.04532 ≈ 9.7e7`. Need cash exponent ≥ ~1e8.
+
+For the **`BuyMax_AtHugeOwnedCount`** test (shrimp at 3B), the single-unit (just to start) cost is `1,244,160 × 1.11^3e9`. Exponent ≈ `1.36e8`. We want to actually buy some, so need cash to cover at least one — exponent ≥ `~1.5e8`.
+
+I'll use `BigDouble(1.0, 200_000_000)` (a 200-million-digit number, more than enough) for the shrimp tests and rethink the chain-buy test.
+
+Let me also double-check: the `CrossBusinessSpeedMultiplier_AtLongRangeMinOwned_StaysFiniteAndPositive` test passed (it never tries to buy). Good — that one's correct.
+
+Now let me fix:Now fix the chain-buy test. The honest contract is: "Owned must never decrease and never wrap negative across repeated batch buys; at least one batch must succeed." Plateauing once cash runs out is *correct* behavior, not a bug.Now let me verify the file as a whole and re-check the other tests for similar cash-sizing issues I might have missed:Line 285 is the chain-buy test — `10_000_000` is correct there (we want plateau behavior to actually happen, demonstrating monotonicity under cash-exhaustion).
+
+Line 347 is `NextCost_AfterMultipleBulkBuys_NeverCollapsesToSubAtto` — that test passed in the original run, so the cash level was sufficient for its purpose (just bulk-buying shrimp 4 times — first call buys ~340 shrimp, subsequent ones plateau, but the test only asserts Owned > 0 and NextCost is finite, all of which work).
+
+Let me also verify the file is syntactically intact:11 `[Fact]`, 11 test methods. Aligned. Let me view the final tail to make sure braces are balanced:Clean. 
+
+One more sanity check: think through whether the new cash values are themselves a problem for `BigDouble`. The struct stores `Mantissa: double` and `Exponent: long`. `BigDouble(1.0, 200_000_000)` is just `Mantissa=1.0, Exponent=200_000_000` — well within `long` range and `Mantissa` is in `[1,10)`. Arithmetic stays representable. ✅
+
+For shrimp at 3B owned, `NextCost.Pow(3e9)` — `Pow` is log-based, so it computes `10^(3e9 × log₁₀(1.11))` ≈ `10^(1.36e8)` — exponent ~1.36e8, comfortably inside long. Cash (`1e2e8`) minus that cost stays in BigDouble range. ✅## What happened
+
+The build was clean, 365/369 tests passed, and the production code was right. **My new regression tests were wrong** — I picked cash values that sounded huge (`10^10⁷`) without doing the geometric-cost math.
+
+Shrimp boat with multiplier 1.11 at 3B owned has a next-unit cost of `1,244,160 × 1.11^(3×10⁹)`, which has an exponent around `1.36 × 10⁸`. My cash exponent was `10⁷` — short by 126 million orders of magnitude. The engine correctly refused to sell something the player couldn't afford; my assertions then accused it of failing to prevent overflow.
+
+## Fixes in this one file
+
+- **`BuyMultiple_StartingAtThreeBillionOwned`** — cash bumped from `10^10⁷` to `10^(2×10⁸)`. Now actually exercises the wrap-prevention path.
+- **`BuyMax_AtHugeOwnedCount`** — same fix.
+- **`BuyBusiness_AtIntMaxValueOwned`** — cash bumped to `10^(1.5×10⁸)`, the minimum to afford one unit at int.MaxValue owned.
+- **`BuyMultiple_RepeatedAtCap`** — renamed to `…_OwnedStaysNonNegativeAndMonotonic` and rewritten. The original assertion (strictly increases every iteration) was an incorrect specification of the contract — with finite cash and geometric cost, plateau is correct behavior. The honest invariant under the wrap bug is "Owned never decreases and never goes negative across a chain of buys," with an end-of-loop check that at least one batch succeeded.
+
+Each test now has a doc-comment showing the cash-sizing math, so a future contributor reading the file can see why the exponents are what they are — and so I can't repeat the mistake silently if I touch these tests later.
+
+## What I still didn't do
+
+I didn't run the suite (no .NET SDK in the sandbox). But the four failures all share one shape — "I asked the engine to spend money the player didn't have" — and the math for each adjusted cash value is in the doc comments. The chain-buy test's monotonicity rewrite is the only structural change; the other three are pure cash bumps.
+
+97
+30
