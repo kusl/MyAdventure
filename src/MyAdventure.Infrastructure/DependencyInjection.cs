@@ -268,6 +268,128 @@ public static class DependencyInjection
     }
 
     /// <summary>
+    /// How aggressively should <see cref="FlushTelemetryAsync"/> tear
+    /// things down to push pending telemetry over the wire.
+    /// </summary>
+    public enum TelemetryFlushMode
+    {
+        /// <summary>
+        /// Non-destructive: ask the trace provider to flush its batch
+        /// processor synchronously. The logger and metrics pipelines
+        /// keep running and continue to emit on their normal batch
+        /// timers. This is the right choice for events that <i>might</i>
+        /// be followed by more work — Android <c>Deactivated(Background)</c>
+        /// in particular, where the activity could resume.
+        /// </summary>
+        Soft,
+
+        /// <summary>
+        /// Destructive: dispose the <see cref="IServiceProvider"/>,
+        /// which disposes the <see cref="ILoggerFactory"/> (flushing the
+        /// OpenTelemetry log batch on the way out) and the trace/meter
+        /// providers. Use this only when the process is genuinely
+        /// exiting — Desktop <c>ShutdownRequested</c>, for example.
+        /// After a <see cref="Final"/> flush the service provider is
+        /// unusable; any subsequent code that resolves services will
+        /// observe an <see cref="ObjectDisposedException"/>.
+        /// </summary>
+        Final,
+    }
+
+    /// <summary>
+    /// Push any pending OpenTelemetry batches to Sentry before the next
+    /// thing that might kill the process. Designed to be called from
+    /// platform-specific lifecycle hooks — Desktop <c>ShutdownRequested</c>,
+    /// Android <c>IActivatableLifetime.Deactivated(ActivationKind.Background)</c>.
+    ///
+    /// <para>
+    /// <b>Why this exists.</b> The OpenTelemetry batch log/trace
+    /// processors buffer records in memory and flush them on a roughly
+    /// 1-second timer. On Desktop a clean shutdown can race the next
+    /// timer tick and lose the last few seconds of telemetry. On Android
+    /// the OS can kill a backgrounded process at any moment without
+    /// warning, so any unflushed batches just vanish. Without an
+    /// explicit flush hook, the gameplay session you most want to
+    /// debug — the one that ended in a crash or a force-quit — is the
+    /// one whose final logs never reach Sentry.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>What it actually does.</b>
+    /// <list type="bullet">
+    ///   <item><see cref="TelemetryFlushMode.Soft"/>: synchronously
+    ///   <see cref="TracerProvider.ForceFlush(int)"/> the trace
+    ///   provider (if registered). Logs keep running on their own
+    ///   batch timer — disposing the LoggerFactory mid-session would
+    ///   break logging for the rest of the process's life, which on
+    ///   Android can be many minutes after a single Deactivated event.</item>
+    ///   <item><see cref="TelemetryFlushMode.Final"/>: dispose the
+    ///   entire service provider, which flushes <i>everything</i>
+    ///   (logs included) via the normal Dispose chain. Single-use; the
+    ///   container is dead afterwards.</item>
+    /// </list>
+    /// </para>
+    ///
+    /// <para>
+    /// Best-effort: never throws. A flush that can't talk to Sentry
+    /// at shutdown isn't recoverable, and propagating that as an
+    /// exception during platform-shutdown handlers risks turning a
+    /// soft close into a crash.
+    /// </para>
+    /// </summary>
+    /// <param name="services">The application service provider.</param>
+    /// <param name="mode">Soft for "might do more work after this",
+    /// Final for "process is exiting now".</param>
+    /// <param name="timeoutMilliseconds">Per-provider timeout. The
+    /// total wall time can be up to <c>2 × timeoutMilliseconds</c> in
+    /// <see cref="TelemetryFlushMode.Soft"/> mode (one timeout each
+    /// for the tracer flush and any auxiliary work). Default 2000ms —
+    /// long enough for a slow OTLP POST over a poor mobile network,
+    /// short enough that Android's "your app is unresponsive" dialog
+    /// doesn't appear.</param>
+    public static Task FlushTelemetryAsync(
+        IServiceProvider services,
+        TelemetryFlushMode mode = TelemetryFlushMode.Soft,
+        int timeoutMilliseconds = 2000)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        return Task.Run(() =>
+        {
+            try
+            {
+                // TracerProvider is registered as a singleton by
+                // services.AddOpenTelemetry().WithTracing(...). If
+                // tracing wasn't configured (unusual in our codebase
+                // but possible in a future test setup) GetService
+                // returns null and we silently skip — Soft flushes are
+                // best-effort by contract.
+                var tracerProvider = services.GetService<TracerProvider>();
+                tracerProvider?.ForceFlush(timeoutMilliseconds);
+
+                if (mode == TelemetryFlushMode.Final && services is IDisposable disposable)
+                {
+                    // Disposing the ServiceProvider disposes the
+                    // ILoggerFactory it owns, which in turn disposes
+                    // every registered ILoggerProvider — including the
+                    // OpenTelemetryLoggerProvider, whose Dispose
+                    // performs a final synchronous flush of its batch
+                    // processor. That's the only public path to flush
+                    // logs from this assembly; the provider's own
+                    // ForceFlush is internal-only.
+                    disposable.Dispose();
+                }
+            }
+            catch
+            {
+                // Best-effort. The caller is in a shutdown / background
+                // handler; we will not crash them because a network
+                // POST timed out.
+            }
+        });
+    }
+
+    /// <summary>
     /// Initialize the SQLite database, applying an in-place schema migration
     /// to lift legacy REAL columns into the new TEXT (BigDouble) columns when
     /// an old v1 database is detected.

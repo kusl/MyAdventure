@@ -17401,3 +17401,100 @@ Three separate reasons, in priority order:
 00
 38
 
+ok what should I do? you didn't give me anything 
+
+You're right — I cut off mid-fix. Here's the Android update.Let me re-check the current Android App.axaml.cs in the fresh dump so I'm working from the truth, not memory:Now let me also check the existing `AppLifecycleManager` to use the right hook — your memory says Background lifecycle uses `IActivatableLifetime` with `ActivationKind.Background`:Good — Android's "about to be backgrounded" signal is `IActivatableLifetime.Deactivated` with `ActivationKind.Background`. That's the same hook `AppLifecycleManager` already uses for offline-earnings recording. Flushing telemetry on that event is the right move: it covers every backgrounding (which is the only point where Android may kill the process), runs synchronously enough that the OTLP flush has a chance to complete, and doesn't depend on any non-existent "exit" event.
+
+One subtlety: `ServiceProvider.Dispose()` is one-shot — dispose it on background and the next foreground activity gets a dead container. So instead of disposing, I need to call OpenTelemetry's force-flush APIs directly on the providers. `LoggerFactory.Dispose()` would also be one-shot. The cleanest path: pull `LoggerProvider` and `TracerProvider` out of DI and call their `ForceFlush()` methods (both exist on the OpenTelemetry SDK types).
+
+But — there's a simpler option that matches what Desktop did: on Android, `OnPause`/background == "process might die now". We don't really need the container to keep working after that; if the user returns, the activity is recreated and `OnFrameworkInitializationCompleted` doesn't run again on the same App instance, but the existing `Services` static remains valid until the process is actually killed. So disposing too early breaks foreground resume.
+
+The correct fix: **`ForceFlush` rather than `Dispose`**. Let me add a `FlushTelemetryAsync` helper in `DependencyInjection.cs` so both Desktop and Android can call the same code path, then update both App.axaml.cs files. This also means revising Desktop — the previous round used `Dispose` on `ShutdownRequested`, which works there because the process IS exiting, but using the same `FlushTelemetryAsync` helper is more consistent and removes the "what if shutdown is cancelled" edge case.
+
+Let me check what's exposed on `OpenTelemetryLoggerProvider` / `TracerProvider`:Good — `tracerProvider.ForceFlush()` exists on the .NET SDK (the issue linked at the end demonstrates the exact signature). The same exists for `LoggerProvider.ForceFlush()`. Both are synchronous and take an optional timeout.
+
+Plan:
+
+1. **`DependencyInjection.cs`** — add `FlushTelemetryAsync(IServiceProvider, int timeoutMs)` that resolves the `LoggerFactory` (which holds the OpenTelemetry logger provider) and the `TracerProvider`, then calls `ForceFlush` on each. Safe to call repeatedly; doesn't dispose anything.
+2. **Desktop `App.axaml.cs`** — replace the `Dispose()` call with `FlushTelemetryAsync`. Disposing on `ShutdownRequested` was already correct for Desktop (process is exiting), but `FlushTelemetryAsync` keeps the surface identical to Android.
+3. **Android `App.axaml.cs`** — wire `IActivatableLifetime.Deactivated` for `ActivationKind.Background` and call `FlushTelemetryAsync`. **Important**: `AppLifecycleManager` already subscribes to the same event for offline-earnings recording, and the two subscribers are independent — adding ours alongside is fine. We do NOT replace the existing manager or fold flushing into it; flushing telemetry belongs in App startup, not in a service that's about game-state lifecycle.
+
+Reaching for `LoggerFactory` to flush its OpenTelemetry provider is unfortunately non-trivial — `LoggerFactory.Dispose()` flushes, but there's no public `ForceFlush`. The reliable path is to resolve the `OpenTelemetryLoggerProvider` directly. But that's not registered in DI by `AddOpenTelemetry()` on the logging builder. The cleanest path is to register a side-channel — capture references to the OTel providers during `AddInfrastructure` so we can flush them later.
+
+Actually, let me look one more time at the simpler option: **`LoggerFactory` does have a public `Dispose()` that flushes, but it's one-shot.** Since Android is going to background (process may die), one-shot is fine *for the dying instance*. If the activity resumes, the static `Services` field would point at a disposed provider. Let me check what AppLifecycleManager does on resume:Good — `AppLifecycleManager` subscribes to `Deactivated(Background)` for the game state, and `Activated(Background)` to resume. The activity persists across background→foreground, so we can NOT dispose the ServiceProvider on background.
+
+The clean solution: capture the OpenTelemetry `LoggerProvider`/`TracerProvider` references in a small internal struct registered as a singleton, exposing a `FlushAsync()` method. Both Desktop (on `ShutdownRequested`) and Android (on `Deactivated(Background)`) call the same method. No disposal, just flush.
+
+Let me look at how to capture references during `WithTracing`/`AddOpenTelemetry`-logging configuration. The `WithTracing()` builder doesn't directly hand you the `TracerProvider`; it gets built later inside DI. The standard way is `services.GetRequiredService<TracerProvider>()` — `AddOpenTelemetry().WithTracing(...)` registers `TracerProvider` as a singleton. Logger provider: `services.GetRequiredService<LoggerFactory>()` — but the OTel provider is hidden behind it.
+
+For logs, the actual provider type is `OpenTelemetryLoggerProvider`. `logging.AddOpenTelemetry(...)` registers it as an `ILoggerProvider` and exposes it via DI as well. Let me confirm:OK, so `ILoggerFactory.Dispose()` does flush (as the search confirms: "On shutdown, ForceFlush() ensures all pending logs are exported"). But disposing the LoggerFactory is destructive — Android can't keep logging after.
+
+The simplest, dependency-free approach: register a `TelemetryFlush` singleton that captures references to `OpenTelemetryLoggerOptions.AddProcessor`-style flush hooks. Hmm, that's actually messy in the AddOpenTelemetry-on-logging-builder world.
+
+**The pragmatic option I'll go with**: resolve `TracerProvider` from DI (it's registered by `.WithTracing()`) for traces, and use a `LoggerFactory` "FlushAndKeepAlive" trick via the SDK's `OpenTelemetryLoggerProvider`. Actually, the cleanest path: `services.AddOpenTelemetry().WithTracing(...).WithLogging(...)` — using `WithLogging` (the OpenTelemetry 1.6+ API) on the `OpenTelemetryBuilder` registers `LoggerProvider` in DI, which has a public `ForceFlush`. The user is on OTel 1.15.3, well past 1.6.
+
+But switching `logging.AddOpenTelemetry(...)` to `.WithLogging(...)` on the OpenTelemetry builder changes the integration pattern and could affect how `ILoggerProvider` interacts with the .NET logging system. Risk too high right now — the user just got logs working.
+
+OK, the **truly simplest** option that doesn't risk regression: capture references to the providers via processor side-channels. There's an even simpler trick: `Sdk.SuppressInstrumentation` aside, the OTel SDK exposes `OpenTelemetryLoggerProvider` as `LoggerProvider` (the base class) since the type IS publicly resolvable. Let me just attempt to resolve `LoggerProvider` from DI — if it's registered, great; if not, no flush for logs, only traces.
+
+Actually, the simplest approach by far that I'm now certain works: **dispose the LoggerFactory on Desktop ShutdownRequested** (we're exiting anyway), and on Android **just resolve `TracerProvider` from DI and ForceFlush it on background, plus do nothing for logs**. Why? Because the log batch processor default scheduled delay is 1 second on OTel .NET — Android backgrounding gives the OS at least a couple of seconds before killing the process for typical app churn, and we just verified logs are arriving in real time. The 1-second timer keeps logs current. Traces, when they exist, are riskier because they're often emitted in bursts; explicit flush helps. Metrics: doesn't matter, Sentry won't accept them.
+
+But the user asked the no-silos question. The right answer is: **same flush helper for both platforms**, even if Android's currently more conservative. Let me just write the helper that handles both, gracefully degrades if logger flush isn't available, and call it from both platforms. Clean and consistent.
+
+The actual workable approach: register the OpenTelemetry `LoggerProvider` as a singleton via DI. Looking again at search result 90: "UseOpenTelemetry(Action<LoggerProviderBuilder>) (Experimental) Full dependency injection support · Registers ILoggerProvider into the DI container". The experimental status is concerning, but more importantly, I notice that what we already register IS resolvable: `services.GetServices<ILoggerProvider>()` returns all registered logging providers, and one of them will be `OpenTelemetryLoggerProvider`. That type has a `ForceFlush(int timeout)` method. Let me confirm:Key finding: `OpenTelemetryLoggerProvider.ForceFlush` is marked **`internal`** in the .NET SDK source. So we can't call it directly from outside the OpenTelemetry assembly. Good catch — I would have written non-compiling code.
+
+But on **dispose**, the logger provider DOES flush, per its inherited `BaseProvider.Dispose` pattern. And the `LoggerFactory` (Microsoft's) calls Dispose on all `ILoggerProvider` instances when the LoggerFactory itself is disposed.
+
+So the available primitives I actually have access to are:
+- `TracerProvider.ForceFlush(int timeout)` — **public** since 1.9, fine.
+- `MeterProvider.ForceFlush(int timeout)` — public, but Sentry rejects metrics.
+- For logs, only `Dispose` flushes, and disposing is destructive.
+
+OK, decision: on Android background, do **partial flush** (traces only via `TracerProvider.ForceFlush`). Logs already auto-flush on their 1-second batch timer, so missing the absolute last second is acceptable on Android (the user just confirmed logs are arriving fine). On Desktop ShutdownRequested, dispose the ServiceProvider — that's already in place, and works because we're exiting.
+
+For cross-platform consistency the helper will accept both a "soft flush" mode (ForceFlush traces only — safe to call repeatedly) and a "final flush" mode (dispose everything — one-shot). Desktop uses final; Android uses soft.
+
+Let me write the code:Now I'll add a `FlushTelemetry` helper to `DependencyInjection.cs` and update both App.axaml.cs files. Three files total: updated `DependencyInjection.cs`, updated Desktop `App.axaml.cs` (use helper instead of ad-hoc dispose), new Android `App.axaml.cs`.
+
+I'll deliver the full `DependencyInjection.cs` and the full updated App files. Let me also re-verify the current full `DependencyInjection.cs` from the dump so I don't drift:Good. Now I have full context. Let me write the three updated files. I'll deliver the full `DependencyInjection.cs` with the new `FlushTelemetryAsync` static method appended, the full Desktop `App.axaml.cs` using it, and the full Android `App.axaml.cs` using it.Now the Desktop App.axaml.cs using `FlushTelemetryAsync(..., Final)`:Now the Android one. The key insight: hook `IActivatableLifetime.Deactivated` for `ActivationKind.Background`. `AppLifecycleManager` already uses the same hook for offline-earnings recording — adding another subscriber is fine and they don't interfere with each other.Now copy to outputs and present:Here are the three files. Sorry for the empty hand-off last turn — I had set up the plan and then sent the message before writing the code.
+
+## Three files
+
+**`src/MyAdventure.Infrastructure/DependencyInjection.cs`** — drops in alongside the rest, adds a public `FlushTelemetryAsync(IServiceProvider, TelemetryFlushMode, int timeout)` helper plus a `TelemetryFlushMode { Soft, Final }` enum. `Soft` calls `TracerProvider.ForceFlush(timeout)` and leaves the rest of the pipeline alive. `Final` disposes the ServiceProvider (which flushes logs via the LoggerFactory.Dispose chain — the only public path to flush logs, because `OpenTelemetryLoggerProvider.ForceFlush` is `internal` in the OTel SDK). Best-effort; never throws.
+
+**`src/MyAdventure.Desktop/App.axaml.cs`** — same as before but now calls `FlushTelemetryAsync(..., Final)` from `ShutdownRequested`. Cleaner than the ad-hoc `disposable.Dispose()` from last turn, and shares the implementation with Android.
+
+**`src/MyAdventure.Android/App.axaml.cs`** — subscribes to `IActivatableLifetime.Deactivated(ActivationKind.Background)` and calls `FlushTelemetryAsync(..., Soft)`. Uses Soft because Android backgrounding ≠ exit — the user usually returns, and disposing the container on every background event would leave a dead provider behind. The subscription sits alongside `AppLifecycleManager`'s existing subscription to the same event; they don't share state and both run.
+
+## On traces and metrics (why they're empty)
+
+I owe you straight answers on these instead of leaving you wondering.
+
+**Traces:** The OTLP traces pipeline is correctly wired and the auth header is now correct. The reason your Traces panel is empty is that **nothing in the codebase ever starts an `Activity`**. The dead `TelemetryBootstrapper.cs` (which you still need to delete) declares an `ActivitySource` but it isn't used. Until something calls `activitySource.StartActivity("something")` around game operations — BuyBusiness, save, load, prestige — there are no spans to export. That's a separate piece of work I deliberately didn't fold in here.
+
+**Metrics:** Per [Sentry's OTLP docs](https://docs.sentry.io/concepts/otlp/), Sentry does not support ingesting OTLP metrics. They tracked this as an open feature request through late 2025. Our metrics pipeline already correctly routes to the console exporter only — there's no toggle on our side that would change this. If you want metrics on a dashboard, the FOSS-friendly path is to add a second OTLP exporter on the metrics builder pointing at a Prometheus or Grafana Mimir instance. I'd suggest deferring that until you actually want to look at metrics; right now it would be process for its own sake.
+
+## Two unfinished items from previous rounds
+
+These are still outstanding from my earlier responses — flag if you want me to do them in a follow-up:
+
+1. `src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs` — orphan dead file. `grep -rn AddMyAdventureTelemetry src/ tests/` returns nothing. Safe to `git rm`.
+2. Adding actual `Activity` spans around game operations so the Traces panel has something to display.
+
+29
+41
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

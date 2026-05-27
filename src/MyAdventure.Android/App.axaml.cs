@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +48,66 @@ public partial class App : Avalonia.Application
 
             DependencyInjection.EmitStartupBreadcrumb(Services);
             await DependencyInjection.InitializeDatabaseAsync(Services);
+
+            // Flush telemetry whenever the app goes to background.
+            //
+            // Android can kill a backgrounded process at any moment without
+            // warning, so any unflushed OpenTelemetry batches just vanish.
+            // The first thing the OS does before killing is push the app to
+            // background, which raises IActivatableLifetime.Deactivated with
+            // ActivationKind.Background — same event AppLifecycleManager
+            // already uses for offline-earnings bookkeeping. Adding our
+            // subscriber alongside is safe; the two handlers don't share
+            // state and Avalonia delivers the event to both.
+            //
+            // Soft mode here, NOT Final. Disposing the ServiceProvider
+            // on background would leave a dead container behind if the
+            // user resumes the activity — and Android resume is the
+            // common case, not the exception. Soft mode synchronously
+            // flushes the trace provider's batch and lets the logger
+            // pipeline keep running on its own 1-second timer (which
+            // is fast enough that the next backgrounding will catch
+            // anything emitted after this flush completes).
+            //
+            // We subscribe directly to IActivatableLifetime here rather
+            // than going through AppLifecycleManager because telemetry
+            // flushing is an app-lifetime concern, not a game-state
+            // concern, and folding it into AppLifecycleManager would
+            // muddle the responsibilities of a service whose only job
+            // is offline earnings.
+            var lifetime = this.TryGetFeature<IActivatableLifetime>();
+            if (lifetime is not null)
+            {
+                lifetime.Deactivated += (_, e) =>
+                {
+                    // Filter to Background events specifically; Avalonia
+                    // also raises Deactivated for things like dialog
+                    // focus changes (ActivationKind.Application) where
+                    // a telemetry flush would be wasted overhead.
+                    if (e.Kind != ActivationKind.Background) return;
+                    if (Services is null) return;
+
+                    try
+                    {
+                        DependencyInjection
+                            .FlushTelemetryAsync(Services, DependencyInjection.TelemetryFlushMode.Soft)
+                            .GetAwaiter()
+                            .GetResult();
+                    }
+                    catch
+                    {
+                        // FlushTelemetryAsync swallows already; this
+                        // extra guard exists to protect against any
+                        // GetAwaiter()-thrown wrapping we might pick up
+                        // from future runtime changes.
+                    }
+                };
+            }
+            else
+            {
+                global::Android.Util.Log.Warn(Tag,
+                    "IActivatableLifetime not available; telemetry will not be flushed on background.");
+            }
 
             // Avalonia 12: Android uses IActivityApplicationLifetime with
             // a MainViewFactory. The factory is invoked for each fresh

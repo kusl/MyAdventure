@@ -63,21 +63,25 @@ public partial class App : Avalonia.Application
             // Flush telemetry on shutdown.
             //
             // The OpenTelemetry batch log/trace processors buffer records
-            // and flush them on a 1-second timer (or when their internal
-            // queue saturates). On a clean Desktop shutdown the process
-            // can exit while a partial batch is still sitting in memory,
-            // so the last few seconds of telemetry never reaches Sentry.
-            // Disposing the ServiceProvider runs each provider's Dispose()
-            // — which for OpenTelemetry's loggers and tracer providers
-            // means a synchronous final flush. The Avalonia lifetime fires
-            // ShutdownRequested before the message loop tears down, so
-            // there is still time for the HTTP POST to land.
+            // and flush them on a roughly 1-second timer. On a clean
+            // Desktop shutdown the process can exit while a partial batch
+            // is still sitting in memory, so the last few seconds of
+            // telemetry never reach Sentry. FlushTelemetryAsync in Final
+            // mode disposes the ServiceProvider, which disposes the
+            // LoggerFactory and trace provider, which flush their
+            // pending batches synchronously on the way out.
+            //
+            // The Avalonia lifetime fires ShutdownRequested before the
+            // message loop tears down, so there is still time for the
+            // HTTP POST to land.
             desktop.ShutdownRequested += (_, _) =>
             {
-                if (Services is IDisposable disposable)
+                if (Services is not null)
                 {
-                    try { disposable.Dispose(); }
-                    catch { /* best-effort flush; never block shutdown */ }
+                    DependencyInjection
+                        .FlushTelemetryAsync(Services, DependencyInjection.TelemetryFlushMode.Final)
+                        .GetAwaiter()
+                        .GetResult();
                 }
             };
         }
