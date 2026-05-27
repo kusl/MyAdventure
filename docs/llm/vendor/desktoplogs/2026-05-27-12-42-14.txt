@@ -1,0 +1,408 @@
+LogRecord.Timestamp:               2026-05-27T16:43:06.7573895Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env=production, verbose=False
+LogRecord.Body:                    Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Environment: production
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:07.8979309Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Applied offline earnings on load: 3.731898403241369e12 for 7931s away
+LogRecord.Body:                    Applied offline earnings on load: {Earnings} for {Seconds:F0}s away
+LogRecord.Attributes (Key:Value):
+    Earnings: 3.731898403241369e12
+    Seconds: 7931.2993132
+    OriginalFormat (a.k.a Body): Applied offline earnings on load: {Earnings} for {Seconds:F0}s away
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:07.9125692Z
+LogRecord.CategoryName:            MyAdventure.Shared.ViewModels.GameViewModel
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Game initialized with 6 businesses
+LogRecord.Body:                    Game initialized with {Count} businesses
+LogRecord.Attributes (Key:Value):
+    Count: 6
+    OriginalFormat (a.k.a Body): Game initialized with {Count} businesses
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:13.0447484Z
+LogRecord.CategoryName:            Microsoft.EntityFrameworkCore.Query
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+LogRecord.Body:                    The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+LogRecord.EventId:                 10103
+LogRecord.EventName:               Microsoft.EntityFrameworkCore.Query.FirstWithoutOrderByAndFilterWarning
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:17.7619976Z
+LogRecord.CategoryName:            MyAdventure.Shared.ViewModels.GameViewModel
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Exported game state (452 chars)
+LogRecord.Body:                    Exported game state ({Length} chars)
+LogRecord.Attributes (Key:Value):
+    Length: 452
+    OriginalFormat (a.k.a Body): Exported game state ({Length} chars)
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:29.9962273Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Prestige #1! Gained 1.02e2 angels
+LogRecord.Body:                    Prestige #{Count}! Gained {Angels} angels
+LogRecord.Attributes (Key:Value):
+    Count: 1
+    Angels: 1.02e2
+    OriginalFormat (a.k.a Body): Prestige #{Count}! Gained {Angels} angels
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:29.9964959Z
+LogRecord.CategoryName:            MyAdventure.Shared.ViewModels.GameViewModel
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Prestige! Gained 1.02e2 angels
+LogRecord.Body:                    Prestige! Gained {Angels} angels
+LogRecord.Attributes (Key:Value):
+    Angels: 1.02e2
+    OriginalFormat (a.k.a Body): Prestige! Gained {Angels} angels
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:31.3403395Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bought Lemonade Stand #1 for 4e0
+LogRecord.Body:                    Bought {Business} #{Count} for {Cost}
+LogRecord.Attributes (Key:Value):
+    Business: Lemonade Stand
+    Count: 1
+    Cost: 4e0
+    OriginalFormat (a.k.a Body): Bought {Business} #{Count} for {Cost}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:35.6823645Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bulk bought 6 of Lemonade Stand for 3.0616084370196006e1 (now 7)
+LogRecord.Body:                    Bulk bought {Count} of {Business} for {Cost} (now {Total})
+LogRecord.Attributes (Key:Value):
+    Count: 6
+    Business: Lemonade Stand
+    Cost: 3.0616084370196006e1
+    Total: 7
+    OriginalFormat (a.k.a Body): Bulk bought {Count} of {Business} for {Cost} (now {Total})
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:38.9873925Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bulk bought 17 of Lemonade Stand for 1.9809059868042582e2 (now 24)
+LogRecord.Body:                    Bulk bought {Count} of {Business} for {Cost} (now {Total})
+LogRecord.Attributes (Key:Value):
+    Count: 17
+    Business: Lemonade Stand
+    Cost: 1.9809059868042582e2
+    Total: 24
+    OriginalFormat (a.k.a Body): Bulk bought {Count} of {Business} for {Cost} (now {Total})
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:43.8115044Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bulk bought 1 of Lemonade Stand for 2.028946781354354e1 (now 25)
+LogRecord.Body:                    Bulk bought {Count} of {Business} for {Cost} (now {Total})
+LogRecord.Attributes (Key:Value):
+    Count: 1
+    Business: Lemonade Stand
+    Cost: 2.028946781354354e1
+    Total: 25
+    OriginalFormat (a.k.a Body): Bulk bought {Count} of {Business} for {Cost} (now {Total})
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:48.4876033Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bulk bought 25 of Lemonade Stand for 1.3731195670256282e3 (now 50)
+LogRecord.Body:                    Bulk bought {Count} of {Business} for {Cost} (now {Total})
+LogRecord.Attributes (Key:Value):
+    Count: 25
+    Business: Lemonade Stand
+    Cost: 1.3731195670256282e3
+    Total: 50
+    OriginalFormat (a.k.a Body): Bulk bought {Count} of {Business} for {Cost} (now {Total})
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:51.0705548Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bought manager for Lemonade Stand
+LogRecord.Body:                    Bought manager for {Business}
+LogRecord.Attributes (Key:Value):
+    Business: Lemonade Stand
+    OriginalFormat (a.k.a Body): Bought manager for {Business}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:52.3456733Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bought Newspaper Route #1 for 6e1
+LogRecord.Body:                    Bought {Business} #{Count} for {Cost}
+LogRecord.Attributes (Key:Value):
+    Business: Newspaper Route
+    Count: 1
+    Cost: 6e1
+    OriginalFormat (a.k.a Body): Bought {Business} #{Count} for {Cost}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:53.3357585Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bulk bought 24 of Newspaper Route for 1.2707581047915852e4 (now 25)
+LogRecord.Body:                    Bulk bought {Count} of {Business} for {Cost} (now {Total})
+LogRecord.Attributes (Key:Value):
+    Count: 24
+    Business: Newspaper Route
+    Cost: 1.2707581047915852e4
+    Total: 25
+    OriginalFormat (a.k.a Body): Bulk bought {Count} of {Business} for {Cost} (now {Total})
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:43:58.1539047Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bought manager for Newspaper Route
+LogRecord.Body:                    Bought manager for {Business}
+LogRecord.Attributes (Key:Value):
+    Business: Newspaper Route
+    OriginalFormat (a.k.a Body): Bought manager for {Business}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:44:01.1738589Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bought Car Wash #1 for 7.2e2
+LogRecord.Body:                    Bought {Business} #{Count} for {Cost}
+LogRecord.Attributes (Key:Value):
+    Business: Car Wash
+    Count: 1
+    Cost: 7.2e2
+    OriginalFormat (a.k.a Body): Bought {Business} #{Count} for {Cost}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:44:03.0859866Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bulk bought 24 of Car Wash for 1.3022699560630075e5 (now 25)
+LogRecord.Body:                    Bulk bought {Count} of {Business} for {Cost} (now {Total})
+LogRecord.Attributes (Key:Value):
+    Count: 24
+    Business: Car Wash
+    Cost: 1.3022699560630075e5
+    Total: 25
+    OriginalFormat (a.k.a Body): Bulk bought {Count} of {Business} for {Cost} (now {Total})
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:44:14.5822165Z
+LogRecord.CategoryName:            MyAdventure.Core.Services.GameEngine
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Bought manager for Car Wash
+LogRecord.Body:                    Bought manager for {Business}
+LogRecord.Attributes (Key:Value):
+    Business: Car Wash
+    OriginalFormat (a.k.a Body): Bought manager for {Business}
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+
+LogRecord.Timestamp:               2026-05-27T16:44:19.6427194Z
+LogRecord.CategoryName:            MyAdventure.Shared.ViewModels.GameViewModel
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Exported game state (448 chars)
+LogRecord.Body:                    Exported game state ({Length} chars)
+LogRecord.Attributes (Key:Value):
+    Length: 448
+    OriginalFormat (a.k.a Body): Exported game state ({Length} chars)
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+4b0994769d61858dc44e8ca1dc4d974a9bbb28c2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.15.3
+

@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Wed May 27 10:28:23 AM EDT 2026
+Generated: Wed May 27 12:43:03 PM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -48,6 +48,7 @@ DIRECTORY STRUCTURE:
 │           │   ├── 2026-05-27-09-11-49.txt
 │           │   ├── 2026-05-27-09-42-02.txt
 │           │   ├── 2026-05-27-10-17-24.txt
+│           │   ├── 2026-05-27-10-27-36.txt
 │           │   └── README.md
 │           ├── instructions.md
 │           └── output
@@ -161,7 +162,6 @@ DIRECTORY STRUCTURE:
 │   │       ├── SentryDsn.cs
 │   │       ├── SentryEnvelope.cs
 │   │       ├── SentryEventLoggerProvider.cs
-│   │       ├── TelemetryBootstrapper.cs
 │   │       ├── TelemetryConfigurationLoader.cs
 │   │       ├── TelemetryDefaults.cs
 │   │       ├── TelemetryOptions.cs
@@ -1674,9 +1674,10 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Android/App.axaml.cs
-SIZE: 3.44 KB
+SIZE: 6.50 KB
 ================================================================================
 
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
@@ -1726,6 +1727,66 @@ public partial class App : Avalonia.Application
 
             DependencyInjection.EmitStartupBreadcrumb(Services);
             await DependencyInjection.InitializeDatabaseAsync(Services);
+
+            // Flush telemetry whenever the app goes to background.
+            //
+            // Android can kill a backgrounded process at any moment without
+            // warning, so any unflushed OpenTelemetry batches just vanish.
+            // The first thing the OS does before killing is push the app to
+            // background, which raises IActivatableLifetime.Deactivated with
+            // ActivationKind.Background — same event AppLifecycleManager
+            // already uses for offline-earnings bookkeeping. Adding our
+            // subscriber alongside is safe; the two handlers don't share
+            // state and Avalonia delivers the event to both.
+            //
+            // Soft mode here, NOT Final. Disposing the ServiceProvider
+            // on background would leave a dead container behind if the
+            // user resumes the activity — and Android resume is the
+            // common case, not the exception. Soft mode synchronously
+            // flushes the trace provider's batch and lets the logger
+            // pipeline keep running on its own 1-second timer (which
+            // is fast enough that the next backgrounding will catch
+            // anything emitted after this flush completes).
+            //
+            // We subscribe directly to IActivatableLifetime here rather
+            // than going through AppLifecycleManager because telemetry
+            // flushing is an app-lifetime concern, not a game-state
+            // concern, and folding it into AppLifecycleManager would
+            // muddle the responsibilities of a service whose only job
+            // is offline earnings.
+            var lifetime = this.TryGetFeature<IActivatableLifetime>();
+            if (lifetime is not null)
+            {
+                lifetime.Deactivated += (_, e) =>
+                {
+                    // Filter to Background events specifically; Avalonia
+                    // also raises Deactivated for things like dialog
+                    // focus changes (ActivationKind.Application) where
+                    // a telemetry flush would be wasted overhead.
+                    if (e.Kind != ActivationKind.Background) return;
+                    if (Services is null) return;
+
+                    try
+                    {
+                        DependencyInjection
+                            .FlushTelemetryAsync(Services, DependencyInjection.TelemetryFlushMode.Soft)
+                            .GetAwaiter()
+                            .GetResult();
+                    }
+                    catch
+                    {
+                        // FlushTelemetryAsync swallows already; this
+                        // extra guard exists to protect against any
+                        // GetAwaiter()-thrown wrapping we might pick up
+                        // from future runtime changes.
+                    }
+                };
+            }
+            else
+            {
+                global::Android.Util.Log.Warn(Tag,
+                    "IActivatableLifetime not available; telemetry will not be flushed on background.");
+            }
 
             // Avalonia 12: Android uses IActivityApplicationLifetime with
             // a MainViewFactory. The factory is invoked for each fresh
@@ -4682,7 +4743,7 @@ SIZE: .29 KB
 
 ================================================================================
 FILE: src/MyAdventure.Desktop/App.axaml.cs
-SIZE: 3.72 KB
+SIZE: 3.82 KB
 ================================================================================
 
 using Avalonia.Controls.ApplicationLifetimes;
@@ -4750,21 +4811,25 @@ public partial class App : Avalonia.Application
             // Flush telemetry on shutdown.
             //
             // The OpenTelemetry batch log/trace processors buffer records
-            // and flush them on a 1-second timer (or when their internal
-            // queue saturates). On a clean Desktop shutdown the process
-            // can exit while a partial batch is still sitting in memory,
-            // so the last few seconds of telemetry never reaches Sentry.
-            // Disposing the ServiceProvider runs each provider's Dispose()
-            // — which for OpenTelemetry's loggers and tracer providers
-            // means a synchronous final flush. The Avalonia lifetime fires
-            // ShutdownRequested before the message loop tears down, so
-            // there is still time for the HTTP POST to land.
+            // and flush them on a roughly 1-second timer. On a clean
+            // Desktop shutdown the process can exit while a partial batch
+            // is still sitting in memory, so the last few seconds of
+            // telemetry never reach Sentry. FlushTelemetryAsync in Final
+            // mode disposes the ServiceProvider, which disposes the
+            // LoggerFactory and trace provider, which flush their
+            // pending batches synchronously on the way out.
+            //
+            // The Avalonia lifetime fires ShutdownRequested before the
+            // message loop tears down, so there is still time for the
+            // HTTP POST to land.
             desktop.ShutdownRequested += (_, _) =>
             {
-                if (Services is IDisposable disposable)
+                if (Services is not null)
                 {
-                    try { disposable.Dispose(); }
-                    catch { /* best-effort flush; never block shutdown */ }
+                    DependencyInjection
+                        .FlushTelemetryAsync(Services, DependencyInjection.TelemetryFlushMode.Final)
+                        .GetAwaiter()
+                        .GetResult();
                 }
             };
         }
@@ -5392,7 +5457,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
 ================================================================================
 FILE: src/MyAdventure.Infrastructure/DependencyInjection.cs
-SIZE: 18.63 KB
+SIZE: 24.33 KB
 ================================================================================
 
 using Microsoft.Data.Sqlite;
@@ -5662,6 +5727,128 @@ public static class DependencyInjection
                 "Telemetry: Sentry disabled (no DSN), verbose={Verbose}",
                 announcement.VerboseLogging);
         }
+    }
+
+    /// <summary>
+    /// How aggressively should <see cref="FlushTelemetryAsync"/> tear
+    /// things down to push pending telemetry over the wire.
+    /// </summary>
+    public enum TelemetryFlushMode
+    {
+        /// <summary>
+        /// Non-destructive: ask the trace provider to flush its batch
+        /// processor synchronously. The logger and metrics pipelines
+        /// keep running and continue to emit on their normal batch
+        /// timers. This is the right choice for events that <i>might</i>
+        /// be followed by more work — Android <c>Deactivated(Background)</c>
+        /// in particular, where the activity could resume.
+        /// </summary>
+        Soft,
+
+        /// <summary>
+        /// Destructive: dispose the <see cref="IServiceProvider"/>,
+        /// which disposes the <see cref="ILoggerFactory"/> (flushing the
+        /// OpenTelemetry log batch on the way out) and the trace/meter
+        /// providers. Use this only when the process is genuinely
+        /// exiting — Desktop <c>ShutdownRequested</c>, for example.
+        /// After a <see cref="Final"/> flush the service provider is
+        /// unusable; any subsequent code that resolves services will
+        /// observe an <see cref="ObjectDisposedException"/>.
+        /// </summary>
+        Final,
+    }
+
+    /// <summary>
+    /// Push any pending OpenTelemetry batches to Sentry before the next
+    /// thing that might kill the process. Designed to be called from
+    /// platform-specific lifecycle hooks — Desktop <c>ShutdownRequested</c>,
+    /// Android <c>IActivatableLifetime.Deactivated(ActivationKind.Background)</c>.
+    ///
+    /// <para>
+    /// <b>Why this exists.</b> The OpenTelemetry batch log/trace
+    /// processors buffer records in memory and flush them on a roughly
+    /// 1-second timer. On Desktop a clean shutdown can race the next
+    /// timer tick and lose the last few seconds of telemetry. On Android
+    /// the OS can kill a backgrounded process at any moment without
+    /// warning, so any unflushed batches just vanish. Without an
+    /// explicit flush hook, the gameplay session you most want to
+    /// debug — the one that ended in a crash or a force-quit — is the
+    /// one whose final logs never reach Sentry.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>What it actually does.</b>
+    /// <list type="bullet">
+    ///   <item><see cref="TelemetryFlushMode.Soft"/>: synchronously
+    ///   <see cref="TracerProvider.ForceFlush(int)"/> the trace
+    ///   provider (if registered). Logs keep running on their own
+    ///   batch timer — disposing the LoggerFactory mid-session would
+    ///   break logging for the rest of the process's life, which on
+    ///   Android can be many minutes after a single Deactivated event.</item>
+    ///   <item><see cref="TelemetryFlushMode.Final"/>: dispose the
+    ///   entire service provider, which flushes <i>everything</i>
+    ///   (logs included) via the normal Dispose chain. Single-use; the
+    ///   container is dead afterwards.</item>
+    /// </list>
+    /// </para>
+    ///
+    /// <para>
+    /// Best-effort: never throws. A flush that can't talk to Sentry
+    /// at shutdown isn't recoverable, and propagating that as an
+    /// exception during platform-shutdown handlers risks turning a
+    /// soft close into a crash.
+    /// </para>
+    /// </summary>
+    /// <param name="services">The application service provider.</param>
+    /// <param name="mode">Soft for "might do more work after this",
+    /// Final for "process is exiting now".</param>
+    /// <param name="timeoutMilliseconds">Per-provider timeout. The
+    /// total wall time can be up to <c>2 × timeoutMilliseconds</c> in
+    /// <see cref="TelemetryFlushMode.Soft"/> mode (one timeout each
+    /// for the tracer flush and any auxiliary work). Default 2000ms —
+    /// long enough for a slow OTLP POST over a poor mobile network,
+    /// short enough that Android's "your app is unresponsive" dialog
+    /// doesn't appear.</param>
+    public static Task FlushTelemetryAsync(
+        IServiceProvider services,
+        TelemetryFlushMode mode = TelemetryFlushMode.Soft,
+        int timeoutMilliseconds = 2000)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        return Task.Run(() =>
+        {
+            try
+            {
+                // TracerProvider is registered as a singleton by
+                // services.AddOpenTelemetry().WithTracing(...). If
+                // tracing wasn't configured (unusual in our codebase
+                // but possible in a future test setup) GetService
+                // returns null and we silently skip — Soft flushes are
+                // best-effort by contract.
+                var tracerProvider = services.GetService<TracerProvider>();
+                tracerProvider?.ForceFlush(timeoutMilliseconds);
+
+                if (mode == TelemetryFlushMode.Final && services is IDisposable disposable)
+                {
+                    // Disposing the ServiceProvider disposes the
+                    // ILoggerFactory it owns, which in turn disposes
+                    // every registered ILoggerProvider — including the
+                    // OpenTelemetryLoggerProvider, whose Dispose
+                    // performs a final synchronous flush of its batch
+                    // processor. That's the only public path to flush
+                    // logs from this assembly; the provider's own
+                    // ForceFlush is internal-only.
+                    disposable.Dispose();
+                }
+            }
+            catch
+            {
+                // Best-effort. The caller is in a shutdown / background
+                // handler; we will not crash them because a network
+                // POST timed out.
+            }
+        });
     }
 
     /// <summary>
@@ -6856,13 +7043,6 @@ internal sealed class SentryCriticalLogException : Exception
 {
     public SentryCriticalLogException(string message) : base(message) { }
 }
-
-
-================================================================================
-FILE: src/MyAdventure.Infrastructure/Telemetry/TelemetryBootstrapper.cs
-SIZE: 0 KB
-================================================================================
-
 
 
 ================================================================================
