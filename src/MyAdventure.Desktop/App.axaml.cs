@@ -59,6 +59,27 @@ public partial class App : Avalonia.Application
             var vm = Services.GetRequiredService<GameViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = vm };
             AppLifecycleManager.Attach(vm);
+
+            // Flush telemetry on shutdown.
+            //
+            // The OpenTelemetry batch log/trace processors buffer records
+            // and flush them on a 1-second timer (or when their internal
+            // queue saturates). On a clean Desktop shutdown the process
+            // can exit while a partial batch is still sitting in memory,
+            // so the last few seconds of telemetry never reaches Sentry.
+            // Disposing the ServiceProvider runs each provider's Dispose()
+            // — which for OpenTelemetry's loggers and tracer providers
+            // means a synchronous final flush. The Avalonia lifetime fires
+            // ShutdownRequested before the message loop tears down, so
+            // there is still time for the HTTP POST to land.
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                if (Services is IDisposable disposable)
+                {
+                    try { disposable.Dispose(); }
+                    catch { /* best-effort flush; never block shutdown */ }
+                }
+            };
         }
 
         base.OnFrameworkInitializationCompleted();

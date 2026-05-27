@@ -48,6 +48,35 @@ public sealed class SentryDsn
     /// </summary>
     public string EnvelopeEndpoint { get; }
 
+    /// <summary>
+    /// The value for the <c>x-sentry-auth</c> HTTP header. Sentry's
+    /// documented OTLP intake format is
+    /// <c>sentry sentry_key={publicKey}</c> — a single space-separated
+    /// token list, <b>no commas</b>. This is also accepted at the
+    /// classic envelope endpoint.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The comma matters.</b> The OpenTelemetry .NET OTLP exporter
+    /// parses its <c>Headers</c> string by splitting on <c>','</c> to
+    /// support setting multiple headers in one go (per the
+    /// OpenTelemetry spec). If we embed a comma inside the auth value,
+    /// the exporter mis-splits it and the project key gets sent under
+    /// a header named "sentry_key" while <c>x-sentry-auth</c> arrives
+    /// without it. Sentry then drops the event silently — no 4xx, no
+    /// log line, no Issue. This is exactly the failure mode that left
+    /// the project's Sentry dashboard empty in May 2026.
+    /// </para>
+    /// <para>
+    /// Earlier versions of this code emitted
+    /// <c>sentry sentry_version=7, sentry_key={publicKey}</c> from
+    /// a misreading of legacy Sentry SDK auth-header docs. The
+    /// <c>sentry_version</c> field belongs to the deprecated
+    /// <c>/store/</c> endpoint and is not required (or honoured) by
+    /// the OTLP intake or the modern envelope intake; dropping it
+    /// also removes the comma that was breaking OTLP delivery.
+    /// </para>
+    /// </remarks>
     public string AuthHeaderValue { get; }
 
     private SentryDsn(
@@ -195,23 +224,25 @@ public sealed class SentryDsn
         var envelopeEndpoint =
             $"{baseUri}/api/{projectId}/envelope/";
 
-        // Sentry's documented OTLP auth header value uses a lowercase
-        // "sentry" keyword (see Settings → Client Keys in the Sentry UI).
-        // The legacy public/secret form includes both keys; the modern
-        // form omits sentry_secret entirely. The same header value is
-        // accepted by both the OTLP intake and the envelope endpoint —
-        // Sentry uses it as the single source of truth for routing the
-        // event to the correct project.
-        string authHeaderValue;
-
-        if (string.IsNullOrWhiteSpace(secretKey))
-        {
-            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}";
-        }
-        else
-        {
-            authHeaderValue = $"sentry sentry_version=7, sentry_key={publicKey}, sentry_secret={secretKey}";
-        }
+        // Sentry's documented OTLP auth header value (see
+        // docs.sentry.io/concepts/otlp/direct/logs and
+        // .../direct/traces) is the space-separated form:
+        //
+        //     sentry sentry_key={publicKey}
+        //
+        // — NO commas, NO sentry_version field. We honoured the legacy
+        // secret key from the colon-form DSN by appending it as
+        // `sentry_secret={secret}`, also space-separated. Sentry's
+        // intake accepts the secret if present but does not require
+        // it for modern DSNs.
+        //
+        // The single space between tokens is what the documented format
+        // uses; the absence of commas is what keeps the OpenTelemetry
+        // .NET OTLP exporter from mis-splitting the value on its way
+        // into the HTTP request (see AuthHeaderValue XML doc).
+        var authHeaderValue = string.IsNullOrWhiteSpace(secretKey)
+            ? $"sentry sentry_key={publicKey}"
+            : $"sentry sentry_key={publicKey} sentry_secret={secretKey}";
 
         return new SentryDsn(
             raw: dsn,

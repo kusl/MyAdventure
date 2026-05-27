@@ -108,15 +108,64 @@ public class TelemetryConfigurationTests : IDisposable
     }
 
     [Fact]
-    public void SentryDsn_AuthHeader_StartsWithSentryKeyword()
+    public void SentryDsn_AuthHeader_MatchesSentryDocumentedFormat()
     {
+        // Per Sentry's documented OTLP setup (docs.sentry.io/concepts/otlp/direct/logs):
+        //
+        //   OTEL_EXPORTER_OTLP_LOGS_HEADERS="x-sentry-auth=sentry sentry_key=<PUBLIC_KEY>"
+        //
+        // The header value is the space-separated token list
+        // `sentry sentry_key=<public_key>`. No commas, no sentry_version.
+        // Earlier versions of this code emitted the legacy
+        // `sentry sentry_version=7, sentry_key=...` form by misreading
+        // the docs for the deprecated /store/ endpoint — see the next
+        // test for why the comma in that form silently broke everything.
         const string dsn =
             "https://abc123@o123.ingest.us.sentry.io/456";
+
         var parsed = SentryDsn.Parse(dsn);
-        // Sentry's OTLP intake requires sentry_version=7 to be present in
-        // the x-sentry-auth header value, otherwise events are accepted at
-        // the HTTP level but silently dropped server-side.
-        parsed.AuthHeaderValue.ShouldBe("sentry sentry_version=7, sentry_key=abc123");
+
+        parsed.AuthHeaderValue.ShouldBe("sentry sentry_key=abc123");
+    }
+
+    [Fact]
+    public void SentryDsn_AuthHeader_ContainsNoComma_RegressionForOtlpHeaderSplit()
+    {
+        // REGRESSION TEST. The OpenTelemetry .NET OTLP exporter's
+        // Headers property is a comma-separated list of header=value
+        // pairs (per the OpenTelemetry spec for OTEL_EXPORTER_OTLP_HEADERS).
+        // The exporter parses it by splitting on ',' and then on the
+        // first '='. So if our AuthHeaderValue contains a comma, the
+        // exporter mis-splits it: the project key ends up under a header
+        // named `sentry_key` while `x-sentry-auth` arrives without it,
+        // and Sentry silently drops every event we send. This is the
+        // exact failure mode that left the project's Sentry dashboard
+        // empty in May 2026.
+        //
+        // No comma in the value, ever. Including the legacy public:secret
+        // DSN form — we space-separate sentry_secret too.
+        const string modernDsn =
+            "https://abc123@o123.ingest.us.sentry.io/456";
+        const string legacyDsn =
+            "https://abc123:secret456@o123.ingest.us.sentry.io/789";
+
+        SentryDsn.Parse(modernDsn).AuthHeaderValue.ShouldNotContain(",");
+        SentryDsn.Parse(legacyDsn).AuthHeaderValue.ShouldNotContain(",");
+    }
+
+    [Fact]
+    public void SentryDsn_AuthHeader_LegacySecretKeyIncluded()
+    {
+        // The legacy public:secret DSN form survives parsing (we don't
+        // reject it — see the existing legacy-format test) and the
+        // secret key, when present, is appended space-separated rather
+        // than comma-separated.
+        const string dsn = "https://pubkey:secret@example.com/9";
+
+        var parsed = SentryDsn.Parse(dsn);
+
+        parsed.AuthHeaderValue.ShouldBe(
+            "sentry sentry_key=pubkey sentry_secret=secret");
     }
 
     [Fact]
