@@ -964,7 +964,7 @@ public class GameEngineTests
     {
         await _engine.LoadAsync(TestContext.Current.CancellationToken);
         var first = _engine.ExportToString();
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         var second = _engine.ExportToString();
 
         string TimestampOf(string b64)
@@ -1035,7 +1035,7 @@ public class GameEngineTests
     {
         await _engine.LoadAsync(TestContext.Current.CancellationToken);
         var first = _engine.ExportToString();
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
 
         var engine2 = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
         await engine2.LoadAsync(TestContext.Current.CancellationToken);
