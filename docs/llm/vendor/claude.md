@@ -17598,3 +17598,34 @@ eyJ2IjoyLCJjYXNoIjoiNS4yODk1NjczMjE1ODgzNTllNSIsImxpZmV0aW1lIjoiNC42NDc5NzQ0ODY0
 
 
 
+20
+27
+
+I have updated some nuget packages based on dotnet cli results. 
+However, I know at least one package has a new version 
+that won't show up on this list -- xunit vs xunit.v3 
+this will require us to opt into Microsoft Testing Platform on our global.json 
+this we have done in other projects before 
+please review the whole code base and upgrade everything to the newest stable versions of all packages
+and all newest versions of all github actions that we use 
+
+that is what I would consider the easy if somewhat tedious part 
+
+the difficult part is the game is fundamentally broken. 
+either the game is too difficult 
+or the game is runaway too easy 
+how do real games handle these problems? 
+
+please analyze the problem carefully and fix it thoroughly
+
+If only a few files (under five or there about) need to change, give me the full path of the files that need to change and the FULL file 
+if there are a lot of files that need to change 
+    Delivery
+    Whole project as one tar.gz, unambiguous file placement
+    Any files to delete on updates called out explicitly
+    No bespoke sed/patch scripts — full files only for anything that changes
+    Docs updated alongside code changes
+    Low verbosity, no code comments
+    NEVER EVER EVER write code comments. 
+    in fact, never, ever write comments at all. 
+    markdown files such as readme.md are the exception but even these should be as concise and terse as possible.
