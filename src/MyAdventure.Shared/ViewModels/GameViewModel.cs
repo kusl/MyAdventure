@@ -11,33 +11,6 @@ using MyAdventure.Shared.Services;
 
 namespace MyAdventure.Shared.ViewModels;
 
-/// <summary>
-/// Main game ViewModel. Drives the game loop and exposes all state for binding.
-///
-/// <para>
-/// <b>BigDouble migration:</b> the engine's cash, lifetime earnings,
-/// angel investors and angel bonus are now <see cref="BigDouble"/>.
-/// This ViewModel still exposes string text properties for binding —
-/// the View doesn't care what underlying numeric type produced the
-/// displayed glyph, only that it's short and readable, which is what
-/// <see cref="NumberFormatter.Format(BigDouble)"/> guarantees.
-/// </para>
-///
-/// <para>
-/// <b>Cross-business speed bonus (Option B):</b> the engine exposes a
-/// roster-wide earnings multiplier via
-/// <see cref="GameEngine.CrossBusinessSpeedMultiplier"/>. We surface it
-/// here so the player sees a single global "×N Speed" indicator (instead
-/// of per-card chrome), because the bonus is uniform across businesses.
-/// The four properties — <see cref="CrossSpeedText"/>,
-/// <see cref="HasCrossSpeedBonus"/>, <see cref="NextCrossThresholdText"/>,
-/// and <see cref="MinOwnedAcrossText"/> — let the View render both the
-/// active multiplier and the next milestone hint without the View
-/// reaching back into the engine. Each <see cref="RefreshAll"/> snapshots
-/// the multiplier once so every <see cref="BusinessViewModel.Refresh(BigDouble, BigDouble, BigDouble)"/>
-/// call in the same frame sees the same value.
-/// </para>
-/// </summary>
 public partial class GameViewModel : ViewModelBase
 {
     private readonly GameEngine _engine;
@@ -47,58 +20,24 @@ public partial class GameViewModel : ViewModelBase
     private DateTime _lastTick;
     private int _saveCounter;
 
-    /// <summary>
-    /// UTC timestamp captured when the OS notifies us that the app is going
-    /// to background (<see cref="OnSuspended"/>). <c>null</c> means we have
-    /// not been suspended in the current process lifetime — important
-    /// because cold start runs <see cref="GameEngine.LoadAsync"/>, which
-    /// already covers the offline gap, and we must not also run
-    /// <see cref="OnResumed"/>'s gap calculation in that case (double-pay).
-    /// </summary>
     private DateTime? _suspendedAt;
 
     [ObservableProperty] private string _cashText = "$0.00";
     [ObservableProperty] private string _angelText = "0";
-    [ObservableProperty] private string _angelBonusText = "\u00D71"; // "×1"
+    [ObservableProperty] private string _angelBonusText = "\u00D71";
     [ObservableProperty] private int _prestigeCount;
     [ObservableProperty] private bool _canPrestige;
     [ObservableProperty] private string _nextAngelText = "0";
     [ObservableProperty] private string _prestigeExplanation = "";
 
-    // --- Cross-business speed bonus (Option B) ---
-    /// <summary>
-    /// Display text for the cross-business multiplier, e.g. "×64 Speed" or
-    /// "×4.10 K Speed" once the bonus climbs beyond what fits in three
-    /// digits. Formatting via <see cref="NumberFormatter.Format(BigDouble)"/>
-    /// guarantees the string stays compact at any reachable magnitude —
-    /// including the unbounded post-400 ladder where multipliers grow
-    /// without limit.
-    /// </summary>
     [ObservableProperty] private string _crossSpeedText = "\u00D71 Speed";
 
-    /// <summary>
-    /// True once the cross-business multiplier exceeds 1.0. Drives the
-    /// visibility of the global "×N Speed" badge so the early-game UI
-    /// stays uncluttered until the player actually has all businesses
-    /// at 25+.
-    /// </summary>
     [ObservableProperty] private bool _hasCrossSpeedBonus;
 
-    /// <summary>
-    /// Human-readable hint for the next cross-business threshold, e.g.
-    /// "15 more of every business → 25". Updated every refresh so the
-    /// player can see exactly how far they are from the next ×2.
-    /// </summary>
     [ObservableProperty] private string _nextCrossThresholdText = "";
 
-    /// <summary>
-    /// The current minimum ownership count across all businesses, exposed
-    /// as text so the View can show which business is gating cross-bonus
-    /// progression. ("Lowest business: 12 owned")
-    /// </summary>
     [ObservableProperty] private string _minOwnedAcrossText = "0";
 
-    // --- Transfer panel (import/export) ---
     [ObservableProperty] private bool _isTransferOpen;
     [ObservableProperty] private bool _isExportMode;
     [ObservableProperty] private string _transferText = "";
@@ -111,11 +50,6 @@ public partial class GameViewModel : ViewModelBase
     {
     }
 
-    /// <summary>
-    /// Test-friendly overload that accepts a <see cref="TimeProvider"/>
-    /// so unit tests can drive <see cref="OnSuspended"/> / <see cref="OnResumed"/>
-    /// against a controllable clock without sleeping the test thread.
-    /// </summary>
     public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts, TimeProvider timeProvider)
     {
         _engine = engine;
@@ -137,28 +71,19 @@ public partial class GameViewModel : ViewModelBase
         _logger.LogInformation("Game initialized with {Count} businesses", Businesses.Count);
     }
 
-    /// <summary>Called by the UI timer (~60fps).</summary>
     public void OnTick()
     {
         var now = _time.GetUtcNow().UtcDateTime;
         var delta = (now - _lastTick).TotalSeconds;
         _lastTick = now;
 
-        // Defensive cap. This protects cold start (where _lastTick is
-        // initialized in the constructor but the first OnTick may be
-        // many seconds later) and debugger pauses. The suspend/resume
-        // gap is handled by OnSuspended/OnResumed, NOT by relaxing this
-        // cap — silent multi-minute deltas would otherwise produce
-        // confusing UI behavior on the first post-resume tick.
         delta = Math.Min(delta, 1.0);
 
         _engine.Tick(delta);
         RefreshAll();
 
-        // Clean up expired toasts
         _toasts.CleanupExpired();
 
-        // Auto-save every ~5 seconds
         _saveCounter++;
         if (_saveCounter >= 300)
         {
@@ -167,47 +92,21 @@ public partial class GameViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Called by <see cref="AppLifecycleManager"/> when the OS notifies the
-    /// app it is entering the background (Android backgrounded, desktop
-    /// hibernate/sleep). Stamps the suspension time so we can compute the
-    /// gap on resume, and triggers an immediate save so the persisted
-    /// <c>LastPlayedAt</c> is as fresh as possible in case the OS later
-    /// kills the process without ever resuming us.
-    /// </summary>
     public void OnSuspended()
     {
         _suspendedAt = _time.GetUtcNow().UtcDateTime;
         _logger.LogInformation("App suspended at {SuspendedAt:o}", _suspendedAt);
 
-        // Fire-and-forget save (the OS gives us limited time after going to
-        // background). If the save loses to the suspend, the cold-load
-        // offline-earnings path still picks up the gap from the last
-        // successful auto-save.
         _ = SaveAsync();
     }
 
-    /// <summary>
-    /// Called by <see cref="AppLifecycleManager"/> when the OS notifies the
-    /// app it is returning to the foreground from a background suspension.
-    /// Computes the time gap since <see cref="OnSuspended"/>, applies
-    /// offline earnings for that gap, resets the tick timestamp so the
-    /// next tick computes a small natural delta, and shows the player a
-    /// "while you were away" toast.
-    /// </summary>
     public void OnResumed()
     {
-        // Snapshot _suspendedAt and clear it BEFORE doing anything else,
-        // so a re-entrant call (rare, but observed on some platforms that
-        // fire duplicate Activated events) can't double-pay.
         var suspended = _suspendedAt;
         _suspendedAt = null;
 
         if (suspended is null)
         {
-            // No prior OnSuspended in this process lifetime — cold start
-            // or a spurious activation event. Either way: nothing to
-            // compensate for, just resync _lastTick so the next tick is sane.
             _lastTick = _time.GetUtcNow().UtcDateTime;
             return;
         }
@@ -217,9 +116,6 @@ public partial class GameViewModel : ViewModelBase
 
         var earned = _engine.ApplyOfflineEarnings(elapsed);
 
-        // Reset _lastTick AFTER applying offline earnings: otherwise the
-        // first post-resume tick would still see a multi-minute delta
-        // (clamped to 1s) on top of what we just applied.
         _lastTick = now;
 
         if (earned.Sign > 0)
@@ -296,7 +192,6 @@ public partial class GameViewModel : ViewModelBase
 
         if (_engine.ImportFromString(TransferText))
         {
-            // Rebuild business view models from the newly imported state
             Businesses.Clear();
             foreach (var biz in _engine.Businesses)
                 Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
@@ -366,14 +261,11 @@ public partial class GameViewModel : ViewModelBase
         CashText = $"${NumberFormatter.Format(_engine.Cash)}";
         AngelText = NumberFormatter.Format(_engine.AngelInvestors);
 
-        // Display the angel bonus as a "×N" multiplier — uniform behavior
-        // at every scale, including the BigDouble exponent range where a
-        // percentage display ("+infinity%") would be illegible.
         AngelBonusText = $"\u00D7{NumberFormatter.Format(_engine.AngelBonus)}";
 
         PrestigeCount = _engine.PrestigeCount;
 
-        var potentialAngels = GameEngine.CalculateAngels(_engine.LifetimeEarnings) - _engine.AngelInvestors;
+        var potentialAngels = _engine.PotentialAngels;
         CanPrestige = potentialAngels >= BigDouble.One;
         NextAngelText = potentialAngels.Sign > 0
             ? NumberFormatter.Format(potentialAngels)
@@ -381,34 +273,22 @@ public partial class GameViewModel : ViewModelBase
 
         if (CanPrestige)
         {
-            PrestigeExplanation = $"Reset all businesses. Gain {NextAngelText} angels (+2% revenue each).";
+            PrestigeExplanation = $"Reset all businesses. Gain {NextAngelText} angels: income \u00D7{NumberFormatter.Format(_engine.PrestigeIncomeMultiplier)}.";
         }
         else
         {
             PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
         }
 
-        // Snapshot AngelBonus and the cross-business multiplier once per
-        // refresh so every BusinessViewModel sees the same values in a
-        // single frame. The product (angelBonus * crossBonus) is computed
-        // inside BusinessViewModel.Refresh — keeping both factors visible
-        // here lets the global cross-speed UI display the unmultiplied
-        // value cleanly while business cards still show combined revenue.
         var angelBonus = _engine.AngelBonus;
         var crossBonus = _engine.CrossBusinessSpeedMultiplier;
         var cash = _engine.Cash;
         foreach (var bvm in Businesses)
             bvm.Refresh(cash, angelBonus, crossBonus);
 
-        // Update the global cross-business UI text. The View shows this
-        // as a single badge in the chrome since the bonus is uniform
-        // across businesses (showing it per-card would just be visual noise).
         var minOwned = _engine.MinOwnedAcrossBusinesses;
         MinOwnedAcrossText = minOwned.ToString();
 
-        // HasCrossSpeedBonus drives visibility — the comparison is against
-        // BigDouble.One via BigDouble.Compare semantics so we don't pay
-        // for a string parse or a ToDouble truncation just for the flag.
         HasCrossSpeedBonus = crossBonus > BigDouble.One;
 
         if (HasCrossSpeedBonus)
@@ -420,19 +300,12 @@ public partial class GameViewModel : ViewModelBase
             CrossSpeedText = "\u00D71 Speed";
         }
 
-        // Always show the "next threshold" hint — it's the player's roadmap
-        // to the next ×2, regardless of whether they've earned any stacks yet.
         var nextThreshold = CrossBusinessSpeedBonus.NextThreshold(minOwned);
-        var unitsToNext = CrossBusinessSpeedBonus.UnitsToNext(minOwned);
-        NextCrossThresholdText = $"{unitsToNext} more of every business \u2192 {nextThreshold}";
+        NextCrossThresholdText = nextThreshold is { } next
+            ? $"{CrossBusinessSpeedBonus.UnitsToNext(minOwned)} more of every business \u2192 {next}"
+            : "All cross-business bonuses earned";
     }
 
-    /// <summary>
-    /// Get the clipboard from the active top-level. Works on desktop,
-    /// Android, iOS, and browser uniformly: the active View registers
-    /// itself with <see cref="AppRoot.CurrentVisual"/> when it attaches
-    /// to the visual tree, and we ask it for its TopLevel.
-    /// </summary>
     private static IClipboard? GetClipboard()
     {
         try

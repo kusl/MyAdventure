@@ -29,123 +29,69 @@ Every push to `main` automatically builds and releases for all platforms via Git
 
 ## The Game
 
-MyAdventure is an idle/clicker game inspired by Adventure Capitalist. You start with $5 and a dream.
+Idle/clicker inspired by Adventure Capitalist. Start with $5, buy businesses, hire managers, prestige for angels.
 
 ### Businesses
 
-Six businesses, each with increasing cost, revenue, and cycle time:
+| Business | Base Cost | Base Revenue | Cycle | Cost Multiplier |
+|----------|-----------|--------------|-------|-----------------|
+| 🍋 Lemonade Stand | $4 | $1 | 0.6s | 1.07 |
+| 📰 Newspaper Route | $60 | $60 | 3s | 1.15 |
+| 🚗 Car Wash | $720 | $540 | 6s | 1.14 |
+| 🍕 Pizza Delivery | $8,640 | $4,320 | 12s | 1.13 |
+| 🍩 Donut Shop | $103,680 | $51,840 | 24s | 1.12 |
+| 🦐 Shrimp Boat | $1,244,160 | $622,080 | 96s | 1.11 |
 
-| Business | Icon | Base Cost | Base Revenue | Cycle Time | Cost Multiplier |
-|----------|------|-----------|-------------|------------|-----------------|
-| Lemonade Stand | 🍋 | $4 | $1 | 0.6s | 1.07× |
-| Newspaper Route | 📰 | $60 | $60 | 3.0s | 1.15× |
-| Car Wash | 🚗 | $720 | $540 | 6.0s | 1.14× |
-| Pizza Delivery | 🍕 | $8,640 | $4,320 | 12.0s | 1.13× |
-| Donut Shop | 🍩 | $103,680 | $51,840 | 24.0s | 1.12× |
-| Shrimp Boat | 🦐 | $1,244,160 | $622,080 | 96.0s | 1.11× |
+Next unit costs `baseCost × r^owned`. Managers cost 1000× base cost and run the business automatically, including offline.
 
-Each additional unit you buy costs more (`base cost × multiplier^owned`). Revenue scales linearly with units owned, then gets multiplied by milestone bonuses, speed bonuses, post-milestone scaling (past unit 1000), the cross-business speed bonus, and your angel-investor bonus — all compounding together.
+### Formulas
 
-### Core Mechanics
+All tuning constants live in `src/MyAdventure.Core/Entities/GameBalance.cs`.
 
-- **Click to Run:** Click the ▶ RUN button on a business to start its production cycle. When the progress bar fills, you collect revenue.
-- **Buy Units:** Purchase additional units of any business with the BUY button (one at a time).
-- **Buy to Milestone / Buy Max:** Each business card shows a bulk-buy button. While a next revenue milestone exists it reads "BUY N→threshold" and buys exactly the units needed to reach it in one click. Once all milestones are reached at 1000 owned, it switches to "BUY MAX (N)" and buys as many units as you can currently afford. The button is always visible — it never disappears past 1000 owned.
-- **Hire Managers:** Each business can have a manager (costs 1000× the business's base cost). Managers automatically restart production cycles so you don't have to click.
-- **Offline Earnings:** When you close the game and come back, all businesses with managers earn revenue for the time you were away, boosted by your angel investor bonus and the cross-business speed multiplier.
+| Quantity | Formula |
+|----------|---------|
+| Revenue per cycle | `baseRevenue × owned × milestones(owned) × efficiency(owned)` |
+| Cycle time | `baseTime / speedMilestones(owned)` |
+| Efficiency | `max(1, r^(0.49·owned) / Q^(min(owned,1000)/1000))`, `Q` = milestone × speed product at 1000 (≈2.1×10⁷) |
+| Cross-business bonus | ×1.5 each time *every* business reaches 25, 50, 100, 200, 300, 400 (max ×11.39) |
+| Angels | `floor(150 × √(lifetime / 10¹⁴))`, lifetime ≥ 10¹² |
+| Angel bonus | `1 + 0.02 × angels` (linear) |
+| Earnings | `revenue × angelBonus × crossBonus`, identical live and offline |
 
-### Revenue Milestone Multipliers
+Revenue milestones: ×2 at 25/50/100/200/300/400, ×4 at 500–900, ×5 at 1000. Speed milestones: ×2 at 25/50/100/200/300/400.
 
-Owning certain quantities of a business triggers permanent revenue multipliers that compound multiplicatively:
+### Balance design
 
-| Units Owned | Multiplier | Cumulative |
-|-------------|-----------|------------|
-| 25 | ×2 | ×2 |
-| 50 | ×2 | ×4 |
-| 100 | ×2 | ×8 |
-| 200 | ×2 | ×16 |
-| 300 | ×2 | ×32 |
-| 400 | ×2 | ×64 |
-| 500 | ×4 | ×256 |
-| 600 | ×4 | ×1,024 |
-| 700 | ×4 | ×4,096 |
-| 800 | ×4 | ×16,384 |
-| 900 | ×4 | ×65,536 |
-| 1000 | ×5 | ×327,680 |
+The old economy was bistable. Before prestige, revenue hit a hard wall at about 10⁹/s because milestones could not keep up with exponential costs. After prestige, compounding angels (`1.02^angels`) created a positive feedback loop: one prestige enabled hundreds more within minutes.
 
-### Speed Milestones
+Real idle games avoid both failure modes the same way:
 
-Owning certain quantities of a business also halves its production cycle time. These are separate from revenue milestones and compound multiplicatively with them:
+- Costs grow exponentially and revenue grows more slowly, so every run hits a *soft* wall.
+- Prestige currency is sublinear in earnings (√ or ∛), and its bonus is *linear*, never compounding.
+- Only one feedback loop is unbounded. Everything else (milestones, global bonuses) is bounded content.
+- Pacing is tuned by simulation against explicit targets and pinned by tests.
 
-| Units Owned | Effect | Cumulative Speed |
-|-------------|--------|-----------------|
-| 25 | ×2 Speed | ×2 |
-| 50 | ×2 Speed | ×4 |
-| 100 | ×2 Speed | ×8 |
-| 200 | ×2 Speed | ×16 |
-| 300 | ×2 Speed | ×32 |
-| 400 | ×2 Speed | ×64 |
+This game makes revenue track `cost^0.49`: efficiency fills the gap between the milestone ladder and that curve. If in-run income grows like `spent^α`, a run reaches `spent ∝ (multiplier × time)^(1/(1−α))`. Angels scale with `√lifetime`, so the prestige loop gain is `1/(2(1−α))`. With α = 0.49 the loop gain is 0.98: just under 1. Progress is steady and very slowly decelerating. It never runs away (gain > 1) and never stalls (gain ≪ 1).
 
-At 400 owned the effective cycle time is divided by 64 compared to the base. For lemonade (0.6s base), that's a 9.375ms effective cycle — faster than a single 60Hz frame. The game engine handles this correctly: it counts how many complete cycles accumulated in the current tick and pays all of them out at once, carrying the fractional remainder into the next tick. The `SubFrameCycleTests` suite pins this behavior.
+`tests/MyAdventure.Core.Tests/Balance` holds a deterministic bot that plays the real `GameEngine`. It prestiges whenever doing so would double income. It pins:
 
-The speed-milestone cap at ×64 is deliberate: cycle time is stored as a `double`, and halving it more than ~1000 times would underflow to zero in IEEE 754, causing a divide-by-zero crash. Instead, the **cross-business speed bonus** (see below) provides unlimited scaling beyond that ceiling as a `BigDouble` revenue multiplier rather than a cycle-time divisor.
+| Scenario | Bound | Measured |
+|----------|-------|----------|
+| First manager | < 2 min | 37 s |
+| First prestige | 8–60 min | 19 min |
+| First 10 prestige runs | 5–90 min each | 13–31 min |
+| Seeded at lifetime 10⁴⁰ / 10⁸⁰ | 3 min – 4 h | 12–14 min / 18–20 min |
+| Never prestige | income still rising after a week | 10¹³·¹/s at 1 day → 10¹³·⁷/s at 7 days |
 
-### Cross-Business Speed Bonus
+`EfficiencyExponent` must stay inside (0.40, 0.50); a test enforces it.
 
-This is the **third compounding axis** in the game, on top of revenue milestones and per-business speed milestones. When *every* business simultaneously reaches a shared ownership threshold, every business earns an additional ×2 revenue multiplier. Because it requires the minimum owned count across all six businesses to climb, it rewards balanced play: a player with 1000 lemonade stands and zero shrimp boats gets exactly zero cross-business bonus.
+### Saves
 
-Thresholds: 25, 50, 100, 200, 300, 400, then every +100 forever (500, 600, 700, 800, ...). There is no cap. At minimum-owned = 400, the cross-business multiplier is ×64. At minimum-owned = 1000, it is ×4096 (`2^(6 + (1000-400)/100)` = `2^12`). At 10,000 it is `2^102` ≈ 5×10³⁰. The game never runs out of things to do.
-
-The UI shows your current cross-business multiplier in the header (e.g. "×64 Speed" — the same label AdCap uses) and a "N more of every business → threshold" hint showing which threshold you're approaching.
-
-**Why a revenue multiplier rather than a cycle-time divisor?** Halving cycle time 1000+ times underflows `double` to exactly zero. The cross-business effect is therefore folded into a `BigDouble` revenue multiplier — mathematically identical from the player's perspective (halving cycle time doubles earnings per second) but numerically robust at any scale.
-
-### Post-1000 Revenue Scaling
-
-1000 is the revenue milestone cap. Buying past it used to mean every new unit cost `1.07^N` more than the previous but contributed no more revenue per unit than unit 1000 — eventually each new lemonade stand cost trillions and paid back in centuries. **Post-1000, revenue is now multiplied by `CostMultiplier^((Owned − 1000) / 2)`** — the square root of the cost growth — so unit 1001 is roughly as cost-efficient as unit 1000, and the late game keeps moving instead of stalling. Below 1000 owned this multiplier is exactly 1.0, so all early-game balance is unchanged.
-
-### Prestige System
-
-Prestiging resets all businesses and cash (to **$5**, not $0 — enough to immediately buy the first lemonade stand) in exchange for **Angel Investors**. Each angel provides a permanent **+2% revenue bonus that compounds**, applied to both live cycle earnings and offline earnings.
-
-The "compounds" part is what matters. Under a strictly linear "+2% per angel" rule, 50 angels would be ×2.00 and 700 would be ×15.00 — the curve flattens out and a marginal prestige stops feeling worth it. Under compounding (`1.02 ^ angels`), 50 angels is ×2.69, 200 is ×52.5, and 700 is ×750,000+. Each prestige genuinely makes the next run feel like a different game.
-
-The number of angels your current lifetime earnings are worth is:
-
-```
-floor(150 × sqrt(lifetimeEarnings / 1e13))
-```
-
-The **PRESTIGE** button unlocks whenever that number is at least one greater than your current angel count — i.e. when prestiging right now would give you at least one new angel. **The UI is the signal:** when the button lights up, you can prestige. The formula is there to explain the shape of the curve, not for you to compute thresholds in your head.
-
-**Lifetime earnings are preserved through prestige** — each subsequent prestige requires more lifetime earnings than the last to net the same number of new angels, but the running total never resets. After prestiging, your cash resets to **$5** so you can immediately get back to clicking. Prestige is optional, but the angel bonus compounds and makes subsequent runs dramatically faster.
-
-**The angel cap is gone.** Angels are now stored as `BigDouble` (see the BigDouble section below). You can accumulate astronomically many angels without hitting any ceiling — the `AngelBonus` computation has a saturation cap at `10^MaxAngelBonusExponent` to prevent downstream overflow, but in practice this is only reachable by hand-editing a save to an absurd value.
-
-### BigDouble: Unbounded Numbers
-
-All monetary values (`Cash`, `LifetimeEarnings`, `AngelInvestors`), and the `NextCost`, `Revenue`, and `RevenuePerSecond` properties of each business are `BigDouble` — a custom floating-point struct with a `double` mantissa and a `long` base-10 exponent. This gives an effective range of roughly `±9.99 × 10^(long.MaxValue)`, which is for practical purposes unlimited.
-
-**Why BigDouble?** An idle game that compounds aggressively will routinely exceed `double.MaxValue` (~1.8 × 10³⁰⁸). Before the BigDouble migration, cash capped silently at `1e200` and stopped growing. BigDouble removes that ceiling. The `Cash_AtFormerCap_ContinuesToGrow` test pins the regression: cash at exactly the old cap must continue increasing, not stall.
-
-**Persistence format:** BigDouble values are stored in SQLite as TEXT strings in canonical form: `"<mantissa>e<exponent>"` (e.g. `"4.25e1"` for 42.5, `"1.5e200"` for 1.5×10²⁰⁰). The conversion is handled by an EF Core `ValueConverter` registered in `AppDbContext.OnModelCreating`. The `GameEngine` works exclusively in `BigDouble` and is unaware of the string form.
-
-**Migration from old saves:** The `DependencyInjection.InitializeDatabaseAsync` method detects old databases that still have `Cash`, `LifetimeEarnings`, and `AngelInvestors` as REAL columns and translates them in-place to the new `CashText`, `LifetimeEarningsText`, `AngelInvestorsText` TEXT columns in a single transaction. Your old save is preserved exactly — the migration is idempotent and a crash mid-migration leaves the old schema intact.
-
-### Save Compatibility
-
-Saves from all earlier versions of MyAdventure remain valid. The v2 export format stores numbers as canonical BigDouble strings (`"4.25e1"`). The import function transparently handles both the legacy v1 format (numbers as native JSON doubles) and the current v2 format, so any save file you have will load.
-
-The two balance changes (compound angel bonus, post-1000 revenue scaling, cross-business speed bonus) are computed on the fly from existing fields, so reopening an old save just shows the new, more rewarding multipliers applied to the angels and units the player already had.
+The save format is unchanged: SQLite TEXT columns hold canonical BigDouble strings, and v1/v2 Base64 export/import both work. Old saves load as-is with the new formulas applied. Angels earned under the old 10¹³ divisor are kept. New angels resume once lifetime earnings catch up with the new curve.
 
 ### Import and Export
 
-Two buttons at the bottom of the screen let you transfer your progress:
-
-- **📤 Export** generates a Base64-encoded JSON string of your complete game state. A **📋 COPY** button copies it to your clipboard instantly — no manual text selection needed.
-- **📥 Import** accepts an export string and restores the game state from it.
-
-The export format is intentionally human-editable. Decode the Base64, edit the JSON to give yourself a billion dollars or 1000 shrimp boats, re-encode, and import. We encourage tinkering. This is your game.
+📤 Export produces Base64 JSON (`v`, `cash`, `lifetime`, `angels`, `prestige`, `businesses`, `managers`, `timestamp`). 📥 Import accepts it back. Editing is encouraged. Business keys: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`. `timestamp` is informational and ignored on import.
 
 ---
 
@@ -185,120 +131,12 @@ All tests (unit, integration, UI/ViewModel) are designed to run fast after every
 
 ## Player Guide
 
-This section is for the people actually playing the game. If you've never played an idle/clicker game before, or if you've played them but don't really know how the math works, this is for you.
-
-### Your first five minutes
-
-You start with **$5** and nothing else. The first lemonade stand costs **$4**, so the very first thing to do is buy one and click ▶ RUN. The progress bar fills in 0.6 seconds and you earn $1. Keep clicking RUN — every cycle drops more cash into your wallet.
-
-When you have $4 + $4.28 ≈ $8.28, you can buy a second lemonade stand. With two stands, each cycle pays $2. Keep buying lemonade stands as long as you can afford them. The cost goes up by 7% per unit, but the revenue goes up linearly — so for the first dozen or so purchases, your money-per-cycle grows roughly as fast as the cost of the next one.
-
-There's no strategy here. Buy lemonade stands. Click run. Repeat.
-
-### Your first hour
-
-Three things change the game decisively in the first hour:
-
-**1. Your first manager (1,000× base cost = $4,000 for lemonade).** As soon as you can afford a manager, buy one. From that point on, your lemonade stand runs by itself forever. You stop clicking RUN, the cash flows in passively, and you can stop staring at the screen.
-
-**2. Your first milestone (25 units = ×2 revenue).** The 25-unit milestone doubles your revenue from that business permanently. The "BUY N→M" button is built specifically to get you to the next milestone in one click — use it. Going from 24 to 25 lemonade stands is a 2× pay raise; going from 49 to 50 is another 2× on top of that.
-
-**3. Your first newspaper route ($60).** Once your lemonade is humming, save up for the next business. Newspapers cost more, take longer per cycle (3.0s vs 0.6s), but pay much more per cycle ($60 base vs $1). Each new business unlocks a whole new tier of income.
-
-By the end of your first hour, you should have managers on lemonade and newspaper, and be saving up for the third business (car wash, $720).
-
-### The middle game: stack milestones
-
-Once all six businesses have managers, the game transforms into a milestone-chasing optimization problem. Each milestone you cross multiplies one business's revenue. Crossing the **500-unit milestone** quadruples revenue (×4 instead of ×2), and 500-unit shrimp boats are absurdly profitable.
-
-A useful mental model: **the next milestone you can afford is almost always your best investment**, even if it means temporarily ignoring a more expensive business. A car wash with 100 units (×8 milestone bonus) often out-earns a donut shop with 24 units (no bonus yet).
-
-The "Can buy: N" line on each business card tells you exactly how many units of that business you could buy right now if you spent everything. The "M more → N" line tells you how far you are from the next milestone for that business. Use both to decide where to spend.
-
-### Past 1000 units: the post-cap scaling
-
-Once a business hits 1000 owned, no further milestone multipliers unlock — the revenue milestone table caps out at the cumulative ×327,680. Without intervention, that creates a wall: every new unit costs `1.07^N` more than the one before, but pays back the same per-unit revenue, so each new lemonade stand becomes exponentially less worthwhile until "the next one" costs trillions and pays back in centuries.
-
-To keep buying past the cap meaningful, **post-1000 revenue is multiplied by `CostMultiplier^((Owned − 1000) / 2)`**. That's the square root of how fast the cost grows, so unit 1001 is roughly as cost-efficient as unit 1000 was, and unit 5000 stays in the same payback ballpark instead of drifting off to infinity. The math is invisible below 1000 — it's exactly 1.0 — so nothing about the early or middle game changes.
-
-The "BUY MAX (N)" button — which shows how many units you can buy right now — uses an O(1) geometric-series closed form, so buying 50,000 lemonade stands at once takes the same time as buying 5.
-
-### The late game: prestige early, prestige often
-
-At some point the **PRESTIGE** button on the top bar lights up. That's the signal: prestiging right now would net you at least one new Angel Investor. Press it. Your cash and businesses reset, your angel count goes up, and **lifetime earnings are not reset** — so the next prestige starts the clock partway through.
-
-The angel-investor formula is `floor(150 × sqrt(lifetime_earnings / 1e13))`, where `lifetime_earnings` is the cumulative all-time total (not per-run). Three practical consequences of the square root:
-
-- **Diminishing returns on waiting.** Doubling lifetime earnings only multiplies your angel count by ~1.41×. Quadrupling it doubles your angels. Waiting "one more order of magnitude" is rarely the right call.
-- **Each angel compounds at +2%.** With 50 angels you have a ×2.69 multiplier across every business, every milestone, every cycle (not the ×2.00 you'd get from a flat "+2% × 50"). With 200 angels it's ×52.5. With 700 angels it's around ×750,000. The compounding is what makes the late game feel like real progress instead of asymptotic stagnation.
-- **The threshold to unlock the button creeps up each run.** It depends on your current angel count, not on a fixed dollar value — the UI does the math for you and shows the projected new angels next to the button.
-
-Rule of thumb: prestige whenever you'd at least **double your current angel count**, or as soon as the button unlocks if it's your first time. Don't agonize over it. Prestige is a checkpoint, not a sacrifice.
-
-### The very late game: cross-business bonus
-
-Once all businesses have managers and you've done a few prestiges, a third axis of scaling opens up: the **cross-business speed bonus**. Every time the minimum-owned count across all six businesses crosses a shared threshold (25, 50, 100, 200, 300, 400, then every 100 forever), every business gets another ×2 revenue multiplier.
-
-Unlike the per-business milestones, the cross-business bonus is **uncapped** — it climbs forever as long as you keep buying the least-owned business. At 400 of each it's ×64. At 1000 of each it's ×4096. At 10,000 of each it's `2^102` ≈ 5×10³⁰. The game literally never runs out of progression.
-
-The strategic implication is clear: if you have 1000 lemonade stands but only 200 shrimp boats, your lowest business is what gates the cross-business bonus. Balanced ownership pays. The UI tells you exactly which threshold you're approaching and how many of every business you need to get there.
-
-### Offline earnings work — use them
-
-Close the game. Walk away. Come back tomorrow. Every business with a manager will have earned revenue for the entire interval you were gone, boosted by your angel bonus and the cross-business speed multiplier. The math is identical to live play: `cycles × revenue × angel_bonus × cross_business_multiplier`. There is no offline cap and no offline penalty. Sleeping is a viable strategy.
-
-When you reopen the app, a toast notification tells you how much you earned while you were away ("While you were away, you earned $X!"). If the gap was less than one second, it's below the minimum threshold and no payout is shown — this avoids spurious toasts for screen flickers or brief app switches.
-
-The only caveat: offline earnings only count businesses with managers. A business sitting at 200 units with no manager produces nothing while you're away. Buy the manager.
-
-### Modding your save
-
-Export your game, decode the Base64 string (any Base64 decoder works, or use `echo '<string>' | base64 -d` on Linux/macOS), and you'll see JSON like:
-
-```json
-{
-  "v": 2,
-  "cash": "4.25e1",
-  "lifetime": "1e3",
-  "angels": "0",
-  "prestige": 0,
-  "businesses": {"lemonade": 3, "newspaper": 0, "carwash": 0, "pizza": 0, "donut": 0, "shrimp": 0},
-  "managers": {"lemonade": false, "newspaper": false, "carwash": false, "pizza": false, "donut": false, "shrimp": false},
-  "timestamp": "2026-05-23T14:30:00.0000000Z"
-}
-```
-
-Edit whatever you want, re-encode to Base64 (`echo '<json>' | base64` on Linux/macOS), and import it back. Give yourself cash, 1000 shrimp boats, enable all managers, set angels to 9999 — it's your game.
-
-A few things to know:
-
-- **`v: 2`** is the current save format version. The import function also accepts the legacy `v: 1` format where numbers were plain JSON numbers instead of strings — old saves still load.
-- **`cash`, `lifetime`, and `angels`** are BigDouble canonical strings: `"<mantissa>e<exponent>"`. You can also use plain numbers like `42.5` or scientific notation like `1e18` — the importer accepts both. There is no ceiling: `"1e500"` is valid and will work correctly.
-- **`angels`** — because the angel bonus is `1.02^angels`, values compound dramatically. `"5e2"` (500 angels) is ×19,956. `"1e4"` (10,000 angels) is astronomical. There is no hard cap in the engine; the `AngelBonus` getter saturates to a very large (but finite) value at extreme angel counts to protect downstream arithmetic.
-- **Business and manager keys** must match the IDs exactly: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`.
-- **The business count value** (e.g. `"lemonade": 3`) is the unit count. Setting it past 1000 doesn't unlock additional revenue milestones — 1000 is the revenue milestone cap — but the cumulative ×327,680 multiplier still applies, and post-1000 revenue gets multiplied by `1.07^((owned-1000)/2)` so each extra unit stays meaningful.
-- **The `timestamp` field** is included for debugging only. Two exported saves plus their timestamps can reveal offline-earnings bugs (if five days passed and cash didn't change, something is wrong). The importer ignores it entirely — it is not validated and not enforced.
-- The save is **not signed or checksummed** — there's no anti-cheat. We don't think there's anyone to cheat against.
-
-If you import garbage and the game looks strange, reset to a fresh save:
-
-- **Desktop:** delete `{LocalApplicationData}/MyAdventure/myadventure.db`. (On Windows that's `%LOCALAPPDATA%\MyAdventure\`; on Linux, `~/.local/share/MyAdventure/`; on macOS, `~/.local/share/MyAdventure/`.)
-- **Android:** clear the app's data via your device's Settings → Apps → MyAdventure → Storage → Clear data. (Reinstalling the APK alone doesn't wipe the save; data lives in the app's private internal storage.)
-
-### Frequently confusing things
-
-- **"My revenue went down after prestige!"** Yes — you reset all businesses to zero owned. The angel bonus compensates over time. Because the bonus compounds, even ~50 angels gives you a ×2.69 multiplier — you'll blow past your previous earnings rate within minutes.
-- **"My progress bar isn't moving."** The business is probably not running. Click RUN once to start it; if it has a manager, it should auto-restart on the next cycle.
-- **"I have a manager but I'm not earning anything."** You need to own at least one unit *and* the business must be running. Click RUN once to kick it off; the manager handles every cycle after that.
-- **"I closed the game for 8 hours and earned barely anything."** Check that your most profitable businesses had managers. Offline earnings ignore unmanaged businesses entirely.
-- **"The numbers are getting weird (Qa, Sx, O, N, D)."** Those are abbreviations for quadrillion, sextillion, octillion, nonillion, decillion. The formatter handles up to 10³⁶ with suffixes; past that it switches to scientific notation with Unicode superscript exponents (`7.53 × 10⁴⁰`). You have not broken the game — this is the intended display for very large values.
-- **"My cash was stuck at 1e200 in an old version."** That was a real bug — the old `double`-based engine silently capped at 1e200. The fix was the BigDouble migration. If you have an old save from before that migration, simply open it in the new build: the database migration runs automatically and your progress is preserved.
-
-### Honest expectations
-
-This is a small idle game built primarily as a learning vehicle for Avalonia and as a sample for native cross-platform .NET apps. The game itself is **complete but minimal**. There is no event system, no daily reward, no random business generator, no leaderboard, no social features. It's the loop: buy, click, milestone, manager, prestige, repeat.
-
-If that's what you're looking for, welcome. If you wanted Adventure Capitalist with permission, well, this is what an LLM and a determined developer made on a weekend.
+- **First minutes:** buy lemonade stands and click ▶ RUN. Hire the lemonade manager ($4,000) as soon as you can.
+- **First half hour:** add businesses and managers; use the bulk-buy button (`BUY N→threshold`, then `BUY MAX (N)` past 1000) to hit milestones.
+- **Prestige:** the button lights up when you can gain at least one angel. The panel shows the income multiplier you would get. Prestiging at ×2 or better keeps runs around 15–30 minutes.
+- **Balance ownership:** the cross-business bonus needs *every* business at the threshold.
+- **Offline:** managed businesses earn while the app is closed, with no cap.
+- **Reset a save:** delete `{LocalApplicationData}/MyAdventure/myadventure.db` (desktop) or clear app data (Android).
 
 ---
 
@@ -338,11 +176,11 @@ MyAdventure.slnx
 - **Progress bars use percentage-based rendering** (`ScaleTransform` with a `PercentToFractionConverter`) instead of pixel widths, which ensures correct display on both desktop and Android without any platform-specific layout code.
 - **Android logging** goes through `Android.Util.Log` rather than console-based providers, since console output is not visible on Android. OpenTelemetry's console exporter is also disabled on Android (`AddInfrastructure` takes an optional `androidLogging` flag to suppress it).
 - **AOT compilation is disabled** for Android (`RunAOTCompilation=false`, `PublishTrimmed=false`) because EF Core's reflection-heavy patterns and OpenTelemetry cause silent trimming crashes. Re-enable once trimmer roots are properly configured.
-- **Angel bonus is compounded, not linear.** `AngelBonus = BigDouble(1.02).Pow(angelCount)` — each angel multiplies revenue by 1.02 on top of the previous angel's contribution. The same value is applied identically to live and offline earnings: `GameEngine.Tick()` multiplies per-cycle revenue by `AngelBonus`, and `CalculateOfflineEarnings()` multiplies the offline total by `AngelBonus` once. The invariant test (`OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice`) guards against either path drifting from the other. The bonus is capped at `10^MaxAngelBonusExponent` to prevent the `long` exponent from overflowing at truly absurd angel counts.
-- **Cross-business speed bonus is a `BigDouble` revenue multiplier, not a cycle-time divisor.** Halving cycle time hundreds of times underflows `double` to zero; folding the entire cross-business effect into a `BigDouble` multiplier sidesteps that completely. Revenue can grow without bound because `BigDouble` has no practical ceiling.
-- **Post-1000 revenue scaling** lives on `Business.PostMilestoneScaling` and equals exactly `1.0` for `Owned <= 1000` (preserving every pre-cap balance number and test) and `CostMultiplier^((Owned - 1000) / 2.0)` past the cap. The square root of cost growth keeps unit 1001+ purchases roughly as efficient as unit 1000.
+- **Angel bonus is linear** (`1 + 0.02 × angels`), applied once per payout in both `Tick` and offline earnings; `OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice` pins the equivalence.
+- **Cross-business bonus is a bounded revenue multiplier** (max ×11.39), not a cycle-time divisor, so cycle times never underflow.
+- **Efficiency** (`GameBalance.Efficiency`) keeps total per-business multipliers on the `cost^0.49` curve; from 1000 owned onward the product of milestones, speed and efficiency is exactly `r^(0.49·owned)`.
 - **Toast notifications** use a simple service (`ToastService`) with expiration timestamps, cleaned up on each game tick via `CleanupExpired()`. No platform-specific notification APIs needed. Toast lifetime defaults to 3 seconds; tests can pass `TimeSpan.Zero` to get immediately-expirable toasts.
-- **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, `$(EfCoreVersion)`, `$(OpenTelemetryVersion)`, `$(XunitVersion)`) in `Directory.Packages.props` so updating a version is a single-line change.
+- **Central package management** uses MSBuild variables (`$(AvaloniaVersion)`, `$(MicrosoftExtensionsVersion)`, `$(EfCoreVersion)`, `$(OpenTelemetryVersion)`) in `Directory.Packages.props` so updating a version is a single-line change.
 - **Clipboard access via a static `AppRoot.CurrentVisual` registered by the active view**, not via per-platform branching on `IApplicationLifetime`. This is necessary in Avalonia 12 because Android's `IActivityApplicationLifetime` exposes only a `MainViewFactory` (a `Func<Control>`) and not a live view reference. Views register `AppRoot.CurrentVisual = this` in `OnOpened` / `OnAttachedToVisualTree` and clear it on detach.
 - **Android safe-area is handled explicitly by `MainView`**, not by the framework's auto-padding. The Android `UserControl` sets `TopLevel.AutoSafeAreaPadding="False"`, captures `InsetsManager.SafeAreaPadding` on attach, and subscribes to `SafeAreaChanged` to keep its `Padding` in sync with the OS-reported insets. This is needed because Android 15+ enforces edge-to-edge rendering — without explicit handling, the top bar (PRESTIGE / cash) gets drawn under the status bar and front-camera cutout on devices like the Moto G Stylus 2025, and the first row of business cards visually rides on top of the prestige bar. Owning the padding deterministically on `MainView` rather than relying on auto-injection at the TopLevel root is also more robust across activity recreation, which is aggressive on Android.
 - **Offline earnings on app resume are handled by `AppLifecycleManager`**, a static service that wires into Avalonia's `IActivatableLifetime` (available via `Application.Current.TryGetFeature<IActivatableLifetime>()`), which works uniformly on all platforms. When the app goes to background (`ActivationKind.Background` Deactivated event), `AppLifecycleManager` calls `GameViewModel.OnSuspended()` to record the timestamp. When it returns to foreground (`ActivationKind.Background` Activated event), it calls `GameViewModel.OnResumed()`, which computes offline earnings for the gap and applies them immediately before refreshing the UI — so the cash display is correct on the very first frame after returning to the app. Sub-second gaps (e.g. screen flickers) are below the minimum threshold and produce no payout. The `AppLifecycleManager` holds a replaceable static "current target" so Android activity recreation (which constructs a fresh ViewModel each time) doesn't leak handlers on the old VM.
@@ -374,16 +212,16 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 | Category | Technology | License |
 |----------|-----------|---------|
 | Runtime | .NET 10 / C# 14 | MIT |
-| UI Framework | Avalonia UI 12.0.3 | MIT |
+| UI Framework | Avalonia UI 12.1.4 | MIT |
 | MVVM | CommunityToolkit.Mvvm 8.4.2 | MIT |
-| Database | SQLite via EF Core 10.0.8 | MIT |
-| Observability | OpenTelemetry 1.15.3 | Apache-2.0 |
+| Database | SQLite via EF Core 10.0.13 | MIT |
+| Observability | OpenTelemetry 1.20.0 | Apache-2.0 |
 | Optional error tracking | Sentry (via OTLP HTTP — no Sentry SDK) | n/a (free tier) |
-| Unit Testing | xUnit 2.9.3 | Apache-2.0 |
+| Testing | xUnit.net v3 4.0.2 on Microsoft Testing Platform | Apache-2.0 |
 | Assertions | Shouldly 4.3.0 | BSD |
-| Mocking | NSubstitute 5.3.0 | BSD |
+| Mocking | NSubstitute 6.2.0 | BSD |
 | Test Data | Bogus 35.6.5 | MIT |
-| Coverage | Coverlet 10.0.1 | MIT |
+| Coverage | coverlet.MTP 10.1.0 | MIT |
 
 ### Modern .NET Practices
 
@@ -394,7 +232,8 @@ All dependencies are free and use permissive open-source licenses (MIT, Apache-2
 - **Compiled bindings** enabled by default in Avalonia (`AvaloniaUseCompiledBindingsByDefault`).
 - **`InternalsVisibleTo`** used in `MyAdventure.Shared.csproj` to give `MyAdventure.UI.Tests` access to `AppLifecycleManager.ResetForTesting()` without over-exposing internals to production code.
 - **Global `using Xunit;`** injected by `tests/Directory.Build.props` so test files don't need per-file using directives for xUnit attributes.
-- **`global.json`** pins the SDK to `10.0.100` with `rollForward: latestMinor` so local builds and CI always use a compatible SDK version; `allowPrerelease: false` keeps things stable.
+- **`global.json`** pins the SDK to `10.0.100` (`rollForward: latestMinor`, no prereleases) and opts `dotnet test` into Microsoft Testing Platform (`"test": { "runner": "Microsoft.Testing.Platform" }`).
+- **Test projects are MTP executables** (xunit.v3); shared test settings and packages live in `tests/Directory.Build.props`. Coverage: `dotnet test --coverlet`. Test methods pass `TestContext.Current.CancellationToken` (analyzer xUnit1051).
 
 ---
 
@@ -408,9 +247,10 @@ The test suite runs fully headless — no emulators, no running applications, no
 
 - `BigDoubleTests` — construction/normalization, arithmetic (add/subtract/multiply/divide), exponentiation (including past `double` overflow range), sqrt, log10, comparison, string round-tripping, implicit conversions, Floor, and edge cases (NaN, Infinity, zero, negative).
 - `BusinessAffordableTests` — `AffordableCount` closed-form calculation including huge-cash edge cases.
-- `BusinessTests` — `NextCost`, `Revenue`, `PostMilestoneScaling`, `MilestoneMultiplier`, `SpeedMultiplier`, `CycleTimeSeconds` at various owned counts including extreme values past 1000.
-- `CrossBusinessSpeedBonusTests` — `BonusCount`, `CalculateSpeedMultiplier`, `NextThreshold`, `UnitsToNext` at all threshold boundaries and into the open-ended ladder past 400.
-- `GameEngineTests` — the most comprehensive suite: `LoadAsync`, `Tick`, `StartBusiness`, `BuyBusiness`, `BuyManager`, `BuyMultiple`, `BuyMax`, `Prestige`, `CalculateAngels`, `AngelBonus`, `ApplyOfflineEarnings`, `ExportToString`/`ImportFromString` (including the legacy v1 format), and invariant tests for offline-earnings equivalence with live ticks.
+- `Balance/*` — deterministic bot playing the real engine; pins pacing (first manager, first prestige, run-length band, late-game seeds, never-prestige soft wall).
+- `BusinessTests` — `NextCost`, `Revenue` (including efficiency) and extreme ownership.
+- `CrossBusinessSpeedBonusTests` — ladder, bounded maximum, `NextThreshold` returning `null` once maxed.
+- `GameEngineTests` — efficiency invariants (never below 1, monotonic, exact `r^(0.49·n)` past 1000, bounded wiggle below), linear angel bonus, `LoadAsync`, `Tick`, `StartBusiness`, `BuyBusiness`, `BuyManager`, `BuyMultiple`, `BuyMax`, `Prestige`, `CalculateAngels`, `AngelBonus`, `ApplyOfflineEarnings`, `ExportToString`/`ImportFromString` (including the legacy v1 format), and invariant tests for offline-earnings equivalence with live ticks.
 - `MilestoneTests` — `CalculateMultiplier`, `NextMilestone`, `UnitsToNext`.
 - `NumberFormatterTests` — suffix formatting (K, M, B, T, Qa, Qi, Sx, Sp, O, N, D), scientific notation past 10³⁶, `BigDouble` overload including values at 10⁵⁰⁰ and 10⁵⁰⁰⁰, infinity/NaN display.
 - `SpeedMilestoneTests` — `CalculateCycleTimeMultiplier`, `CalculateSpeedMultiplier`, `NextSpeedMilestone` at all threshold boundaries.
@@ -421,11 +261,12 @@ The test suite runs fully headless — no emulators, no running applications, no
 - `GameStateRepositoryTests` — round-trip save/load for all fields including BigDouble string columns; extreme-magnitude BigDouble values; upsert behaviour (single row kept, `CreatedAt` never changes across saves).
 - `SchemaMigrationTests` — verifies that the legacy REAL-column schema (pre-BigDouble migration) is correctly translated to the new TEXT-column schema in place, without data loss, in a single transaction.
 
-**`MyAdventure.UI.Tests`** — ViewModel and service tests. No Avalonia UI host needed; all tests run in a standard xUnit process.
+**`MyAdventure.UI.Tests`** — ViewModel and service tests. No Avalonia UI host needed.
 
 - `AppLifecycleManagerTests` — `Attach` with and without an active Avalonia `Application`, replaceable target on repeated `Attach` calls, `ResetForTesting` isolation.
 - `BusinessViewModelSpeedTests` — `SpeedMultiplierText`, `HasSpeedBonus`, `HasNextSpeedMilestone`, `NextSpeedMilestoneText` at every speed threshold; cross-business multiplier applied correctly to the displayed revenue.
 - `BusinessViewModelTests` — `Refresh` with various cash and angel bonus combinations; affordability flags; bulk-buy button visibility and label transitions ("BUY N→threshold" vs. "BUY MAX (N)" past 1000 owned); `CanBulkBuy` dims on zero affordable rather than vanishing.
+- `GameViewModelPrestigeTests` — prestige panel shows the income multiplier; cross-bonus texts before the first and after the last threshold.
 - `GameViewModelLifecycleTests` — `OnSuspended`/`OnResumed` round-trip with a controllable `TestTimeProvider`: payout for a 10-minute gap, angel bonus applied once, toast notification on payout, no toast when no managed businesses, tiny gaps below threshold produce no payout, second `OnResumed` without intervening `OnSuspended` produces no payout, `LastTick` reset on resume prevents the next timer tick from replaying the gap.
 - `ToastServiceTests` — `Show`, `CleanupExpired`, mixed expired/active toasts.
 
@@ -623,7 +464,3 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 **Note on dependency licenses:** All NuGet dependencies used by this project are licensed under MIT, Apache-2.0, or BSD licenses, which are compatible with AGPLv3. The AGPLv3 applies to the MyAdventure source code itself.
-
-
-
-

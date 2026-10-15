@@ -7,21 +7,12 @@ using Shouldly;
 
 namespace MyAdventure.Integration.Tests;
 
-/// <summary>
-/// Integration tests for the BigDouble schema migration. Construct a
-/// SQLite file with the LEGACY v1 schema (REAL columns), then run the
-/// initializer and verify the data ends up in the new TEXT columns
-/// with values that round-trip correctly through BigDouble.Parse.
-/// </summary>
 public class SchemaMigrationTests : IDisposable
 {
     private readonly string _dbPath;
 
     public SchemaMigrationTests()
     {
-        // Use a unique on-disk SQLite file per test — the in-memory provider
-        // doesn't support the ALTER TABLE DROP COLUMN that real SQLite does,
-        // so we need actual disk SQLite.
         _dbPath = Path.Combine(Path.GetTempPath(), $"myadventure-test-{Guid.NewGuid():N}.db");
     }
 
@@ -34,9 +25,8 @@ public class SchemaMigrationTests : IDisposable
 
         await DependencyInjection.InitializeDatabaseAsync(provider);
 
-        // Verify the new columns exist by querying them.
         using var conn = new SqliteConnection($"Data Source={_dbPath}");
-        await conn.OpenAsync();
+        await conn.OpenAsync(TestContext.Current.CancellationToken);
         var cols = await GetColumnsAsync(conn, "GameStates");
         cols.ShouldContain("CashText");
         cols.ShouldContain("LifetimeEarningsText");
@@ -49,31 +39,23 @@ public class SchemaMigrationTests : IDisposable
     [Fact]
     public async Task InitializeDatabaseAsync_LegacySchema_MigratesData()
     {
-        // 1. Hand-create a v1-schema database with sample data.
         await CreateLegacyDatabaseAsync(_dbPath, cash: 1234.5, lifetime: 9999.99, angels: 50.0);
 
-        // 2. Run the initializer — it should detect the legacy columns
-        // and migrate them in-place.
         var services = new ServiceCollection();
         services.AddInfrastructure(_dbPath);
         var provider = services.BuildServiceProvider();
         await DependencyInjection.InitializeDatabaseAsync(provider);
 
-        // 3. Verify the new columns exist with the migrated data,
-        // and the old columns are gone.
         using var conn = new SqliteConnection($"Data Source={_dbPath}");
-        await conn.OpenAsync();
+        await conn.OpenAsync(TestContext.Current.CancellationToken);
         var cols = await GetColumnsAsync(conn, "GameStates");
         cols.ShouldContain("CashText");
         cols.ShouldNotContain("Cash");
 
-        // Read the migrated data — should be the cast-to-TEXT
-        // representations of the original doubles.
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT CashText, LifetimeEarningsText, AngelInvestorsText FROM GameStates LIMIT 1";
-        using var reader = await cmd.ExecuteReaderAsync();
-        await reader.ReadAsync();
-        // SQLite's CAST(double AS TEXT) produces something like "1234.5".
+        using var reader = await cmd.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        await reader.ReadAsync(TestContext.Current.CancellationToken);
         reader.GetString(0).ShouldStartWith("1234.5");
         reader.GetString(1).ShouldStartWith("9999.99");
         reader.GetString(2).ShouldStartWith("50");
@@ -82,8 +64,6 @@ public class SchemaMigrationTests : IDisposable
     [Fact]
     public async Task InitializeDatabaseAsync_RunTwice_IsIdempotent()
     {
-        // Migration must be safe to run repeatedly — the engine boots
-        // through this path on every cold start.
         var services = new ServiceCollection();
         services.AddInfrastructure(_dbPath);
         var provider = services.BuildServiceProvider();
@@ -92,20 +72,15 @@ public class SchemaMigrationTests : IDisposable
         await DependencyInjection.InitializeDatabaseAsync(provider);
 
         using var conn = new SqliteConnection($"Data Source={_dbPath}");
-        await conn.OpenAsync();
+        await conn.OpenAsync(TestContext.Current.CancellationToken);
         var cols = await GetColumnsAsync(conn, "GameStates");
         cols.ShouldContain("CashText");
     }
 
-    /// <summary>
-    /// Open the database with the legacy v1 schema (REAL columns) and
-    /// insert a single sample row. Mimics what an existing player's save
-    /// file looks like before the migration runs.
-    /// </summary>
     private static async Task CreateLegacyDatabaseAsync(string dbPath, double cash, double lifetime, double angels)
     {
         await using var conn = new SqliteConnection($"Data Source={dbPath}");
-        await conn.OpenAsync();
+        await conn.OpenAsync(TestContext.Current.CancellationToken);
 
         await ExecAsync(conn, """
             CREATE TABLE GameStates (
@@ -132,14 +107,14 @@ public class SchemaMigrationTests : IDisposable
         insert.Parameters.AddWithValue("$cash", cash);
         insert.Parameters.AddWithValue("$lt", lifetime);
         insert.Parameters.AddWithValue("$angels", angels);
-        await insert.ExecuteNonQueryAsync();
+        await insert.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 
     private static async Task ExecAsync(SqliteConnection conn, string sql)
     {
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
-        await cmd.ExecuteNonQueryAsync();
+        await cmd.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 
     private static async Task<HashSet<string>> GetColumnsAsync(SqliteConnection conn, string table)
@@ -147,25 +122,21 @@ public class SchemaMigrationTests : IDisposable
         var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = $"PRAGMA table_info({table})";
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        await using var reader = await cmd.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
             result.Add(reader.GetString(1));
         return result;
     }
 
     public void Dispose()
     {
-        // Best-effort cleanup. SQLite file handles can linger briefly on Windows;
-        // we ignore any IO exception rather than failing the test on teardown.
         try
         {
-            // Force pool to release connections so the file can be deleted.
             SqliteConnection.ClearAllPools();
             if (File.Exists(_dbPath)) File.Delete(_dbPath);
         }
         catch (IOException)
         {
-            // Swallow — temp directory cleanup will handle it eventually.
         }
     }
 }

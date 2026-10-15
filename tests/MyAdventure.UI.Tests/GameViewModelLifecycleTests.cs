@@ -10,21 +10,10 @@ using Shouldly;
 
 namespace MyAdventure.UI.Tests;
 
-/// <summary>
-/// Tests for <see cref="GameViewModel.OnSuspended"/> and
-/// <see cref="GameViewModel.OnResumed"/> — the foreground-resume hooks
-/// that compensate the player for time spent with the app suspended in
-/// the background.
-/// </summary>
 public class GameViewModelLifecycleTests
 {
-    /// <summary>AngelBonus at 50 angels under the compound formula.</summary>
-    private static readonly double FiftyAngelBonus = Math.Pow(1.02, 50);
+    private static readonly double FiftyAngelBonus = 1.0 + GameBalance.AngelBonusPerAngel * 50;
 
-    /// <summary>
-    /// Minimal hand-rolled fake to drive the ViewModel's clock from tests
-    /// without sleeping or adding a dependency on TimeProvider.Testing.
-    /// </summary>
     private sealed class TestTimeProvider : TimeProvider
     {
         private DateTimeOffset _now;
@@ -44,22 +33,21 @@ public class GameViewModelLifecycleTests
         var toasts = new ToastService();
         var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts, clock);
 
-        // Force initial cash & angels via reflection so we don't depend on
-        // BuyBusiness side-effects bleeding into earnings calculations.
         if (angels > 0)
             typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!
                 .GetSetMethod(true)!.Invoke(engine, [new BigDouble(angels)]);
         typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!
             .GetSetMethod(true)!.Invoke(engine, [new BigDouble(1_000_000.0)]);
 
-        // Set up a managed lemonade stand so offline earnings have
-        // something to compute.
         engine.BuyBusiness("lemonade");
         engine.BuyManager("lemonade");
         engine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
 
         return (vm, engine, clock, toasts);
     }
+
+    private static double LemonadeRevenue(GameEngine engine) =>
+        engine.Businesses.First(b => b.Id == "lemonade").Revenue.ToDouble();
 
     [Fact]
     public void OnResumed_WithoutPriorSuspend_ShouldNotApplyEarnings()
@@ -94,9 +82,8 @@ public class GameViewModelLifecycleTests
         clock.Advance(TimeSpan.FromMinutes(10));
         vm.OnResumed();
 
-        // 600s / 0.6s cycle = 1000 cycles × $1 × 1.0 bonus = $1000.
         var earned = (engine.Cash - cashBefore).ToDouble();
-        earned.ShouldBe(1000.0, tolerance: 1e-9);
+        earned.ShouldBe(1000.0 * LemonadeRevenue(engine), tolerance: 1e-9);
     }
 
     [Fact]
@@ -110,7 +97,7 @@ public class GameViewModelLifecycleTests
         vm.OnResumed();
 
         var earned = (engine.Cash - cashBefore).ToDouble();
-        earned.ShouldBe(100.0 * FiftyAngelBonus, tolerance: 1e-7);
+        earned.ShouldBe(100.0 * LemonadeRevenue(engine) * FiftyAngelBonus, tolerance: 1e-7);
     }
 
     [Fact]
@@ -137,7 +124,6 @@ public class GameViewModelLifecycleTests
         var toasts = new ToastService();
         var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts, clock);
 
-        // No managed businesses; offline path returns 0.
         vm.OnSuspended();
         clock.Advance(TimeSpan.FromMinutes(5));
         vm.OnResumed();
@@ -170,7 +156,7 @@ public class GameViewModelLifecycleTests
         var cashAfterFirst = engine.Cash;
         clock.Advance(TimeSpan.FromMinutes(5));
 
-        vm.OnResumed(); // no new suspend → no new payout
+        vm.OnResumed();
 
         engine.Cash.ShouldBe(cashAfterFirst);
     }
@@ -186,15 +172,10 @@ public class GameViewModelLifecycleTests
 
         var cashAfterResume = engine.Cash;
 
-        // Now simulate the very next tick: delta should be ~0, so
-        // running OnTick must add at most ~one cycle of earnings, not
-        // ten minutes' worth. (Lemonade is at 0% so a sub-cycle delta
-        // produces no payout.)
         engine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
         clock.Advance(TimeSpan.FromMilliseconds(16));
         vm.OnTick();
 
-        // 16ms / 600ms = 2.67% — no cycle completes.
         engine.Cash.ShouldBe(cashAfterResume);
     }
 
@@ -208,11 +189,9 @@ public class GameViewModelLifecycleTests
         clock.Advance(TimeSpan.FromMinutes(10));
         vm.OnResumed();
 
-        // 10 minutes / 0.6s = 1000 cycles × $1 × 1.0 = $1000
-        var expectedCash = cashBeforeResume + new BigDouble(1000.0);
+        var expectedCash = cashBeforeResume + new BigDouble(1000.0 * LemonadeRevenue(engine));
         engine.Cash.ToDouble().ShouldBe(expectedCash.ToDouble(), tolerance: 1e-9);
 
-        // CashText must reflect the post-payout cash.
         vm.CashText.ShouldBe($"${NumberFormatter.Format(engine.Cash)}");
     }
 

@@ -7,11 +7,6 @@ using Shouldly;
 
 namespace MyAdventure.Integration.Tests;
 
-/// <summary>
-/// Integration tests for the SQLite-backed game state repository.
-/// Post-BigDouble migration: the numeric columns are TEXT holding canonical
-/// BigDouble strings, so round-trips must preserve string content exactly.
-/// </summary>
 public class GameStateRepositoryTests : IDisposable
 {
     private readonly AppDbContext _db;
@@ -38,8 +33,8 @@ public class GameStateRepositoryTests : IDisposable
             ManagerDataJson = """{"lemonade":true}"""
         };
 
-        await _repo.SaveAsync(state);
-        var loaded = await _repo.GetLatestAsync();
+        await _repo.SaveAsync(state, TestContext.Current.CancellationToken);
+        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
 
         loaded.ShouldNotBeNull();
         loaded.CashText.ShouldBe("1.23456e3");
@@ -50,10 +45,10 @@ public class GameStateRepositoryTests : IDisposable
     [Fact]
     public async Task Save_Twice_ShouldUpdate()
     {
-        await _repo.SaveAsync(new GameState { CashText = "100" });
-        await _repo.SaveAsync(new GameState { CashText = "200" });
+        await _repo.SaveAsync(new GameState { CashText = "100" }, TestContext.Current.CancellationToken);
+        await _repo.SaveAsync(new GameState { CashText = "200" }, TestContext.Current.CancellationToken);
 
-        var loaded = await _repo.GetLatestAsync();
+        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
         loaded!.CashText.ShouldBe("200");
         _db.GameStates.Count().ShouldBe(1);
     }
@@ -61,18 +56,13 @@ public class GameStateRepositoryTests : IDisposable
     [Fact]
     public async Task DeleteAll_ShouldClearState()
     {
-        await _repo.SaveAsync(new GameState { CashText = "100" });
-        await _repo.DeleteAllAsync();
+        await _repo.SaveAsync(new GameState { CashText = "100" }, TestContext.Current.CancellationToken);
+        await _repo.DeleteAllAsync(TestContext.Current.CancellationToken);
 
-        var loaded = await _repo.GetLatestAsync();
+        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
         loaded.ShouldBeNull();
     }
 
-    /// <summary>
-    /// BigDouble migration regression: ensure that an extreme BigDouble
-    /// string (e.g. cash = 1e500, far past what double can represent)
-    /// round-trips through SQLite without precision loss.
-    /// </summary>
     [Fact]
     public async Task SaveAndLoad_ExtremeBigDoubleString_RoundTripsExactly()
     {
@@ -83,8 +73,8 @@ public class GameStateRepositoryTests : IDisposable
             AngelInvestorsText = "2.5e15"
         };
 
-        await _repo.SaveAsync(state);
-        var loaded = await _repo.GetLatestAsync();
+        await _repo.SaveAsync(state, TestContext.Current.CancellationToken);
+        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
 
         loaded.ShouldNotBeNull();
         loaded.CashText.ShouldBe("1.5e500");

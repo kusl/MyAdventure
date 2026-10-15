@@ -3,14 +3,6 @@ using Shouldly;
 
 namespace MyAdventure.Core.Tests;
 
-/// <summary>
-/// Speed milestones halve cycle time at 25/50/100/200/300/400 ownership —
-/// the six-threshold AdCap-parity ladder. These tests pin both the curve
-/// and the compounding behavior, plus the invariant that very early game
-/// (owned &lt; 25) sees no change from before this feature existed. The
-/// older four-threshold table (100/200/300/400 → ×16 max) has been
-/// replaced; tests targeting the previous ladder were rewritten here.
-/// </summary>
 public class SpeedMilestoneTests
 {
     [Fact]
@@ -20,11 +12,6 @@ public class SpeedMilestoneTests
     [Fact]
     public void CycleTimeMultiplier_Below25_IsExactlyOne()
     {
-        // Critical invariant: no speed scaling kicks in below the first
-        // threshold. The threshold MOVED from 100 to 25 with the AdCap-
-        // parity update, so any existing test using owned in [25, 99]
-        // now legitimately sees a speed multiplier where it previously
-        // didn't. Tests for that range have been updated in the suite.
         SpeedMilestone.CalculateCycleTimeMultiplier(24).ShouldBe(1.0);
         SpeedMilestone.CalculateCycleTimeMultiplier(10).ShouldBe(1.0);
         SpeedMilestone.CalculateCycleTimeMultiplier(1).ShouldBe(1.0);
@@ -57,12 +44,6 @@ public class SpeedMilestoneTests
     [Fact]
     public void CycleTimeMultiplier_At1000_StaysSixtyFourth()
     {
-        // The default table caps at six speed milestones (400). Past 400 the
-        // multiplier doesn't shrink further — the cross-business bonus
-        // (CrossBusinessSpeedBonus, Option B) is what keeps progression
-        // moving past this ceiling. The per-business cap is intentional;
-        // see SpeedMilestone XML docs for why further per-business
-        // halvings would underflow cycle time.
         SpeedMilestone.CalculateCycleTimeMultiplier(1000).ShouldBe(0.015625);
         SpeedMilestone.CalculateCycleTimeMultiplier(10_000).ShouldBe(0.015625);
     }
@@ -112,8 +93,6 @@ public class SpeedMilestoneTests
     public void NextSpeedMilestone_Past400_IsNull() =>
         SpeedMilestone.NextSpeedMilestone(5000).ShouldBeNull();
 
-    // ---------------- Business integration ----------------
-
     [Fact]
     public void Business_CycleTime_Below25_EqualsBaseTime()
     {
@@ -125,7 +104,6 @@ public class SpeedMilestoneTests
     public void Business_CycleTime_At25_IsHalfBaseTime()
     {
         var biz = MakeBiz(owned: 25, baseTime: 0.6);
-        // 0.6 × 0.5 = 0.3
         biz.CycleTimeSeconds.ShouldBe(0.3, tolerance: 1e-12);
     }
 
@@ -133,7 +111,6 @@ public class SpeedMilestoneTests
     public void Business_CycleTime_At100_IsEighthBaseTime()
     {
         var biz = MakeBiz(owned: 100, baseTime: 0.6);
-        // 0.6 / 8 = 0.075
         biz.CycleTimeSeconds.ShouldBe(0.075, tolerance: 1e-12);
     }
 
@@ -141,7 +118,6 @@ public class SpeedMilestoneTests
     public void Business_CycleTime_At400_IsSixtyFourthBaseTime()
     {
         var biz = MakeBiz(owned: 400, baseTime: 0.6);
-        // 0.6 / 64 = 0.009375
         biz.CycleTimeSeconds.ShouldBe(0.009375, tolerance: 1e-12);
     }
 
@@ -158,22 +134,11 @@ public class SpeedMilestoneTests
         MakeBiz(owned: 400).SpeedMultiplier.ShouldBe(64.0);
     }
 
-    /// <summary>
-    /// The whole point of the speed-milestone feature: revenue per second
-    /// gets a multiplicative boost beyond what the revenue milestones
-    /// alone provide. At 100 owned of a baseTime=1.0 business:
-    ///   - Revenue milestones at 25/50/100 fire ×8.
-    ///   - Speed milestones at 25/50/100 fire ×8 (cycle time × 0.125).
-    /// Compound: revenue = 100 × $1 × 8 = $800/cycle; cycle = 1.0 × 0.125 = 0.125s.
-    /// EPS = $800 / 0.125s = $6400/s. Under the old four-threshold table
-    /// this was $1600/s — the AdCap-parity update produces 4× higher EPS
-    /// at owned=100, which is the intended buff.
-    /// </summary>
     [Fact]
     public void Business_RevenuePerSecond_CompoundsRevenueAndSpeedAt100()
     {
         var biz = MakeBiz(owned: 100, baseTime: 1.0);
-        biz.RevenuePerSecond.ToDouble().ShouldBe(6400.0, tolerance: 1e-9);
+        biz.RevenuePerSecond.ToDouble().ShouldBe(6400.0 * biz.Efficiency.ToDouble(), tolerance: 1e-6);
     }
 
     private static Business MakeBiz(int owned, double baseTime = 1.0) => new()

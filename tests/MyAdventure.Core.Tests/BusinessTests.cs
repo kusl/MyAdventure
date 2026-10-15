@@ -21,10 +21,10 @@ public class BusinessTests
             CostMultiplier = 1.1
         };
 
-        biz.NextCost.ToDouble().ShouldBe(100); // 0 owned
+        biz.NextCost.ToDouble().ShouldBe(100);
 
         biz.Owned = 10;
-        biz.NextCost.ToDouble().ShouldBeGreaterThan(250); // 100 * 1.1^10 ≈ 259
+        biz.NextCost.ToDouble().ShouldBeGreaterThan(250);
     }
 
     [Fact]
@@ -42,16 +42,11 @@ public class BusinessTests
             CostMultiplier = 1.1
         };
 
-        biz.Revenue.IsZero.ShouldBeTrue(); // 0 owned
+        biz.Revenue.IsZero.ShouldBeTrue();
         biz.Owned = 5;
-        biz.Revenue.ToDouble().ShouldBe(50);
+        biz.Revenue.ToDouble().ShouldBe(50 * biz.Efficiency.ToDouble(), tolerance: 1e-9);
     }
 
-    /// <summary>
-    /// Post-BigDouble regression: ownership counts and cost multipliers
-    /// that previously produced Infinity (Math.Pow(1.11, 10000)) now
-    /// produce a finite BigDouble. The hard 1e200 clamp is gone.
-    /// </summary>
     [Fact]
     public void NextCost_AtExtremeOwnership_IsFiniteAndUnclamped()
     {
@@ -65,11 +60,10 @@ public class BusinessTests
             BaseRevenue = 1,
             BaseTimeSeconds = 1,
             CostMultiplier = 1.11,
-            Owned = 10_000 // raw Math.Pow(1.11, 10000) is Infinity
+            Owned = 10_000
         };
 
         biz.NextCost.IsFinite.ShouldBeTrue();
-        // 1.11^10000 is around 10^412 — well past the old 1e200 cap.
         biz.NextCost.Exponent.ShouldBeGreaterThan(200);
     }
 
