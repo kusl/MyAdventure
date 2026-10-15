@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Oct 15 09:53:18 AM EDT 2026
+Generated: Thu Oct 15 09:54:56 AM EDT 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -103,7 +103,8 @@ DIRECTORY STRUCTURE:
 │               ├── 048.txt
 │               ├── 049.txt
 │               ├── 050.txt
-│               └── 051.txt
+│               ├── 051.txt
+│               └── 052.txt
 ├── export.sh
 ├── global.json
 ├── setup.sh
@@ -713,7 +714,7 @@ SIZE: 4.26 KB
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="coverlet.collector" Version="10.1.0" />
   </ItemGroup>
 </Project>
 
