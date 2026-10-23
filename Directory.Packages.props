@@ -6,9 +6,9 @@
     <AvaloniaVersion>12.1.4</AvaloniaVersion>
     <MicrosoftExtensionsVersion>10.0.13</MicrosoftExtensionsVersion>
     <EfCoreVersion>10.0.13</EfCoreVersion>
-    <OpenTelemetryVersion>1.20.0</OpenTelemetryVersion>
-    <OpenTelemetryInstrumentationRuntimeVersion>1.19.0</OpenTelemetryInstrumentationRuntimeVersion>
-    <OpenTelemetryInstrumentationHttpVersion>1.19.0</OpenTelemetryInstrumentationHttpVersion>
+    <OpenTelemetryVersion>1.20.1</OpenTelemetryVersion>
+    <OpenTelemetryInstrumentationRuntimeVersion>1.20.1</OpenTelemetryInstrumentationRuntimeVersion>
+    <OpenTelemetryInstrumentationHttpVersion>1.20.1</OpenTelemetryInstrumentationHttpVersion>
   </PropertyGroup>
 
   <ItemGroup Label="Avalonia - MIT License">
