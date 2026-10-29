@@ -4,8 +4,8 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
     <AvaloniaVersion>12.1.4</AvaloniaVersion>
-    <MicrosoftExtensionsVersion>10.0.13</MicrosoftExtensionsVersion>
-    <EfCoreVersion>10.0.13</EfCoreVersion>
+    <MicrosoftExtensionsVersion>10.0.14</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.14</EfCoreVersion>
     <OpenTelemetryVersion>1.20.1</OpenTelemetryVersion>
     <OpenTelemetryInstrumentationRuntimeVersion>1.20.1</OpenTelemetryInstrumentationRuntimeVersion>
     <OpenTelemetryInstrumentationHttpVersion>1.20.1</OpenTelemetryInstrumentationHttpVersion>
