@@ -1,0 +1,41 @@
+﻿2026-10-30T12:47:36.5143933Z ##[group]Run actions/upload-artifact@v7
+2026-10-30T12:47:36.5144348Z with:
+2026-10-30T12:47:36.5144563Z   name: win-x64
+2026-10-30T12:47:36.5144924Z   path: ./MyAdventure-win-x64.tar.gz
+./MyAdventure-win-x64.zip
+
+2026-10-30T12:47:36.5145374Z   if-no-files-found: error
+2026-10-30T12:47:36.5145905Z   retention-days: 7
+2026-10-30T12:47:36.5146400Z   compression-level: 6
+2026-10-30T12:47:36.5146658Z   overwrite: false
+2026-10-30T12:47:36.5146923Z   include-hidden-files: false
+2026-10-30T12:47:36.5147206Z   archive: true
+2026-10-30T12:47:36.5147425Z env:
+2026-10-30T12:47:36.5147641Z   DOTNET_NOLOGO: true
+2026-10-30T12:47:36.5147907Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:47:36.5148249Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:47:36.5148598Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-30T12:47:36.5148906Z ##[endgroup]
+2026-10-30T12:47:36.6891566Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-30T12:47:36.6894710Z The least common ancestor is D:\a\MyAdventure\MyAdventure. This will be the root directory of the artifact
+2026-10-30T12:47:36.6895578Z With the provided path, there will be 1 file uploaded
+2026-10-30T12:47:36.6898874Z Artifact name is valid!
+2026-10-30T12:47:36.6900433Z Root directory input is valid!
+2026-10-30T12:47:37.0364481Z Uploading artifact: win-x64.zip
+2026-10-30T12:47:37.0396312Z Beginning upload of artifact content to blob storage
+2026-10-30T12:47:38.2572939Z Uploaded bytes 8388608
+2026-10-30T12:47:38.5184198Z Uploaded bytes 16777216
+2026-10-30T12:47:38.6864202Z Uploaded bytes 25165824
+2026-10-30T12:47:38.8268115Z Uploaded bytes 33554432
+2026-10-30T12:47:38.8439889Z Uploaded bytes 41943040
+2026-10-30T12:47:39.0298901Z Uploaded bytes 50331648
+2026-10-30T12:47:39.0561255Z Uploaded bytes 58720256
+2026-10-30T12:47:39.2129100Z Uploaded bytes 67108864
+2026-10-30T12:47:39.4902102Z Uploaded bytes 75497472
+2026-10-30T12:47:39.5714587Z Uploaded bytes 76107453
+2026-10-30T12:47:39.6268952Z Finished uploading artifact content to blob storage!
+2026-10-30T12:47:39.6272360Z SHA256 digest of uploaded artifact is 26b8360456e3b2d13709b92656dd01301dd8e6bc93c9fb59e293b602695f315d
+2026-10-30T12:47:39.6274279Z Finalizing artifact upload
+2026-10-30T12:47:40.2029494Z Artifact win-x64 successfully finalized. Artifact ID 12976684859
+2026-10-30T12:47:40.2030105Z Artifact win-x64 has been successfully uploaded! Final size is 76107453 bytes. Artifact ID is 12976684859
+2026-10-30T12:47:40.2040317Z Artifact download URL: https://github.com/kusl/MyAdventure/actions/runs/41057431569/artifacts/12976684859

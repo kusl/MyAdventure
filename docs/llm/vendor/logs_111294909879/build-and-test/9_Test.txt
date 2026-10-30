@@ -1,0 +1,29 @@
+﻿2026-10-30T12:45:24.4121644Z ##[group]Run dotnet test --configuration Release --no-build
+2026-10-30T12:45:24.4122111Z [36;1mdotnet test --configuration Release --no-build[0m
+2026-10-30T12:45:24.4143803Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:45:24.4144075Z env:
+2026-10-30T12:45:24.4144267Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:24.4144515Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:24.4144812Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:24.4145109Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:45:24.4145473Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:45:24.4146002Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:45:24.4146392Z   MAVEN_ARGS: -ntp
+2026-10-30T12:45:24.4146602Z ##[endgroup]
+2026-10-30T12:45:25.5546585Z Running tests from /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll (net10.0|x64)
+2026-10-30T12:45:25.5642301Z Running tests from /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll (net10.0|x64)
+2026-10-30T12:45:25.5684988Z Running tests from /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll (net10.0|x64)
+2026-10-30T12:45:26.4962414Z [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll (net10.0|x64) [32mpassed[m [90m(931ms)[m
+2026-10-30T12:45:27.5486384Z [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll (net10.0|x64) [32mpassed[m [90m(1s 999ms)[m
+2026-10-30T12:45:27.5837886Z [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll (net10.0|x64) [32mpassed[m [90m(2s 016ms)[m
+2026-10-30T12:45:27.5863707Z 
+2026-10-30T12:45:27.5873081Z [32mTest run summary: Passed!
+2026-10-30T12:45:27.5874978Z   [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll (net10.0|x64) [32mpassed[m [90m(1s 999ms)[m
+2026-10-30T12:45:27.5877145Z   [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll (net10.0|x64) [32mpassed[m [90m(931ms)[m
+2026-10-30T12:45:27.5878944Z   [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll (net10.0|x64) [32mpassed[m [90m(2s 016ms)[m
+2026-10-30T12:45:27.5880145Z 
+2026-10-30T12:45:27.5882329Z [m  total: 409
+2026-10-30T12:45:27.5882875Z   failed: 0
+2026-10-30T12:45:27.5883543Z [32m  succeeded: 409
+2026-10-30T12:45:27.5884095Z [m  skipped: 0
+2026-10-30T12:45:27.5884620Z   duration: 2s 415ms

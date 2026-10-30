@@ -1,0 +1,90 @@
+﻿2026-10-30T12:45:33.9934814Z ##[group]Run actions/checkout@v7
+2026-10-30T12:45:33.9935899Z with:
+2026-10-30T12:45:33.9936530Z   repository: kusl/MyAdventure
+2026-10-30T12:45:33.9941223Z   token: ***
+2026-10-30T12:45:33.9941922Z   ssh-strict: true
+2026-10-30T12:45:33.9942513Z   ssh-user: git
+2026-10-30T12:45:33.9943124Z   persist-credentials: true
+2026-10-30T12:45:33.9943888Z   clean: true
+2026-10-30T12:45:33.9944515Z   sparse-checkout-cone-mode: true
+2026-10-30T12:45:33.9945285Z   fetch-depth: 1
+2026-10-30T12:45:33.9945888Z   fetch-tags: false
+2026-10-30T12:45:33.9946493Z   show-progress: true
+2026-10-30T12:45:33.9947104Z   lfs: false
+2026-10-30T12:45:33.9947946Z   submodules: false
+2026-10-30T12:45:33.9948676Z   set-safe-directory: true
+2026-10-30T12:45:33.9949359Z   allow-unsafe-pr-checkout: false
+2026-10-30T12:45:33.9950221Z env:
+2026-10-30T12:45:33.9950807Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:33.9951442Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:33.9952242Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:33.9953023Z ##[endgroup]
+2026-10-30T12:45:34.2566981Z Syncing repository: kusl/MyAdventure
+2026-10-30T12:45:34.2569485Z ##[group]Getting Git version info
+2026-10-30T12:45:34.2570767Z Working directory is '/home/runner/work/MyAdventure/MyAdventure'
+2026-10-30T12:45:34.2572627Z [command]/usr/bin/git version
+2026-10-30T12:45:34.2659720Z git version 2.56.0
+2026-10-30T12:45:34.2681111Z ##[endgroup]
+2026-10-30T12:45:34.2695045Z Temporarily overriding HOME='/home/runner/work/_temp/5c9fafec-f6ae-448c-b4d2-852de75e870d' before making global git config changes
+2026-10-30T12:45:34.2697401Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:45:34.2702729Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:45:34.2754888Z Deleting the contents of '/home/runner/work/MyAdventure/MyAdventure'
+2026-10-30T12:45:34.2760232Z ##[group]Determining repository object format
+2026-10-30T12:45:34.2762112Z ##[endgroup]
+2026-10-30T12:45:34.2763538Z ##[group]Initializing the repository
+2026-10-30T12:45:34.2769742Z [command]/usr/bin/git init /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:45:34.2858632Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T12:45:34.2861386Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T12:45:34.2862709Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T12:45:34.2863978Z hint: call:
+2026-10-30T12:45:34.2864735Z hint:
+2026-10-30T12:45:34.2865820Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T12:45:34.2866952Z hint:
+2026-10-30T12:45:34.2868137Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T12:45:34.2869774Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T12:45:34.2870720Z hint:
+2026-10-30T12:45:34.2871313Z hint: 	git branch -m <name>
+2026-10-30T12:45:34.2871919Z hint:
+2026-10-30T12:45:34.2872746Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T12:45:34.2874038Z Initialized empty Git repository in /home/runner/work/MyAdventure/MyAdventure/.git/
+2026-10-30T12:45:34.2887231Z [command]/usr/bin/git remote add origin https://github.com/kusl/MyAdventure
+2026-10-30T12:45:34.2935192Z ##[endgroup]
+2026-10-30T12:45:34.2937104Z ##[group]Disabling automatic garbage collection
+2026-10-30T12:45:34.2938948Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T12:45:34.2973377Z ##[endgroup]
+2026-10-30T12:45:34.2975362Z ##[group]Setting up auth
+2026-10-30T12:45:34.2976731Z Removing SSH command configuration
+2026-10-30T12:45:34.2978904Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:45:34.3022850Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T12:45:34.3353335Z Removing HTTP extra header
+2026-10-30T12:45:34.3360354Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:45:34.3399079Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T12:45:34.3618019Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:45:34.3621409Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:45:34.3657346Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T12:45:34.3855350Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-a294d150-fa88-4201-855e-b73bb0e25992.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T12:45:34.3895925Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path /home/runner/work/_temp/git-credentials-a294d150-fa88-4201-855e-b73bb0e25992.config
+2026-10-30T12:45:34.3929532Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-a294d150-fa88-4201-855e-b73bb0e25992.config
+2026-10-30T12:45:34.3962915Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-a294d150-fa88-4201-855e-b73bb0e25992.config
+2026-10-30T12:45:34.3996711Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-a294d150-fa88-4201-855e-b73bb0e25992.config
+2026-10-30T12:45:34.4028092Z ##[endgroup]
+2026-10-30T12:45:34.4029267Z ##[group]Fetching the repository
+2026-10-30T12:45:34.4034308Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6f776fecac5f27616cfaf885234a155c8dae7879:refs/remotes/origin/main
+2026-10-30T12:45:35.1126255Z From https://github.com/kusl/MyAdventure
+2026-10-30T12:45:35.1128823Z  * [new ref]         6f776fecac5f27616cfaf885234a155c8dae7879 -> origin/main
+2026-10-30T12:45:35.1135063Z [command]/usr/bin/git branch --list --remote origin/main
+2026-10-30T12:45:35.1160797Z   origin/main
+2026-10-30T12:45:35.1171089Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-10-30T12:45:35.1195821Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:45:35.1200660Z ##[endgroup]
+2026-10-30T12:45:35.1202483Z ##[group]Determining the checkout info
+2026-10-30T12:45:35.1204965Z ##[endgroup]
+2026-10-30T12:45:35.1206226Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T12:45:35.1271444Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T12:45:35.1307261Z ##[group]Checking out the ref
+2026-10-30T12:45:35.1310160Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-10-30T12:45:35.1587448Z Switched to a new branch 'main'
+2026-10-30T12:45:35.1593840Z branch 'main' set up to track 'origin/main'.
+2026-10-30T12:45:35.1600552Z ##[endgroup]
+2026-10-30T12:45:35.1640542Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T12:45:35.1666850Z 6f776fecac5f27616cfaf885234a155c8dae7879

@@ -1,0 +1,37 @@
+﻿2026-10-30T12:46:18.8721970Z ##[group]Run actions/upload-artifact@v7
+2026-10-30T12:46:18.8722410Z with:
+2026-10-30T12:46:18.8722780Z   name: osx-x64
+2026-10-30T12:46:18.8723100Z   path: ./MyAdventure-osx-x64.tar.gz
+./MyAdventure-osx-x64.zip
+
+2026-10-30T12:46:18.8723590Z   if-no-files-found: error
+2026-10-30T12:46:18.8723870Z   retention-days: 7
+2026-10-30T12:46:18.8724260Z   compression-level: 6
+2026-10-30T12:46:18.8724520Z   overwrite: false
+2026-10-30T12:46:18.8724800Z   include-hidden-files: false
+2026-10-30T12:46:18.8725060Z   archive: true
+2026-10-30T12:46:18.8725390Z env:
+2026-10-30T12:46:18.8725660Z   DOTNET_NOLOGO: true
+2026-10-30T12:46:18.8726040Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:46:18.8726360Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:46:18.8726910Z   DOTNET_ROOT: /Users/runner/.dotnet
+2026-10-30T12:46:18.8727410Z ##[endgroup]
+2026-10-30T12:46:19.2772430Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-30T12:46:19.2774800Z The least common ancestor is /Users/runner/work/MyAdventure/MyAdventure. This will be the root directory of the artifact
+2026-10-30T12:46:19.2776260Z With the provided path, there will be 1 file uploaded
+2026-10-30T12:46:19.2777340Z Artifact name is valid!
+2026-10-30T12:46:19.2778170Z Root directory input is valid!
+2026-10-30T12:46:19.6861670Z Uploading artifact: osx-x64.zip
+2026-10-30T12:46:19.6885030Z Beginning upload of artifact content to blob storage
+2026-10-30T12:46:20.9886920Z Uploaded bytes 8388608
+2026-10-30T12:46:21.3068440Z Uploaded bytes 16777216
+2026-10-30T12:46:21.3356020Z Uploaded bytes 25165824
+2026-10-30T12:46:21.5528570Z Uploaded bytes 33554432
+2026-10-30T12:46:21.6032210Z Uploaded bytes 41943040
+2026-10-30T12:46:21.9532560Z Uploaded bytes 48673290
+2026-10-30T12:46:22.0234920Z Finished uploading artifact content to blob storage!
+2026-10-30T12:46:22.0335760Z SHA256 digest of uploaded artifact is ea31a08f28a2940401618ed103ca34b974c0e7d1ad187d6136117727019dc05f
+2026-10-30T12:46:22.0436370Z Finalizing artifact upload
+2026-10-30T12:46:22.6684560Z Artifact osx-x64 successfully finalized. Artifact ID 12978375531
+2026-10-30T12:46:22.6722700Z Artifact osx-x64 has been successfully uploaded! Final size is 48673290 bytes. Artifact ID is 12978375531
+2026-10-30T12:46:22.6725750Z Artifact download URL: https://github.com/kusl/MyAdventure/actions/runs/41057431569/artifacts/12978375531

@@ -1,0 +1,17 @@
+﻿2026-10-30T12:45:58.8619570Z ##[group]Run cd ./publish
+2026-10-30T12:45:58.8620030Z [36;1mcd ./publish[0m
+2026-10-30T12:45:58.8620500Z [36;1mtar -czvf ../MyAdventure-osx-arm64.tar.gz .[0m
+2026-10-30T12:45:58.8690530Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:45:58.8691420Z env:
+2026-10-30T12:45:58.8691970Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:58.8692220Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:58.8692620Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:58.8693050Z   DOTNET_ROOT: /Users/runner/.dotnet
+2026-10-30T12:45:58.8693390Z ##[endgroup]
+2026-10-30T12:45:58.9718930Z a .
+2026-10-30T12:45:58.9734790Z a ./MyAdventure.Shared.pdb
+2026-10-30T12:45:58.9743560Z a ./appsettings.json
+2026-10-30T12:46:04.3222830Z a ./MyAdventure.Desktop
+2026-10-30T12:46:04.3233720Z a ./MyAdventure.Infrastructure.pdb
+2026-10-30T12:46:04.3245910Z a ./MyAdventure.Core.pdb
+2026-10-30T12:46:04.3255370Z a ./MyAdventure.Desktop.pdb

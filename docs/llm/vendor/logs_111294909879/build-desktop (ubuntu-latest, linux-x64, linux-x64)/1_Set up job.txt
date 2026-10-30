@@ -1,0 +1,52 @@
+﻿2026-10-30T12:45:32.2062106Z Current runner version: '2.338.0'
+2026-10-30T12:45:32.2090169Z ##[group]Runner Image Provisioner
+2026-10-30T12:45:32.2091424Z Hosted Compute Agent
+2026-10-30T12:45:32.2092165Z Version: 20261021.618
+2026-10-30T12:45:32.2092843Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T12:45:32.2093632Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T12:45:32.2094421Z Worker ID: {fd7eca41-f8e7-4e58-b0a3-9147c6ac9cbc}
+2026-10-30T12:45:32.2095162Z Region: eastus
+2026-10-30T12:45:32.2095710Z Cloud: Azure
+2026-10-30T12:45:32.2096335Z ##[endgroup]
+2026-10-30T12:45:32.2098032Z ##[group]Operating System
+2026-10-30T12:45:32.2099161Z Ubuntu
+2026-10-30T12:45:32.2099916Z 24.04.5
+2026-10-30T12:45:32.2100479Z LTS
+2026-10-30T12:45:32.2101455Z ##[endgroup]
+2026-10-30T12:45:32.2102088Z ##[group]Runner Image
+2026-10-30T12:45:32.2102767Z Image: ubuntu-24.04
+2026-10-30T12:45:32.2103404Z Version: 20261025.353.1
+2026-10-30T12:45:32.2104495Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-30T12:45:32.2106499Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-30T12:45:32.2107522Z ##[endgroup]
+2026-10-30T12:45:32.2110960Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T12:45:32.2113541Z Actions: write
+2026-10-30T12:45:32.2114245Z ArtifactMetadata: write
+2026-10-30T12:45:32.2114943Z Attestations: write
+2026-10-30T12:45:32.2115550Z Checks: write
+2026-10-30T12:45:32.2116135Z CodeQuality: write
+2026-10-30T12:45:32.2116766Z Contents: write
+2026-10-30T12:45:32.2117392Z CopilotRequests: write
+2026-10-30T12:45:32.2117982Z Deployments: write
+2026-10-30T12:45:32.2118620Z Discussions: write
+2026-10-30T12:45:32.2119195Z Drives: write
+2026-10-30T12:45:32.2119829Z Issues: write
+2026-10-30T12:45:32.2120513Z Metadata: read
+2026-10-30T12:45:32.2121335Z Models: read
+2026-10-30T12:45:32.2122005Z Packages: write
+2026-10-30T12:45:32.2122570Z Pages: write
+2026-10-30T12:45:32.2123919Z PullRequests: write
+2026-10-30T12:45:32.2124627Z RepositoryProjects: write
+2026-10-30T12:45:32.2125279Z SecurityEvents: write
+2026-10-30T12:45:32.2125951Z Statuses: write
+2026-10-30T12:45:32.2126603Z VulnerabilityAlerts: read
+2026-10-30T12:45:32.2127268Z ##[endgroup]
+2026-10-30T12:45:32.2129558Z Secret source: Actions
+2026-10-30T12:45:32.2130835Z Cache mode: write
+2026-10-30T12:45:32.2132003Z Prepare workflow directory
+2026-10-30T12:45:32.2547516Z Prepare all required actions
+2026-10-30T12:45:32.2597000Z Getting action download info
+2026-10-30T12:45:32.4938424Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-30T12:45:32.6005473Z Download action repository 'actions/setup-dotnet@v6' (SHA:a98b56852c35b8e3190ac28c8c2271da59106c68)
+2026-10-30T12:45:32.7912713Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-30T12:45:32.9690924Z Complete job name: build-desktop (ubuntu-latest, linux-x64, linux-x64)

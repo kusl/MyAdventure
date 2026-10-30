@@ -1,0 +1,739 @@
+﻿2026-10-30T12:43:01.5055506Z Current runner version: '2.338.0'
+2026-10-30T12:43:01.5082365Z ##[group]Runner Image Provisioner
+2026-10-30T12:43:01.5083729Z Hosted Compute Agent
+2026-10-30T12:43:01.5084418Z Version: 20261021.618
+2026-10-30T12:43:01.5085149Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T12:43:01.5086039Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T12:43:01.5086763Z Worker ID: {b14f2cfd-a852-4a5b-99e5-67ef15a95b56}
+2026-10-30T12:43:01.5087605Z Region: eastus
+2026-10-30T12:43:01.5088205Z Cloud: Azure
+2026-10-30T12:43:01.5088906Z ##[endgroup]
+2026-10-30T12:43:01.5091739Z ##[group]Operating System
+2026-10-30T12:43:01.5092436Z Ubuntu
+2026-10-30T12:43:01.5093111Z 24.04.5
+2026-10-30T12:43:01.5093960Z LTS
+2026-10-30T12:43:01.5095185Z ##[endgroup]
+2026-10-30T12:43:01.5096130Z ##[group]Runner Image
+2026-10-30T12:43:01.5097120Z Image: ubuntu-24.04
+2026-10-30T12:43:01.5098179Z Version: 20261025.353.1
+2026-10-30T12:43:01.5099936Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-30T12:43:01.5101710Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-30T12:43:01.5102746Z ##[endgroup]
+2026-10-30T12:43:01.5106032Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T12:43:01.5108637Z Actions: write
+2026-10-30T12:43:01.5109340Z ArtifactMetadata: write
+2026-10-30T12:43:01.5110359Z Attestations: write
+2026-10-30T12:43:01.5111135Z Checks: write
+2026-10-30T12:43:01.5111806Z CodeQuality: write
+2026-10-30T12:43:01.5112452Z Contents: write
+2026-10-30T12:43:01.5113074Z CopilotRequests: write
+2026-10-30T12:43:01.5113689Z Deployments: write
+2026-10-30T12:43:01.5114445Z Discussions: write
+2026-10-30T12:43:01.5115080Z Drives: write
+2026-10-30T12:43:01.5115695Z Issues: write
+2026-10-30T12:43:01.5116474Z Metadata: read
+2026-10-30T12:43:01.5117062Z Models: read
+2026-10-30T12:43:01.5117776Z Packages: write
+2026-10-30T12:43:01.5118400Z Pages: write
+2026-10-30T12:43:01.5119089Z PullRequests: write
+2026-10-30T12:43:01.5120030Z RepositoryProjects: write
+2026-10-30T12:43:01.5120713Z SecurityEvents: write
+2026-10-30T12:43:01.5121473Z Statuses: write
+2026-10-30T12:43:01.5122118Z VulnerabilityAlerts: read
+2026-10-30T12:43:01.5122814Z ##[endgroup]
+2026-10-30T12:43:01.5125010Z Secret source: Actions
+2026-10-30T12:43:01.5126180Z Cache mode: write
+2026-10-30T12:43:01.5127253Z Prepare workflow directory
+2026-10-30T12:43:01.5522960Z Prepare all required actions
+2026-10-30T12:43:01.5571426Z Getting action download info
+2026-10-30T12:43:01.7647318Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-30T12:43:01.8666826Z Download action repository 'actions/setup-dotnet@v6' (SHA:a98b56852c35b8e3190ac28c8c2271da59106c68)
+2026-10-30T12:43:02.0532478Z Download action repository 'actions/setup-java@v6' (SHA:b843ebf9b913146b38da2eaa7aeddf76074ae1ad)
+2026-10-30T12:43:02.4220604Z Complete job name: build-and-test
+2026-10-30T12:43:02.5198826Z ##[group]Run actions/checkout@v7
+2026-10-30T12:43:02.5200170Z with:
+2026-10-30T12:43:02.5200711Z   fetch-depth: 0
+2026-10-30T12:43:02.5201305Z   repository: kusl/MyAdventure
+2026-10-30T12:43:02.5204953Z   token: ***
+2026-10-30T12:43:02.5205441Z   ssh-strict: true
+2026-10-30T12:43:02.5205934Z   ssh-user: git
+2026-10-30T12:43:02.5206449Z   persist-credentials: true
+2026-10-30T12:43:02.5206984Z   clean: true
+2026-10-30T12:43:02.5207481Z   sparse-checkout-cone-mode: true
+2026-10-30T12:43:02.5208064Z   fetch-tags: false
+2026-10-30T12:43:02.5208562Z   show-progress: true
+2026-10-30T12:43:02.5209055Z   lfs: false
+2026-10-30T12:43:02.5209819Z   submodules: false
+2026-10-30T12:43:02.5210453Z   set-safe-directory: true
+2026-10-30T12:43:02.5211062Z   allow-unsafe-pr-checkout: false
+2026-10-30T12:43:02.5211966Z env:
+2026-10-30T12:43:02.5212442Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:02.5212984Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:02.5213648Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:02.5214253Z ##[endgroup]
+2026-10-30T12:43:02.8773326Z Syncing repository: kusl/MyAdventure
+2026-10-30T12:43:02.8775868Z ##[group]Getting Git version info
+2026-10-30T12:43:02.8777028Z Working directory is '/home/runner/work/MyAdventure/MyAdventure'
+2026-10-30T12:43:02.8778519Z [command]/usr/bin/git version
+2026-10-30T12:43:02.8893951Z git version 2.56.0
+2026-10-30T12:43:02.8922747Z ##[endgroup]
+2026-10-30T12:43:02.8936978Z Temporarily overriding HOME='/home/runner/work/_temp/f76a110f-953b-4eca-a2da-104a8976f1a7' before making global git config changes
+2026-10-30T12:43:02.8940184Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:43:02.8942811Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:43:02.8992429Z Deleting the contents of '/home/runner/work/MyAdventure/MyAdventure'
+2026-10-30T12:43:02.9012257Z ##[group]Determining repository object format
+2026-10-30T12:43:02.9015230Z ##[endgroup]
+2026-10-30T12:43:02.9017754Z ##[group]Initializing the repository
+2026-10-30T12:43:02.9020234Z [command]/usr/bin/git init /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:43:02.9187347Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T12:43:02.9190422Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T12:43:02.9193116Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T12:43:02.9195304Z hint: call:
+2026-10-30T12:43:02.9196778Z hint:
+2026-10-30T12:43:02.9198497Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T12:43:02.9200656Z hint:
+2026-10-30T12:43:02.9202471Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T12:43:02.9205058Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T12:43:02.9207334Z hint:
+2026-10-30T12:43:02.9208796Z hint: 	git branch -m <name>
+2026-10-30T12:43:02.9210897Z hint:
+2026-10-30T12:43:02.9212889Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T12:43:02.9215641Z Initialized empty Git repository in /home/runner/work/MyAdventure/MyAdventure/.git/
+2026-10-30T12:43:02.9219389Z [command]/usr/bin/git remote add origin https://github.com/kusl/MyAdventure
+2026-10-30T12:43:02.9268840Z ##[endgroup]
+2026-10-30T12:43:02.9270962Z ##[group]Disabling automatic garbage collection
+2026-10-30T12:43:02.9272629Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T12:43:02.9310743Z ##[endgroup]
+2026-10-30T12:43:02.9408043Z ##[group]Setting up auth
+2026-10-30T12:43:02.9410051Z Removing SSH command configuration
+2026-10-30T12:43:02.9412397Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:43:02.9418254Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T12:43:02.9817665Z Removing HTTP extra header
+2026-10-30T12:43:02.9824591Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:43:02.9871970Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T12:43:03.0121880Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:43:03.0126512Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:43:03.0175648Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T12:43:03.0423070Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T12:43:03.0471476Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path /home/runner/work/_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:43:03.0515190Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:43:03.0559941Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:43:03.0603953Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:43:03.0649109Z ##[endgroup]
+2026-10-30T12:43:03.0651910Z ##[group]Fetching the repository
+2026-10-30T12:43:03.0657123Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-30T12:43:03.6271872Z From https://github.com/kusl/MyAdventure
+2026-10-30T12:43:03.6274389Z  * [new branch]      main       -> origin/main
+2026-10-30T12:43:03.6275162Z  * [new tag]         v1.0.10    -> v1.0.10
+2026-10-30T12:43:03.6276181Z  * [new tag]         v1.0.11    -> v1.0.11
+2026-10-30T12:43:03.6277185Z  * [new tag]         v1.0.12    -> v1.0.12
+2026-10-30T12:43:03.6277878Z  * [new tag]         v1.0.13    -> v1.0.13
+2026-10-30T12:43:03.6278552Z  * [new tag]         v1.0.16    -> v1.0.16
+2026-10-30T12:43:03.6279261Z  * [new tag]         v1.0.17    -> v1.0.17
+2026-10-30T12:43:03.6280324Z  * [new tag]         v1.0.18    -> v1.0.18
+2026-10-30T12:43:03.6281183Z  * [new tag]         v1.0.19    -> v1.0.19
+2026-10-30T12:43:03.6281966Z  * [new tag]         v1.0.20    -> v1.0.20
+2026-10-30T12:43:03.6283075Z  * [new tag]         v1.0.21    -> v1.0.21
+2026-10-30T12:43:03.6283859Z  * [new tag]         v1.0.22    -> v1.0.22
+2026-10-30T12:43:03.6284547Z  * [new tag]         v1.0.23    -> v1.0.23
+2026-10-30T12:43:03.6285302Z  * [new tag]         v1.0.24    -> v1.0.24
+2026-10-30T12:43:03.6286149Z  * [new tag]         v1.0.29    -> v1.0.29
+2026-10-30T12:43:03.6286883Z  * [new tag]         v1.0.35    -> v1.0.35
+2026-10-30T12:43:03.6287634Z  * [new tag]         v1.0.36    -> v1.0.36
+2026-10-30T12:43:03.6288384Z  * [new tag]         v1.0.37    -> v1.0.37
+2026-10-30T12:43:03.6289115Z  * [new tag]         v1.0.40    -> v1.0.40
+2026-10-30T12:43:03.6290176Z  * [new tag]         v1.0.42    -> v1.0.42
+2026-10-30T12:43:03.6290965Z  * [new tag]         v1.0.43    -> v1.0.43
+2026-10-30T12:43:03.6291747Z  * [new tag]         v1.0.44    -> v1.0.44
+2026-10-30T12:43:03.6292539Z  * [new tag]         v1.0.45    -> v1.0.45
+2026-10-30T12:43:03.6293369Z  * [new tag]         v1.0.46    -> v1.0.46
+2026-10-30T12:43:03.6294210Z  * [new tag]         v1.0.48    -> v1.0.48
+2026-10-30T12:43:03.6295087Z  * [new tag]         v1.0.49    -> v1.0.49
+2026-10-30T12:43:03.6296465Z  * [new tag]         v1.0.50    -> v1.0.50
+2026-10-30T12:43:03.6297368Z  * [new tag]         v1.0.51    -> v1.0.51
+2026-10-30T12:43:03.6298319Z  * [new tag]         v1.0.52    -> v1.0.52
+2026-10-30T12:43:03.6299260Z  * [new tag]         v1.0.53    -> v1.0.53
+2026-10-30T12:43:03.6300442Z  * [new tag]         v1.0.54    -> v1.0.54
+2026-10-30T12:43:03.6301262Z  * [new tag]         v1.0.56    -> v1.0.56
+2026-10-30T12:43:03.6302071Z  * [new tag]         v1.0.57    -> v1.0.57
+2026-10-30T12:43:03.6302888Z  * [new tag]         v1.0.58    -> v1.0.58
+2026-10-30T12:43:03.6303694Z  * [new tag]         v1.0.59    -> v1.0.59
+2026-10-30T12:43:03.6304497Z  * [new tag]         v1.0.60    -> v1.0.60
+2026-10-30T12:43:03.6305338Z  * [new tag]         v1.0.62    -> v1.0.62
+2026-10-30T12:43:03.6307611Z [command]/usr/bin/git branch --list --remote origin/main
+2026-10-30T12:43:03.6323087Z   origin/main
+2026-10-30T12:43:03.6332269Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-10-30T12:43:03.6370641Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:43:03.6377073Z ##[endgroup]
+2026-10-30T12:43:03.6379288Z ##[group]Determining the checkout info
+2026-10-30T12:43:03.6381910Z ##[endgroup]
+2026-10-30T12:43:03.6383300Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T12:43:03.6462168Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T12:43:03.6506915Z ##[group]Checking out the ref
+2026-10-30T12:43:03.6511798Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-10-30T12:43:03.6950745Z Switched to a new branch 'main'
+2026-10-30T12:43:03.6956538Z branch 'main' set up to track 'origin/main'.
+2026-10-30T12:43:03.6975989Z ##[endgroup]
+2026-10-30T12:43:03.7032982Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T12:43:03.7073227Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:43:03.7395609Z ##[group]Run actions/setup-dotnet@v6
+2026-10-30T12:43:03.7396472Z with:
+2026-10-30T12:43:03.7396992Z   dotnet-version: 10.0.x
+2026-10-30T12:43:03.7397659Z   cache: false
+2026-10-30T12:43:03.7398193Z env:
+2026-10-30T12:43:03.7398714Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:03.7399392Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:03.7400670Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:03.7401550Z ##[endgroup]
+2026-10-30T12:43:03.8813646Z [command]/home/runner/work/_actions/actions/setup-dotnet/v6/externals/install-dotnet.sh --skip-non-versioned-files --runtime dotnet --channel LTS
+2026-10-30T12:43:04.1230769Z dotnet-install: .NET Core Runtime with version '10.0.14' is already installed.
+2026-10-30T12:43:04.1257603Z [command]/home/runner/work/_actions/actions/setup-dotnet/v6/externals/install-dotnet.sh --skip-non-versioned-files --channel 10.0
+2026-10-30T12:43:04.3241844Z dotnet-install: .NET Core SDK with version '10.0.403' is already installed.
+2026-10-30T12:43:04.3547380Z ##[group]Run actions/setup-java@v6
+2026-10-30T12:43:04.3547686Z with:
+2026-10-30T12:43:04.3547890Z   distribution: temurin
+2026-10-30T12:43:04.3548119Z   java-version: 21
+2026-10-30T12:43:04.3548337Z   java-package: jdk
+2026-10-30T12:43:04.3548570Z   check-latest: false
+2026-10-30T12:43:04.3548784Z   force-download: false
+2026-10-30T12:43:04.3549012Z   set-default: true
+2026-10-30T12:43:04.3549208Z   server-id: github
+2026-10-30T12:43:04.3549443Z   mvn-repositories-include-central: true
+2026-10-30T12:43:04.3550111Z   mvn-repositories-prioritize-central: true
+2026-10-30T12:43:04.3550428Z   overwrite-settings: true
+2026-10-30T12:43:04.3550670Z   cache-read-only: false
+2026-10-30T12:43:04.3550895Z   job-status: success
+2026-10-30T12:43:04.3553100Z   token: ***
+2026-10-30T12:43:04.3553325Z   show-download-progress: false
+2026-10-30T12:43:04.3553594Z   problem-matcher: true
+2026-10-30T12:43:04.3553814Z env:
+2026-10-30T12:43:04.3553998Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:04.3554263Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:04.3554547Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:04.3554838Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:04.3555080Z ##[endgroup]
+2026-10-30T12:43:04.4322202Z ##[group]Installed distributions
+2026-10-30T12:43:04.4422051Z Resolved Java 21.0.13+9 from tool-cache
+2026-10-30T12:43:04.4422712Z Setting Java 21.0.13+9 as the default
+2026-10-30T12:43:04.4431155Z 
+2026-10-30T12:43:04.4431445Z Java configuration:
+2026-10-30T12:43:04.4432184Z   Distribution: temurin
+2026-10-30T12:43:04.4432785Z   Version: 21.0.13+9
+2026-10-30T12:43:04.4433530Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:04.4434081Z 
+2026-10-30T12:43:04.4434583Z ##[endgroup]
+2026-10-30T12:43:04.4458932Z Creating settings.xml with server-id: github
+2026-10-30T12:43:04.4465715Z Creating toolchains.xml for JDK version 21 from temurin
+2026-10-30T12:43:04.4469023Z Writing to /home/runner/.m2/settings.xml
+2026-10-30T12:43:04.4478962Z Writing to /home/runner/.m2/toolchains.xml
+2026-10-30T12:43:04.4487225Z Configured MAVEN_ARGS to include -ntp to suppress Maven transfer progress logs. Set 'show-download-progress: true' to keep the download progress output.
+2026-10-30T12:43:04.4655023Z ##[group]Run dotnet workload install android
+2026-10-30T12:43:04.4655871Z [36;1mdotnet workload install android[0m
+2026-10-30T12:43:04.4689064Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:43:04.4689345Z env:
+2026-10-30T12:43:04.4689855Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:04.4690164Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:04.4690465Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:04.4690765Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:04.4691142Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:04.4691633Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:04.4692029Z   MAVEN_ARGS: -ntp
+2026-10-30T12:43:04.4692241Z ##[endgroup]
+2026-10-30T12:43:07.2942854Z 
+2026-10-30T12:43:07.2947323Z Checking for updated workload version.
+2026-10-30T12:43:08.4912693Z Skipping NuGet package signature verification.
+2026-10-30T12:43:08.5234136Z Installing workload version 10.0.403.
+2026-10-30T12:43:08.5612559Z Installing workload manifest microsoft.net.workload.emscripten.current version 10.0.114...
+2026-10-30T12:43:08.6010704Z Installing workload manifest microsoft.net.workload.emscripten.net6 version 10.0.114...
+2026-10-30T12:43:08.6458484Z Installing workload manifest microsoft.net.workload.emscripten.net7 version 10.0.114...
+2026-10-30T12:43:08.6876430Z Installing workload manifest microsoft.net.workload.emscripten.net8 version 10.0.114...
+2026-10-30T12:43:08.7203214Z Installing workload manifest microsoft.net.workload.emscripten.net9 version 10.0.114...
+2026-10-30T12:43:08.7600259Z Installing workload manifest microsoft.net.sdk.android version 36.1.118...
+2026-10-30T12:43:08.7965050Z Installing workload manifest microsoft.net.sdk.ios version 27.1.10018...
+2026-10-30T12:43:08.8298612Z Installing workload manifest microsoft.net.sdk.maccatalyst version 27.0.10742...
+2026-10-30T12:43:08.8610447Z Installing workload manifest microsoft.net.sdk.macos version 27.0.10742...
+2026-10-30T12:43:08.9049161Z Installing workload manifest microsoft.net.sdk.maui version 10.0.110...
+2026-10-30T12:43:08.9387921Z Installing workload manifest microsoft.net.sdk.tvos version 27.0.10742...
+2026-10-30T12:43:08.9720467Z Installing workload manifest microsoft.net.workload.mono.toolchain.current version 10.0.114...
+2026-10-30T12:43:09.0084466Z Installing workload manifest microsoft.net.workload.mono.toolchain.net6 version 10.0.114...
+2026-10-30T12:43:09.0482901Z Installing workload manifest microsoft.net.workload.mono.toolchain.net7 version 10.0.114...
+2026-10-30T12:43:09.0910713Z Installing workload manifest microsoft.net.workload.mono.toolchain.net8 version 10.0.114...
+2026-10-30T12:43:09.1238374Z Installing workload manifest microsoft.net.workload.mono.toolchain.net9 version 10.0.114...
+2026-10-30T12:43:10.6262347Z Installing pack Microsoft.Android.Runtime.CoreCLR.36.android-x64 version 36.1.118...
+2026-10-30T12:43:10.7381938Z Writing workload pack installation record for Microsoft.Android.Runtime.CoreCLR.36.android-x64 version 36.1.118...
+2026-10-30T12:43:11.1007208Z Installing pack Microsoft.Android.Runtime.NativeAOT.36.android-arm64 version 36.1.118...
+2026-10-30T12:43:11.1191603Z Writing workload pack installation record for Microsoft.Android.Runtime.NativeAOT.36.android-arm64 version 36.1.118...
+2026-10-30T12:43:11.1571834Z Installing pack Microsoft.Android.Runtime.NativeAOT.36.android-x64 version 36.1.118...
+2026-10-30T12:43:11.1691011Z Writing workload pack installation record for Microsoft.Android.Runtime.NativeAOT.36.android-x64 version 36.1.118...
+2026-10-30T12:43:11.2041391Z Installing pack Microsoft.Android.Templates version 36.1.118...
+2026-10-30T12:43:11.2074864Z Writing workload pack installation record for Microsoft.Android.Templates version 36.1.118...
+2026-10-30T12:43:11.2117118Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-arm version 9.0.22...
+2026-10-30T12:43:11.4801197Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm version 9.0.22...
+2026-10-30T12:43:11.4803484Z Installing pack Microsoft.Android.Sdk.Linux version 36.1.118...
+2026-10-30T12:43:12.7947171Z Writing workload pack installation record for Microsoft.Android.Sdk.Linux version 36.1.118...
+2026-10-30T12:43:12.7949698Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 9.0.22...
+2026-10-30T12:43:13.0366999Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 9.0.22...
+2026-10-30T12:43:13.0390636Z Installing pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 9.0.22...
+2026-10-30T12:43:13.0401174Z Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 9.0.22...
+2026-10-30T12:43:13.0402660Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-x64 version 10.0.14...
+2026-10-30T12:43:13.2829942Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x64 version 10.0.14...
+2026-10-30T12:43:13.2831746Z Installing pack Microsoft.Android.Sdk.Linux version 35.0.105...
+2026-10-30T12:43:14.0987814Z Writing workload pack installation record for Microsoft.Android.Sdk.Linux version 35.0.105...
+2026-10-30T12:43:14.0989962Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-x64 version 9.0.22...
+2026-10-30T12:43:14.3386941Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x64 version 9.0.22...
+2026-10-30T12:43:14.3388163Z Installing pack Microsoft.NET.Runtime.MonoTargets.Sdk version 9.0.22...
+2026-10-30T12:43:14.3461118Z Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 9.0.22...
+2026-10-30T12:43:14.3462978Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-x86 version 10.0.14...
+2026-10-30T12:43:14.5732413Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x86 version 10.0.14...
+2026-10-30T12:43:14.5733996Z Installing pack Microsoft.Android.Ref.36 version 36.1.118...
+2026-10-30T12:43:14.7375079Z Writing workload pack installation record for Microsoft.Android.Ref.36 version 36.1.118...
+2026-10-30T12:43:14.7376895Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-x86 version 9.0.22...
+2026-10-30T12:43:14.9673362Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x86 version 9.0.22...
+2026-10-30T12:43:14.9693438Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 9.0.22...
+2026-10-30T12:43:15.4158494Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 9.0.22...
+2026-10-30T12:43:15.4161096Z Installing pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.14...
+2026-10-30T12:43:15.4184529Z Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.14...
+2026-10-30T12:43:15.4195860Z Installing pack Microsoft.Android.Runtime.36.android version 36.1.118...
+2026-10-30T12:43:15.4993704Z Writing workload pack installation record for Microsoft.Android.Runtime.36.android version 36.1.118...
+2026-10-30T12:43:15.4999909Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 9.0.22...
+2026-10-30T12:43:15.9543380Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 9.0.22...
+2026-10-30T12:43:16.0067750Z Installing pack Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.14...
+2026-10-30T12:43:16.0110837Z Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.14...
+2026-10-30T12:43:16.0568471Z Installing pack Microsoft.Android.Runtime.Mono.36.android-arm version 36.1.118...
+2026-10-30T12:43:16.0777400Z Writing workload pack installation record for Microsoft.Android.Runtime.Mono.36.android-arm version 36.1.118...
+2026-10-30T12:43:16.1541540Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 9.0.22...
+2026-10-30T12:43:16.5943166Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 9.0.22...
+2026-10-30T12:43:16.6067446Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 10.0.14...
+2026-10-30T12:43:17.0520520Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 10.0.14...
+2026-10-30T12:43:17.1491001Z Installing pack Microsoft.Android.Runtime.Mono.36.android-arm64 version 36.1.118...
+2026-10-30T12:43:17.1746719Z Writing workload pack installation record for Microsoft.Android.Runtime.Mono.36.android-arm64 version 36.1.118...
+2026-10-30T12:43:17.2053023Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 9.0.22...
+2026-10-30T12:43:17.6459144Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 9.0.22...
+2026-10-30T12:43:17.6971031Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 10.0.14...
+2026-10-30T12:43:18.1401709Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 10.0.14...
+2026-10-30T12:43:18.1402635Z Installing pack Microsoft.Android.Runtime.Mono.36.android-x86 version 36.1.118...
+2026-10-30T12:43:18.1616820Z Writing workload pack installation record for Microsoft.Android.Runtime.Mono.36.android-x86 version 36.1.118...
+2026-10-30T12:43:18.1618364Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-arm version 10.0.14...
+2026-10-30T12:43:18.3730919Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm version 10.0.14...
+2026-10-30T12:43:18.3732328Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 10.0.14...
+2026-10-30T12:43:18.8164839Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 10.0.14...
+2026-10-30T12:43:18.8166026Z Installing pack Microsoft.Android.Runtime.Mono.36.android-x64 version 36.1.118...
+2026-10-30T12:43:18.8408563Z Writing workload pack installation record for Microsoft.Android.Runtime.Mono.36.android-x64 version 36.1.118...
+2026-10-30T12:43:18.8411151Z Installing pack Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 10.0.14...
+2026-10-30T12:43:19.0674977Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 10.0.14...
+2026-10-30T12:43:19.0677441Z Installing pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 10.0.14...
+2026-10-30T12:43:19.5050396Z Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 10.0.14...
+2026-10-30T12:43:19.5051829Z Installing pack Microsoft.Android.Runtime.CoreCLR.36.android-arm64 version 36.1.118...
+2026-10-30T12:43:19.5960188Z Writing workload pack installation record for Microsoft.Android.Runtime.CoreCLR.36.android-arm64 version 36.1.118...
+2026-10-30T12:43:19.6413741Z Garbage collecting for SDK feature band(s) 8.0.100 8.0.200 8.0.300 8.0.400 9.0.100 9.0.200 9.0.300 10.0.100 10.0.200 10.0.300 10.0.400...
+2026-10-30T12:43:19.6540809Z 
+2026-10-30T12:43:19.6541758Z Successfully installed workload(s) android.
+2026-10-30T12:43:19.6542247Z 
+2026-10-30T12:43:19.8158608Z ##[group]Run if [[ -n "***" ]]; then
+2026-10-30T12:43:19.8190379Z [36;1mif [[ -n "***" ]]; then[0m
+2026-10-30T12:43:19.8213118Z [36;1m  echo "***" | base64 -d > "$GITHUB_WORKSPACE/android.keystore"[0m
+2026-10-30T12:43:19.8213766Z [36;1m  echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"[0m
+2026-10-30T12:43:19.8214198Z [36;1m  echo "available=true" >> "$GITHUB_OUTPUT"[0m
+2026-10-30T12:43:19.8214499Z [36;1melse[0m
+2026-10-30T12:43:19.8214831Z [36;1m  keytool -genkey -v -keystore "$GITHUB_WORKSPACE/android.keystore" \[0m
+2026-10-30T12:43:19.8215309Z [36;1m    -alias myalias -keyalg RSA -keysize 2048 -validity 1 \[0m
+2026-10-30T12:43:19.8215726Z [36;1m    -storepass dummypassword -keypass dummypassword \[0m
+2026-10-30T12:43:19.8216157Z [36;1m    -dname "CN=Dummy, OU=Dummy, O=Dummy, L=Dummy, ST=Dummy, C=US" \[0m
+2026-10-30T12:43:19.8217275Z [36;1m    2>/dev/null || true[0m
+2026-10-30T12:43:19.8217929Z [36;1m  echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"[0m
+2026-10-30T12:43:19.8218653Z [36;1m  echo "available=false" >> "$GITHUB_OUTPUT"[0m
+2026-10-30T12:43:19.8219147Z [36;1mfi[0m
+2026-10-30T12:43:19.8246310Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:43:19.8246655Z env:
+2026-10-30T12:43:19.8246847Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:19.8247086Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:19.8247380Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:19.8247667Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:19.8248025Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:19.8248645Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:19.8249039Z   MAVEN_ARGS: -ntp
+2026-10-30T12:43:19.8249254Z ##[endgroup]
+2026-10-30T12:43:20.0444873Z ##[group]Run dotnet restore
+2026-10-30T12:43:20.0445416Z [36;1mdotnet restore[0m
+2026-10-30T12:43:20.0471436Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:43:20.0471829Z env:
+2026-10-30T12:43:20.0472140Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:20.0472524Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:20.0472998Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:20.0473466Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:20.0474063Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:20.0474907Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:20.0475572Z   MAVEN_ARGS: -ntp
+2026-10-30T12:43:20.0475908Z ##[endgroup]
+2026-10-30T12:43:22.0183584Z   Determining projects to restore...
+2026-10-30T12:43:25.5131418Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/MyAdventure.Core.csproj (in 1.87 sec).
+2026-10-30T12:43:26.1567813Z   Restored /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj (in 2.94 sec).
+2026-10-30T12:43:26.2536734Z   Restored /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj (in 2.94 sec).
+2026-10-30T12:43:26.7551412Z   Restored /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj (in 488 ms).
+2026-10-30T12:43:26.9921397Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj (in 13 ms).
+2026-10-30T12:43:27.5611334Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj (in 2.02 sec).
+2026-10-30T12:43:29.6996472Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Android/MyAdventure.Android.csproj (in 6.87 sec).
+2026-10-30T12:43:29.7971224Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj (in 3.63 sec).
+2026-10-30T12:43:29.8678303Z ##[group]Run SIGN_PASS="***"
+2026-10-30T12:43:29.8678861Z [36;1mSIGN_PASS="***"[0m
+2026-10-30T12:43:29.8679123Z [36;1mif [[ "true" != "true" ]]; then[0m
+2026-10-30T12:43:29.8679427Z [36;1m  SIGN_PASS="dummypassword"[0m
+2026-10-30T12:43:29.8680008Z [36;1mfi[0m
+2026-10-30T12:43:29.8680289Z [36;1mdotnet build --configuration Release --no-restore \[0m
+2026-10-30T12:43:29.8680641Z [36;1m  -p:BuildNumber=63 \[0m
+2026-10-30T12:43:29.8680942Z [36;1m  -p:AndroidKeyStore=true \[0m
+2026-10-30T12:43:29.8681449Z [36;1m  -p:AndroidSigningKeyStore="/home/runner/work/MyAdventure/MyAdventure/android.keystore" \[0m
+2026-10-30T12:43:29.8682013Z [36;1m  -p:AndroidSigningStorePass="$SIGN_PASS" \[0m
+2026-10-30T12:43:29.8682372Z [36;1m  -p:AndroidSigningKeyPass="$SIGN_PASS" \[0m
+2026-10-30T12:43:29.8682724Z [36;1m  -p:AndroidSigningKeyAlias=myalias[0m
+2026-10-30T12:43:29.8703110Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:43:29.8703360Z env:
+2026-10-30T12:43:29.8703592Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:29.8704001Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:29.8704303Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:29.8704596Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:29.8704969Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:29.8705482Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:29.8705879Z   MAVEN_ARGS: -ntp
+2026-10-30T12:43:29.8706091Z ##[endgroup]
+2026-10-30T12:43:38.1429921Z   MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net10.0/MyAdventure.Core.dll
+2026-10-30T12:43:39.4215142Z   MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net10.0/MyAdventure.Infrastructure.dll
+2026-10-30T12:43:41.7655817Z   MyAdventure.Core.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll
+2026-10-30T12:43:42.0978436Z   MyAdventure.Shared -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/bin/Release/net10.0/MyAdventure.Shared.dll
+2026-10-30T12:43:44.0699489Z   MyAdventure.UI.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll
+2026-10-30T12:43:46.1803008Z   MyAdventure.Integration.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll
+2026-10-30T12:43:46.2092463Z   MyAdventure.Desktop -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/bin/Release/net10.0/MyAdventure.Desktop.dll
+2026-10-30T12:43:48.7946440Z   MyAdventure.Android -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Android/bin/Release/net10.0-android/MyAdventure.Android.dll
+2026-10-30T12:43:49.1657282Z   MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net10.0/MyAdventure.Core.dll
+2026-10-30T12:43:49.2361947Z   MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net10.0/MyAdventure.Infrastructure.dll
+2026-10-30T12:43:49.3131820Z   MyAdventure.Shared -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/bin/Release/net10.0/MyAdventure.Shared.dll
+2026-10-30T12:43:50.2201522Z   Optimizing assemblies for size may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink
+2026-10-30T12:43:50.2230690Z   Optimizing assemblies for size. This process might take a while.
+2026-10-30T12:43:50.2341008Z   Optimizing assemblies for size may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink
+2026-10-30T12:43:50.2381817Z   Optimizing assemblies for size. This process might take a while.
+2026-10-30T12:44:20.3360246Z   [1/126] _Microsoft.Android.Resource.Designer.dll -> _Microsoft.Android.Resource.Designer.dll.so
+2026-10-30T12:44:20.3501659Z   [1/126] _Microsoft.Android.Resource.Designer.dll -> _Microsoft.Android.Resource.Designer.dll.so
+2026-10-30T12:44:20.3565970Z   [2/126] MyAdventure.Shared.dll -> MyAdventure.Shared.dll.so
+2026-10-30T12:44:20.3852135Z   [3/126] MyAdventure.Core.dll -> MyAdventure.Core.dll.so
+2026-10-30T12:44:20.4302171Z   [4/126] MyAdventure.Infrastructure.dll -> MyAdventure.Infrastructure.dll.so
+2026-10-30T12:44:20.4913252Z   [2/126] MyAdventure.Core.dll -> MyAdventure.Core.dll.so
+2026-10-30T12:44:20.5832020Z   [5/126] Avalonia.DesignerSupport.dll -> Avalonia.DesignerSupport.dll.so
+2026-10-30T12:44:20.6922748Z   [3/126] MyAdventure.Infrastructure.dll -> MyAdventure.Infrastructure.dll.so
+2026-10-30T12:44:20.7725522Z   [6/126] Avalonia.Dialogs.dll -> Avalonia.Dialogs.dll.so
+2026-10-30T12:44:20.8671959Z   [4/126] MyAdventure.Shared.dll -> MyAdventure.Shared.dll.so
+2026-10-30T12:44:20.9088296Z   [7/126] MyAdventure.Android.dll -> MyAdventure.Android.dll.so
+2026-10-30T12:44:20.9722019Z   [8/126] Avalonia.Controls.dll -> Avalonia.Controls.dll.so
+2026-10-30T12:44:20.9992009Z   [9/126] Avalonia.Markup.Xaml.dll -> Avalonia.Markup.Xaml.dll.so
+2026-10-30T12:44:21.0441067Z   [10/126] Avalonia.Markup.dll -> Avalonia.Markup.dll.so
+2026-10-30T12:44:21.1071665Z   [11/126] Avalonia.Metal.dll -> Avalonia.Metal.dll.so
+2026-10-30T12:44:21.1591886Z   [12/126] Avalonia.OpenGL.dll -> Avalonia.OpenGL.dll.so
+2026-10-30T12:44:21.1911154Z   [13/126] Avalonia.Vulkan.dll -> Avalonia.Vulkan.dll.so
+2026-10-30T12:44:21.2987502Z   [14/126] Avalonia.dll -> Avalonia.dll.so
+2026-10-30T12:44:21.3561168Z   [15/126] Avalonia.Fonts.Inter.dll -> Avalonia.Fonts.Inter.dll.so
+2026-10-30T12:44:21.3873623Z   [5/126] MyAdventure.Android.dll -> MyAdventure.Android.dll.so
+2026-10-30T12:44:21.4904309Z   [16/126] Avalonia.HarfBuzz.dll -> Avalonia.HarfBuzz.dll.so
+2026-10-30T12:44:21.4980716Z   [17/126] Avalonia.Remote.Protocol.dll -> Avalonia.Remote.Protocol.dll.so
+2026-10-30T12:44:21.5237218Z   [18/126] Avalonia.Android.dll -> Avalonia.Android.dll.so
+2026-10-30T12:44:21.6403795Z   [19/126] Avalonia.Themes.Fluent.dll -> Avalonia.Themes.Fluent.dll.so
+2026-10-30T12:44:21.6454903Z   [20/126] Avalonia.Skia.dll -> Avalonia.Skia.dll.so
+2026-10-30T12:44:21.6577575Z   [21/126] Avalonia.Base.dll -> Avalonia.Base.dll.so
+2026-10-30T12:44:21.6624574Z   [22/126] CommunityToolkit.Mvvm.dll -> CommunityToolkit.Mvvm.dll.so
+2026-10-30T12:44:21.7959791Z   [23/126] HarfBuzzSharp.dll -> HarfBuzzSharp.dll.so
+2026-10-30T12:44:21.8445218Z   [24/126] Microsoft.EntityFrameworkCore.Abstractions.dll -> Microsoft.EntityFrameworkCore.Abstractions.dll.so
+2026-10-30T12:44:22.3200773Z   [25/126] Microsoft.Data.Sqlite.dll -> Microsoft.Data.Sqlite.dll.so
+2026-10-30T12:44:22.4267950Z   [26/126] Microsoft.EntityFrameworkCore.Sqlite.dll -> Microsoft.EntityFrameworkCore.Sqlite.dll.so
+2026-10-30T12:44:22.4762177Z   [27/126] Microsoft.Extensions.Caching.Abstractions.dll -> Microsoft.Extensions.Caching.Abstractions.dll.so
+2026-10-30T12:44:22.5556467Z   [28/126] Microsoft.Extensions.Caching.Memory.dll -> Microsoft.Extensions.Caching.Memory.dll.so
+2026-10-30T12:44:22.5742974Z   [6/126] Avalonia.Base.dll -> Avalonia.Base.dll.so
+2026-10-30T12:44:22.6113069Z   [29/126] Microsoft.Extensions.Configuration.dll -> Microsoft.Extensions.Configuration.dll.so
+2026-10-30T12:44:22.6741314Z   [30/126] Microsoft.Extensions.Configuration.Abstractions.dll -> Microsoft.Extensions.Configuration.Abstractions.dll.so
+2026-10-30T12:44:22.7501413Z   [31/126] Microsoft.Extensions.Configuration.Binder.dll -> Microsoft.Extensions.Configuration.Binder.dll.so
+2026-10-30T12:44:22.8231560Z   [32/126] Microsoft.Extensions.Configuration.EnvironmentVariables.dll -> Microsoft.Extensions.Configuration.EnvironmentVariables.dll.so
+2026-10-30T12:44:22.9205108Z   [33/126] Microsoft.Extensions.DependencyInjection.dll -> Microsoft.Extensions.DependencyInjection.dll.so
+2026-10-30T12:44:22.9520905Z   [34/126] Microsoft.EntityFrameworkCore.Relational.dll -> Microsoft.EntityFrameworkCore.Relational.dll.so
+2026-10-30T12:44:22.9822624Z   [35/126] Microsoft.Extensions.DependencyInjection.Abstractions.dll -> Microsoft.Extensions.DependencyInjection.Abstractions.dll.so
+2026-10-30T12:44:23.0478845Z   [36/126] Microsoft.Extensions.DependencyModel.dll -> Microsoft.Extensions.DependencyModel.dll.so
+2026-10-30T12:44:23.0531584Z   [7/126] Avalonia.Controls.dll -> Avalonia.Controls.dll.so
+2026-10-30T12:44:23.0861607Z   [37/126] Microsoft.Extensions.Diagnostics.Abstractions.dll -> Microsoft.Extensions.Diagnostics.Abstractions.dll.so
+2026-10-30T12:44:23.1031310Z   [38/126] Microsoft.Extensions.Hosting.Abstractions.dll -> Microsoft.Extensions.Hosting.Abstractions.dll.so
+2026-10-30T12:44:23.1912836Z   [8/126] Avalonia.DesignerSupport.dll -> Avalonia.DesignerSupport.dll.so
+2026-10-30T12:44:23.2091487Z   [39/126] Microsoft.Extensions.Logging.dll -> Microsoft.Extensions.Logging.dll.so
+2026-10-30T12:44:23.2451076Z   [40/126] Microsoft.Extensions.Logging.Configuration.dll -> Microsoft.Extensions.Logging.Configuration.dll.so
+2026-10-30T12:44:23.3018429Z   [41/126] Microsoft.Extensions.Logging.Abstractions.dll -> Microsoft.Extensions.Logging.Abstractions.dll.so
+2026-10-30T12:44:23.3282367Z   [9/126] Avalonia.Dialogs.dll -> Avalonia.Dialogs.dll.so
+2026-10-30T12:44:23.3437347Z   [42/126] Microsoft.Extensions.Options.dll -> Microsoft.Extensions.Options.dll.so
+2026-10-30T12:44:23.3792198Z   [43/126] Microsoft.Extensions.Options.ConfigurationExtensions.dll -> Microsoft.Extensions.Options.ConfigurationExtensions.dll.so
+2026-10-30T12:44:23.4540536Z   [44/126] Microsoft.Extensions.Primitives.dll -> Microsoft.Extensions.Primitives.dll.so
+2026-10-30T12:44:23.4720894Z   [10/126] Avalonia.Markup.Xaml.dll -> Avalonia.Markup.Xaml.dll.so
+2026-10-30T12:44:23.5500824Z   [45/126] OpenTelemetry.Api.dll -> OpenTelemetry.Api.dll.so
+2026-10-30T12:44:23.5631115Z   [46/126] OpenTelemetry.Api.ProviderBuilderExtensions.dll -> OpenTelemetry.Api.ProviderBuilderExtensions.dll.so
+2026-10-30T12:44:23.5983659Z   [11/126] Avalonia.Markup.dll -> Avalonia.Markup.dll.so
+2026-10-30T12:44:23.6698197Z   [47/126] OpenTelemetry.dll -> OpenTelemetry.dll.so
+2026-10-30T12:44:23.7271557Z   [12/126] Avalonia.Metal.dll -> Avalonia.Metal.dll.so
+2026-10-30T12:44:23.7731299Z   [48/126] OpenTelemetry.Exporter.Console.dll -> OpenTelemetry.Exporter.Console.dll.so
+2026-10-30T12:44:23.7812154Z   [49/126] OpenTelemetry.Exporter.OpenTelemetryProtocol.dll -> OpenTelemetry.Exporter.OpenTelemetryProtocol.dll.so
+2026-10-30T12:44:23.7835529Z   [50/126] OpenTelemetry.Extensions.Hosting.dll -> OpenTelemetry.Extensions.Hosting.dll.so
+2026-10-30T12:44:23.8524364Z   [13/126] Avalonia.OpenGL.dll -> Avalonia.OpenGL.dll.so
+2026-10-30T12:44:23.8970939Z   [51/126] SQLitePCLRaw.batteries_v2.dll -> SQLitePCLRaw.batteries_v2.dll.so
+2026-10-30T12:44:23.9060865Z   [52/126] OpenTelemetry.Instrumentation.Runtime.dll -> OpenTelemetry.Instrumentation.Runtime.dll.so
+2026-10-30T12:44:23.9341506Z   [53/126] SkiaSharp.dll -> SkiaSharp.dll.so
+2026-10-30T12:44:24.0003206Z   [14/126] Avalonia.Vulkan.dll -> Avalonia.Vulkan.dll.so
+2026-10-30T12:44:24.0160863Z   [54/126] SQLitePCLRaw.core.dll -> SQLitePCLRaw.core.dll.so
+2026-10-30T12:44:24.0451152Z   [55/126] SQLitePCLRaw.lib.e_sqlite3.android.dll -> SQLitePCLRaw.lib.e_sqlite3.android.dll.so
+2026-10-30T12:44:24.0672157Z   [56/126] SQLitePCLRaw.provider.e_sqlite3.dll -> SQLitePCLRaw.provider.e_sqlite3.dll.so
+2026-10-30T12:44:24.1053608Z   [15/126] Avalonia.dll -> Avalonia.dll.so
+2026-10-30T12:44:24.1511065Z   [57/126] Xamarin.AndroidX.Activity.dll -> Xamarin.AndroidX.Activity.dll.so
+2026-10-30T12:44:24.1931011Z   [58/126] Xamarin.AndroidX.AppCompat.dll -> Xamarin.AndroidX.AppCompat.dll.so
+2026-10-30T12:44:24.2256970Z   [59/126] Xamarin.AndroidX.Core.dll -> Xamarin.AndroidX.Core.dll.so
+2026-10-30T12:44:24.2901102Z   [60/126] Xamarin.AndroidX.CustomView.dll -> Xamarin.AndroidX.CustomView.dll.so
+2026-10-30T12:44:24.3327313Z   [61/126] Xamarin.AndroidX.DrawerLayout.dll -> Xamarin.AndroidX.DrawerLayout.dll.so
+2026-10-30T12:44:24.3484371Z   [62/126] Xamarin.AndroidX.Fragment.dll -> Xamarin.AndroidX.Fragment.dll.so
+2026-10-30T12:44:24.3631143Z   [16/126] Avalonia.Android.dll -> Avalonia.Android.dll.so
+2026-10-30T12:44:24.4045185Z   [63/126] Xamarin.AndroidX.Lifecycle.Common.Jvm.dll -> Xamarin.AndroidX.Lifecycle.Common.Jvm.dll.so
+2026-10-30T12:44:24.4499449Z   [64/126] Xamarin.AndroidX.Lifecycle.LiveData.Core.dll -> Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so
+2026-10-30T12:44:24.4772773Z   [65/126] Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll -> Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll.so
+2026-10-30T12:44:24.5074694Z   [17/126] Avalonia.Fonts.Inter.dll -> Avalonia.Fonts.Inter.dll.so
+2026-10-30T12:44:24.5564275Z   [66/126] Xamarin.AndroidX.Loader.dll -> Xamarin.AndroidX.Loader.dll.so
+2026-10-30T12:44:24.5823879Z   [67/126] Xamarin.AndroidX.NavigationEvent.Android.dll -> Xamarin.AndroidX.NavigationEvent.Android.dll.so
+2026-10-30T12:44:24.6162721Z   [68/126] Xamarin.AndroidX.SavedState.SavedState.Android.dll -> Xamarin.AndroidX.SavedState.SavedState.Android.dll.so
+2026-10-30T12:44:24.6268137Z   [18/126] Avalonia.HarfBuzz.dll -> Avalonia.HarfBuzz.dll.so
+2026-10-30T12:44:24.6946014Z   [69/126] Xamarin.AndroidX.Window.dll -> Xamarin.AndroidX.Window.dll.so
+2026-10-30T12:44:24.7137262Z   [70/126] Xamarin.Kotlin.StdLib.dll -> Xamarin.Kotlin.StdLib.dll.so
+2026-10-30T12:44:24.7229310Z   [71/126] Xamarin.KotlinX.Coroutines.Core.Jvm.dll -> Xamarin.KotlinX.Coroutines.Core.Jvm.dll.so
+2026-10-30T12:44:24.7706286Z   [72/126] Microsoft.EntityFrameworkCore.dll -> Microsoft.EntityFrameworkCore.dll.so
+2026-10-30T12:44:24.7911049Z   [19/126] Avalonia.Remote.Protocol.dll -> Avalonia.Remote.Protocol.dll.so
+2026-10-30T12:44:24.8379006Z   [73/126] System.Collections.NonGeneric.dll -> System.Collections.NonGeneric.dll.so
+2026-10-30T12:44:24.8681721Z   [74/126] System.Collections.Specialized.dll -> System.Collections.Specialized.dll.so
+2026-10-30T12:44:24.9390889Z   [20/126] Avalonia.Skia.dll -> Avalonia.Skia.dll.so
+2026-10-30T12:44:24.9705370Z   [75/126] System.Collections.Concurrent.dll -> System.Collections.Concurrent.dll.so
+2026-10-30T12:44:24.9730994Z   [76/126] System.ComponentModel.Annotations.dll -> System.ComponentModel.Annotations.dll.so
+2026-10-30T12:44:25.0765805Z   [21/126] Avalonia.Themes.Fluent.dll -> Avalonia.Themes.Fluent.dll.so
+2026-10-30T12:44:25.0846593Z   [77/126] System.ComponentModel.Primitives.dll -> System.ComponentModel.Primitives.dll.so
+2026-10-30T12:44:25.1263865Z   [78/126] System.Collections.Immutable.dll -> System.Collections.Immutable.dll.so
+2026-10-30T12:44:25.1377406Z   [79/126] System.ComponentModel.TypeConverter.dll -> System.ComponentModel.TypeConverter.dll.so
+2026-10-30T12:44:25.1943790Z   [80/126] System.ComponentModel.dll -> System.ComponentModel.dll.so
+2026-10-30T12:44:25.2066097Z   [22/126] CommunityToolkit.Mvvm.dll -> CommunityToolkit.Mvvm.dll.so
+2026-10-30T12:44:25.2434534Z   [81/126] System.Collections.dll -> System.Collections.dll.so
+2026-10-30T12:44:25.2474571Z   [82/126] System.Console.dll -> System.Console.dll.so
+2026-10-30T12:44:25.3385335Z   [83/126] System.Diagnostics.DiagnosticSource.dll -> System.Diagnostics.DiagnosticSource.dll.so
+2026-10-30T12:44:25.3447080Z   [84/126] System.Diagnostics.Process.dll -> System.Diagnostics.Process.dll.so
+2026-10-30T12:44:25.3620711Z   [23/126] HarfBuzzSharp.dll -> HarfBuzzSharp.dll.so
+2026-10-30T12:44:25.3651239Z   [85/126] System.Diagnostics.StackTrace.dll -> System.Diagnostics.StackTrace.dll.so
+2026-10-30T12:44:25.4232491Z   [86/126] System.Data.Common.dll -> System.Data.Common.dll.so
+2026-10-30T12:44:25.4563295Z   [87/126] System.Diagnostics.Tracing.dll -> System.Diagnostics.Tracing.dll.so
+2026-10-30T12:44:25.4588258Z   [88/126] System.Diagnostics.TraceSource.dll -> System.Diagnostics.TraceSource.dll.so
+2026-10-30T12:44:25.4749134Z   [89/126] System.Drawing.Primitives.dll -> System.Drawing.Primitives.dll.so
+2026-10-30T12:44:25.5304836Z   [90/126] System.Drawing.dll -> System.Drawing.dll.so
+2026-10-30T12:44:25.5662149Z   [91/126] System.IO.Compression.Brotli.dll -> System.IO.Compression.Brotli.dll.so
+2026-10-30T12:44:25.5922058Z   [92/126] System.IO.Compression.dll -> System.IO.Compression.dll.so
+2026-10-30T12:44:25.6071368Z   [93/126] System.Formats.Asn1.dll -> System.Formats.Asn1.dll.so
+2026-10-30T12:44:25.6562634Z   [94/126] System.IO.MemoryMappedFiles.dll -> System.IO.MemoryMappedFiles.dll.so
+2026-10-30T12:44:25.7113030Z   [95/126] System.IO.Pipelines.dll -> System.IO.Pipelines.dll.so
+2026-10-30T12:44:25.8357050Z   [24/126] Microsoft.Data.Sqlite.dll -> Microsoft.Data.Sqlite.dll.so
+2026-10-30T12:44:25.9341059Z   [96/126] System.Memory.dll -> System.Memory.dll.so
+2026-10-30T12:44:25.9907520Z   [97/126] System.Linq.Queryable.dll -> System.Linq.Queryable.dll.so
+2026-10-30T12:44:26.0821287Z   [98/126] System.Linq.Expressions.dll -> System.Linq.Expressions.dll.so
+2026-10-30T12:44:26.1811191Z   [99/126] System.Net.NetworkInformation.dll -> System.Net.NetworkInformation.dll.so
+2026-10-30T12:44:26.1940676Z   [100/126] System.Net.NameResolution.dll -> System.Net.NameResolution.dll.so
+2026-10-30T12:44:26.3158528Z   [101/126] System.Net.Requests.dll -> System.Net.Requests.dll.so
+2026-10-30T12:44:26.3365727Z   [102/126] System.Net.Http.dll -> System.Net.Http.dll.so
+2026-10-30T12:44:26.3529230Z   [103/126] System.Net.Primitives.dll -> System.Net.Primitives.dll.so
+2026-10-30T12:44:26.4380749Z   [104/126] System.Net.Sockets.dll -> System.Net.Sockets.dll.so
+2026-10-30T12:44:26.5081749Z   [105/126] System.ObjectModel.dll -> System.ObjectModel.dll.so
+2026-10-30T12:44:26.5881854Z   [106/126] System.Private.Uri.dll -> System.Private.Uri.dll.so
+2026-10-30T12:44:26.6192204Z   [107/126] System.Runtime.InteropServices.RuntimeInformation.dll -> System.Runtime.InteropServices.RuntimeInformation.dll.so
+2026-10-30T12:44:26.6540997Z   [108/126] System.Linq.dll -> System.Linq.dll.so
+2026-10-30T12:44:26.6891657Z   [109/126] System.Private.Xml.dll -> System.Private.Xml.dll.so
+2026-10-30T12:44:26.7171061Z   [110/126] System.Runtime.InteropServices.dll -> System.Runtime.InteropServices.dll.so
+2026-10-30T12:44:26.7763807Z   [111/126] System.Runtime.Serialization.Formatters.dll -> System.Runtime.Serialization.Formatters.dll.so
+2026-10-30T12:44:26.7861021Z   [112/126] System.Runtime.Numerics.dll -> System.Runtime.Numerics.dll.so
+2026-10-30T12:44:26.8110800Z   [113/126] System.Runtime.dll -> System.Runtime.dll.so
+2026-10-30T12:44:26.9067209Z   [114/126] System.Text.Encodings.Web.dll -> System.Text.Encodings.Web.dll.so
+2026-10-30T12:44:26.9230374Z   [115/126] System.Security.Cryptography.dll -> System.Security.Cryptography.dll.so
+2026-10-30T12:44:27.0307465Z   [116/126] System.Threading.dll -> System.Threading.dll.so
+2026-10-30T12:44:27.0540737Z   [117/126] System.Threading.Thread.dll -> System.Threading.Thread.dll.so
+2026-10-30T12:44:27.1781112Z   [118/126] System.Transactions.Local.dll -> System.Transactions.Local.dll.so
+2026-10-30T12:44:27.1831668Z   [119/126] System.dll -> System.dll.so
+2026-10-30T12:44:27.2066831Z   [120/126] System.Text.RegularExpressions.dll -> System.Text.RegularExpressions.dll.so
+2026-10-30T12:44:27.2860848Z   [121/126] System.Text.Json.dll -> System.Text.Json.dll.so
+2026-10-30T12:44:27.3253474Z   [122/126] Mono.Android.Runtime.dll -> Mono.Android.Runtime.dll.so
+2026-10-30T12:44:27.3270604Z   [123/126] netstandard.dll -> netstandard.dll.so
+2026-10-30T12:44:27.5640825Z   [124/126] Java.Interop.dll -> Java.Interop.dll.so
+2026-10-30T12:44:27.9301218Z   [125/126] Mono.Android.dll -> Mono.Android.dll.so
+2026-10-30T12:44:28.3374342Z   [25/126] Microsoft.EntityFrameworkCore.dll -> Microsoft.EntityFrameworkCore.dll.so
+2026-10-30T12:44:28.4064710Z   [26/126] Microsoft.EntityFrameworkCore.Abstractions.dll -> Microsoft.EntityFrameworkCore.Abstractions.dll.so
+2026-10-30T12:44:28.9946981Z   [27/126] Microsoft.EntityFrameworkCore.Relational.dll -> Microsoft.EntityFrameworkCore.Relational.dll.so
+2026-10-30T12:44:29.1772136Z   [28/126] Microsoft.EntityFrameworkCore.Sqlite.dll -> Microsoft.EntityFrameworkCore.Sqlite.dll.so
+2026-10-30T12:44:29.2408250Z   [29/126] Microsoft.Extensions.Caching.Abstractions.dll -> Microsoft.Extensions.Caching.Abstractions.dll.so
+2026-10-30T12:44:29.3071943Z   [30/126] Microsoft.Extensions.Caching.Memory.dll -> Microsoft.Extensions.Caching.Memory.dll.so
+2026-10-30T12:44:29.3703985Z   [31/126] Microsoft.Extensions.Configuration.dll -> Microsoft.Extensions.Configuration.dll.so
+2026-10-30T12:44:29.4380317Z   [32/126] Microsoft.Extensions.Configuration.Abstractions.dll -> Microsoft.Extensions.Configuration.Abstractions.dll.so
+2026-10-30T12:44:29.5040914Z   [33/126] Microsoft.Extensions.Configuration.Binder.dll -> Microsoft.Extensions.Configuration.Binder.dll.so
+2026-10-30T12:44:29.5043191Z   [126/126] System.Private.CoreLib.dll -> System.Private.CoreLib.dll.so
+2026-10-30T12:44:29.5647852Z   [34/126] Microsoft.Extensions.Configuration.EnvironmentVariables.dll -> Microsoft.Extensions.Configuration.EnvironmentVariables.dll.so
+2026-10-30T12:44:29.6317132Z   [35/126] Microsoft.Extensions.DependencyInjection.dll -> Microsoft.Extensions.DependencyInjection.dll.so
+2026-10-30T12:44:29.7007977Z   [36/126] Microsoft.Extensions.DependencyInjection.Abstractions.dll -> Microsoft.Extensions.DependencyInjection.Abstractions.dll.so
+2026-10-30T12:44:29.7704376Z   [37/126] Microsoft.Extensions.DependencyModel.dll -> Microsoft.Extensions.DependencyModel.dll.so
+2026-10-30T12:44:29.8322391Z   [38/126] Microsoft.Extensions.Diagnostics.Abstractions.dll -> Microsoft.Extensions.Diagnostics.Abstractions.dll.so
+2026-10-30T12:44:29.8918252Z   [39/126] Microsoft.Extensions.Hosting.Abstractions.dll -> Microsoft.Extensions.Hosting.Abstractions.dll.so
+2026-10-30T12:44:29.9597650Z   [40/126] Microsoft.Extensions.Logging.dll -> Microsoft.Extensions.Logging.dll.so
+2026-10-30T12:44:30.0640035Z   [41/126] Microsoft.Extensions.Logging.Abstractions.dll -> Microsoft.Extensions.Logging.Abstractions.dll.so
+2026-10-30T12:44:30.1265988Z   [42/126] Microsoft.Extensions.Logging.Configuration.dll -> Microsoft.Extensions.Logging.Configuration.dll.so
+2026-10-30T12:44:30.2105078Z   [43/126] Microsoft.Extensions.Options.dll -> Microsoft.Extensions.Options.dll.so
+2026-10-30T12:44:30.2713575Z   [44/126] Microsoft.Extensions.Options.ConfigurationExtensions.dll -> Microsoft.Extensions.Options.ConfigurationExtensions.dll.so
+2026-10-30T12:44:30.3336291Z   [45/126] Microsoft.Extensions.Primitives.dll -> Microsoft.Extensions.Primitives.dll.so
+2026-10-30T12:44:30.4914846Z   [46/126] OpenTelemetry.dll -> OpenTelemetry.dll.so
+2026-10-30T12:44:30.5607887Z   [47/126] OpenTelemetry.Api.dll -> OpenTelemetry.Api.dll.so
+2026-10-30T12:44:30.6202274Z   [48/126] OpenTelemetry.Api.ProviderBuilderExtensions.dll -> OpenTelemetry.Api.ProviderBuilderExtensions.dll.so
+2026-10-30T12:44:30.7190115Z   [49/126] OpenTelemetry.Exporter.Console.dll -> OpenTelemetry.Exporter.Console.dll.so
+2026-10-30T12:44:30.8236509Z   [50/126] OpenTelemetry.Exporter.OpenTelemetryProtocol.dll -> OpenTelemetry.Exporter.OpenTelemetryProtocol.dll.so
+2026-10-30T12:44:30.8827696Z   [51/126] OpenTelemetry.Extensions.Hosting.dll -> OpenTelemetry.Extensions.Hosting.dll.so
+2026-10-30T12:44:30.9430511Z   [52/126] OpenTelemetry.Instrumentation.Runtime.dll -> OpenTelemetry.Instrumentation.Runtime.dll.so
+2026-10-30T12:44:31.0266187Z   [53/126] SkiaSharp.dll -> SkiaSharp.dll.so
+2026-10-30T12:44:31.0853984Z   [54/126] SQLitePCLRaw.batteries_v2.dll -> SQLitePCLRaw.batteries_v2.dll.so
+2026-10-30T12:44:31.1493230Z   [55/126] SQLitePCLRaw.core.dll -> SQLitePCLRaw.core.dll.so
+2026-10-30T12:44:31.2088435Z   [56/126] SQLitePCLRaw.lib.e_sqlite3.android.dll -> SQLitePCLRaw.lib.e_sqlite3.android.dll.so
+2026-10-30T12:44:31.2744362Z   [57/126] SQLitePCLRaw.provider.e_sqlite3.dll -> SQLitePCLRaw.provider.e_sqlite3.dll.so
+2026-10-30T12:44:31.3401266Z   [58/126] Xamarin.AndroidX.Activity.dll -> Xamarin.AndroidX.Activity.dll.so
+2026-10-30T12:44:31.4181161Z   [59/126] Xamarin.AndroidX.AppCompat.dll -> Xamarin.AndroidX.AppCompat.dll.so
+2026-10-30T12:44:31.4962104Z   [60/126] Xamarin.AndroidX.Core.dll -> Xamarin.AndroidX.Core.dll.so
+2026-10-30T12:44:31.5601075Z   [61/126] Xamarin.AndroidX.CustomView.dll -> Xamarin.AndroidX.CustomView.dll.so
+2026-10-30T12:44:31.6258821Z   [62/126] Xamarin.AndroidX.DrawerLayout.dll -> Xamarin.AndroidX.DrawerLayout.dll.so
+2026-10-30T12:44:31.7003195Z   [63/126] Xamarin.AndroidX.Fragment.dll -> Xamarin.AndroidX.Fragment.dll.so
+2026-10-30T12:44:31.7642342Z   [64/126] Xamarin.AndroidX.Lifecycle.Common.Jvm.dll -> Xamarin.AndroidX.Lifecycle.Common.Jvm.dll.so
+2026-10-30T12:44:31.8277128Z   [65/126] Xamarin.AndroidX.Lifecycle.LiveData.Core.dll -> Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so
+2026-10-30T12:44:31.8904220Z   [66/126] Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll -> Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll.so
+2026-10-30T12:44:31.9526598Z   [67/126] Xamarin.AndroidX.Loader.dll -> Xamarin.AndroidX.Loader.dll.so
+2026-10-30T12:44:32.0191562Z   [68/126] Xamarin.AndroidX.NavigationEvent.Android.dll -> Xamarin.AndroidX.NavigationEvent.Android.dll.so
+2026-10-30T12:44:32.0813093Z   [69/126] Xamarin.AndroidX.SavedState.SavedState.Android.dll -> Xamarin.AndroidX.SavedState.SavedState.Android.dll.so
+2026-10-30T12:44:32.1441479Z   [70/126] Xamarin.AndroidX.Window.dll -> Xamarin.AndroidX.Window.dll.so
+2026-10-30T12:44:32.2095671Z   [71/126] Xamarin.Kotlin.StdLib.dll -> Xamarin.Kotlin.StdLib.dll.so
+2026-10-30T12:44:32.2713602Z   [72/126] Xamarin.KotlinX.Coroutines.Core.Jvm.dll -> Xamarin.KotlinX.Coroutines.Core.Jvm.dll.so
+2026-10-30T12:44:32.3917519Z   [73/126] System.Collections.Concurrent.dll -> System.Collections.Concurrent.dll.so
+2026-10-30T12:44:32.5973024Z   [74/126] System.Collections.Immutable.dll -> System.Collections.Immutable.dll.so
+2026-10-30T12:44:32.6580157Z   [75/126] System.Collections.NonGeneric.dll -> System.Collections.NonGeneric.dll.so
+2026-10-30T12:44:32.7167130Z   [76/126] System.Collections.Specialized.dll -> System.Collections.Specialized.dll.so
+2026-10-30T12:44:32.9093170Z   [77/126] System.Collections.dll -> System.Collections.dll.so
+2026-10-30T12:44:32.9688215Z   [78/126] System.ComponentModel.Annotations.dll -> System.ComponentModel.Annotations.dll.so
+2026-10-30T12:44:33.0278220Z   [79/126] System.ComponentModel.Primitives.dll -> System.ComponentModel.Primitives.dll.so
+2026-10-30T12:44:33.1017817Z   [80/126] System.ComponentModel.TypeConverter.dll -> System.ComponentModel.TypeConverter.dll.so
+2026-10-30T12:44:33.1602881Z   [81/126] System.ComponentModel.dll -> System.ComponentModel.dll.so
+2026-10-30T12:44:33.2189729Z   [82/126] System.Console.dll -> System.Console.dll.so
+2026-10-30T12:44:33.3443647Z   [83/126] System.Data.Common.dll -> System.Data.Common.dll.so
+2026-10-30T12:44:33.4324272Z   [84/126] System.Diagnostics.DiagnosticSource.dll -> System.Diagnostics.DiagnosticSource.dll.so
+2026-10-30T12:44:33.4950611Z   [85/126] System.Diagnostics.Process.dll -> System.Diagnostics.Process.dll.so
+2026-10-30T12:44:33.5534790Z   [86/126] System.Diagnostics.StackTrace.dll -> System.Diagnostics.StackTrace.dll.so
+2026-10-30T12:44:33.6135347Z   [87/126] System.Diagnostics.TraceSource.dll -> System.Diagnostics.TraceSource.dll.so
+2026-10-30T12:44:33.6853070Z   [88/126] System.Diagnostics.Tracing.dll -> System.Diagnostics.Tracing.dll.so
+2026-10-30T12:44:33.7458810Z   [89/126] System.Drawing.Primitives.dll -> System.Drawing.Primitives.dll.so
+2026-10-30T12:44:33.8036414Z   [90/126] System.Drawing.dll -> System.Drawing.dll.so
+2026-10-30T12:44:33.8676284Z   [91/126] System.Formats.Asn1.dll -> System.Formats.Asn1.dll.so
+2026-10-30T12:44:33.9294467Z   [92/126] System.IO.Compression.Brotli.dll -> System.IO.Compression.Brotli.dll.so
+2026-10-30T12:44:33.9897950Z   [93/126] System.IO.Compression.dll -> System.IO.Compression.dll.so
+2026-10-30T12:44:34.0508974Z   [94/126] System.IO.MemoryMappedFiles.dll -> System.IO.MemoryMappedFiles.dll.so
+2026-10-30T12:44:34.1142015Z   [95/126] System.IO.Pipelines.dll -> System.IO.Pipelines.dll.so
+2026-10-30T12:44:34.3474790Z   [96/126] System.Linq.Expressions.dll -> System.Linq.Expressions.dll.so
+2026-10-30T12:44:34.4947603Z   [97/126] System.Linq.Queryable.dll -> System.Linq.Queryable.dll.so
+2026-10-30T12:44:34.9521047Z   [98/126] System.Linq.dll -> System.Linq.dll.so
+2026-10-30T12:44:35.0373145Z   [99/126] System.Memory.dll -> System.Memory.dll.so
+2026-10-30T12:44:35.2321756Z   [100/126] System.Net.Http.dll -> System.Net.Http.dll.so
+2026-10-30T12:44:35.3024077Z   [101/126] System.Net.NameResolution.dll -> System.Net.NameResolution.dll.so
+2026-10-30T12:44:35.3617423Z   [102/126] System.Net.NetworkInformation.dll -> System.Net.NetworkInformation.dll.so
+2026-10-30T12:44:35.4350896Z   [103/126] System.Net.Primitives.dll -> System.Net.Primitives.dll.so
+2026-10-30T12:44:35.4938325Z   [104/126] System.Net.Requests.dll -> System.Net.Requests.dll.so
+2026-10-30T12:44:35.5679805Z   [105/126] System.Net.Sockets.dll -> System.Net.Sockets.dll.so
+2026-10-30T12:44:35.6365065Z   [106/126] System.ObjectModel.dll -> System.ObjectModel.dll.so
+2026-10-30T12:44:35.7659824Z   [107/126] System.Private.Uri.dll -> System.Private.Uri.dll.so
+2026-10-30T12:44:35.8914357Z   [108/126] System.Private.Xml.dll -> System.Private.Xml.dll.so
+2026-10-30T12:44:35.9505837Z   [109/126] System.Runtime.InteropServices.RuntimeInformation.dll -> System.Runtime.InteropServices.RuntimeInformation.dll.so
+2026-10-30T12:44:36.0092124Z   [110/126] System.Runtime.InteropServices.dll -> System.Runtime.InteropServices.dll.so
+2026-10-30T12:44:36.0971734Z   [111/126] System.Runtime.Numerics.dll -> System.Runtime.Numerics.dll.so
+2026-10-30T12:44:36.1555472Z   [112/126] System.Runtime.Serialization.Formatters.dll -> System.Runtime.Serialization.Formatters.dll.so
+2026-10-30T12:44:36.2142911Z   [113/126] System.Runtime.dll -> System.Runtime.dll.so
+2026-10-30T12:44:36.3189253Z   [114/126] System.Security.Cryptography.dll -> System.Security.Cryptography.dll.so
+2026-10-30T12:44:36.3786030Z   [115/126] System.Text.Encodings.Web.dll -> System.Text.Encodings.Web.dll.so
+2026-10-30T12:44:36.6514107Z   [116/126] System.Text.Json.dll -> System.Text.Json.dll.so
+2026-10-30T12:44:36.8505262Z   [117/126] System.Text.RegularExpressions.dll -> System.Text.RegularExpressions.dll.so
+2026-10-30T12:44:36.9091152Z   [118/126] System.Threading.Thread.dll -> System.Threading.Thread.dll.so
+2026-10-30T12:44:36.9655494Z   [119/126] System.Threading.dll -> System.Threading.dll.so
+2026-10-30T12:44:37.0288880Z   [120/126] System.Transactions.Local.dll -> System.Transactions.Local.dll.so
+2026-10-30T12:44:37.0861264Z   [121/126] System.dll -> System.dll.so
+2026-10-30T12:44:37.1433373Z   [122/126] netstandard.dll -> netstandard.dll.so
+2026-10-30T12:44:37.3460632Z   [123/126] Java.Interop.dll -> Java.Interop.dll.so
+2026-10-30T12:44:37.4077393Z   [124/126] Mono.Android.Runtime.dll -> Mono.Android.Runtime.dll.so
+2026-10-30T12:44:37.7555383Z   [125/126] Mono.Android.dll -> Mono.Android.dll.so
+2026-10-30T12:44:39.7683217Z   [126/126] System.Private.CoreLib.dll -> System.Private.CoreLib.dll.so
+2026-10-30T12:45:24.3600872Z 
+2026-10-30T12:45:24.3602272Z Build succeeded.
+2026-10-30T12:45:24.3603135Z     0 Warning(s)
+2026-10-30T12:45:24.3603758Z     0 Error(s)
+2026-10-30T12:45:24.3604175Z 
+2026-10-30T12:45:24.3622720Z Time Elapsed 00:01:54.19
+2026-10-30T12:45:24.4121656Z ##[group]Run dotnet test --configuration Release --no-build
+2026-10-30T12:45:24.4122114Z [36;1mdotnet test --configuration Release --no-build[0m
+2026-10-30T12:45:24.4143810Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:45:24.4144078Z env:
+2026-10-30T12:45:24.4144269Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:24.4144517Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:24.4144814Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:24.4145111Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:45:24.4145476Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:45:24.4146004Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:45:24.4146394Z   MAVEN_ARGS: -ntp
+2026-10-30T12:45:24.4146605Z ##[endgroup]
+2026-10-30T12:45:25.5546637Z Running tests from /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll (net10.0|x64)
+2026-10-30T12:45:25.5642662Z Running tests from /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll (net10.0|x64)
+2026-10-30T12:45:25.5685016Z Running tests from /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll (net10.0|x64)
+2026-10-30T12:45:26.4962467Z [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll (net10.0|x64) [32mpassed[m [90m(931ms)[m
+2026-10-30T12:45:27.5486432Z [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll (net10.0|x64) [32mpassed[m [90m(1s 999ms)[m
+2026-10-30T12:45:27.5837931Z [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll (net10.0|x64) [32mpassed[m [90m(2s 016ms)[m
+2026-10-30T12:45:27.5863731Z 
+2026-10-30T12:45:27.5873124Z [32mTest run summary: Passed!
+2026-10-30T12:45:27.5874984Z   [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll (net10.0|x64) [32mpassed[m [90m(1s 999ms)[m
+2026-10-30T12:45:27.5877150Z   [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll (net10.0|x64) [32mpassed[m [90m(931ms)[m
+2026-10-30T12:45:27.5878947Z   [m/home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll (net10.0|x64) [32mpassed[m [90m(2s 016ms)[m
+2026-10-30T12:45:27.5880161Z 
+2026-10-30T12:45:27.5882341Z [m  total: 409
+2026-10-30T12:45:27.5882880Z   failed: 0
+2026-10-30T12:45:27.5883550Z [32m  succeeded: 409
+2026-10-30T12:45:27.5884100Z [m  skipped: 0
+2026-10-30T12:45:27.5884625Z   duration: 2s 415ms
+2026-10-30T12:45:27.6145565Z Post job cleanup.
+2026-10-30T12:45:27.6984245Z Post job cleanup.
+2026-10-30T12:45:27.8460034Z Post job cleanup.
+2026-10-30T12:45:27.9508044Z [command]/usr/bin/git version
+2026-10-30T12:45:27.9557111Z git version 2.56.0
+2026-10-30T12:45:27.9619872Z Temporarily overriding HOME='/home/runner/work/_temp/34fbf848-ff98-425a-abe5-b7947a329acc' before making global git config changes
+2026-10-30T12:45:27.9621337Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:45:27.9626255Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:45:27.9664892Z Removing SSH command configuration
+2026-10-30T12:45:27.9672664Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:45:27.9715465Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T12:45:28.0002079Z Removing HTTP extra header
+2026-10-30T12:45:28.0010075Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:45:28.0058619Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T12:45:28.0334974Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:45:28.0343755Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:45:28.0388244Z includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path
+2026-10-30T12:45:28.0389712Z includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path
+2026-10-30T12:45:28.0390891Z includeif.gitdir:/github/workspace/.git.path
+2026-10-30T12:45:28.0391907Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T12:45:28.0399475Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path
+2026-10-30T12:45:28.0437118Z /home/runner/work/_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:45:28.0447921Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-b16c4452\-be28\-4fc2\-a655\-c20128e54bc8\.config
+2026-10-30T12:45:28.0533621Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path
+2026-10-30T12:45:28.0573043Z /home/runner/work/_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:45:28.0583847Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-b16c4452\-be28\-4fc2\-a655\-c20128e54bc8\.config
+2026-10-30T12:45:28.0633810Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-30T12:45:28.0668913Z /github/runner_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:45:28.0677647Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-b16c4452\-be28\-4fc2\-a655\-c20128e54bc8\.config
+2026-10-30T12:45:28.0723562Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T12:45:28.0757696Z /github/runner_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config
+2026-10-30T12:45:28.0767019Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-b16c4452\-be28\-4fc2\-a655\-c20128e54bc8\.config
+2026-10-30T12:45:28.0816254Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T12:45:28.1088070Z Removing credentials config '/home/runner/work/_temp/git-credentials-b16c4452-be28-4fc2-a655-c20128e54bc8.config'
+2026-10-30T12:45:28.1263286Z Cleaning up orphan processes
+2026-10-30T12:45:28.1591560Z Terminate orphan process: pid (2712) (dotnet)
+2026-10-30T12:45:28.1637064Z Terminate orphan process: pid (2713) (dotnet)
+2026-10-30T12:45:28.1673016Z Terminate orphan process: pid (2714) (dotnet)
+2026-10-30T12:45:28.1709755Z Terminate orphan process: pid (2848) (VBCSCompiler)

@@ -1,0 +1,36 @@
+﻿2026-10-30T12:48:01.7855721Z ##[group]Run actions/upload-artifact@v7
+2026-10-30T12:48:01.7856046Z with:
+2026-10-30T12:48:01.7856236Z   name: android
+2026-10-30T12:48:01.7856458Z   path: ./MyAdventure-android-63.apk
+2026-10-30T12:48:01.7856727Z   if-no-files-found: error
+2026-10-30T12:48:01.7856957Z   retention-days: 7
+2026-10-30T12:48:01.7857172Z   compression-level: 6
+2026-10-30T12:48:01.7857386Z   overwrite: false
+2026-10-30T12:48:01.7857598Z   include-hidden-files: false
+2026-10-30T12:48:01.7857830Z   archive: true
+2026-10-30T12:48:01.7858023Z env:
+2026-10-30T12:48:01.7858205Z   DOTNET_NOLOGO: true
+2026-10-30T12:48:01.7858427Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:48:01.7858698Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:48:01.7858983Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:48:01.7859616Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:48:01.7860195Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:48:01.7860583Z   MAVEN_ARGS: -ntp
+2026-10-30T12:48:01.7860829Z ##[endgroup]
+2026-10-30T12:48:01.9545433Z With the provided path, there will be 1 file uploaded
+2026-10-30T12:48:01.9553752Z Artifact name is valid!
+2026-10-30T12:48:01.9555007Z Root directory input is valid!
+2026-10-30T12:48:02.3471014Z Uploading artifact: android.zip
+2026-10-30T12:48:02.3512625Z Beginning upload of artifact content to blob storage
+2026-10-30T12:48:03.7449288Z Uploaded bytes 8388608
+2026-10-30T12:48:03.9572377Z Uploaded bytes 16777216
+2026-10-30T12:48:04.0427637Z Uploaded bytes 25165824
+2026-10-30T12:48:04.2260731Z Uploaded bytes 33554432
+2026-10-30T12:48:04.4406127Z Uploaded bytes 41943040
+2026-10-30T12:48:04.5690342Z Uploaded bytes 43203694
+2026-10-30T12:48:04.6480149Z Finished uploading artifact content to blob storage!
+2026-10-30T12:48:04.6491483Z SHA256 digest of uploaded artifact is 5a9a1581cb52f00b4cbafacb00c8b96bea7dbd35ec0a4a2b3fc604572a9e9dc6
+2026-10-30T12:48:04.6493831Z Finalizing artifact upload
+2026-10-30T12:48:05.3042540Z Artifact android successfully finalized. Artifact ID 12977956690
+2026-10-30T12:48:05.3043831Z Artifact android has been successfully uploaded! Final size is 43203694 bytes. Artifact ID is 12977956690
+2026-10-30T12:48:05.3050567Z Artifact download URL: https://github.com/kusl/MyAdventure/actions/runs/41057431569/artifacts/12977956690

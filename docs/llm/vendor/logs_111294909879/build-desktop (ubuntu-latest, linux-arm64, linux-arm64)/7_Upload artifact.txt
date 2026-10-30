@@ -1,0 +1,37 @@
+﻿2026-10-30T12:46:04.6525115Z ##[group]Run actions/upload-artifact@v7
+2026-10-30T12:46:04.6525592Z with:
+2026-10-30T12:46:04.6525926Z   name: linux-arm64
+2026-10-30T12:46:04.6526377Z   path: ./MyAdventure-linux-arm64.tar.gz
+./MyAdventure-linux-arm64.zip
+
+2026-10-30T12:46:04.6526956Z   if-no-files-found: error
+2026-10-30T12:46:04.6527298Z   retention-days: 7
+2026-10-30T12:46:04.6527831Z   compression-level: 6
+2026-10-30T12:46:04.6528170Z   overwrite: false
+2026-10-30T12:46:04.6528488Z   include-hidden-files: false
+2026-10-30T12:46:04.6528844Z   archive: true
+2026-10-30T12:46:04.6529210Z env:
+2026-10-30T12:46:04.6529509Z   DOTNET_NOLOGO: true
+2026-10-30T12:46:04.6529843Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:46:04.6530217Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:46:04.6530636Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:46:04.6531021Z ##[endgroup]
+2026-10-30T12:46:04.8082435Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-30T12:46:04.8085892Z The least common ancestor is /home/runner/work/MyAdventure/MyAdventure. This will be the root directory of the artifact
+2026-10-30T12:46:04.8087871Z With the provided path, there will be 1 file uploaded
+2026-10-30T12:46:04.8089562Z Artifact name is valid!
+2026-10-30T12:46:04.8091660Z Root directory input is valid!
+2026-10-30T12:46:05.3014734Z Uploading artifact: linux-arm64.zip
+2026-10-30T12:46:05.3050251Z Beginning upload of artifact content to blob storage
+2026-10-30T12:46:06.9111484Z Uploaded bytes 8388608
+2026-10-30T12:46:07.2527813Z Uploaded bytes 16777216
+2026-10-30T12:46:07.4172618Z Uploaded bytes 25165824
+2026-10-30T12:46:07.5050722Z Uploaded bytes 33554432
+2026-10-30T12:46:07.6063186Z Uploaded bytes 41943040
+2026-10-30T12:46:07.7859569Z Uploaded bytes 43175499
+2026-10-30T12:46:07.8434765Z Finished uploading artifact content to blob storage!
+2026-10-30T12:46:07.9140105Z SHA256 digest of uploaded artifact is fa904fa503c7c1291ef868b06ac524253ba39fdc4cb06f9e6fd6f2e9a8fb364b
+2026-10-30T12:46:07.9141629Z Finalizing artifact upload
+2026-10-30T12:46:08.4414937Z Artifact linux-arm64 successfully finalized. Artifact ID 12976908023
+2026-10-30T12:46:08.4415811Z Artifact linux-arm64 has been successfully uploaded! Final size is 43175499 bytes. Artifact ID is 12976908023
+2026-10-30T12:46:08.4421492Z Artifact download URL: https://github.com/kusl/MyAdventure/actions/runs/41057431569/artifacts/12976908023

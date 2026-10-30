@@ -1,0 +1,21 @@
+﻿2026-10-30T12:43:20.0444862Z ##[group]Run dotnet restore
+2026-10-30T12:43:20.0445413Z [36;1mdotnet restore[0m
+2026-10-30T12:43:20.0471428Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:43:20.0471825Z env:
+2026-10-30T12:43:20.0472136Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:20.0472521Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:20.0472995Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:20.0473463Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:20.0474059Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:20.0474904Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:20.0475569Z   MAVEN_ARGS: -ntp
+2026-10-30T12:43:20.0475905Z ##[endgroup]
+2026-10-30T12:43:22.0183542Z   Determining projects to restore...
+2026-10-30T12:43:25.5131361Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/MyAdventure.Core.csproj (in 1.87 sec).
+2026-10-30T12:43:26.1567683Z   Restored /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj (in 2.94 sec).
+2026-10-30T12:43:26.2536684Z   Restored /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj (in 2.94 sec).
+2026-10-30T12:43:26.7551359Z   Restored /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj (in 488 ms).
+2026-10-30T12:43:26.9921351Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj (in 13 ms).
+2026-10-30T12:43:27.5611284Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj (in 2.02 sec).
+2026-10-30T12:43:29.6996428Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Android/MyAdventure.Android.csproj (in 6.87 sec).
+2026-10-30T12:43:29.7971193Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj (in 3.63 sec).

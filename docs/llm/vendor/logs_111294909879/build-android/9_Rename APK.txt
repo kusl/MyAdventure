@@ -1,0 +1,19 @@
+﻿2026-10-30T12:48:01.7528221Z ##[group]Run APK_PATH=$(find ./publish/android -name "*-Signed.apk" -o -name "*.apk" | grep -v "\.aab$" | head -1)
+2026-10-30T12:48:01.7529035Z [36;1mAPK_PATH=$(find ./publish/android -name "*-Signed.apk" -o -name "*.apk" | grep -v "\.aab$" | head -1)[0m
+2026-10-30T12:48:01.7529892Z [36;1mif [[ -n "$APK_PATH" ]]; then[0m
+2026-10-30T12:48:01.7530237Z [36;1m  cp "$APK_PATH" "./MyAdventure-android-63.apk"[0m
+2026-10-30T12:48:01.7530669Z [36;1melse[0m
+2026-10-30T12:48:01.7530945Z [36;1m  echo "ERROR: No APK found!"[0m
+2026-10-30T12:48:01.7531300Z [36;1m  find ./publish -type f -name "*.apk" || echo "No APK files"[0m
+2026-10-30T12:48:01.7531650Z [36;1m  exit 1[0m
+2026-10-30T12:48:01.7531862Z [36;1mfi[0m
+2026-10-30T12:48:01.7552680Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:48:01.7553045Z env:
+2026-10-30T12:48:01.7553252Z   DOTNET_NOLOGO: true
+2026-10-30T12:48:01.7553486Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:48:01.7553782Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:48:01.7554114Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:48:01.7554487Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:48:01.7554981Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:48:01.7555367Z   MAVEN_ARGS: -ntp
+2026-10-30T12:48:01.7555575Z ##[endgroup]

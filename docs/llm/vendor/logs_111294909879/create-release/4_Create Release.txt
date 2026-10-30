@@ -1,0 +1,54 @@
+﻿2026-10-30T12:48:17.1256757Z ##[group]Run softprops/action-gh-release@v3
+2026-10-30T12:48:17.1257423Z with:
+2026-10-30T12:48:17.1257815Z   tag_name: v1.0.63
+2026-10-30T12:48:17.1258210Z   name: Release v1.0.63
+2026-10-30T12:48:17.1258611Z   draft: false
+2026-10-30T12:48:17.1258987Z   prerelease: false
+2026-10-30T12:48:17.1259383Z   generate_release_notes: true
+2026-10-30T12:48:17.1259820Z   files: ./release/*
+2026-10-30T12:48:17.1262983Z   body: ## MyAdventure v1.0.63
+
+### Downloads
+
+| Platform | File |
+|----------|------|
+| Windows x64 | `MyAdventure-win-x64.zip` |
+| Windows ARM64 | `MyAdventure-win-arm64.zip` |
+| Linux x64 | `MyAdventure-linux-x64.tar.gz` |
+| Linux ARM64 | `MyAdventure-linux-arm64.tar.gz` |
+| macOS x64 (Intel) | `MyAdventure-osx-x64.tar.gz` |
+| macOS ARM64 (Apple Silicon) | `MyAdventure-osx-arm64.tar.gz` |
+| Android | `MyAdventure-android-63.apk` |
+
+### Android Users (Obtainium)
+
+Point Obtainium to this repository's releases for automatic updates.
+The APK version code increments with each release.
+
+2026-10-30T12:48:17.1266739Z   overwrite_files: true
+2026-10-30T12:48:17.1270637Z   token: ***
+2026-10-30T12:48:17.1270981Z env:
+2026-10-30T12:48:17.1271295Z   DOTNET_NOLOGO: true
+2026-10-30T12:48:17.1271675Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:48:17.1272125Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:48:17.1276003Z   GITHUB_TOKEN: ***
+2026-10-30T12:48:17.1276636Z ##[endgroup]
+2026-10-30T12:48:21.0645275Z 👩‍🏭 Creating new GitHub release for tag v1.0.63...
+2026-10-30T12:48:22.3609279Z Release 429026615 is not yet discoverable by tag v1.0.63, retrying... (2 retries remaining)
+2026-10-30T12:48:24.0171344Z ⬆️ Uploading MyAdventure-win-x64.zip...
+2026-10-30T12:48:24.0172803Z ⬆️ Uploading MyAdventure-win-arm64.zip...
+2026-10-30T12:48:24.0174219Z ⬆️ Uploading MyAdventure-osx-x64.tar.gz...
+2026-10-30T12:48:24.0175579Z ⬆️ Uploading MyAdventure-osx-arm64.tar.gz...
+2026-10-30T12:48:24.0177260Z ⬆️ Uploading MyAdventure-linux-x64.tar.gz...
+2026-10-30T12:48:24.0178552Z ⬆️ Uploading MyAdventure-linux-arm64.tar.gz...
+2026-10-30T12:48:24.0179968Z ⬆️ Uploading MyAdventure-android-63.apk...
+2026-10-30T12:48:27.3407259Z ✅ Uploaded MyAdventure-linux-arm64.tar.gz
+2026-10-30T12:48:27.7130658Z ✅ Uploaded MyAdventure-android-63.apk
+2026-10-30T12:48:27.7210010Z ✅ Uploaded MyAdventure-linux-x64.tar.gz
+2026-10-30T12:48:27.8715097Z ✅ Uploaded MyAdventure-osx-x64.tar.gz
+2026-10-30T12:48:28.1140138Z ✅ Uploaded MyAdventure-osx-arm64.tar.gz
+2026-10-30T12:48:28.3373339Z ✅ Uploaded MyAdventure-win-x64.zip
+2026-10-30T12:48:29.1218954Z ✅ Uploaded MyAdventure-win-arm64.zip
+2026-10-30T12:48:29.1219641Z Finalizing release...
+2026-10-30T12:48:30.0774809Z Getting assets list...
+2026-10-30T12:48:30.1970962Z 🎉 Release ready at https://github.com/kusl/MyAdventure/releases/tag/v1.0.63

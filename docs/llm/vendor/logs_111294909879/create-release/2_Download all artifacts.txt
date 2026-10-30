@@ -1,0 +1,56 @@
+﻿2026-10-30T12:48:12.5808861Z ##[group]Run actions/download-artifact@v8
+2026-10-30T12:48:12.5809842Z with:
+2026-10-30T12:48:12.5810291Z   path: ./artifacts
+2026-10-30T12:48:12.5810765Z   merge-multiple: false
+2026-10-30T12:48:12.5811261Z   repository: kusl/MyAdventure
+2026-10-30T12:48:12.5811764Z   run-id: 41057431569
+2026-10-30T12:48:12.5812232Z   skip-decompress: false
+2026-10-30T12:48:12.5812721Z   digest-mismatch: error
+2026-10-30T12:48:12.5813357Z env:
+2026-10-30T12:48:12.5813781Z   DOTNET_NOLOGO: true
+2026-10-30T12:48:12.5814272Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:48:12.5814840Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:48:12.5815389Z ##[endgroup]
+2026-10-30T12:48:13.0154292Z Found 7 artifact(s)
+2026-10-30T12:48:13.0159007Z No input name, artifact-ids or pattern filtered specified, downloading all artifacts
+2026-10-30T12:48:13.0161132Z An extra directory with the artifact name will be created for each download
+2026-10-30T12:48:13.0162533Z Preparing to download the following artifacts:
+2026-10-30T12:48:13.0164303Z - osx-x64 (ID: 12978375531, Size: 48673290, Expected Digest: sha256:ea31a08f28a2940401618ed103ca34b974c0e7d1ad187d6136117727019dc05f)
+2026-10-30T12:48:13.0166510Z - win-arm64 (ID: 12978315529, Size: 73566801, Expected Digest: sha256:fe67c7da909964f10d5ba6d6160251cff790582f658a86d82e9da311d19fa0b5)
+2026-10-30T12:48:13.0169280Z - android (ID: 12977956690, Size: 43203694, Expected Digest: sha256:5a9a1581cb52f00b4cbafacb00c8b96bea7dbd35ec0a4a2b3fc604572a9e9dc6)
+2026-10-30T12:48:13.0171482Z - linux-arm64 (ID: 12976908023, Size: 43175499, Expected Digest: sha256:fa904fa503c7c1291ef868b06ac524253ba39fdc4cb06f9e6fd6f2e9a8fb364b)
+2026-10-30T12:48:13.0173469Z - linux-x64 (ID: 12976883219, Size: 45253008, Expected Digest: sha256:8cda82b47bcf8ccfe820a4ddd322367a5eb726c8fe46738986367d1bef1ed508)
+2026-10-30T12:48:13.0175587Z - win-x64 (ID: 12976684859, Size: 76107453, Expected Digest: sha256:26b8360456e3b2d13709b92656dd01301dd8e6bc93c9fb59e293b602695f315d)
+2026-10-30T12:48:13.0177832Z - osx-arm64 (ID: 12976639755, Size: 46720943, Expected Digest: sha256:0d18508151e9c3bb540bfb0ca40dae1f2a9627e32d0173c6de93c51ae754ea2a)
+2026-10-30T12:48:13.2001794Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-146f1ecf-526b-5394-8d56-56a4d1940c92/artifacts/2cc29203eb8483cf10595a15013d5b2e6305a1472b38c933ef0cbaaa27989735.zip
+2026-10-30T12:48:13.2006191Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/linux-x64
+2026-10-30T12:48:13.2049004Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-2a9c2936-afbc-5f64-b7ea-f296240e03ac/artifacts/17d46d4991b2edd5e445342a72ba0cb7cf09e4849b5e98c16408ce11e05c7388.zip
+2026-10-30T12:48:13.2053599Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/linux-arm64
+2026-10-30T12:48:13.2085320Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-07d5d2c0-bf3f-5acd-b1b7-41b7511b383a/artifacts/f60ed56a9c8275894022fe5a7a1625c33bdb55b729bb4e38962af4d1613eda25.zip
+2026-10-30T12:48:13.2090567Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/android
+2026-10-30T12:48:13.2117379Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-0c742d4b-cb8e-540c-894e-5e79276e32cc/artifacts/d4109a44189c83fa115171c737362fb668cb2a49ce8f37e3b61e44ae8f4651ae.zip
+2026-10-30T12:48:13.2121852Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/win-x64
+2026-10-30T12:48:13.2200609Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-83d4fee8-378c-58eb-9f7d-3b8dbd30ec7d/artifacts/0bd93ba997043ad480a694d0b2e983d8511334df88d22f44bd532b28fe1aa9bb.zip
+2026-10-30T12:48:13.2203604Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/osx-arm64
+2026-10-30T12:48:13.2302980Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-48e31f56-4ddc-54c5-b499-c18b38fe063d/artifacts/1fb9620fbd61efa713c0b778d4701a989cbacdfa8e734cf73daecf76fcb4454c.zip
+2026-10-30T12:48:13.2306097Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/win-arm64
+2026-10-30T12:48:13.2354886Z Redirecting to blob download url: https://productionresultssa15.blob.core.windows.net/actions-results/ab6e3c2c-0f8f-852a-8cf2-0a2a8cdd938f/workflow-job-run-ab242a7a-7b41-5b82-a16a-e44bce74b5e5/artifacts/14488c696fab22a3a3f26cd6ba2b4a142d5ae40125654ceb2c8e14b716fdc7c6.zip
+2026-10-30T12:48:13.2360421Z Starting download of artifact to: /home/runner/work/MyAdventure/MyAdventure/artifacts/osx-x64
+2026-10-30T12:48:13.2860601Z (node:2051) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-10-30T12:48:13.2862821Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-30T12:48:16.0914914Z SHA256 digest of downloaded artifact is fa904fa503c7c1291ef868b06ac524253ba39fdc4cb06f9e6fd6f2e9a8fb364b
+2026-10-30T12:48:16.0919271Z Artifact download completed successfully.
+2026-10-30T12:48:16.1109794Z SHA256 digest of downloaded artifact is 8cda82b47bcf8ccfe820a4ddd322367a5eb726c8fe46738986367d1bef1ed508
+2026-10-30T12:48:16.1112262Z Artifact download completed successfully.
+2026-10-30T12:48:16.1192962Z SHA256 digest of downloaded artifact is 5a9a1581cb52f00b4cbafacb00c8b96bea7dbd35ec0a4a2b3fc604572a9e9dc6
+2026-10-30T12:48:16.1194481Z Artifact download completed successfully.
+2026-10-30T12:48:16.2473737Z SHA256 digest of downloaded artifact is 0d18508151e9c3bb540bfb0ca40dae1f2a9627e32d0173c6de93c51ae754ea2a
+2026-10-30T12:48:16.2475793Z Artifact download completed successfully.
+2026-10-30T12:48:16.3455654Z SHA256 digest of downloaded artifact is ea31a08f28a2940401618ed103ca34b974c0e7d1ad187d6136117727019dc05f
+2026-10-30T12:48:16.3457979Z Artifact download completed successfully.
+2026-10-30T12:48:16.8843530Z SHA256 digest of downloaded artifact is fe67c7da909964f10d5ba6d6160251cff790582f658a86d82e9da311d19fa0b5
+2026-10-30T12:48:16.8844530Z Artifact download completed successfully.
+2026-10-30T12:48:16.9180230Z SHA256 digest of downloaded artifact is 26b8360456e3b2d13709b92656dd01301dd8e6bc93c9fb59e293b602695f315d
+2026-10-30T12:48:16.9181582Z Artifact download completed successfully.
+2026-10-30T12:48:16.9182984Z Total of 7 artifact(s) downloaded
+2026-10-30T12:48:16.9207323Z Download artifact has finished successfully

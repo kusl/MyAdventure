@@ -1,0 +1,273 @@
+﻿2026-10-30T12:45:32.2062977Z Current runner version: '2.338.0'
+2026-10-30T12:45:32.2090195Z ##[group]Runner Image Provisioner
+2026-10-30T12:45:32.2091435Z Hosted Compute Agent
+2026-10-30T12:45:32.2092169Z Version: 20261021.618
+2026-10-30T12:45:32.2092847Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T12:45:32.2093636Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T12:45:32.2094425Z Worker ID: {fd7eca41-f8e7-4e58-b0a3-9147c6ac9cbc}
+2026-10-30T12:45:32.2095166Z Region: eastus
+2026-10-30T12:45:32.2095713Z Cloud: Azure
+2026-10-30T12:45:32.2096339Z ##[endgroup]
+2026-10-30T12:45:32.2098043Z ##[group]Operating System
+2026-10-30T12:45:32.2099172Z Ubuntu
+2026-10-30T12:45:32.2099921Z 24.04.5
+2026-10-30T12:45:32.2100482Z LTS
+2026-10-30T12:45:32.2101462Z ##[endgroup]
+2026-10-30T12:45:32.2102092Z ##[group]Runner Image
+2026-10-30T12:45:32.2102772Z Image: ubuntu-24.04
+2026-10-30T12:45:32.2103407Z Version: 20261025.353.1
+2026-10-30T12:45:32.2104783Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-30T12:45:32.2106503Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-30T12:45:32.2107526Z ##[endgroup]
+2026-10-30T12:45:32.2110970Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T12:45:32.2113559Z Actions: write
+2026-10-30T12:45:32.2114248Z ArtifactMetadata: write
+2026-10-30T12:45:32.2114947Z Attestations: write
+2026-10-30T12:45:32.2115553Z Checks: write
+2026-10-30T12:45:32.2116138Z CodeQuality: write
+2026-10-30T12:45:32.2116770Z Contents: write
+2026-10-30T12:45:32.2117395Z CopilotRequests: write
+2026-10-30T12:45:32.2117985Z Deployments: write
+2026-10-30T12:45:32.2118624Z Discussions: write
+2026-10-30T12:45:32.2119198Z Drives: write
+2026-10-30T12:45:32.2119832Z Issues: write
+2026-10-30T12:45:32.2120517Z Metadata: read
+2026-10-30T12:45:32.2121341Z Models: read
+2026-10-30T12:45:32.2122008Z Packages: write
+2026-10-30T12:45:32.2122573Z Pages: write
+2026-10-30T12:45:32.2123930Z PullRequests: write
+2026-10-30T12:45:32.2124654Z RepositoryProjects: write
+2026-10-30T12:45:32.2125282Z SecurityEvents: write
+2026-10-30T12:45:32.2125996Z Statuses: write
+2026-10-30T12:45:32.2126607Z VulnerabilityAlerts: read
+2026-10-30T12:45:32.2127271Z ##[endgroup]
+2026-10-30T12:45:32.2129574Z Secret source: Actions
+2026-10-30T12:45:32.2130842Z Cache mode: write
+2026-10-30T12:45:32.2132050Z Prepare workflow directory
+2026-10-30T12:45:32.2547559Z Prepare all required actions
+2026-10-30T12:45:32.2597038Z Getting action download info
+2026-10-30T12:45:32.4938458Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-30T12:45:32.6005497Z Download action repository 'actions/setup-dotnet@v6' (SHA:a98b56852c35b8e3190ac28c8c2271da59106c68)
+2026-10-30T12:45:32.7912739Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-30T12:45:32.9690957Z Complete job name: build-desktop (ubuntu-latest, linux-x64, linux-x64)
+2026-10-30T12:45:33.0668812Z ##[group]Run actions/checkout@v7
+2026-10-30T12:45:33.0669814Z with:
+2026-10-30T12:45:33.0670267Z   repository: kusl/MyAdventure
+2026-10-30T12:45:33.0674714Z   token: ***
+2026-10-30T12:45:33.0675166Z   ssh-strict: true
+2026-10-30T12:45:33.0675610Z   ssh-user: git
+2026-10-30T12:45:33.0676065Z   persist-credentials: true
+2026-10-30T12:45:33.0676561Z   clean: true
+2026-10-30T12:45:33.0677016Z   sparse-checkout-cone-mode: true
+2026-10-30T12:45:33.0677563Z   fetch-depth: 1
+2026-10-30T12:45:33.0678008Z   fetch-tags: false
+2026-10-30T12:45:33.0678465Z   show-progress: true
+2026-10-30T12:45:33.0678919Z   lfs: false
+2026-10-30T12:45:33.0679342Z   submodules: false
+2026-10-30T12:45:33.0679796Z   set-safe-directory: true
+2026-10-30T12:45:33.0680315Z   allow-unsafe-pr-checkout: false
+2026-10-30T12:45:33.0681295Z env:
+2026-10-30T12:45:33.0681735Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:33.0682233Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:33.0682851Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:33.0683410Z ##[endgroup]
+2026-10-30T12:45:33.3985448Z Syncing repository: kusl/MyAdventure
+2026-10-30T12:45:33.3987433Z ##[group]Getting Git version info
+2026-10-30T12:45:33.3988360Z Working directory is '/home/runner/work/MyAdventure/MyAdventure'
+2026-10-30T12:45:33.3989430Z [command]/usr/bin/git version
+2026-10-30T12:45:33.4105624Z git version 2.56.0
+2026-10-30T12:45:33.4128104Z ##[endgroup]
+2026-10-30T12:45:33.4149091Z Temporarily overriding HOME='/home/runner/work/_temp/6cc9b192-7051-45dd-ba3f-0577b4d1319f' before making global git config changes
+2026-10-30T12:45:33.4151809Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:45:33.4161491Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:45:33.4223949Z Deleting the contents of '/home/runner/work/MyAdventure/MyAdventure'
+2026-10-30T12:45:33.4237200Z ##[group]Determining repository object format
+2026-10-30T12:45:33.4239047Z ##[endgroup]
+2026-10-30T12:45:33.4240849Z ##[group]Initializing the repository
+2026-10-30T12:45:33.4242231Z [command]/usr/bin/git init /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:45:33.4378278Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T12:45:33.4379975Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T12:45:33.4381848Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T12:45:33.4383069Z hint: call:
+2026-10-30T12:45:33.4383707Z hint:
+2026-10-30T12:45:33.4384566Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T12:45:33.4385687Z hint:
+2026-10-30T12:45:33.4386639Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T12:45:33.4388159Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T12:45:33.4389426Z hint:
+2026-10-30T12:45:33.4390164Z hint: 	git branch -m <name>
+2026-10-30T12:45:33.4391214Z hint:
+2026-10-30T12:45:33.4392234Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T12:45:33.4419067Z Initialized empty Git repository in /home/runner/work/MyAdventure/MyAdventure/.git/
+2026-10-30T12:45:33.4432689Z [command]/usr/bin/git remote add origin https://github.com/kusl/MyAdventure
+2026-10-30T12:45:33.4492954Z ##[endgroup]
+2026-10-30T12:45:33.4494591Z ##[group]Disabling automatic garbage collection
+2026-10-30T12:45:33.4495591Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T12:45:33.4530949Z ##[endgroup]
+2026-10-30T12:45:33.4532332Z ##[group]Setting up auth
+2026-10-30T12:45:33.4533349Z Removing SSH command configuration
+2026-10-30T12:45:33.4538513Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:45:33.4584872Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T12:45:33.5012309Z Removing HTTP extra header
+2026-10-30T12:45:33.5017634Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:45:33.5062222Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T12:45:33.5309082Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:45:33.5314844Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:45:33.5375919Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T12:45:33.5642824Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T12:45:33.5694110Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path /home/runner/work/_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:45:33.5737511Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:45:33.5781875Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:45:33.5826095Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:45:33.5866336Z ##[endgroup]
+2026-10-30T12:45:33.5867209Z ##[group]Fetching the repository
+2026-10-30T12:45:33.5873567Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6f776fecac5f27616cfaf885234a155c8dae7879:refs/remotes/origin/main
+2026-10-30T12:45:34.0035445Z From https://github.com/kusl/MyAdventure
+2026-10-30T12:45:34.0037002Z  * [new ref]         6f776fecac5f27616cfaf885234a155c8dae7879 -> origin/main
+2026-10-30T12:45:34.0044990Z [command]/usr/bin/git branch --list --remote origin/main
+2026-10-30T12:45:34.0082994Z   origin/main
+2026-10-30T12:45:34.0093080Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-10-30T12:45:34.0128331Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:45:34.0134276Z ##[endgroup]
+2026-10-30T12:45:34.0135667Z ##[group]Determining the checkout info
+2026-10-30T12:45:34.0137193Z ##[endgroup]
+2026-10-30T12:45:34.0140395Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T12:45:34.0211099Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T12:45:34.0255732Z ##[group]Checking out the ref
+2026-10-30T12:45:34.0259235Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-10-30T12:45:34.0576078Z Switched to a new branch 'main'
+2026-10-30T12:45:34.0581392Z branch 'main' set up to track 'origin/main'.
+2026-10-30T12:45:34.0592647Z ##[endgroup]
+2026-10-30T12:45:34.0650487Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T12:45:34.0689075Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:45:34.1151617Z ##[group]Run actions/setup-dotnet@v6
+2026-10-30T12:45:34.1153017Z with:
+2026-10-30T12:45:34.1153966Z   dotnet-version: 10.0.x
+2026-10-30T12:45:34.1155095Z   cache: false
+2026-10-30T12:45:34.1156067Z env:
+2026-10-30T12:45:34.1156968Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:34.1158074Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:34.1159430Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:34.1160992Z ##[endgroup]
+2026-10-30T12:45:34.2679712Z [command]/home/runner/work/_actions/actions/setup-dotnet/v6/externals/install-dotnet.sh --skip-non-versioned-files --runtime dotnet --channel LTS
+2026-10-30T12:45:34.4532953Z dotnet-install: .NET Core Runtime with version '10.0.14' is already installed.
+2026-10-30T12:45:34.4559597Z [command]/home/runner/work/_actions/actions/setup-dotnet/v6/externals/install-dotnet.sh --skip-non-versioned-files --channel 10.0
+2026-10-30T12:45:34.6188515Z dotnet-install: .NET Core SDK with version '10.0.403' is already installed.
+2026-10-30T12:45:34.6390020Z ##[group]Run dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
+2026-10-30T12:45:34.6391062Z [36;1mdotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \[0m
+2026-10-30T12:45:34.6391550Z [36;1m  --configuration Release \[0m
+2026-10-30T12:45:34.6391849Z [36;1m  -r linux-x64 \[0m
+2026-10-30T12:45:34.6392107Z [36;1m  --self-contained true \[0m
+2026-10-30T12:45:34.6392394Z [36;1m  -p:PublishSingleFile=true \[0m
+2026-10-30T12:45:34.6392754Z [36;1m  -p:IncludeNativeLibrariesForSelfExtract=true \[0m
+2026-10-30T12:45:34.6393126Z [36;1m  -p:Version=1.0.63 \[0m
+2026-10-30T12:45:34.6393400Z [36;1m  --output ./publish[0m
+2026-10-30T12:45:34.6419001Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:45:34.6419617Z env:
+2026-10-30T12:45:34.6419827Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:34.6420083Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:34.6420395Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:34.6421075Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:45:34.6421348Z ##[endgroup]
+2026-10-30T12:45:35.9966592Z   Determining projects to restore...
+2026-10-30T12:45:39.6513115Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/MyAdventure.Core.csproj (in 2.57 sec).
+2026-10-30T12:45:40.7372708Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj (in 3.65 sec).
+2026-10-30T12:45:40.8243048Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj (in 3.75 sec).
+2026-10-30T12:45:41.6110275Z   Restored /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj (in 4.54 sec).
+2026-10-30T12:45:46.1109869Z   MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net10.0/MyAdventure.Core.dll
+2026-10-30T12:45:47.2064641Z   MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net10.0/MyAdventure.Infrastructure.dll
+2026-10-30T12:45:49.7789075Z   MyAdventure.Shared -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/bin/Release/net10.0/MyAdventure.Shared.dll
+2026-10-30T12:45:51.6533682Z   MyAdventure.Desktop -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/bin/Release/net10.0/linux-x64/MyAdventure.Desktop.dll
+2026-10-30T12:45:52.6523696Z   MyAdventure.Desktop -> /home/runner/work/MyAdventure/MyAdventure/publish/
+2026-10-30T12:45:52.7865416Z ##[group]Run cd ./publish
+2026-10-30T12:45:52.7865745Z [36;1mcd ./publish[0m
+2026-10-30T12:45:52.7866033Z [36;1mtar -czvf ../MyAdventure-linux-x64.tar.gz .[0m
+2026-10-30T12:45:52.7889280Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:45:52.7889909Z env:
+2026-10-30T12:45:52.7890254Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:52.7890938Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:52.7891466Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:52.7891996Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:45:52.7892434Z ##[endgroup]
+2026-10-30T12:45:52.7988006Z ./
+2026-10-30T12:45:52.7989098Z ./MyAdventure.Shared.pdb
+2026-10-30T12:45:52.7990096Z ./MyAdventure.Infrastructure.pdb
+2026-10-30T12:45:52.7991329Z ./MyAdventure.Desktop
+2026-10-30T12:45:58.1019266Z ./appsettings.json
+2026-10-30T12:45:58.1019826Z ./MyAdventure.Desktop.pdb
+2026-10-30T12:45:58.1020391Z ./MyAdventure.Core.pdb
+2026-10-30T12:45:58.1833128Z ##[group]Run actions/upload-artifact@v7
+2026-10-30T12:45:58.1833652Z with:
+2026-10-30T12:45:58.1833999Z   name: linux-x64
+2026-10-30T12:45:58.1834570Z   path: ./MyAdventure-linux-x64.tar.gz
+./MyAdventure-linux-x64.zip
+
+2026-10-30T12:45:58.1835236Z   if-no-files-found: error
+2026-10-30T12:45:58.1835660Z   retention-days: 7
+2026-10-30T12:45:58.1836024Z   compression-level: 6
+2026-10-30T12:45:58.1836395Z   overwrite: false
+2026-10-30T12:45:58.1836770Z   include-hidden-files: false
+2026-10-30T12:45:58.1837175Z   archive: true
+2026-10-30T12:45:58.1837502Z env:
+2026-10-30T12:45:58.1837816Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:58.1838201Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:58.1838679Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:58.1839158Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:45:58.1839524Z ##[endgroup]
+2026-10-30T12:45:58.6222173Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-30T12:45:58.6226323Z The least common ancestor is /home/runner/work/MyAdventure/MyAdventure. This will be the root directory of the artifact
+2026-10-30T12:45:58.6227681Z With the provided path, there will be 1 file uploaded
+2026-10-30T12:45:58.6228940Z Artifact name is valid!
+2026-10-30T12:45:58.6229699Z Root directory input is valid!
+2026-10-30T12:45:59.2171112Z Uploading artifact: linux-x64.zip
+2026-10-30T12:45:59.2213716Z Beginning upload of artifact content to blob storage
+2026-10-30T12:46:00.9429305Z Uploaded bytes 8388608
+2026-10-30T12:46:01.2210129Z Uploaded bytes 16777216
+2026-10-30T12:46:01.4369221Z Uploaded bytes 25165824
+2026-10-30T12:46:01.7608416Z Uploaded bytes 33554432
+2026-10-30T12:46:02.1126087Z Uploaded bytes 41943040
+2026-10-30T12:46:02.2179636Z Uploaded bytes 45253008
+2026-10-30T12:46:02.2340550Z Finished uploading artifact content to blob storage!
+2026-10-30T12:46:02.2351743Z SHA256 digest of uploaded artifact is 8cda82b47bcf8ccfe820a4ddd322367a5eb726c8fe46738986367d1bef1ed508
+2026-10-30T12:46:02.2353983Z Finalizing artifact upload
+2026-10-30T12:46:02.6734927Z Artifact linux-x64 successfully finalized. Artifact ID 12976883219
+2026-10-30T12:46:02.6736182Z Artifact linux-x64 has been successfully uploaded! Final size is 45253008 bytes. Artifact ID is 12976883219
+2026-10-30T12:46:02.6744047Z Artifact download URL: https://github.com/kusl/MyAdventure/actions/runs/41057431569/artifacts/12976883219
+2026-10-30T12:46:02.6960215Z Post job cleanup.
+2026-10-30T12:46:02.8335318Z Post job cleanup.
+2026-10-30T12:46:02.9241708Z [command]/usr/bin/git version
+2026-10-30T12:46:02.9301412Z git version 2.56.0
+2026-10-30T12:46:02.9334484Z Temporarily overriding HOME='/home/runner/work/_temp/8d76641f-1bd8-4a47-99bf-281ee4d616d2' before making global git config changes
+2026-10-30T12:46:02.9335957Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:46:02.9341300Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MyAdventure/MyAdventure
+2026-10-30T12:46:02.9378613Z Removing SSH command configuration
+2026-10-30T12:46:02.9385735Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:46:02.9434005Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T12:46:02.9715716Z Removing HTTP extra header
+2026-10-30T12:46:02.9716714Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:46:02.9762100Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T12:46:03.0042702Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:46:03.0047993Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:46:03.0102919Z includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path
+2026-10-30T12:46:03.0104410Z includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path
+2026-10-30T12:46:03.0105545Z includeif.gitdir:/github/workspace/.git.path
+2026-10-30T12:46:03.0106523Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T12:46:03.0109263Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path
+2026-10-30T12:46:03.0151983Z /home/runner/work/_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:46:03.0167199Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-b0f005bc\-f72e\-4764\-a3af\-87924b6fb4cc\.config
+2026-10-30T12:46:03.0221706Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path
+2026-10-30T12:46:03.0278054Z /home/runner/work/_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:46:03.0286568Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/MyAdventure/MyAdventure/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-b0f005bc\-f72e\-4764\-a3af\-87924b6fb4cc\.config
+2026-10-30T12:46:03.0333984Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-30T12:46:03.0369911Z /github/runner_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:46:03.0411217Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-b0f005bc\-f72e\-4764\-a3af\-87924b6fb4cc\.config
+2026-10-30T12:46:03.0457591Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T12:46:03.0493271Z /github/runner_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config
+2026-10-30T12:46:03.0502183Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-b0f005bc\-f72e\-4764\-a3af\-87924b6fb4cc\.config
+2026-10-30T12:46:03.0551581Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T12:46:03.0795060Z Removing credentials config '/home/runner/work/_temp/git-credentials-b0f005bc-f72e-4764-a3af-87924b6fb4cc.config'
+2026-10-30T12:46:03.0946861Z Cleaning up orphan processes
+2026-10-30T12:46:03.1295751Z Terminate orphan process: pid (2483) (dotnet)
+2026-10-30T12:46:03.1318964Z Terminate orphan process: pid (2484) (dotnet)
+2026-10-30T12:46:03.1341861Z Terminate orphan process: pid (2544) (VBCSCompiler)
+2026-10-30T12:46:03.1487659Z Terminate orphan process: pid (2603) (dotnet)

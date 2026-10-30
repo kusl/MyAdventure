@@ -1,0 +1,38 @@
+﻿2026-10-30T12:43:04.3547369Z ##[group]Run actions/setup-java@v6
+2026-10-30T12:43:04.3547683Z with:
+2026-10-30T12:43:04.3547887Z   distribution: temurin
+2026-10-30T12:43:04.3548117Z   java-version: 21
+2026-10-30T12:43:04.3548335Z   java-package: jdk
+2026-10-30T12:43:04.3548568Z   check-latest: false
+2026-10-30T12:43:04.3548782Z   force-download: false
+2026-10-30T12:43:04.3549010Z   set-default: true
+2026-10-30T12:43:04.3549206Z   server-id: github
+2026-10-30T12:43:04.3549440Z   mvn-repositories-include-central: true
+2026-10-30T12:43:04.3550106Z   mvn-repositories-prioritize-central: true
+2026-10-30T12:43:04.3550425Z   overwrite-settings: true
+2026-10-30T12:43:04.3550667Z   cache-read-only: false
+2026-10-30T12:43:04.3550893Z   job-status: success
+2026-10-30T12:43:04.3553098Z   token: ***
+2026-10-30T12:43:04.3553322Z   show-download-progress: false
+2026-10-30T12:43:04.3553592Z   problem-matcher: true
+2026-10-30T12:43:04.3553811Z env:
+2026-10-30T12:43:04.3553996Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:04.3554222Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:04.3554545Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:04.3554836Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:04.3555078Z ##[endgroup]
+2026-10-30T12:43:04.4322160Z ##[group]Installed distributions
+2026-10-30T12:43:04.4422011Z Resolved Java 21.0.13+9 from tool-cache
+2026-10-30T12:43:04.4422702Z Setting Java 21.0.13+9 as the default
+2026-10-30T12:43:04.4431137Z 
+2026-10-30T12:43:04.4431441Z Java configuration:
+2026-10-30T12:43:04.4432167Z   Distribution: temurin
+2026-10-30T12:43:04.4432777Z   Version: 21.0.13+9
+2026-10-30T12:43:04.4433518Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:04.4434072Z 
+2026-10-30T12:43:04.4434574Z ##[endgroup]
+2026-10-30T12:43:04.4458916Z Creating settings.xml with server-id: github
+2026-10-30T12:43:04.4465692Z Creating toolchains.xml for JDK version 21 from temurin
+2026-10-30T12:43:04.4469008Z Writing to /home/runner/.m2/settings.xml
+2026-10-30T12:43:04.4478927Z Writing to /home/runner/.m2/toolchains.xml
+2026-10-30T12:43:04.4487215Z Configured MAVEN_ARGS to include -ntp to suppress Maven transfer progress logs. Set 'show-download-progress: true' to keep the download progress output.

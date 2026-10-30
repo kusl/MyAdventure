@@ -1,0 +1,26 @@
+﻿2026-10-30T12:45:41.1752760Z ##[group]Run dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
+2026-10-30T12:45:41.1753360Z [36;1mdotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \[0m
+2026-10-30T12:45:41.1753760Z [36;1m  --configuration Release \[0m
+2026-10-30T12:45:41.1754000Z [36;1m  -r osx-arm64 \[0m
+2026-10-30T12:45:41.1754730Z [36;1m  --self-contained true \[0m
+2026-10-30T12:45:41.1754970Z [36;1m  -p:PublishSingleFile=true \[0m
+2026-10-30T12:45:41.1755300Z [36;1m  -p:IncludeNativeLibrariesForSelfExtract=true \[0m
+2026-10-30T12:45:41.1755640Z [36;1m  -p:Version=1.0.63 \[0m
+2026-10-30T12:45:41.1755910Z [36;1m  --output ./publish[0m
+2026-10-30T12:45:41.1794880Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:45:41.1795180Z env:
+2026-10-30T12:45:41.1795340Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:41.1795520Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:41.1795750Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:41.1796010Z   DOTNET_ROOT: /Users/runner/.dotnet
+2026-10-30T12:45:41.1796280Z ##[endgroup]
+2026-10-30T12:45:42.7993380Z   Determining projects to restore...
+2026-10-30T12:45:46.4235850Z   Restored /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/MyAdventure.Core.csproj (in 2.62 sec).
+2026-10-30T12:45:46.4851890Z   Restored /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj (in 2.67 sec).
+2026-10-30T12:45:46.4918970Z   Restored /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj (in 2.69 sec).
+2026-10-30T12:45:50.0193040Z   Restored /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj (in 3.58 sec).
+2026-10-30T12:45:52.5945250Z   MyAdventure.Core -> /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net10.0/MyAdventure.Core.dll
+2026-10-30T12:45:53.1799220Z   MyAdventure.Infrastructure -> /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net10.0/MyAdventure.Infrastructure.dll
+2026-10-30T12:45:55.5270560Z   MyAdventure.Shared -> /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/bin/Release/net10.0/MyAdventure.Shared.dll
+2026-10-30T12:45:57.0185370Z   MyAdventure.Desktop -> /Users/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/bin/Release/net10.0/osx-arm64/MyAdventure.Desktop.dll
+2026-10-30T12:45:58.7694480Z   MyAdventure.Desktop -> /Users/runner/work/MyAdventure/MyAdventure/publish/

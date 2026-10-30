@@ -1,0 +1,22 @@
+﻿2026-10-30T12:48:16.9440351Z ##[group]Run mkdir -p ./release
+2026-10-30T12:48:16.9440803Z [36;1mmkdir -p ./release[0m
+2026-10-30T12:48:16.9441399Z [36;1mfind ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.apk" \) -exec cp {} ./release/ \;[0m
+2026-10-30T12:48:16.9441977Z [36;1mecho "=== Release files ==="[0m
+2026-10-30T12:48:16.9442302Z [36;1mls -la ./release/[0m
+2026-10-30T12:48:16.9467377Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:48:16.9467810Z env:
+2026-10-30T12:48:16.9468054Z   DOTNET_NOLOGO: true
+2026-10-30T12:48:16.9468331Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:48:16.9468661Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:48:16.9468982Z ##[endgroup]
+2026-10-30T12:48:17.0953213Z === Release files ===
+2026-10-30T12:48:17.0971603Z total 369940
+2026-10-30T12:48:17.0972170Z drwxr-xr-x 2 runner runner     4096 Oct 30 12:48 .
+2026-10-30T12:48:17.0972998Z drwxr-xr-x 4 runner runner     4096 Oct 30 12:48 ..
+2026-10-30T12:48:17.0973797Z -rw-r--r-- 1 runner runner 43884749 Oct 30 12:48 MyAdventure-android-63.apk
+2026-10-30T12:48:17.0974886Z -rw-r--r-- 1 runner runner 43438594 Oct 30 12:48 MyAdventure-linux-arm64.tar.gz
+2026-10-30T12:48:17.0975849Z -rw-r--r-- 1 runner runner 45480657 Oct 30 12:48 MyAdventure-linux-x64.tar.gz
+2026-10-30T12:48:17.0976727Z -rw-r--r-- 1 runner runner 46953221 Oct 30 12:48 MyAdventure-osx-arm64.tar.gz
+2026-10-30T12:48:17.0977342Z -rw-r--r-- 1 runner runner 48876838 Oct 30 12:48 MyAdventure-osx-x64.tar.gz
+2026-10-30T12:48:17.0977926Z -rw-r--r-- 1 runner runner 73818650 Oct 30 12:48 MyAdventure-win-arm64.zip
+2026-10-30T12:48:17.0978450Z -rw-r--r-- 1 runner runner 76338728 Oct 30 12:48 MyAdventure-win-x64.zip

@@ -1,0 +1,9 @@
+﻿2026-10-30T12:46:49.4992655Z ##[group]Run Compress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-win-arm64.zip
+2026-10-30T12:46:49.4993816Z [36;1mCompress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-win-arm64.zip[0m
+2026-10-30T12:46:49.5150219Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-30T12:46:49.5150747Z env:
+2026-10-30T12:46:49.5151034Z   DOTNET_NOLOGO: true
+2026-10-30T12:46:49.5151379Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:46:49.5151810Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:46:49.5152249Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-30T12:46:49.5152643Z ##[endgroup]

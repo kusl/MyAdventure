@@ -1,0 +1,270 @@
+﻿2026-10-30T12:45:32.6486486Z Current runner version: '2.338.0'
+2026-10-30T12:45:32.6507944Z ##[group]Runner Image Provisioner
+2026-10-30T12:45:32.6508565Z Hosted Compute Agent
+2026-10-30T12:45:32.6508978Z Version: 20261021.618
+2026-10-30T12:45:32.6509453Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T12:45:32.6510017Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T12:45:32.6510532Z Worker ID: {a402c139-99f4-494f-b00f-4b0ef7dfb387}
+2026-10-30T12:45:32.6511105Z Region: westus3
+2026-10-30T12:45:32.6511495Z Cloud: Azure
+2026-10-30T12:45:32.6511929Z ##[endgroup]
+2026-10-30T12:45:32.6512954Z ##[group]Operating System
+2026-10-30T12:45:32.6513429Z Microsoft Windows Server 2025
+2026-10-30T12:45:32.6513908Z 10.0.26100
+2026-10-30T12:45:32.6514332Z Datacenter
+2026-10-30T12:45:32.6514720Z ##[endgroup]
+2026-10-30T12:45:32.6515166Z ##[group]Runner Image
+2026-10-30T12:45:32.6515586Z Image: windows-2025-vs2026
+2026-10-30T12:45:32.6516132Z Version: 20261021.278.1
+2026-10-30T12:45:32.6517322Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261021.278/images/windows/Windows2025-VS2026-Readme.md
+2026-10-30T12:45:32.6518608Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261021.278
+2026-10-30T12:45:32.6519355Z ##[endgroup]
+2026-10-30T12:45:32.6521772Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T12:45:32.6523419Z Actions: write
+2026-10-30T12:45:32.6523919Z ArtifactMetadata: write
+2026-10-30T12:45:32.6524724Z Attestations: write
+2026-10-30T12:45:32.6525181Z Checks: write
+2026-10-30T12:45:32.6525658Z CodeQuality: write
+2026-10-30T12:45:32.6526059Z Contents: write
+2026-10-30T12:45:32.6526474Z CopilotRequests: write
+2026-10-30T12:45:32.6526955Z Deployments: write
+2026-10-30T12:45:32.6527416Z Discussions: write
+2026-10-30T12:45:32.6527869Z Drives: write
+2026-10-30T12:45:32.6528244Z Issues: write
+2026-10-30T12:45:32.6528718Z Metadata: read
+2026-10-30T12:45:32.6529123Z Models: read
+2026-10-30T12:45:32.6529618Z Packages: write
+2026-10-30T12:45:32.6530020Z Pages: write
+2026-10-30T12:45:32.6530397Z PullRequests: write
+2026-10-30T12:45:32.6530837Z RepositoryProjects: write
+2026-10-30T12:45:32.6531336Z SecurityEvents: write
+2026-10-30T12:45:32.6531828Z Statuses: write
+2026-10-30T12:45:32.6532270Z VulnerabilityAlerts: read
+2026-10-30T12:45:32.6532735Z ##[endgroup]
+2026-10-30T12:45:32.6534513Z Secret source: Actions
+2026-10-30T12:45:32.6535222Z Cache mode: write
+2026-10-30T12:45:32.6535764Z Prepare workflow directory
+2026-10-30T12:45:32.6876841Z Prepare all required actions
+2026-10-30T12:45:32.6916324Z Getting action download info
+2026-10-30T12:45:32.9890010Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-30T12:45:33.1729349Z Download action repository 'actions/setup-dotnet@v6' (SHA:a98b56852c35b8e3190ac28c8c2271da59106c68)
+2026-10-30T12:45:33.8147187Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-30T12:45:34.0422927Z Complete job name: build-desktop (windows-latest, win-x64, win-x64)
+2026-10-30T12:45:34.5336966Z ##[group]Run actions/checkout@v7
+2026-10-30T12:45:34.5337841Z with:
+2026-10-30T12:45:34.5338149Z   repository: kusl/MyAdventure
+2026-10-30T12:45:34.5341248Z   token: ***
+2026-10-30T12:45:34.5341560Z   ssh-strict: true
+2026-10-30T12:45:34.5341868Z   ssh-user: git
+2026-10-30T12:45:34.5342177Z   persist-credentials: true
+2026-10-30T12:45:34.5342526Z   clean: true
+2026-10-30T12:45:34.5342840Z   sparse-checkout-cone-mode: true
+2026-10-30T12:45:34.5343211Z   fetch-depth: 1
+2026-10-30T12:45:34.5343516Z   fetch-tags: false
+2026-10-30T12:45:34.5343838Z   show-progress: true
+2026-10-30T12:45:34.5344157Z   lfs: false
+2026-10-30T12:45:34.5344450Z   submodules: false
+2026-10-30T12:45:34.5344759Z   set-safe-directory: true
+2026-10-30T12:45:34.5345119Z   allow-unsafe-pr-checkout: false
+2026-10-30T12:45:34.5345639Z env:
+2026-10-30T12:45:34.5345918Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:34.5346250Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:34.5348254Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:34.5348664Z ##[endgroup]
+2026-10-30T12:45:35.0058997Z Syncing repository: kusl/MyAdventure
+2026-10-30T12:45:35.0061053Z ##[group]Getting Git version info
+2026-10-30T12:45:35.0061841Z Working directory is 'D:\a\MyAdventure\MyAdventure'
+2026-10-30T12:45:35.2926112Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-30T12:45:36.1953027Z git version 2.56.0.windows.2
+2026-10-30T12:45:36.1990730Z ##[endgroup]
+2026-10-30T12:45:36.2007529Z Temporarily overriding HOME='D:\a\_temp\fabaed2b-356b-4513-b3d2-2ae1ad695341' before making global git config changes
+2026-10-30T12:45:36.2008884Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:45:36.2016496Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\MyAdventure\MyAdventure
+2026-10-30T12:45:36.4734676Z Deleting the contents of 'D:\a\MyAdventure\MyAdventure'
+2026-10-30T12:45:36.4738611Z ##[group]Determining repository object format
+2026-10-30T12:45:36.4740272Z ##[endgroup]
+2026-10-30T12:45:36.4740729Z ##[group]Initializing the repository
+2026-10-30T12:45:36.4748161Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\MyAdventure\MyAdventure
+2026-10-30T12:45:36.7068302Z Initialized empty Git repository in D:/a/MyAdventure/MyAdventure/.git/
+2026-10-30T12:45:36.7110019Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/kusl/MyAdventure
+2026-10-30T12:45:36.7757428Z ##[endgroup]
+2026-10-30T12:45:36.7757829Z ##[group]Disabling automatic garbage collection
+2026-10-30T12:45:36.7765791Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-30T12:45:36.8066238Z ##[endgroup]
+2026-10-30T12:45:36.8066696Z ##[group]Setting up auth
+2026-10-30T12:45:36.8066987Z Removing SSH command configuration
+2026-10-30T12:45:36.8075746Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:45:36.8378910Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-30T12:45:40.8631488Z Removing HTTP extra header
+2026-10-30T12:45:40.8640577Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:45:40.8947101Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-30T12:45:41.6309517Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:45:41.6320829Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:45:41.6648557Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-30T12:45:42.1389935Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-30T12:45:42.1698538Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/MyAdventure/MyAdventure/.git.path D:\a\_temp\git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:45:42.2000481Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/MyAdventure/MyAdventure/.git/worktrees/*.path D:\a\_temp\git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:45:42.2474323Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:45:42.2837379Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:45:42.3147005Z ##[endgroup]
+2026-10-30T12:45:42.3147484Z ##[group]Fetching the repository
+2026-10-30T12:45:42.3158102Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6f776fecac5f27616cfaf885234a155c8dae7879:refs/remotes/origin/main
+2026-10-30T12:45:43.9369233Z From https://github.com/kusl/MyAdventure
+2026-10-30T12:45:43.9370107Z  * [new ref]         6f776fecac5f27616cfaf885234a155c8dae7879 -> origin/main
+2026-10-30T12:45:43.9414822Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/main
+2026-10-30T12:45:43.9793211Z   origin/main
+2026-10-30T12:45:43.9830680Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/main
+2026-10-30T12:45:44.0162129Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:45:44.0195055Z ##[endgroup]
+2026-10-30T12:45:44.0195499Z ##[group]Determining the checkout info
+2026-10-30T12:45:44.0197000Z ##[endgroup]
+2026-10-30T12:45:44.0204954Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-30T12:45:44.0785930Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-30T12:45:44.1102066Z ##[group]Checking out the ref
+2026-10-30T12:45:44.1114392Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B main refs/remotes/origin/main
+2026-10-30T12:45:44.2303691Z Switched to a new branch 'main'
+2026-10-30T12:45:44.2320759Z branch 'main' set up to track 'origin/main'.
+2026-10-30T12:45:44.2357513Z ##[endgroup]
+2026-10-30T12:45:44.2751949Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-30T12:45:44.3055964Z 6f776fecac5f27616cfaf885234a155c8dae7879
+2026-10-30T12:45:44.3483099Z ##[group]Run actions/setup-dotnet@v6
+2026-10-30T12:45:44.3483399Z with:
+2026-10-30T12:45:44.3483563Z   dotnet-version: 10.0.x
+2026-10-30T12:45:44.3483742Z   cache: false
+2026-10-30T12:45:44.3483880Z env:
+2026-10-30T12:45:44.3484018Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:44.3484188Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:44.3484408Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:44.3484606Z ##[endgroup]
+2026-10-30T12:45:44.5946180Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v6\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Runtime dotnet -Channel LTS
+2026-10-30T12:45:46.3210621Z dotnet-install: Downloaded file https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.14/dotnet-runtime-10.0.14-win-x64.zip size is 36971047 bytes.
+2026-10-30T12:45:46.3213141Z dotnet-install: Either downloaded or local package size can not be measured. One of them may be corrupted.
+2026-10-30T12:45:46.3233615Z dotnet-install: Extracting the archive.
+2026-10-30T12:45:47.0189628Z dotnet-install: Note that the script does not ensure your Windows version is supported during the installation.
+2026-10-30T12:45:47.0193114Z dotnet-install: To check the list of supported versions, go to https://learn.microsoft.com/dotnet/core/install/windows#supported-versions
+2026-10-30T12:45:47.0198102Z dotnet-install: Installed version is 10.0.14
+2026-10-30T12:45:47.0202833Z dotnet-install: Installation finished
+2026-10-30T12:45:47.1258549Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v6\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Channel 10.0
+2026-10-30T12:45:57.7425481Z dotnet-install: Downloaded file https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.403/dotnet-sdk-10.0.403-win-x64.zip size is 300745255 bytes.
+2026-10-30T12:45:57.7429291Z dotnet-install: Either downloaded or local package size can not be measured. One of them may be corrupted.
+2026-10-30T12:45:57.7449593Z dotnet-install: Extracting the archive.
+2026-10-30T12:46:21.4913367Z dotnet-install: Note that the script does not ensure your Windows version is supported during the installation.
+2026-10-30T12:46:21.4915021Z dotnet-install: To check the list of supported versions, go to https://learn.microsoft.com/dotnet/core/install/windows#supported-versions
+2026-10-30T12:46:21.4919859Z dotnet-install: Installed version is 10.0.403
+2026-10-30T12:46:21.4924034Z dotnet-install: Installation finished
+2026-10-30T12:46:21.5523890Z ##[group]Run dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
+2026-10-30T12:46:21.5524451Z [36;1mdotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \[0m
+2026-10-30T12:46:21.5524809Z [36;1m  --configuration Release \[0m
+2026-10-30T12:46:21.5525295Z [36;1m  -r win-x64 \[0m
+2026-10-30T12:46:21.5525519Z [36;1m  --self-contained true \[0m
+2026-10-30T12:46:21.5525729Z [36;1m  -p:PublishSingleFile=true \[0m
+2026-10-30T12:46:21.5526010Z [36;1m  -p:IncludeNativeLibrariesForSelfExtract=true \[0m
+2026-10-30T12:46:21.5526266Z [36;1m  -p:Version=1.0.63 \[0m
+2026-10-30T12:46:21.5526460Z [36;1m  --output ./publish[0m
+2026-10-30T12:46:21.5541737Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-10-30T12:46:21.5542053Z env:
+2026-10-30T12:46:21.5542206Z   DOTNET_NOLOGO: true
+2026-10-30T12:46:21.5542390Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:46:21.5542639Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:46:21.5542855Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-30T12:46:21.5543045Z ##[endgroup]
+2026-10-30T12:46:25.9281312Z   Determining projects to restore...
+2026-10-30T12:47:21.1009478Z   Restored D:\a\MyAdventure\MyAdventure\src\MyAdventure.Core\MyAdventure.Core.csproj (in 54.27 sec).
+2026-10-30T12:47:21.1010593Z   Restored D:\a\MyAdventure\MyAdventure\src\MyAdventure.Shared\MyAdventure.Shared.csproj (in 54.28 sec).
+2026-10-30T12:47:21.1030907Z   Restored D:\a\MyAdventure\MyAdventure\src\MyAdventure.Desktop\MyAdventure.Desktop.csproj (in 54.29 sec).
+2026-10-30T12:47:23.4146581Z   Restored D:\a\MyAdventure\MyAdventure\src\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj (in 55.88 sec).
+2026-10-30T12:47:26.5628175Z   MyAdventure.Core -> D:\a\MyAdventure\MyAdventure\src\MyAdventure.Core\bin\Release\net10.0\MyAdventure.Core.dll
+2026-10-30T12:47:27.2978582Z   MyAdventure.Infrastructure -> D:\a\MyAdventure\MyAdventure\src\MyAdventure.Infrastructure\bin\Release\net10.0\MyAdventure.Infrastructure.dll
+2026-10-30T12:47:29.2584675Z   MyAdventure.Shared -> D:\a\MyAdventure\MyAdventure\src\MyAdventure.Shared\bin\Release\net10.0\MyAdventure.Shared.dll
+2026-10-30T12:47:30.7039216Z   MyAdventure.Desktop -> D:\a\MyAdventure\MyAdventure\src\MyAdventure.Desktop\bin\Release\net10.0\win-x64\MyAdventure.Desktop.dll
+2026-10-30T12:47:31.2897142Z   MyAdventure.Desktop -> D:\a\MyAdventure\MyAdventure\publish\
+2026-10-30T12:47:31.6287939Z ##[group]Run Compress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-win-x64.zip
+2026-10-30T12:47:31.6288859Z [36;1mCompress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-win-x64.zip[0m
+2026-10-30T12:47:31.6431505Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-30T12:47:31.6431942Z env:
+2026-10-30T12:47:31.6432153Z   DOTNET_NOLOGO: true
+2026-10-30T12:47:31.6432407Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:47:31.6432736Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:47:31.6433068Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-30T12:47:31.6433350Z ##[endgroup]
+2026-10-30T12:47:36.5143955Z ##[group]Run actions/upload-artifact@v7
+2026-10-30T12:47:36.5144351Z with:
+2026-10-30T12:47:36.5144566Z   name: win-x64
+2026-10-30T12:47:36.5144930Z   path: ./MyAdventure-win-x64.tar.gz
+./MyAdventure-win-x64.zip
+
+2026-10-30T12:47:36.5145377Z   if-no-files-found: error
+2026-10-30T12:47:36.5145909Z   retention-days: 7
+2026-10-30T12:47:36.5146403Z   compression-level: 6
+2026-10-30T12:47:36.5146661Z   overwrite: false
+2026-10-30T12:47:36.5146925Z   include-hidden-files: false
+2026-10-30T12:47:36.5147209Z   archive: true
+2026-10-30T12:47:36.5147428Z env:
+2026-10-30T12:47:36.5147643Z   DOTNET_NOLOGO: true
+2026-10-30T12:47:36.5147910Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:47:36.5148251Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:47:36.5148601Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-30T12:47:36.5148909Z ##[endgroup]
+2026-10-30T12:47:36.6891602Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-30T12:47:36.6894825Z The least common ancestor is D:\a\MyAdventure\MyAdventure. This will be the root directory of the artifact
+2026-10-30T12:47:36.6895582Z With the provided path, there will be 1 file uploaded
+2026-10-30T12:47:36.6898885Z Artifact name is valid!
+2026-10-30T12:47:36.6900445Z Root directory input is valid!
+2026-10-30T12:47:37.0364508Z Uploading artifact: win-x64.zip
+2026-10-30T12:47:37.0396326Z Beginning upload of artifact content to blob storage
+2026-10-30T12:47:38.2572984Z Uploaded bytes 8388608
+2026-10-30T12:47:38.5184236Z Uploaded bytes 16777216
+2026-10-30T12:47:38.6864247Z Uploaded bytes 25165824
+2026-10-30T12:47:38.8268158Z Uploaded bytes 33554432
+2026-10-30T12:47:38.8439914Z Uploaded bytes 41943040
+2026-10-30T12:47:39.0298943Z Uploaded bytes 50331648
+2026-10-30T12:47:39.0561295Z Uploaded bytes 58720256
+2026-10-30T12:47:39.2129137Z Uploaded bytes 67108864
+2026-10-30T12:47:39.4902148Z Uploaded bytes 75497472
+2026-10-30T12:47:39.5714630Z Uploaded bytes 76107453
+2026-10-30T12:47:39.6269002Z Finished uploading artifact content to blob storage!
+2026-10-30T12:47:39.6272367Z SHA256 digest of uploaded artifact is 26b8360456e3b2d13709b92656dd01301dd8e6bc93c9fb59e293b602695f315d
+2026-10-30T12:47:39.6274283Z Finalizing artifact upload
+2026-10-30T12:47:40.2029530Z Artifact win-x64 successfully finalized. Artifact ID 12976684859
+2026-10-30T12:47:40.2030108Z Artifact win-x64 has been successfully uploaded! Final size is 76107453 bytes. Artifact ID is 12976684859
+2026-10-30T12:47:40.2040333Z Artifact download URL: https://github.com/kusl/MyAdventure/actions/runs/41057431569/artifacts/12976684859
+2026-10-30T12:47:40.2352878Z Post job cleanup.
+2026-10-30T12:47:40.3727541Z Post job cleanup.
+2026-10-30T12:47:40.5072825Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-30T12:47:40.5352166Z git version 2.56.0.windows.2
+2026-10-30T12:47:40.5411609Z Temporarily overriding HOME='D:\a\_temp\59aaae66-6453-46ef-bffa-3d60bede566b' before making global git config changes
+2026-10-30T12:47:40.5412941Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T12:47:40.5421355Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\MyAdventure\MyAdventure
+2026-10-30T12:47:40.5724889Z Removing SSH command configuration
+2026-10-30T12:47:40.5733221Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T12:47:40.6028934Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-30T12:47:41.0836930Z Removing HTTP extra header
+2026-10-30T12:47:41.0846326Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T12:47:41.1164216Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-30T12:47:41.5679989Z Removing includeIf entries pointing to credentials config files
+2026-10-30T12:47:41.5689050Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T12:47:41.5960084Z includeif.gitdir:D:/a/MyAdventure/MyAdventure/.git.path
+2026-10-30T12:47:41.5961127Z includeif.gitdir:D:/a/MyAdventure/MyAdventure/.git/worktrees/*.path
+2026-10-30T12:47:41.5961531Z includeif.gitdir:/github/workspace/.git.path
+2026-10-30T12:47:41.5961864Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T12:47:41.5993118Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/MyAdventure/MyAdventure/.git.path
+2026-10-30T12:47:41.6254690Z D:\a\_temp\git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:47:41.6290372Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/MyAdventure/MyAdventure/.git.path D\:\\a\\_temp\\git\-credentials\-4b74b65b\-cfbf\-4caa\-9f79\-0c6046449f02\.config
+2026-10-30T12:47:41.6586290Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/MyAdventure/MyAdventure/.git/worktrees/*.path
+2026-10-30T12:47:41.6845523Z D:\a\_temp\git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:47:41.6878431Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/MyAdventure/MyAdventure/.git/worktrees/*.path D\:\\a\\_temp\\git\-credentials\-4b74b65b\-cfbf\-4caa\-9f79\-0c6046449f02\.config
+2026-10-30T12:47:41.7169491Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-30T12:47:41.7424199Z /github/runner_temp/git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:47:41.7456982Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-4b74b65b\-cfbf\-4caa\-9f79\-0c6046449f02\.config
+2026-10-30T12:47:41.7753510Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T12:47:41.8010376Z /github/runner_temp/git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config
+2026-10-30T12:47:41.8044893Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-4b74b65b\-cfbf\-4caa\-9f79\-0c6046449f02\.config
+2026-10-30T12:47:41.8334711Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-30T12:47:42.2938376Z Removing credentials config 'D:\a\_temp\git-credentials-4b74b65b-cfbf-4caa-9f79-0c6046449f02.config'
+2026-10-30T12:47:42.3109772Z Cleaning up orphan processes
+2026-10-30T12:47:42.3336642Z Terminate orphan process: pid (9060) (dotnet)
+2026-10-30T12:47:42.3456190Z Terminate orphan process: pid (9040) (dotnet)
+2026-10-30T12:47:42.3519047Z Terminate orphan process: pid (7516) (conhost)
+2026-10-30T12:47:42.3703181Z Terminate orphan process: pid (916) (VBCSCompiler)
+2026-10-30T12:47:42.3747911Z Terminate orphan process: pid (2972) (conhost)
+2026-10-30T12:47:42.3841689Z Terminate orphan process: pid (3304) (dotnet)

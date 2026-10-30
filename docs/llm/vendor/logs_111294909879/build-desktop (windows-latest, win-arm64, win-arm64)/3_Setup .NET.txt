@@ -1,0 +1,25 @@
+﻿2026-10-30T12:45:38.7784983Z ##[group]Run actions/setup-dotnet@v6
+2026-10-30T12:45:38.7785513Z with:
+2026-10-30T12:45:38.7785809Z   dotnet-version: 10.0.x
+2026-10-30T12:45:38.7786149Z   cache: false
+2026-10-30T12:45:38.7786420Z env:
+2026-10-30T12:45:38.7786659Z   DOTNET_NOLOGO: true
+2026-10-30T12:45:38.7786970Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:45:38.7787251Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:45:38.7787500Z ##[endgroup]
+2026-10-30T12:45:39.0443345Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v6\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Runtime dotnet -Channel LTS
+2026-10-30T12:45:40.8149376Z dotnet-install: Downloaded file https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.14/dotnet-runtime-10.0.14-win-x64.zip size is 36971047 bytes.
+2026-10-30T12:45:40.8154378Z dotnet-install: Either downloaded or local package size can not be measured. One of them may be corrupted.
+2026-10-30T12:45:40.8179005Z dotnet-install: Extracting the archive.
+2026-10-30T12:45:42.1284693Z dotnet-install: Note that the script does not ensure your Windows version is supported during the installation.
+2026-10-30T12:45:42.1289654Z dotnet-install: To check the list of supported versions, go to https://learn.microsoft.com/dotnet/core/install/windows#supported-versions
+2026-10-30T12:45:42.1295457Z dotnet-install: Installed version is 10.0.14
+2026-10-30T12:45:42.1301637Z dotnet-install: Installation finished
+2026-10-30T12:45:42.2640979Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v6\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Channel 10.0
+2026-10-30T12:45:46.5291333Z dotnet-install: Downloaded file https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.403/dotnet-sdk-10.0.403-win-x64.zip size is 300745255 bytes.
+2026-10-30T12:45:46.5297635Z dotnet-install: Either downloaded or local package size can not be measured. One of them may be corrupted.
+2026-10-30T12:45:46.5324420Z dotnet-install: Extracting the archive.
+2026-10-30T12:46:07.3744914Z dotnet-install: Note that the script does not ensure your Windows version is supported during the installation.
+2026-10-30T12:46:07.3748636Z dotnet-install: To check the list of supported versions, go to https://learn.microsoft.com/dotnet/core/install/windows#supported-versions
+2026-10-30T12:46:07.3754614Z dotnet-install: Installed version is 10.0.403
+2026-10-30T12:46:07.3760485Z dotnet-install: Installation finished

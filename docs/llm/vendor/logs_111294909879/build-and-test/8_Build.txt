@@ -1,0 +1,295 @@
+﻿2026-10-30T12:43:29.8678289Z ##[group]Run SIGN_PASS="***"
+2026-10-30T12:43:29.8678859Z [36;1mSIGN_PASS="***"[0m
+2026-10-30T12:43:29.8679121Z [36;1mif [[ "true" != "true" ]]; then[0m
+2026-10-30T12:43:29.8679425Z [36;1m  SIGN_PASS="dummypassword"[0m
+2026-10-30T12:43:29.8680004Z [36;1mfi[0m
+2026-10-30T12:43:29.8680286Z [36;1mdotnet build --configuration Release --no-restore \[0m
+2026-10-30T12:43:29.8680639Z [36;1m  -p:BuildNumber=63 \[0m
+2026-10-30T12:43:29.8680938Z [36;1m  -p:AndroidKeyStore=true \[0m
+2026-10-30T12:43:29.8681446Z [36;1m  -p:AndroidSigningKeyStore="/home/runner/work/MyAdventure/MyAdventure/android.keystore" \[0m
+2026-10-30T12:43:29.8682011Z [36;1m  -p:AndroidSigningStorePass="$SIGN_PASS" \[0m
+2026-10-30T12:43:29.8682369Z [36;1m  -p:AndroidSigningKeyPass="$SIGN_PASS" \[0m
+2026-10-30T12:43:29.8682722Z [36;1m  -p:AndroidSigningKeyAlias=myalias[0m
+2026-10-30T12:43:29.8703103Z shell: /usr/bin/bash -e {0}
+2026-10-30T12:43:29.8703357Z env:
+2026-10-30T12:43:29.8703551Z   DOTNET_NOLOGO: true
+2026-10-30T12:43:29.8703999Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+2026-10-30T12:43:29.8704301Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+2026-10-30T12:43:29.8704594Z   DOTNET_ROOT: /usr/share/dotnet
+2026-10-30T12:43:29.8704967Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:29.8705479Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+2026-10-30T12:43:29.8705877Z   MAVEN_ARGS: -ntp
+2026-10-30T12:43:29.8706083Z ##[endgroup]
+2026-10-30T12:43:38.1429876Z   MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net10.0/MyAdventure.Core.dll
+2026-10-30T12:43:39.4215095Z   MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net10.0/MyAdventure.Infrastructure.dll
+2026-10-30T12:43:41.7655772Z   MyAdventure.Core.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net10.0/MyAdventure.Core.Tests.dll
+2026-10-30T12:43:42.0978356Z   MyAdventure.Shared -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/bin/Release/net10.0/MyAdventure.Shared.dll
+2026-10-30T12:43:44.0699431Z   MyAdventure.UI.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.UI.Tests/bin/Release/net10.0/MyAdventure.UI.Tests.dll
+2026-10-30T12:43:46.1802966Z   MyAdventure.Integration.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net10.0/MyAdventure.Integration.Tests.dll
+2026-10-30T12:43:46.2092416Z   MyAdventure.Desktop -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Desktop/bin/Release/net10.0/MyAdventure.Desktop.dll
+2026-10-30T12:43:48.7946396Z   MyAdventure.Android -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Android/bin/Release/net10.0-android/MyAdventure.Android.dll
+2026-10-30T12:43:49.1657237Z   MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net10.0/MyAdventure.Core.dll
+2026-10-30T12:43:49.2361874Z   MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net10.0/MyAdventure.Infrastructure.dll
+2026-10-30T12:43:49.3131765Z   MyAdventure.Shared -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/bin/Release/net10.0/MyAdventure.Shared.dll
+2026-10-30T12:43:50.2201478Z   Optimizing assemblies for size may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink
+2026-10-30T12:43:50.2230656Z   Optimizing assemblies for size. This process might take a while.
+2026-10-30T12:43:50.2340981Z   Optimizing assemblies for size may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink
+2026-10-30T12:43:50.2381803Z   Optimizing assemblies for size. This process might take a while.
+2026-10-30T12:44:20.3360201Z   [1/126] _Microsoft.Android.Resource.Designer.dll -> _Microsoft.Android.Resource.Designer.dll.so
+2026-10-30T12:44:20.3501172Z   [1/126] _Microsoft.Android.Resource.Designer.dll -> _Microsoft.Android.Resource.Designer.dll.so
+2026-10-30T12:44:20.3565950Z   [2/126] MyAdventure.Shared.dll -> MyAdventure.Shared.dll.so
+2026-10-30T12:44:20.3852097Z   [3/126] MyAdventure.Core.dll -> MyAdventure.Core.dll.so
+2026-10-30T12:44:20.4302136Z   [4/126] MyAdventure.Infrastructure.dll -> MyAdventure.Infrastructure.dll.so
+2026-10-30T12:44:20.4913210Z   [2/126] MyAdventure.Core.dll -> MyAdventure.Core.dll.so
+2026-10-30T12:44:20.5831980Z   [5/126] Avalonia.DesignerSupport.dll -> Avalonia.DesignerSupport.dll.so
+2026-10-30T12:44:20.6922704Z   [3/126] MyAdventure.Infrastructure.dll -> MyAdventure.Infrastructure.dll.so
+2026-10-30T12:44:20.7725479Z   [6/126] Avalonia.Dialogs.dll -> Avalonia.Dialogs.dll.so
+2026-10-30T12:44:20.8671915Z   [4/126] MyAdventure.Shared.dll -> MyAdventure.Shared.dll.so
+2026-10-30T12:44:20.9088250Z   [7/126] MyAdventure.Android.dll -> MyAdventure.Android.dll.so
+2026-10-30T12:44:20.9721939Z   [8/126] Avalonia.Controls.dll -> Avalonia.Controls.dll.so
+2026-10-30T12:44:20.9991966Z   [9/126] Avalonia.Markup.Xaml.dll -> Avalonia.Markup.Xaml.dll.so
+2026-10-30T12:44:21.0441024Z   [10/126] Avalonia.Markup.dll -> Avalonia.Markup.dll.so
+2026-10-30T12:44:21.1071622Z   [11/126] Avalonia.Metal.dll -> Avalonia.Metal.dll.so
+2026-10-30T12:44:21.1591844Z   [12/126] Avalonia.OpenGL.dll -> Avalonia.OpenGL.dll.so
+2026-10-30T12:44:21.1911119Z   [13/126] Avalonia.Vulkan.dll -> Avalonia.Vulkan.dll.so
+2026-10-30T12:44:21.2987463Z   [14/126] Avalonia.dll -> Avalonia.dll.so
+2026-10-30T12:44:21.3561121Z   [15/126] Avalonia.Fonts.Inter.dll -> Avalonia.Fonts.Inter.dll.so
+2026-10-30T12:44:21.3873576Z   [5/126] MyAdventure.Android.dll -> MyAdventure.Android.dll.so
+2026-10-30T12:44:21.4904262Z   [16/126] Avalonia.HarfBuzz.dll -> Avalonia.HarfBuzz.dll.so
+2026-10-30T12:44:21.4980676Z   [17/126] Avalonia.Remote.Protocol.dll -> Avalonia.Remote.Protocol.dll.so
+2026-10-30T12:44:21.5237182Z   [18/126] Avalonia.Android.dll -> Avalonia.Android.dll.so
+2026-10-30T12:44:21.6403720Z   [19/126] Avalonia.Themes.Fluent.dll -> Avalonia.Themes.Fluent.dll.so
+2026-10-30T12:44:21.6454838Z   [20/126] Avalonia.Skia.dll -> Avalonia.Skia.dll.so
+2026-10-30T12:44:21.6577541Z   [21/126] Avalonia.Base.dll -> Avalonia.Base.dll.so
+2026-10-30T12:44:21.6624544Z   [22/126] CommunityToolkit.Mvvm.dll -> CommunityToolkit.Mvvm.dll.so
+2026-10-30T12:44:21.7959483Z   [23/126] HarfBuzzSharp.dll -> HarfBuzzSharp.dll.so
+2026-10-30T12:44:21.8445169Z   [24/126] Microsoft.EntityFrameworkCore.Abstractions.dll -> Microsoft.EntityFrameworkCore.Abstractions.dll.so
+2026-10-30T12:44:22.3200728Z   [25/126] Microsoft.Data.Sqlite.dll -> Microsoft.Data.Sqlite.dll.so
+2026-10-30T12:44:22.4267927Z   [26/126] Microsoft.EntityFrameworkCore.Sqlite.dll -> Microsoft.EntityFrameworkCore.Sqlite.dll.so
+2026-10-30T12:44:22.4762130Z   [27/126] Microsoft.Extensions.Caching.Abstractions.dll -> Microsoft.Extensions.Caching.Abstractions.dll.so
+2026-10-30T12:44:22.5556395Z   [28/126] Microsoft.Extensions.Caching.Memory.dll -> Microsoft.Extensions.Caching.Memory.dll.so
+2026-10-30T12:44:22.5742933Z   [6/126] Avalonia.Base.dll -> Avalonia.Base.dll.so
+2026-10-30T12:44:22.6113027Z   [29/126] Microsoft.Extensions.Configuration.dll -> Microsoft.Extensions.Configuration.dll.so
+2026-10-30T12:44:22.6741252Z   [30/126] Microsoft.Extensions.Configuration.Abstractions.dll -> Microsoft.Extensions.Configuration.Abstractions.dll.so
+2026-10-30T12:44:22.7501366Z   [31/126] Microsoft.Extensions.Configuration.Binder.dll -> Microsoft.Extensions.Configuration.Binder.dll.so
+2026-10-30T12:44:22.8231514Z   [32/126] Microsoft.Extensions.Configuration.EnvironmentVariables.dll -> Microsoft.Extensions.Configuration.EnvironmentVariables.dll.so
+2026-10-30T12:44:22.9205071Z   [33/126] Microsoft.Extensions.DependencyInjection.dll -> Microsoft.Extensions.DependencyInjection.dll.so
+2026-10-30T12:44:22.9520860Z   [34/126] Microsoft.EntityFrameworkCore.Relational.dll -> Microsoft.EntityFrameworkCore.Relational.dll.so
+2026-10-30T12:44:22.9822205Z   [35/126] Microsoft.Extensions.DependencyInjection.Abstractions.dll -> Microsoft.Extensions.DependencyInjection.Abstractions.dll.so
+2026-10-30T12:44:23.0478798Z   [36/126] Microsoft.Extensions.DependencyModel.dll -> Microsoft.Extensions.DependencyModel.dll.so
+2026-10-30T12:44:23.0531553Z   [7/126] Avalonia.Controls.dll -> Avalonia.Controls.dll.so
+2026-10-30T12:44:23.0861544Z   [37/126] Microsoft.Extensions.Diagnostics.Abstractions.dll -> Microsoft.Extensions.Diagnostics.Abstractions.dll.so
+2026-10-30T12:44:23.1031273Z   [38/126] Microsoft.Extensions.Hosting.Abstractions.dll -> Microsoft.Extensions.Hosting.Abstractions.dll.so
+2026-10-30T12:44:23.1912794Z   [8/126] Avalonia.DesignerSupport.dll -> Avalonia.DesignerSupport.dll.so
+2026-10-30T12:44:23.2091435Z   [39/126] Microsoft.Extensions.Logging.dll -> Microsoft.Extensions.Logging.dll.so
+2026-10-30T12:44:23.2451032Z   [40/126] Microsoft.Extensions.Logging.Configuration.dll -> Microsoft.Extensions.Logging.Configuration.dll.so
+2026-10-30T12:44:23.3018343Z   [41/126] Microsoft.Extensions.Logging.Abstractions.dll -> Microsoft.Extensions.Logging.Abstractions.dll.so
+2026-10-30T12:44:23.3282327Z   [9/126] Avalonia.Dialogs.dll -> Avalonia.Dialogs.dll.so
+2026-10-30T12:44:23.3437314Z   [42/126] Microsoft.Extensions.Options.dll -> Microsoft.Extensions.Options.dll.so
+2026-10-30T12:44:23.3792153Z   [43/126] Microsoft.Extensions.Options.ConfigurationExtensions.dll -> Microsoft.Extensions.Options.ConfigurationExtensions.dll.so
+2026-10-30T12:44:23.4540494Z   [44/126] Microsoft.Extensions.Primitives.dll -> Microsoft.Extensions.Primitives.dll.so
+2026-10-30T12:44:23.4720851Z   [10/126] Avalonia.Markup.Xaml.dll -> Avalonia.Markup.Xaml.dll.so
+2026-10-30T12:44:23.5500778Z   [45/126] OpenTelemetry.Api.dll -> OpenTelemetry.Api.dll.so
+2026-10-30T12:44:23.5631077Z   [46/126] OpenTelemetry.Api.ProviderBuilderExtensions.dll -> OpenTelemetry.Api.ProviderBuilderExtensions.dll.so
+2026-10-30T12:44:23.5983571Z   [11/126] Avalonia.Markup.dll -> Avalonia.Markup.dll.so
+2026-10-30T12:44:23.6698122Z   [47/126] OpenTelemetry.dll -> OpenTelemetry.dll.so
+2026-10-30T12:44:23.7271505Z   [12/126] Avalonia.Metal.dll -> Avalonia.Metal.dll.so
+2026-10-30T12:44:23.7731252Z   [48/126] OpenTelemetry.Exporter.Console.dll -> OpenTelemetry.Exporter.Console.dll.so
+2026-10-30T12:44:23.7812114Z   [49/126] OpenTelemetry.Exporter.OpenTelemetryProtocol.dll -> OpenTelemetry.Exporter.OpenTelemetryProtocol.dll.so
+2026-10-30T12:44:23.7835495Z   [50/126] OpenTelemetry.Extensions.Hosting.dll -> OpenTelemetry.Extensions.Hosting.dll.so
+2026-10-30T12:44:23.8524318Z   [13/126] Avalonia.OpenGL.dll -> Avalonia.OpenGL.dll.so
+2026-10-30T12:44:23.8970893Z   [51/126] SQLitePCLRaw.batteries_v2.dll -> SQLitePCLRaw.batteries_v2.dll.so
+2026-10-30T12:44:23.9060824Z   [52/126] OpenTelemetry.Instrumentation.Runtime.dll -> OpenTelemetry.Instrumentation.Runtime.dll.so
+2026-10-30T12:44:23.9341475Z   [53/126] SkiaSharp.dll -> SkiaSharp.dll.so
+2026-10-30T12:44:24.0003160Z   [14/126] Avalonia.Vulkan.dll -> Avalonia.Vulkan.dll.so
+2026-10-30T12:44:24.0160793Z   [54/126] SQLitePCLRaw.core.dll -> SQLitePCLRaw.core.dll.so
+2026-10-30T12:44:24.0451109Z   [55/126] SQLitePCLRaw.lib.e_sqlite3.android.dll -> SQLitePCLRaw.lib.e_sqlite3.android.dll.so
+2026-10-30T12:44:24.0672115Z   [56/126] SQLitePCLRaw.provider.e_sqlite3.dll -> SQLitePCLRaw.provider.e_sqlite3.dll.so
+2026-10-30T12:44:24.1053566Z   [15/126] Avalonia.dll -> Avalonia.dll.so
+2026-10-30T12:44:24.1511023Z   [57/126] Xamarin.AndroidX.Activity.dll -> Xamarin.AndroidX.Activity.dll.so
+2026-10-30T12:44:24.1930956Z   [58/126] Xamarin.AndroidX.AppCompat.dll -> Xamarin.AndroidX.AppCompat.dll.so
+2026-10-30T12:44:24.2256923Z   [59/126] Xamarin.AndroidX.Core.dll -> Xamarin.AndroidX.Core.dll.so
+2026-10-30T12:44:24.2901059Z   [60/126] Xamarin.AndroidX.CustomView.dll -> Xamarin.AndroidX.CustomView.dll.so
+2026-10-30T12:44:24.3327259Z   [61/126] Xamarin.AndroidX.DrawerLayout.dll -> Xamarin.AndroidX.DrawerLayout.dll.so
+2026-10-30T12:44:24.3484333Z   [62/126] Xamarin.AndroidX.Fragment.dll -> Xamarin.AndroidX.Fragment.dll.so
+2026-10-30T12:44:24.3630783Z   [16/126] Avalonia.Android.dll -> Avalonia.Android.dll.so
+2026-10-30T12:44:24.4045142Z   [63/126] Xamarin.AndroidX.Lifecycle.Common.Jvm.dll -> Xamarin.AndroidX.Lifecycle.Common.Jvm.dll.so
+2026-10-30T12:44:24.4499407Z   [64/126] Xamarin.AndroidX.Lifecycle.LiveData.Core.dll -> Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so
+2026-10-30T12:44:24.4772728Z   [65/126] Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll -> Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll.so
+2026-10-30T12:44:24.5074642Z   [17/126] Avalonia.Fonts.Inter.dll -> Avalonia.Fonts.Inter.dll.so
+2026-10-30T12:44:24.5564230Z   [66/126] Xamarin.AndroidX.Loader.dll -> Xamarin.AndroidX.Loader.dll.so
+2026-10-30T12:44:24.5823837Z   [67/126] Xamarin.AndroidX.NavigationEvent.Android.dll -> Xamarin.AndroidX.NavigationEvent.Android.dll.so
+2026-10-30T12:44:24.6162681Z   [68/126] Xamarin.AndroidX.SavedState.SavedState.Android.dll -> Xamarin.AndroidX.SavedState.SavedState.Android.dll.so
+2026-10-30T12:44:24.6268098Z   [18/126] Avalonia.HarfBuzz.dll -> Avalonia.HarfBuzz.dll.so
+2026-10-30T12:44:24.6945934Z   [69/126] Xamarin.AndroidX.Window.dll -> Xamarin.AndroidX.Window.dll.so
+2026-10-30T12:44:24.7137218Z   [70/126] Xamarin.Kotlin.StdLib.dll -> Xamarin.Kotlin.StdLib.dll.so
+2026-10-30T12:44:24.7229275Z   [71/126] Xamarin.KotlinX.Coroutines.Core.Jvm.dll -> Xamarin.KotlinX.Coroutines.Core.Jvm.dll.so
+2026-10-30T12:44:24.7706228Z   [72/126] Microsoft.EntityFrameworkCore.dll -> Microsoft.EntityFrameworkCore.dll.so
+2026-10-30T12:44:24.7911009Z   [19/126] Avalonia.Remote.Protocol.dll -> Avalonia.Remote.Protocol.dll.so
+2026-10-30T12:44:24.8378957Z   [73/126] System.Collections.NonGeneric.dll -> System.Collections.NonGeneric.dll.so
+2026-10-30T12:44:24.8681672Z   [74/126] System.Collections.Specialized.dll -> System.Collections.Specialized.dll.so
+2026-10-30T12:44:24.9390853Z   [20/126] Avalonia.Skia.dll -> Avalonia.Skia.dll.so
+2026-10-30T12:44:24.9705326Z   [75/126] System.Collections.Concurrent.dll -> System.Collections.Concurrent.dll.so
+2026-10-30T12:44:24.9730930Z   [76/126] System.ComponentModel.Annotations.dll -> System.ComponentModel.Annotations.dll.so
+2026-10-30T12:44:25.0765761Z   [21/126] Avalonia.Themes.Fluent.dll -> Avalonia.Themes.Fluent.dll.so
+2026-10-30T12:44:25.0846554Z   [77/126] System.ComponentModel.Primitives.dll -> System.ComponentModel.Primitives.dll.so
+2026-10-30T12:44:25.1263816Z   [78/126] System.Collections.Immutable.dll -> System.Collections.Immutable.dll.so
+2026-10-30T12:44:25.1377369Z   [79/126] System.ComponentModel.TypeConverter.dll -> System.ComponentModel.TypeConverter.dll.so
+2026-10-30T12:44:25.1943747Z   [80/126] System.ComponentModel.dll -> System.ComponentModel.dll.so
+2026-10-30T12:44:25.2066062Z   [22/126] CommunityToolkit.Mvvm.dll -> CommunityToolkit.Mvvm.dll.so
+2026-10-30T12:44:25.2434492Z   [81/126] System.Collections.dll -> System.Collections.dll.so
+2026-10-30T12:44:25.2474538Z   [82/126] System.Console.dll -> System.Console.dll.so
+2026-10-30T12:44:25.3385296Z   [83/126] System.Diagnostics.DiagnosticSource.dll -> System.Diagnostics.DiagnosticSource.dll.so
+2026-10-30T12:44:25.3447013Z   [84/126] System.Diagnostics.Process.dll -> System.Diagnostics.Process.dll.so
+2026-10-30T12:44:25.3620666Z   [23/126] HarfBuzzSharp.dll -> HarfBuzzSharp.dll.so
+2026-10-30T12:44:25.3651202Z   [85/126] System.Diagnostics.StackTrace.dll -> System.Diagnostics.StackTrace.dll.so
+2026-10-30T12:44:25.4232447Z   [86/126] System.Data.Common.dll -> System.Data.Common.dll.so
+2026-10-30T12:44:25.4563248Z   [87/126] System.Diagnostics.Tracing.dll -> System.Diagnostics.Tracing.dll.so
+2026-10-30T12:44:25.4588232Z   [88/126] System.Diagnostics.TraceSource.dll -> System.Diagnostics.TraceSource.dll.so
+2026-10-30T12:44:25.4749102Z   [89/126] System.Drawing.Primitives.dll -> System.Drawing.Primitives.dll.so
+2026-10-30T12:44:25.5304790Z   [90/126] System.Drawing.dll -> System.Drawing.dll.so
+2026-10-30T12:44:25.5662102Z   [91/126] System.IO.Compression.Brotli.dll -> System.IO.Compression.Brotli.dll.so
+2026-10-30T12:44:25.5922017Z   [92/126] System.IO.Compression.dll -> System.IO.Compression.dll.so
+2026-10-30T12:44:25.6070912Z   [93/126] System.Formats.Asn1.dll -> System.Formats.Asn1.dll.so
+2026-10-30T12:44:25.6562577Z   [94/126] System.IO.MemoryMappedFiles.dll -> System.IO.MemoryMappedFiles.dll.so
+2026-10-30T12:44:25.7112986Z   [95/126] System.IO.Pipelines.dll -> System.IO.Pipelines.dll.so
+2026-10-30T12:44:25.8357003Z   [24/126] Microsoft.Data.Sqlite.dll -> Microsoft.Data.Sqlite.dll.so
+2026-10-30T12:44:25.9341030Z   [96/126] System.Memory.dll -> System.Memory.dll.so
+2026-10-30T12:44:25.9907478Z   [97/126] System.Linq.Queryable.dll -> System.Linq.Queryable.dll.so
+2026-10-30T12:44:26.0821239Z   [98/126] System.Linq.Expressions.dll -> System.Linq.Expressions.dll.so
+2026-10-30T12:44:26.1811146Z   [99/126] System.Net.NetworkInformation.dll -> System.Net.NetworkInformation.dll.so
+2026-10-30T12:44:26.1940639Z   [100/126] System.Net.NameResolution.dll -> System.Net.NameResolution.dll.so
+2026-10-30T12:44:26.3158484Z   [101/126] System.Net.Requests.dll -> System.Net.Requests.dll.so
+2026-10-30T12:44:26.3365650Z   [102/126] System.Net.Http.dll -> System.Net.Http.dll.so
+2026-10-30T12:44:26.3529200Z   [103/126] System.Net.Primitives.dll -> System.Net.Primitives.dll.so
+2026-10-30T12:44:26.4380715Z   [104/126] System.Net.Sockets.dll -> System.Net.Sockets.dll.so
+2026-10-30T12:44:26.5081707Z   [105/126] System.ObjectModel.dll -> System.ObjectModel.dll.so
+2026-10-30T12:44:26.5881804Z   [106/126] System.Private.Uri.dll -> System.Private.Uri.dll.so
+2026-10-30T12:44:26.6192159Z   [107/126] System.Runtime.InteropServices.RuntimeInformation.dll -> System.Runtime.InteropServices.RuntimeInformation.dll.so
+2026-10-30T12:44:26.6540953Z   [108/126] System.Linq.dll -> System.Linq.dll.so
+2026-10-30T12:44:26.6891610Z   [109/126] System.Private.Xml.dll -> System.Private.Xml.dll.so
+2026-10-30T12:44:26.7171009Z   [110/126] System.Runtime.InteropServices.dll -> System.Runtime.InteropServices.dll.so
+2026-10-30T12:44:26.7763764Z   [111/126] System.Runtime.Serialization.Formatters.dll -> System.Runtime.Serialization.Formatters.dll.so
+2026-10-30T12:44:26.7860967Z   [112/126] System.Runtime.Numerics.dll -> System.Runtime.Numerics.dll.so
+2026-10-30T12:44:26.8110758Z   [113/126] System.Runtime.dll -> System.Runtime.dll.so
+2026-10-30T12:44:26.9067167Z   [114/126] System.Text.Encodings.Web.dll -> System.Text.Encodings.Web.dll.so
+2026-10-30T12:44:26.9230341Z   [115/126] System.Security.Cryptography.dll -> System.Security.Cryptography.dll.so
+2026-10-30T12:44:27.0307421Z   [116/126] System.Threading.dll -> System.Threading.dll.so
+2026-10-30T12:44:27.0540695Z   [117/126] System.Threading.Thread.dll -> System.Threading.Thread.dll.so
+2026-10-30T12:44:27.1781069Z   [118/126] System.Transactions.Local.dll -> System.Transactions.Local.dll.so
+2026-10-30T12:44:27.1831635Z   [119/126] System.dll -> System.dll.so
+2026-10-30T12:44:27.2066796Z   [120/126] System.Text.RegularExpressions.dll -> System.Text.RegularExpressions.dll.so
+2026-10-30T12:44:27.2860798Z   [121/126] System.Text.Json.dll -> System.Text.Json.dll.so
+2026-10-30T12:44:27.3253386Z   [122/126] Mono.Android.Runtime.dll -> Mono.Android.Runtime.dll.so
+2026-10-30T12:44:27.3270575Z   [123/126] netstandard.dll -> netstandard.dll.so
+2026-10-30T12:44:27.5640781Z   [124/126] Java.Interop.dll -> Java.Interop.dll.so
+2026-10-30T12:44:27.9301173Z   [125/126] Mono.Android.dll -> Mono.Android.dll.so
+2026-10-30T12:44:28.3374298Z   [25/126] Microsoft.EntityFrameworkCore.dll -> Microsoft.EntityFrameworkCore.dll.so
+2026-10-30T12:44:28.4064664Z   [26/126] Microsoft.EntityFrameworkCore.Abstractions.dll -> Microsoft.EntityFrameworkCore.Abstractions.dll.so
+2026-10-30T12:44:28.9946935Z   [27/126] Microsoft.EntityFrameworkCore.Relational.dll -> Microsoft.EntityFrameworkCore.Relational.dll.so
+2026-10-30T12:44:29.1772091Z   [28/126] Microsoft.EntityFrameworkCore.Sqlite.dll -> Microsoft.EntityFrameworkCore.Sqlite.dll.so
+2026-10-30T12:44:29.2408201Z   [29/126] Microsoft.Extensions.Caching.Abstractions.dll -> Microsoft.Extensions.Caching.Abstractions.dll.so
+2026-10-30T12:44:29.3071581Z   [30/126] Microsoft.Extensions.Caching.Memory.dll -> Microsoft.Extensions.Caching.Memory.dll.so
+2026-10-30T12:44:29.3703942Z   [31/126] Microsoft.Extensions.Configuration.dll -> Microsoft.Extensions.Configuration.dll.so
+2026-10-30T12:44:29.4380269Z   [32/126] Microsoft.Extensions.Configuration.Abstractions.dll -> Microsoft.Extensions.Configuration.Abstractions.dll.so
+2026-10-30T12:44:29.5040868Z   [33/126] Microsoft.Extensions.Configuration.Binder.dll -> Microsoft.Extensions.Configuration.Binder.dll.so
+2026-10-30T12:44:29.5043175Z   [126/126] System.Private.CoreLib.dll -> System.Private.CoreLib.dll.so
+2026-10-30T12:44:29.5647814Z   [34/126] Microsoft.Extensions.Configuration.EnvironmentVariables.dll -> Microsoft.Extensions.Configuration.EnvironmentVariables.dll.so
+2026-10-30T12:44:29.6317088Z   [35/126] Microsoft.Extensions.DependencyInjection.dll -> Microsoft.Extensions.DependencyInjection.dll.so
+2026-10-30T12:44:29.7007930Z   [36/126] Microsoft.Extensions.DependencyInjection.Abstractions.dll -> Microsoft.Extensions.DependencyInjection.Abstractions.dll.so
+2026-10-30T12:44:29.7704296Z   [37/126] Microsoft.Extensions.DependencyModel.dll -> Microsoft.Extensions.DependencyModel.dll.so
+2026-10-30T12:44:29.8322347Z   [38/126] Microsoft.Extensions.Diagnostics.Abstractions.dll -> Microsoft.Extensions.Diagnostics.Abstractions.dll.so
+2026-10-30T12:44:29.8918205Z   [39/126] Microsoft.Extensions.Hosting.Abstractions.dll -> Microsoft.Extensions.Hosting.Abstractions.dll.so
+2026-10-30T12:44:29.9597621Z   [40/126] Microsoft.Extensions.Logging.dll -> Microsoft.Extensions.Logging.dll.so
+2026-10-30T12:44:30.0639988Z   [41/126] Microsoft.Extensions.Logging.Abstractions.dll -> Microsoft.Extensions.Logging.Abstractions.dll.so
+2026-10-30T12:44:30.1265939Z   [42/126] Microsoft.Extensions.Logging.Configuration.dll -> Microsoft.Extensions.Logging.Configuration.dll.so
+2026-10-30T12:44:30.2105038Z   [43/126] Microsoft.Extensions.Options.dll -> Microsoft.Extensions.Options.dll.so
+2026-10-30T12:44:30.2713498Z   [44/126] Microsoft.Extensions.Options.ConfigurationExtensions.dll -> Microsoft.Extensions.Options.ConfigurationExtensions.dll.so
+2026-10-30T12:44:30.3336245Z   [45/126] Microsoft.Extensions.Primitives.dll -> Microsoft.Extensions.Primitives.dll.so
+2026-10-30T12:44:30.4914804Z   [46/126] OpenTelemetry.dll -> OpenTelemetry.dll.so
+2026-10-30T12:44:30.5607843Z   [47/126] OpenTelemetry.Api.dll -> OpenTelemetry.Api.dll.so
+2026-10-30T12:44:30.6202236Z   [48/126] OpenTelemetry.Api.ProviderBuilderExtensions.dll -> OpenTelemetry.Api.ProviderBuilderExtensions.dll.so
+2026-10-30T12:44:30.7190074Z   [49/126] OpenTelemetry.Exporter.Console.dll -> OpenTelemetry.Exporter.Console.dll.so
+2026-10-30T12:44:30.8236466Z   [50/126] OpenTelemetry.Exporter.OpenTelemetryProtocol.dll -> OpenTelemetry.Exporter.OpenTelemetryProtocol.dll.so
+2026-10-30T12:44:30.8827662Z   [51/126] OpenTelemetry.Extensions.Hosting.dll -> OpenTelemetry.Extensions.Hosting.dll.so
+2026-10-30T12:44:30.9430465Z   [52/126] OpenTelemetry.Instrumentation.Runtime.dll -> OpenTelemetry.Instrumentation.Runtime.dll.so
+2026-10-30T12:44:31.0266085Z   [53/126] SkiaSharp.dll -> SkiaSharp.dll.so
+2026-10-30T12:44:31.0853939Z   [54/126] SQLitePCLRaw.batteries_v2.dll -> SQLitePCLRaw.batteries_v2.dll.so
+2026-10-30T12:44:31.1493169Z   [55/126] SQLitePCLRaw.core.dll -> SQLitePCLRaw.core.dll.so
+2026-10-30T12:44:31.2088390Z   [56/126] SQLitePCLRaw.lib.e_sqlite3.android.dll -> SQLitePCLRaw.lib.e_sqlite3.android.dll.so
+2026-10-30T12:44:31.2744315Z   [57/126] SQLitePCLRaw.provider.e_sqlite3.dll -> SQLitePCLRaw.provider.e_sqlite3.dll.so
+2026-10-30T12:44:31.3401218Z   [58/126] Xamarin.AndroidX.Activity.dll -> Xamarin.AndroidX.Activity.dll.so
+2026-10-30T12:44:31.4181109Z   [59/126] Xamarin.AndroidX.AppCompat.dll -> Xamarin.AndroidX.AppCompat.dll.so
+2026-10-30T12:44:31.4962070Z   [60/126] Xamarin.AndroidX.Core.dll -> Xamarin.AndroidX.Core.dll.so
+2026-10-30T12:44:31.5601033Z   [61/126] Xamarin.AndroidX.CustomView.dll -> Xamarin.AndroidX.CustomView.dll.so
+2026-10-30T12:44:31.6258781Z   [62/126] Xamarin.AndroidX.DrawerLayout.dll -> Xamarin.AndroidX.DrawerLayout.dll.so
+2026-10-30T12:44:31.7002819Z   [63/126] Xamarin.AndroidX.Fragment.dll -> Xamarin.AndroidX.Fragment.dll.so
+2026-10-30T12:44:31.7642301Z   [64/126] Xamarin.AndroidX.Lifecycle.Common.Jvm.dll -> Xamarin.AndroidX.Lifecycle.Common.Jvm.dll.so
+2026-10-30T12:44:31.8277083Z   [65/126] Xamarin.AndroidX.Lifecycle.LiveData.Core.dll -> Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so
+2026-10-30T12:44:31.8904179Z   [66/126] Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll -> Xamarin.AndroidX.Lifecycle.ViewModel.Android.dll.so
+2026-10-30T12:44:31.9526571Z   [67/126] Xamarin.AndroidX.Loader.dll -> Xamarin.AndroidX.Loader.dll.so
+2026-10-30T12:44:32.0191516Z   [68/126] Xamarin.AndroidX.NavigationEvent.Android.dll -> Xamarin.AndroidX.NavigationEvent.Android.dll.so
+2026-10-30T12:44:32.0813054Z   [69/126] Xamarin.AndroidX.SavedState.SavedState.Android.dll -> Xamarin.AndroidX.SavedState.SavedState.Android.dll.so
+2026-10-30T12:44:32.1441436Z   [70/126] Xamarin.AndroidX.Window.dll -> Xamarin.AndroidX.Window.dll.so
+2026-10-30T12:44:32.2095598Z   [71/126] Xamarin.Kotlin.StdLib.dll -> Xamarin.Kotlin.StdLib.dll.so
+2026-10-30T12:44:32.2713561Z   [72/126] Xamarin.KotlinX.Coroutines.Core.Jvm.dll -> Xamarin.KotlinX.Coroutines.Core.Jvm.dll.so
+2026-10-30T12:44:32.3917476Z   [73/126] System.Collections.Concurrent.dll -> System.Collections.Concurrent.dll.so
+2026-10-30T12:44:32.5972984Z   [74/126] System.Collections.Immutable.dll -> System.Collections.Immutable.dll.so
+2026-10-30T12:44:32.6580119Z   [75/126] System.Collections.NonGeneric.dll -> System.Collections.NonGeneric.dll.so
+2026-10-30T12:44:32.7167094Z   [76/126] System.Collections.Specialized.dll -> System.Collections.Specialized.dll.so
+2026-10-30T12:44:32.9093129Z   [77/126] System.Collections.dll -> System.Collections.dll.so
+2026-10-30T12:44:32.9688187Z   [78/126] System.ComponentModel.Annotations.dll -> System.ComponentModel.Annotations.dll.so
+2026-10-30T12:44:33.0278174Z   [79/126] System.ComponentModel.Primitives.dll -> System.ComponentModel.Primitives.dll.so
+2026-10-30T12:44:33.1017745Z   [80/126] System.ComponentModel.TypeConverter.dll -> System.ComponentModel.TypeConverter.dll.so
+2026-10-30T12:44:33.1602839Z   [81/126] System.ComponentModel.dll -> System.ComponentModel.dll.so
+2026-10-30T12:44:33.2189685Z   [82/126] System.Console.dll -> System.Console.dll.so
+2026-10-30T12:44:33.3443601Z   [83/126] System.Data.Common.dll -> System.Data.Common.dll.so
+2026-10-30T12:44:33.4324231Z   [84/126] System.Diagnostics.DiagnosticSource.dll -> System.Diagnostics.DiagnosticSource.dll.so
+2026-10-30T12:44:33.4950566Z   [85/126] System.Diagnostics.Process.dll -> System.Diagnostics.Process.dll.so
+2026-10-30T12:44:33.5534748Z   [86/126] System.Diagnostics.StackTrace.dll -> System.Diagnostics.StackTrace.dll.so
+2026-10-30T12:44:33.6135305Z   [87/126] System.Diagnostics.TraceSource.dll -> System.Diagnostics.TraceSource.dll.so
+2026-10-30T12:44:33.6853029Z   [88/126] System.Diagnostics.Tracing.dll -> System.Diagnostics.Tracing.dll.so
+2026-10-30T12:44:33.7458738Z   [89/126] System.Drawing.Primitives.dll -> System.Drawing.Primitives.dll.so
+2026-10-30T12:44:33.8036381Z   [90/126] System.Drawing.dll -> System.Drawing.dll.so
+2026-10-30T12:44:33.8676234Z   [91/126] System.Formats.Asn1.dll -> System.Formats.Asn1.dll.so
+2026-10-30T12:44:33.9294421Z   [92/126] System.IO.Compression.Brotli.dll -> System.IO.Compression.Brotli.dll.so
+2026-10-30T12:44:33.9897913Z   [93/126] System.IO.Compression.dll -> System.IO.Compression.dll.so
+2026-10-30T12:44:34.0508931Z   [94/126] System.IO.MemoryMappedFiles.dll -> System.IO.MemoryMappedFiles.dll.so
+2026-10-30T12:44:34.1141963Z   [95/126] System.IO.Pipelines.dll -> System.IO.Pipelines.dll.so
+2026-10-30T12:44:34.3474748Z   [96/126] System.Linq.Expressions.dll -> System.Linq.Expressions.dll.so
+2026-10-30T12:44:34.4947567Z   [97/126] System.Linq.Queryable.dll -> System.Linq.Queryable.dll.so
+2026-10-30T12:44:34.9521021Z   [98/126] System.Linq.dll -> System.Linq.dll.so
+2026-10-30T12:44:35.0373109Z   [99/126] System.Memory.dll -> System.Memory.dll.so
+2026-10-30T12:44:35.2321396Z   [100/126] System.Net.Http.dll -> System.Net.Http.dll.so
+2026-10-30T12:44:35.3024042Z   [101/126] System.Net.NameResolution.dll -> System.Net.NameResolution.dll.so
+2026-10-30T12:44:35.3617382Z   [102/126] System.Net.NetworkInformation.dll -> System.Net.NetworkInformation.dll.so
+2026-10-30T12:44:35.4350854Z   [103/126] System.Net.Primitives.dll -> System.Net.Primitives.dll.so
+2026-10-30T12:44:35.4938287Z   [104/126] System.Net.Requests.dll -> System.Net.Requests.dll.so
+2026-10-30T12:44:35.5679764Z   [105/126] System.Net.Sockets.dll -> System.Net.Sockets.dll.so
+2026-10-30T12:44:35.6365022Z   [106/126] System.ObjectModel.dll -> System.ObjectModel.dll.so
+2026-10-30T12:44:35.7659779Z   [107/126] System.Private.Uri.dll -> System.Private.Uri.dll.so
+2026-10-30T12:44:35.8914313Z   [108/126] System.Private.Xml.dll -> System.Private.Xml.dll.so
+2026-10-30T12:44:35.9505795Z   [109/126] System.Runtime.InteropServices.RuntimeInformation.dll -> System.Runtime.InteropServices.RuntimeInformation.dll.so
+2026-10-30T12:44:36.0092056Z   [110/126] System.Runtime.InteropServices.dll -> System.Runtime.InteropServices.dll.so
+2026-10-30T12:44:36.0971699Z   [111/126] System.Runtime.Numerics.dll -> System.Runtime.Numerics.dll.so
+2026-10-30T12:44:36.1555435Z   [112/126] System.Runtime.Serialization.Formatters.dll -> System.Runtime.Serialization.Formatters.dll.so
+2026-10-30T12:44:36.2142872Z   [113/126] System.Runtime.dll -> System.Runtime.dll.so
+2026-10-30T12:44:36.3189214Z   [114/126] System.Security.Cryptography.dll -> System.Security.Cryptography.dll.so
+2026-10-30T12:44:36.3785995Z   [115/126] System.Text.Encodings.Web.dll -> System.Text.Encodings.Web.dll.so
+2026-10-30T12:44:36.6514062Z   [116/126] System.Text.Json.dll -> System.Text.Json.dll.so
+2026-10-30T12:44:36.8505219Z   [117/126] System.Text.RegularExpressions.dll -> System.Text.RegularExpressions.dll.so
+2026-10-30T12:44:36.9091111Z   [118/126] System.Threading.Thread.dll -> System.Threading.Thread.dll.so
+2026-10-30T12:44:36.9655460Z   [119/126] System.Threading.dll -> System.Threading.dll.so
+2026-10-30T12:44:37.0288810Z   [120/126] System.Transactions.Local.dll -> System.Transactions.Local.dll.so
+2026-10-30T12:44:37.0861228Z   [121/126] System.dll -> System.dll.so
+2026-10-30T12:44:37.1433336Z   [122/126] netstandard.dll -> netstandard.dll.so
+2026-10-30T12:44:37.3460584Z   [123/126] Java.Interop.dll -> Java.Interop.dll.so
+2026-10-30T12:44:37.4077357Z   [124/126] Mono.Android.Runtime.dll -> Mono.Android.Runtime.dll.so
+2026-10-30T12:44:37.7555342Z   [125/126] Mono.Android.dll -> Mono.Android.dll.so
+2026-10-30T12:44:39.7683174Z   [126/126] System.Private.CoreLib.dll -> System.Private.CoreLib.dll.so
+2026-10-30T12:45:24.3600788Z 
+2026-10-30T12:45:24.3602257Z Build succeeded.
+2026-10-30T12:45:24.3603127Z     0 Warning(s)
+2026-10-30T12:45:24.3603740Z     0 Error(s)
+2026-10-30T12:45:24.3604167Z 
+2026-10-30T12:45:24.3622702Z Time Elapsed 00:01:54.19

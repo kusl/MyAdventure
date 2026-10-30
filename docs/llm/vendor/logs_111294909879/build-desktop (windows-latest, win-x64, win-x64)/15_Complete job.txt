@@ -1,0 +1,7 @@
+﻿2026-10-30T12:47:42.3109754Z Cleaning up orphan processes
+2026-10-30T12:47:42.3336618Z Terminate orphan process: pid (9060) (dotnet)
+2026-10-30T12:47:42.3456160Z Terminate orphan process: pid (9040) (dotnet)
+2026-10-30T12:47:42.3519024Z Terminate orphan process: pid (7516) (conhost)
+2026-10-30T12:47:42.3703163Z Terminate orphan process: pid (916) (VBCSCompiler)
+2026-10-30T12:47:42.3747895Z Terminate orphan process: pid (2972) (conhost)
+2026-10-30T12:47:42.3841672Z Terminate orphan process: pid (3304) (dotnet)
