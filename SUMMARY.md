@@ -1,29 +1,16 @@
-# Change summary: balance redesign, xunit.v3, dependency refresh
+# Change summary: fix uninstallable Android APK
 
-## Balance
+## Cause
 
-- Angel bonus is linear: `1 + 0.02 × angels` (was `1.02^angels`, which caused runaway prestige loops).
-- `Business.Efficiency` replaces `PostMilestoneScaling`, so revenue tracks `cost^0.49` across the whole range. This removes the hard wall at ~10⁹/s.
-- Cross-business bonus is bounded: ×1.5 per threshold at 25/50/100/200/300/400 (max ×11.39). `NextThreshold` returns `null` once maxed.
-- Angel divisor raised from 10¹³ to 10¹⁴.
-- All tuning constants live in `GameBalance`.
-- New engine members: `IncomePerSecond`, `PotentialAngels`, `PrestigeIncomeMultiplier`, `Business.CostOf(n)`.
-- `Tick` counts cycles as a floored `double` instead of an `int` cast.
-- Prestige panel text shows the income multiplier a prestige would grant.
-- New `Balance/` test suite: a deterministic bot plays the real engine and pins pacing bounds. See README "Balance design".
+Releases v1.0.62 and v1.0.63 shipped the unsigned APK. `dotnet publish` writes both `com.myadventure.app.apk` (unsigned) and `com.myadventure.app-Signed.apk`. The old rename step ran `find -name "*-Signed.apk" -o -name "*.apk" | head -1`; `-o` matches both, and `find` order follows directory hash order, so the pick was random per runner. Android rejects unsigned APKs with "package appears to be invalid". v1.0.60 is signed; v1.0.62 and v1.0.63 have no signature.
 
-## Tooling
+## Fix
 
-- xunit 2.9.3 → xunit.v3 4.0.2 on Microsoft Testing Platform v2 (`global.json` `test.runner`).
-- Removed `Microsoft.NET.Test.Sdk`, `xunit.runner.visualstudio` and the unused `Avalonia.Headless*` entries.
-- `coverlet.collector` → `coverlet.MTP` 10.1.0.
-- OpenTelemetry 1.19.1 → 1.20.0.
-- Test methods pass `TestContext.Current.CancellationToken` (xUnit1051).
-- Actions: checkout v7, setup-dotnet v6, setup-java v6, upload-artifact v7, download-artifact v8, action-gh-release v3.
+- `build-android` requires exactly one `*-Signed.apk` and fails otherwise.
+- New `Verify APK` step: `apksigner verify`, plus `aapt2 dump badging` must report `com.myadventure.app` and `versionCode` equal to the run number.
+- "Unsigned" build step renamed "Debug key"; without secrets the APK is debug-signed, not unsigned.
+- README and `docs/KEYSTORE.md` updated.
 
 ## Apply
 
-```bash
-tar xzf myadventure.tar.gz
-dotnet clean && dotnet restore && dotnet build && dotnet test
-```
+Replace the changed files, push, then install the next release. Optionally delete releases v1.0.62 and v1.0.63 so Obtainium never offers them.

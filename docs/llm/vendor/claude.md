@@ -18519,3 +18519,80 @@ if there are a lot of files that need to change
     No bespoke sed/patch scripts — full files only for anything that changes
     Docs updated alongside code changes
     Low verbosity, no code comments
+
+Claude
+/
+logs_111294909879.zip
+logs_111294909879.zip
+ZIP
+When installing the latest apk I now get an error 
+something like 
+App not installed as package appears to be invalid. 
+
+and please update all documentation accordingly as well.
+these winners and losers should go at the bottom after recent results  
+
+Use your best judgment
+
+If only a few files (under five or there about) need to change, give me the full path of the files that need to change and the FULL file 
+if there are a lot of files that need to change 
+    Delivery
+    Whole project as one tar.gz, unambiguous file placement
+    do not include any file that has not changed 
+    Any files to delete on updates called out explicitly
+    No bespoke sed/patch scripts — full files only for anything that changes
+    Docs updated alongside code changes
+    Low verbosity, no code comments
+
+Ran 16 commands, read memory, and 2 more tools
+I downloaded the release APKs to confirm the cause. v1.0.60 is signed. v1.0.62 and v1.0.63 have no signature at all. Android rejects an unsigned APK with “package appears to be invalid.”
+
+Why it happened: dotnet publish writes two APKs: com.myadventure.app.apk, which is unsigned, and com.myadventure.app-Signed.apk. The rename step ran find -name "*-Signed.apk" -o -name "*.apk" | head -1. Because of the -o, that pattern matches both files. find returns them in directory-hash order, which can differ on each runner. So which file got picked was effectively random, and the two most recent runs picked the unsigned one.
+
+The fix is in build-android:
+
+The job now requires exactly one *-Signed.apk and fails if it finds zero or more than one.
+A new Verify APK step runs apksigner verify. It also uses aapt2 dump badging to check that the package is com.myadventure.app and that versionCode equals the run number. A broken APK now fails the build instead of reaching a release.
+The step called “Unsigned” is renamed “Debug key,” since without secrets the APK is actually signed with the debug key.
+Four full files are attached. Place them at these paths:
+
+.github/workflows/build-and-release.yml
+README.md
+docs/KEYSTORE.md
+SUMMARY.md
+No files need to be deleted.
+
+After you push, install the next release (v1.0.64+). It’s signed with the same key and has a higher version code, so it will update cleanly over v1.0.60. You may also want to delete the v1.0.62 and v1.0.63 releases so Obtainium never offers them.
+
+I couldn’t find any “winners and losers” or “recent results” section anywhere in this repo. That line looks like it came from another project, so I didn’t act on it.
+
+Build and release
+YML
+Readme
+Document
+·MD
+Keystore
+Document
+·MD
+Summary
+Document
+·MD
+
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+
+
+
+
+
+Claude finished the response
+
+06
+74
+
+
+
+
+
+

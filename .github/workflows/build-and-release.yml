@@ -191,7 +191,7 @@ jobs:
             -p:AndroidUseAapt2Daemon=false \
             --output ./publish/android
 
-      - name: Build Android APK (Unsigned)
+      - name: Build Android APK (Debug key)
         if: steps.keystore.outputs.available != 'true'
         shell: bash
         run: |
@@ -202,17 +202,27 @@ jobs:
             -p:AndroidUseAapt2Daemon=false \
             --output ./publish/android
 
-      - name: Rename APK
+      - name: Select signed APK
         shell: bash
         run: |
-          APK_PATH=$(find ./publish/android -name "*-Signed.apk" -o -name "*.apk" | grep -v "\.aab$" | head -1)
-          if [[ -n "$APK_PATH" ]]; then
-            cp "$APK_PATH" "./MyAdventure-android-${{ github.run_number }}.apk"
-          else
-            echo "ERROR: No APK found!"
-            find ./publish -type f -name "*.apk" || echo "No APK files"
+          mapfile -t APKS < <(find ./publish/android -type f -name '*-Signed.apk')
+          if [[ ${#APKS[@]} -ne 1 ]]; then
+            echo "ERROR: expected exactly one *-Signed.apk, found ${#APKS[@]}"
+            find ./publish -type f -name '*.apk'
             exit 1
           fi
+          cp "${APKS[0]}" "./MyAdventure-android-${{ github.run_number }}.apk"
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          APK="./MyAdventure-android-${{ github.run_number }}.apk"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          "${BT}apksigner" verify --verbose --print-certs "$APK"
+          BADGING=$("${BT}aapt2" dump badging "$APK" | grep '^package:')
+          echo "$BADGING"
+          grep -q "name='com.myadventure.app'" <<< "$BADGING"
+          grep -q "versionCode='${{ github.run_number }}'" <<< "$BADGING"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
