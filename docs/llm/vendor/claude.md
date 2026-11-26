@@ -18596,3 +18596,37 @@ Claude finished the response
 
 
 
+
+
+
+Now that dotnet 11 is out, 
+lets reimagine this whole project for dotnet 11 
+if you were writing this project from scratch today 
+what would you do differently? 
+do that 
+we don't want to have any weird "compromises" 
+unless absolutely necessary to ensure existing user data isn't wiped
+make our code cleaner and leaner 
+there may be new things we could do in dotnet 11 and csharp 15
+do them the new way when and where possible 
+also there might be nuget packages and github actions 
+and other dependencies that we can upgrade to latest stable as well
+upgrade them all 
+as we do all of this 
+please be mindful to use best engineering practices 
+and solid principles 
+Use your best judgment
+If only a few files (under five or there about) need to change, give me the full path of the files that need to change and the FULL file 
+if there are a lot of files that need to change 
+Delivery
+    Whole project as one tar.gz, unambiguous file placement
+    do not include any file that has not changed 
+    Any files to delete on updates called out explicitly
+    No bespoke sed/patch scripts — full files only for anything that changes
+    Docs updated alongside code changes
+    Low verbosity, no code comments
+    I only have the rc3 locally so the CI will need to do everything
+    unless you can structure the global.json to work with rc3 or better
+    this will improve soon when dotnet 11 stable lands on fedora default repos 
+also when pressing buttons we need some kind of audible and tactile feedback 
+not sure how 
