@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Nov 26 04:20:03 AM EST 2026
+Generated: Thu Nov 26 04:32:30 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -447,7 +447,7 @@ updates:
 
 ================================================================================
 FILE: .github/workflows/build-and-release.yml
-SIZE: 9.50 KB
+SIZE: 9.53 KB
 ================================================================================
 
 name: Build and Release
@@ -512,7 +512,7 @@ jobs:
           fi
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore -property:Configuration=Release
 
       - name: Build
         run: |
