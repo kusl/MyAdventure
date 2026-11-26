@@ -60,7 +60,7 @@ jobs:
           fi
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore -property:Configuration=Release
 
       - name: Build
         run: |
