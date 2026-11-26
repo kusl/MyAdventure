@@ -624,13 +624,21 @@ public class GameEngineTests
             AngelInvestors = BigDouble.Parse("1e9"),
             Owned = new Dictionary<string, long>
             {
-                ["lemonade"] = 1100, ["newspaper"] = 1000, ["carwash"] = 1000,
-                ["pizza"] = 1000, ["donut"] = 1000, ["shrimp"] = 2270,
+                ["lemonade"] = 1100,
+                ["newspaper"] = 1000,
+                ["carwash"] = 1000,
+                ["pizza"] = 1000,
+                ["donut"] = 1000,
+                ["shrimp"] = 2270,
             },
             Managers = new Dictionary<string, bool>
             {
-                ["lemonade"] = true, ["newspaper"] = true, ["carwash"] = true,
-                ["pizza"] = true, ["donut"] = true, ["shrimp"] = true,
+                ["lemonade"] = true,
+                ["newspaper"] = true,
+                ["carwash"] = true,
+                ["pizza"] = true,
+                ["donut"] = true,
+                ["shrimp"] = true,
             },
             LastPlayedAt = pastTime,
         };
