@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
-using Avalonia.Themes.Fluent;
+using Avalonia.Themes.Fluent2;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MyAdventure.Infrastructure;
@@ -21,7 +21,7 @@ public class App : Application
     public override void Initialize()
     {
         RequestedThemeVariant = ThemeVariant.Dark;
-        Styles.Add(new FluentTheme());
+        Styles.Add(new Fluent2Theme());
     }
 
     public override void OnFrameworkInitializationCompleted()

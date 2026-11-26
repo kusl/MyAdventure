@@ -19098,3 +19098,1403 @@ I have also uploaded the latest copy of the dump.txt in the project files
 
 
 
+
+/
+Now that dotnet 11 is out, 
+lets reimagine this whole project for dotnet 11 
+if you were writing this project from scratch today 
+what would you do differently? 
+do that 
+we don't want to have any weird "compromises" 
+unless absolutely necessary to ensure existing user data isn't wiped
+make our code cleaner and leaner 
+there may be new things we could do in dotnet 11 and csharp 15
+do them the new way when and where possible 
+also there might be nuget packages and github actions 
+and other dependencies that we can upgrade to latest stable as well
+upgrade them all 
+as we do all of this 
+please be mindful to use best engineering practices 
+and solid principles 
+Use your best judgment
+If only a few files (under five or there about) need to change, give me the full path of the files that need to change and the FULL file 
+if there are a lot of files that need to change 
+Delivery
+    Whole project as one tar.gz, unambiguous file placement
+    do not include any file that has not changed 
+    Any files to delete on updates called out explicitly
+    No bespoke sed/patch scripts — full files only for anything that changes
+    Docs updated alongside code changes
+    Low verbosity, no code comments
+    I only have the rc3 locally so the CI will need to do everything
+    unless you can structure the global.json to work with rc3 or better
+    this will improve soon when dotnet 11 stable lands on fedora default repos 
+also when pressing buttons we need some kind of audible and tactile feedback 
+not sure how
+
+I’ve rebuilt the project for .NET 11 and added sound, vibration and a button-press animation. The archive holds only the 96 new or changed files, with paths starting at the repo root. CI has to be the final check: NuGet was blocked here, so I couldn’t restore packages or run a real build.
+
+About rc3: your 060.txt log shows dotnet-sdk-11.0 11.0.100, the final release, is already installed from Fedora’s repos. You got .NET 10 only because global.json pinned 10.0.100. The new global.json pins 11.0.100 and accepts newer versions in the 11.0 series. Your Android workload is installed for the .NET 10 SDK only, so run dotnet workload install android once.
+
+What I could check without NuGet (using the .NET 11.0.100 SDK from conda-forge):
+
+Core: builds in Release with warnings as errors.
+Core tests: all 320 pass, run with stand-in versions of xUnit and Shouldly that I wrote.
+Save format: exports from the old engine and the new one are identical apart from the timestamp, and each imports the other’s.
+Telemetry and Sentry tests: all 53 pass the same way.
+Database upgrade SQL: I ran it against a copy of the old database layout in sqlite3, and the data came through.
+UI tests: all 77 pass, but against stand-ins I wrote for Avalonia, the MVVM toolkit and NSubstitute. That checks the C#, not the real library APIs.
+Not checked at all: XAML compilation, the Android build, and EF Core at runtime.
+Main changes
+
+.NET 11: C# 15 and Microsoft packages 11.0.0. Other packages were already latest. Seven unused packages are removed. Android now runs on CoreCLR, since Mono is gone in .NET 11. It requires Android 7.0 (API 24) and builds for arm, arm64 and x64; 32-bit Intel (x86) is no longer supported.
+One app, one screen: the Desktop and Android projects each had their own copy of the app setup and the whole screen layout. Now there is one of each, in Shared. The layout switches between 3×2 and 2×3 based on available width, so a narrow desktop window gets the phone layout. Each platform project is now a few lines.
+Cleaner code: the engine saves through a plain snapshot instead of database text columns. Export/import no longer uses reflection. Tests no longer reach into the engine with reflection. All code comments are gone.
+CI: reads the SDK version from global.json, has read-only permissions by default, and cancels outdated PR runs. Dependabot now also updates the SDK.
+Bugs I found and fixed
+
+Sentry traces and all metrics were never sent. Nothing in the app ever started the trace and metric pipelines; logs worked only because they start on their own. This explains the empty Sentry Traces panel.
+Every business card was drawn at 40% opacity. A number was bound to an on/off fade, so it never counted as “owned”.
+The desktop app could lose its last save on close. Saving and the final telemetry send now happen when the app exits.
+Feedback on every button
+
+Sound: short tones generated in code, so no audio files and no new packages. Windows uses its built-in sound API, macOS afplay, Linux the first of pw-play/paplay/aplay, and Android SoundPool.
+Vibration: Android only; this adds the VIBRATE permission.
+Press animation: buttons shrink slightly while pressed, on all platforms.
+There are six different cues: tap, purchase, manager, milestone, prestige and denied. Sound and vibration have on/off buttons in the bottom bar, saved in SQLite. Existing saves get the new settings table added automatically on first launch, without touching progress.
+
+Two things I held back on
+
+Fluent2 theme: Avalonia 12.2 introduced it, but I couldn’t confirm the package exists, so the app stays on the current Fluent theme.
+MVVM toolkit properties: the toolkit’s shorter [ObservableProperty] form may need a preview language setting on C# 15. I used the plain C# 14 field pattern instead, which compiles for certain.
+Delete these 19 files before extracting:
+
+src/MyAdventure.Android/App.axaml
+src/MyAdventure.Android/App.axaml.cs
+src/MyAdventure.Android/Views/MainView.axaml
+src/MyAdventure.Android/Views/MainView.axaml.cs
+src/MyAdventure.Core/Entities/EntityBase.cs
+src/MyAdventure.Core/Entities/GameState.cs
+src/MyAdventure.Desktop/App.axaml
+src/MyAdventure.Desktop/App.axaml.cs
+src/MyAdventure.Desktop/Views/MainWindow.axaml
+src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+src/MyAdventure.Infrastructure/DependencyInjection.cs
+src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs
+src/MyAdventure.Shared/Resources/i18n/en.json
+src/MyAdventure.Shared/Resources/i18n/es.json
+src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+src/MyAdventure.Shared/Services/AppRoot.cs
+src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+Then extract MyAdventure-net11.tar.gz in the repo root, run dotnet workload install android, and push. desktop.sh is also updated: the commented-out lines were stopping MYADVENTURE_VERBOSE=1 from reaching dotnet run.
+
+
+MyAdventure net11.tar
+GZ 
+build is broken, both locally and on github dot com
+local: 
+  MyAdventure.Core net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Integration.Tests net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Infrastructure net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Desktop net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Core.Tests net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.UI.Tests net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Shared net11.0 failed with 1 error(s) (0.1s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Android net11.0-android failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/obj/project.assets.json' doesn't have a target for 'net11.0-android'. Ensure that restore has run and that you have included 'net11.0-android' in the TargetFrameworks for your project.
+
+Build failed with 8 error(s) in 0.2s
+
+real    0m0.359s
+user    0m0.107s
+sys    0m0.038s
+Restore complete (4.6s)
+
+Build succeeded in 4.6s
+
+real    0m4.717s
+user    0m0.369s
+sys    0m0.048s
+Restore complete (0.1s)
+  MyAdventure.Core net11.0 succeeded (1.6s) → src/MyAdventure.Core/bin/Debug/net11.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net11.0 succeeded (0.5s) → src/MyAdventure.Infrastructure/bin/Debug/net11.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net11.0 succeeded (0.8s) → tests/MyAdventure.Core.Tests/bin/Debug/net11.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net11.0 succeeded (0.4s) → tests/MyAdventure.Integration.Tests/bin/Debug/net11.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net11.0 failed with 3 error(s) (1.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14.
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18.
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18.
+
+Build failed with 3 error(s) in 3.5s
+
+real    0m3.644s
+user    0m0.963s
+sys    0m0.153s
+
+Github actions: 
+https://github.com/kusl/MyAdventure/actions/runs/45786565930/job/139794695374
+Run SIGN_PASS="***"
+  MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net11.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net11.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net11.0/MyAdventure.Core.Tests.dll
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+  MyAdventure.Integration.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net11.0/MyAdventure.Integration.Tests.dll
+
+Build FAILED.
+
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+    0 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:09.37
+
+here are some hints from Gemini 4 Hydrogen 
+as usual use your own best judgment, these are only helpful hints: 
+
+Yes — **Avalonia 12.2.0** officially ships the new **Fluent 2** theme as a separate NuGet package:
+
+### Fluent 2 in Avalonia 12.2.0
+* **NuGet package:** `Avalonia.Themes.Fluent2` (`12.2.0`)
+* **Theme class / XAML tag:** `Fluent2Theme` (`<Fluent2Theme />` in XAML, or `new Fluent2Theme()` in C# from `Avalonia.Themes.Fluent2`)
+* **Release context:** Introduced in Avalonia 12.2 (PR #21771, released Nov 23–24, 2026) and now the default theme in Avalonia's new-project templates. Avalonia's release notes also highlight ~1.8× faster theme resource lookups in Fluent2.
+
+### How to switch your repo to Fluent 2
+Because your app initializes its styles in C# (`src/MyAdventure.Shared/App.cs`) rather than `App.axaml`, three files need changes:
+
+1. **`Directory.Packages.props`** — replace `Avalonia.Themes.Fluent` with `Avalonia.Themes.Fluent2`:
+   ```xml
+   <PackageVersion Include="Avalonia.Themes.Fluent2" Version="$(AvaloniaVersion)" />
+**src/MyAdventure.Shared/MyAdventure.Shared.csproj** — update the package reference:
+xml
+<PackageReference Include="Avalonia.Themes.Fluent2" />
+**src/MyAdventure.Shared/App.cs** — swap FluentTheme for Fluent2Theme:
+csharp
+using Avalonia.Themes.Fluent2;
+...
+public override void Initialize()
+{
+    RequestedThemeVariant = ThemeVariant.Dark;
+    Styles.Add(new Fluent2Theme());
+}
+### Compatibility notes for your project
+* **Known 12.2.0 issues found in GitHub:**
+  * Fluent2 omits some legacy SystemControl* brush aliases from Fluent v1 (Issue #22567).
+  * TabItem with TabStripPlacement="Left" / "Right" / "Bottom" currently draws its selection pill horizontally underneath instead of matching placement (Issue #22939).
+* **Impact on MyAdventure:** MainView.axaml doesn't use TabControl and sets explicit hex colors (#1A1A2E, #16213E, #0D1B2A, etc.) rather than SystemControl* brushes, so switching to Fluent2Theme should be safe and will mainly modernize built-in Button/TextBox styling and focus/hover states.
+
+---
+
+### Bonus: Exact cause of the AVLN2200 errors in MainView.axaml
+From the src/MyAdventure.Shared/Views/MainView.axaml in your dump, lines **28, 79, and 82** fail because .compactOnly and .wideOnly are bare class selectors with no control type:
+* Line 27–29: <Style Selector=".compactOnly"><Setter Property="IsVisible" Value="False" /></Style>
+* Lines 78–83 (inside <ContainerQuery>): <Style Selector=".wideOnly"> and <Style Selector=".compactOnly"> setting IsVisible
+
+Updating those three selectors to include :is(Control) (so it matches Border, StackPanel, and TextBlock) fixes the build:
+
+<Style Selector=":is(Control).compactOnly">
+    <Setter Property="IsVisible" Value="False" />
+</Style>
+*(and likewise :is(Control).wideOnly and :is(Control).compactOnly inside <ContainerQuery>, or adding x:SetterTargetType="Control" on those <Style> tags).*
+```
+I have also uploaded the latest copy of the dump.txt in the project files
+
+Ran 4 commands, searched the web
+The build had two separate problems, and four files need to change. I couldn’t compile any XAML in my sandbox, so both problems are only confirmed fixed once CI passes.
+
+Local errors (NETSDK1005): these aren’t a code problem. The first command in your script is dotnet clean, and it read obj/ folders left over from the .NET 10 restore. Your log shows the next restore went through fine. Run git clean -xdf src tests once (or delete the bin/obj folders) to clear them.
+
+The real failure (AVLN2200, local and CI): three styles in MainView.axaml used a class selector with no control type (.compactOnly, .wideOnly). The Avalonia XAML compiler needs a type to resolve IsVisible, so they are now :is(Control).compactOnly and :is(Control).wideOnly. That’s what Gemini found too.
+
+Fluent2 theme: I’ve switched to it. Avalonia’s 12.2 release notes and the theme’s pull request both confirm the package Avalonia.Themes.Fluent2 and the class Fluent2Theme. It’s a drop-in replacement: all the old theme resource names still work, and the UI uses its own hex colours anyway.
+
+No files to delete.
+
+Directory.Packages.props
+xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <AvaloniaVersion>12.2.0</AvaloniaVersion>
+    <DotNetVersion>11.0.0</DotNetVersion>
+    <OpenTelemetryVersion>1.21.0</OpenTelemetryVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia - MIT">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent2" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM - MIT">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Microsoft - MIT">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(DotNetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="OpenTelemetry - Apache-2.0">
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing - Apache-2.0 / BSD / MIT">
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="coverlet.MTP" Version="10.1.1" />
+  </ItemGroup>
+</Project>
+src/MyAdventure.Shared/MyAdventure.Shared.csproj
+xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
+    <ProjectReference Include="..\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Fluent2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+</Project>
+src/MyAdventure.Shared/App.cs
+csharp
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Styling;
+using Avalonia.Themes.Fluent2;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+using MyAdventure.Shared.Views;
+
+namespace MyAdventure.Shared;
+
+public class App : Application
+{
+    private readonly LifecycleRouter _lifecycle = new();
+    private ServiceProvider? _services;
+
+    public override void Initialize()
+    {
+        RequestedThemeVariant = ThemeVariant.Dark;
+        Styles.Add(new Fluent2Theme());
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        var services = new ServiceCollection();
+        ConfigurePlatformServices(services);
+        services.AddInfrastructure(TelemetryConfigurationLoader.Load()).AddGame();
+        var provider = services.BuildServiceProvider();
+        _services = provider;
+
+        TelemetryLifecycle.Start(provider);
+        ObserveUnhandledExceptions(provider.GetRequiredService<ILoggerFactory>().CreateLogger<App>());
+        ObserveLifecycle(provider);
+
+        switch (ApplicationLifetime)
+        {
+            case IClassicDesktopStyleApplicationLifetime desktop:
+                desktop.MainWindow = new MainWindow(CreateMainView(provider));
+                desktop.Exit += (_, _) => Shutdown(provider);
+                break;
+            case IActivityApplicationLifetime activity:
+                activity.MainViewFactory = () => CreateMainView(provider);
+                break;
+            case ISingleViewApplicationLifetime singleView:
+                singleView.MainView = CreateMainView(provider);
+                break;
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    protected virtual void ConfigurePlatformServices(IServiceCollection services)
+    {
+    }
+
+    private Control CreateMainView(IServiceProvider provider)
+    {
+        var viewModel = provider.GetRequiredService<GameViewModel>();
+        _lifecycle.Attach(viewModel);
+        return new MainView { DataContext = viewModel };
+    }
+
+    private void ObserveLifecycle(IServiceProvider provider)
+    {
+        _lifecycle.Backgrounded += (_, _) => _ = TelemetryLifecycle.FlushAsync(provider, TelemetryFlushMode.Soft);
+
+        if (this.TryGetFeature<IActivatableLifetime>() is not { } activatable) return;
+        activatable.Activated += (_, e) => _lifecycle.OnActivated(e.Kind);
+        activatable.Deactivated += (_, e) => _lifecycle.OnDeactivated(e.Kind);
+    }
+
+    private void Shutdown(IServiceProvider provider)
+    {
+        if (_services is null) return;
+        _services = null;
+
+        var viewModel = provider.GetRequiredService<GameViewModel>();
+        Task.Run(() => viewModel.SaveAsync()).GetAwaiter().GetResult();
+        TelemetryLifecycle.FlushAsync(provider, TelemetryFlushMode.Final).GetAwaiter().GetResult();
+    }
+
+    private static void ObserveUnhandledExceptions(ILogger logger)
+    {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            logger.LogCritical(e.ExceptionObject as Exception, "Unhandled exception (terminating: {Terminating})", e.IsTerminating);
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            logger.LogError(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
+    }
+}
+src/MyAdventure.Shared/Views/MainView.axaml
+xml
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MyAdventure.Shared.ViewModels"
+             xmlns:conv="using:MyAdventure.Shared.Converters"
+             xmlns:svc="using:MyAdventure.Shared.Services"
+             x:Class="MyAdventure.Shared.Views.MainView"
+             x:DataType="vm:GameViewModel"
+             Background="#1A1A2E"
+             TopLevel.AutoSafeAreaPadding="False">
+
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.93)" />
+        </Style>
+
+        <Style Selector=":is(Control).compactOnly">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <Style Selector="Border.bar">
+            <Setter Property="Background" Value="#16213E" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20,12" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#16213E" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="6" />
+        </Style>
+        <Style Selector="UniformGrid.businesses">
+            <Setter Property="Columns" Value="3" />
+            <Setter Property="Rows" Value="2" />
+        </Style>
+        <Style Selector="TextBlock.cash">
+            <Setter Property="FontSize" Value="36" />
+        </Style>
+        <Style Selector="TextBlock.icon">
+            <Setter Property="FontSize" Value="28" />
+        </Style>
+        <Style Selector="TextBlock.name">
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style Selector="TextBlock.small">
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style Selector="Button.action">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0,8" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.bulk">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="0,5" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="#1565C0" />
+        </Style>
+        <Style Selector="Button.tool">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+
+        <ContainerQuery Name="root" Query="max-width:760">
+            <Style Selector=":is(Control).wideOnly">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+            <Style Selector=":is(Control).compactOnly">
+                <Setter Property="IsVisible" Value="True" />
+            </Style>
+            <Style Selector="Border.bar">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="10,6" />
+            </Style>
+            <Style Selector="Border.card">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="6" />
+                <Setter Property="Margin" Value="3" />
+            </Style>
+            <Style Selector="UniformGrid.businesses">
+                <Setter Property="Columns" Value="2" />
+                <Setter Property="Rows" Value="3" />
+            </Style>
+            <Style Selector="TextBlock.cash">
+                <Setter Property="FontSize" Value="28" />
+            </Style>
+            <Style Selector="TextBlock.icon">
+                <Setter Property="FontSize" Value="20" />
+            </Style>
+            <Style Selector="TextBlock.name">
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+            <Style Selector="TextBlock.small">
+                <Setter Property="FontSize" Value="9" />
+            </Style>
+            <Style Selector="Button.action">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="0,6" />
+                <Setter Property="CornerRadius" Value="5" />
+            </Style>
+            <Style Selector="Button.bulk">
+                <Setter Property="FontSize" Value="9" />
+                <Setter Property="Padding" Value="0,4" />
+            </Style>
+            <Style Selector="Button.tool">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="10,4" />
+            </Style>
+        </ContainerQuery>
+    </UserControl.Styles>
+
+    <Panel Container.Name="root" Container.Sizing="Width">
+        <DockPanel Margin="8">
+            <Border DockPanel.Dock="Top" Classes="bar" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Viewbox Grid.Column="0" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="44"
+                             HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Classes="cash" Text="💰" VerticalAlignment="Center" />
+                            <TextBlock Classes="cash" Text="{Binding CashText}" FontWeight="Bold"
+                                       Foreground="#00E676" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Viewbox>
+
+                    <StackPanel Grid.Column="1" Classes="wideOnly" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center" Margin="20,0">
+                        <TextBlock Text="😇" FontSize="20" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="18" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="14" Foreground="#FFD740" Opacity="0.7" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Classes="tool" Command="{Binding PrestigeCommand}" Background="#AA00FF"
+                                HorizontalAlignment="Right"
+                                Opacity="{Binding CanPrestige, Converter={x:Static conv:GameConverters.BoolToOpacity}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="🔄" VerticalAlignment="Center" />
+                                <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
+                                <TextBlock Classes="wideOnly" Text="{Binding NextAngelText, StringFormat='+{0}'}"
+                                           Opacity="0.8" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Classes="small" Text="{Binding PrestigeExplanation}" Foreground="#AAAAAA"
+                                   HorizontalAlignment="Right" MaxWidth="260" TextWrapping="Wrap" TextAlignment="Right" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Top" Classes="compactOnly" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,6">
+                <Viewbox StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="20" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="😇" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="14" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="12" Foreground="#FFD740" Opacity="0.7" VerticalAlignment="Center" />
+                        <TextBlock Text="•" Foreground="#444" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding NextAngelText, StringFormat='Next: +{0}'}" FontSize="12"
+                                   Foreground="#CE93D8" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Viewbox>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom" Classes="bar" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <Button Classes="tool" Command="{Binding ExportCommand}" Background="#00897B" Content="📤 EXPORT" />
+                    <Button Classes="tool" Command="{Binding StartImportCommand}" Background="#5C6BC0" Content="📥 IMPORT" />
+                    <Button Classes="tool" Command="{Binding ToggleSoundCommand}" Background="#37474F">
+                        <Panel>
+                            <TextBlock Text="🔊 SOUND" IsVisible="{Binding SoundEnabled}" />
+                            <TextBlock Text="🔇 MUTED" IsVisible="{Binding !SoundEnabled}" />
+                        </Panel>
+                    </Button>
+                    <Button Classes="tool" Command="{Binding ToggleHapticsCommand}" Background="#37474F"
+                            IsVisible="{Binding HapticsSupported}">
+                        <Panel>
+                            <TextBlock Text="📳 HAPTICS" IsVisible="{Binding HapticsEnabled}" />
+                            <TextBlock Text="📴 HAPTICS" IsVisible="{Binding !HapticsEnabled}" />
+                        </Panel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Panel>
+                <ItemsControl ItemsSource="{Binding Businesses}" IsVisible="{Binding !IsTransferOpen}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Classes="businesses" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BusinessViewModel">
+                            <Border Classes="card"
+                                    Opacity="{Binding IsOwned, Converter={x:Static conv:GameConverters.BoolToOpacity}}">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+                                        <TextBlock Grid.Column="0" Classes="icon" Text="{Binding Icon}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Classes="name" Text="{Binding Name}" FontWeight="Bold"
+                                                   Foreground="White" VerticalAlignment="Center" Margin="6,0,0,0"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <Border Grid.Column="2" Background="#0D47A1" CornerRadius="10" Padding="8,2">
+                                            <TextBlock Classes="name" Text="{Binding Owned}" FontWeight="Bold"
+                                                       Foreground="White" HorizontalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" Margin="0,2,0,4">
+                                        <Border Background="#0A0A1A" CornerRadius="4" Height="6" />
+                                        <Border Background="{Binding Color, Converter={x:Static conv:GameConverters.HexToBrush}}"
+                                                CornerRadius="4" Height="6" HorizontalAlignment="Stretch" RenderTransformOrigin="0,0.5">
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="{Binding ProgressPercent, Converter={x:Static conv:GameConverters.PercentToFraction}, FallbackValue=0}" />
+                                            </Border.RenderTransform>
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,4">
+                                        <Viewbox Grid.Column="0" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="22" HorizontalAlignment="Left">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding RevenueText, StringFormat='💵 {0}'}" FontSize="12"
+                                                           Foreground="#00E676" TextWrapping="NoWrap" />
+                                                <TextBlock Classes="compactOnly" Text="{Binding RevenuePerSecondText}" FontSize="10"
+                                                           Foreground="#80CBC4" TextWrapping="NoWrap" />
+                                            </StackPanel>
+                                        </Viewbox>
+                                        <Viewbox Grid.Column="1" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="20" HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding CostText, StringFormat='🏷️ {0}'}" FontSize="12"
+                                                       Foreground="#FFAB40" TextWrapping="NoWrap" />
+                                        </Viewbox>
+                                    </Grid>
+
+                                    <Border Grid.Row="3" Classes="wideOnly" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="small" Text="{Binding CycleTimeText, StringFormat='⏱️ {0}'}" Foreground="#B0BEC5" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Classes="small" Text="{Binding RevenuePerSecondText, StringFormat='📈 {0}'}"
+                                                       Foreground="#80CBC4" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="small" Text="{Binding AffordableCountText, StringFormat='🛒 {0}'}"
+                                                       Foreground="#CE93D8" Margin="0,2,0,0" />
+                                            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Classes="small" Text="{Binding MilestoneMultiplierText, StringFormat='⭐ {0} revenue'}"
+                                                       Foreground="#FFD740" Margin="0,2,0,0" />
+                                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasNextMilestone}">
+                                                <TextBlock Classes="small" Text="{Binding NextMilestoneText, StringFormat='🎯 {0}'}" Foreground="#90CAF9" />
+                                                <TextBlock Classes="small" Text="{Binding NextMilestoneRewardText}" Foreground="#A5D6A7" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Classes="small" Text="{Binding SpeedMultiplierText, StringFormat='⚡ {0}'}"
+                                                       Foreground="#FF8A65" Margin="0,2,0,0" IsVisible="{Binding HasSpeedBonus}" />
+                                            <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Classes="small" Text="{Binding NextSpeedMilestoneText, StringFormat='🚀 {0}'}"
+                                                       Foreground="#FFCC80" Margin="0,2,0,0" IsVisible="{Binding HasNextSpeedMilestone}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Row="3" Classes="compactOnly" Orientation="Horizontal" Spacing="4" Margin="0,0,0,2">
+                                        <TextBlock Classes="small" Text="{Binding MilestoneMultiplierText}" Foreground="#FFD740" />
+                                        <TextBlock Classes="small" Text="{Binding SpeedMultiplierText}" Foreground="#FF8A65" IsVisible="{Binding HasSpeedBonus}" />
+                                        <TextBlock Classes="small" Text="{Binding AffordableCountText}" Foreground="#CE93D8" />
+                                    </StackPanel>
+
+                                    <Button Grid.Row="4" Classes="bulk" Command="{Binding BulkBuyCommand}" Margin="0,0,0,4"
+                                            Opacity="{Binding CanBulkBuy, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                            Content="{Binding BulkBuyText}" />
+
+                                    <Grid Grid.Row="5" ColumnDefinitions="*,4,*,4,*">
+                                        <Button Grid.Column="0" Classes="action" Command="{Binding BuyBusinessCommand}"
+                                                Background="{Binding Color, Converter={x:Static conv:GameConverters.HexToBrush}}"
+                                                Opacity="{Binding CanAfford, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                                Content="BUY" />
+                                        <Button Grid.Column="2" Classes="action" Command="{Binding ClickBusinessCommand}"
+                                                Background="#2196F3" Content="▶ RUN" />
+                                        <Button Grid.Column="4" Classes="action" Command="{Binding BuyManagerCommand}"
+                                                IsVisible="{Binding !HasManager}" Background="#FF6F00"
+                                                Opacity="{Binding CanAffordManager, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                                Content="MGR" />
+                                        <Border Grid.Column="4" IsVisible="{Binding HasManager}" Background="#2E7D32" CornerRadius="6"
+                                                VerticalAlignment="Stretch">
+                                            <TextBlock Text="✅" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Foreground="White" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border IsVisible="{Binding IsTransferOpen}" Classes="card">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" Margin="0,0,0,4" IsVisible="{Binding IsExportMode}"
+                                   Text="📤 Export Progress" />
+                        <TextBlock DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" Margin="0,0,0,4" IsVisible="{Binding !IsExportMode}"
+                                   Text="📥 Import Progress" />
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   Margin="0,0,0,8" IsVisible="{Binding IsExportMode}"
+                                   Text="Tap COPY to copy to clipboard, or select and copy manually." />
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   Margin="0,0,0,8" IsVisible="{Binding !IsExportMode}"
+                                   Text="Paste an export string below, then confirm." />
+
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8"
+                                    HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Classes="tool" Command="{Binding CopyExportCommand}" IsVisible="{Binding IsExportMode}"
+                                    Background="#00897B" Content="📋 COPY" />
+                            <Button Classes="tool" Command="{Binding ConfirmImportCommand}" IsVisible="{Binding !IsExportMode}"
+                                    Background="#4CAF50" Content="✅ CONFIRM" />
+                            <Button Classes="tool" Command="{Binding CloseTransferCommand}" Background="#616161" Content="CLOSE" />
+                        </StackPanel>
+
+                        <TextBox Text="{Binding TransferText, Mode=TwoWay}" IsReadOnly="{Binding IsExportMode}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas, Courier New, monospace"
+                                 FontSize="12" Background="#0D1B2A" Foreground="#E0E0E0" CornerRadius="8" Padding="10"
+                                 PlaceholderText="Paste your export string here..." />
+                    </DockPanel>
+                </Border>
+            </Panel>
+        </DockPanel>
+
+        <ItemsControl ItemsSource="{Binding Toasts.ActiveToasts}" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      Margin="0,0,0,24" IsHitTestVisible="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="svc:ToastItem">
+                    <Border Background="#333333" CornerRadius="8" Padding="14,8" MaxWidth="440" Opacity="0.95">
+                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="13"
+                                   TextWrapping="Wrap" TextAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Panel>
+</UserControl>
+The XAML compiler stopped at these three errors, so there may be more errors further along that it never reached. If CI shows any, send me the log.
+
+
+
+
+Claude finished the response
+
+MyAdventure-net11.tar.gz
+
+adventure-capitalist
+2 documents read
+Web search
+10 searches
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The build had two separate problems, and four files need to change. I couldn't compile any XAML in my sandbox, so both problems are only confirmed fixed once CI passes.
+
+**Local errors (NETSDK1005):** these aren't a code problem. The first command in your script is `dotnet clean`, and it read `obj/` folders left over from the .NET 10 restore. Your log shows the next restore went through fine. Run `git clean -xdf src tests` once (or delete the `bin`/`obj` folders) to clear them.
+
+**The real failure (AVLN2200, local and CI):** three styles in `MainView.axaml` used a class selector with no control type (`.compactOnly`, `.wideOnly`). The Avalonia XAML compiler needs a type to resolve `IsVisible`, so they are now `:is(Control).compactOnly` and `:is(Control).wideOnly`. That's what Gemini found too.
+
+**Fluent2 theme:** I've switched to it. Avalonia's 12.2 release notes and the theme's pull request both confirm the package `Avalonia.Themes.Fluent2` and the class `Fluent2Theme`. It's a drop-in replacement: all the old theme resource names still work, and the UI uses its own hex colours anyway.
+
+No files to delete.
+
+### `Directory.Packages.props`
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <AvaloniaVersion>12.2.0</AvaloniaVersion>
+    <DotNetVersion>11.0.0</DotNetVersion>
+    <OpenTelemetryVersion>1.21.0</OpenTelemetryVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia - MIT">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent2" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM - MIT">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Microsoft - MIT">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(DotNetVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(DotNetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="OpenTelemetry - Apache-2.0">
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing - Apache-2.0 / BSD / MIT">
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="coverlet.MTP" Version="10.1.1" />
+  </ItemGroup>
+</Project>
+```
+
+### `src/MyAdventure.Shared/MyAdventure.Shared.csproj`
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdventure.Core\MyAdventure.Core.csproj" />
+    <ProjectReference Include="..\MyAdventure.Infrastructure\MyAdventure.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Fluent2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+</Project>
+```
+
+### `src/MyAdventure.Shared/App.cs`
+```csharp
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Styling;
+using Avalonia.Themes.Fluent2;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Telemetry;
+using MyAdventure.Shared.Services;
+using MyAdventure.Shared.ViewModels;
+using MyAdventure.Shared.Views;
+
+namespace MyAdventure.Shared;
+
+public class App : Application
+{
+    private readonly LifecycleRouter _lifecycle = new();
+    private ServiceProvider? _services;
+
+    public override void Initialize()
+    {
+        RequestedThemeVariant = ThemeVariant.Dark;
+        Styles.Add(new Fluent2Theme());
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        var services = new ServiceCollection();
+        ConfigurePlatformServices(services);
+        services.AddInfrastructure(TelemetryConfigurationLoader.Load()).AddGame();
+        var provider = services.BuildServiceProvider();
+        _services = provider;
+
+        TelemetryLifecycle.Start(provider);
+        ObserveUnhandledExceptions(provider.GetRequiredService<ILoggerFactory>().CreateLogger<App>());
+        ObserveLifecycle(provider);
+
+        switch (ApplicationLifetime)
+        {
+            case IClassicDesktopStyleApplicationLifetime desktop:
+                desktop.MainWindow = new MainWindow(CreateMainView(provider));
+                desktop.Exit += (_, _) => Shutdown(provider);
+                break;
+            case IActivityApplicationLifetime activity:
+                activity.MainViewFactory = () => CreateMainView(provider);
+                break;
+            case ISingleViewApplicationLifetime singleView:
+                singleView.MainView = CreateMainView(provider);
+                break;
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    protected virtual void ConfigurePlatformServices(IServiceCollection services)
+    {
+    }
+
+    private Control CreateMainView(IServiceProvider provider)
+    {
+        var viewModel = provider.GetRequiredService<GameViewModel>();
+        _lifecycle.Attach(viewModel);
+        return new MainView { DataContext = viewModel };
+    }
+
+    private void ObserveLifecycle(IServiceProvider provider)
+    {
+        _lifecycle.Backgrounded += (_, _) => _ = TelemetryLifecycle.FlushAsync(provider, TelemetryFlushMode.Soft);
+
+        if (this.TryGetFeature<IActivatableLifetime>() is not { } activatable) return;
+        activatable.Activated += (_, e) => _lifecycle.OnActivated(e.Kind);
+        activatable.Deactivated += (_, e) => _lifecycle.OnDeactivated(e.Kind);
+    }
+
+    private void Shutdown(IServiceProvider provider)
+    {
+        if (_services is null) return;
+        _services = null;
+
+        var viewModel = provider.GetRequiredService<GameViewModel>();
+        Task.Run(() => viewModel.SaveAsync()).GetAwaiter().GetResult();
+        TelemetryLifecycle.FlushAsync(provider, TelemetryFlushMode.Final).GetAwaiter().GetResult();
+    }
+
+    private static void ObserveUnhandledExceptions(ILogger logger)
+    {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            logger.LogCritical(e.ExceptionObject as Exception, "Unhandled exception (terminating: {Terminating})", e.IsTerminating);
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            logger.LogError(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
+    }
+}
+```
+
+### `src/MyAdventure.Shared/Views/MainView.axaml`
+```xml
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MyAdventure.Shared.ViewModels"
+             xmlns:conv="using:MyAdventure.Shared.Converters"
+             xmlns:svc="using:MyAdventure.Shared.Services"
+             x:Class="MyAdventure.Shared.Views.MainView"
+             x:DataType="vm:GameViewModel"
+             Background="#1A1A2E"
+             TopLevel.AutoSafeAreaPadding="False">
+
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.93)" />
+        </Style>
+
+        <Style Selector=":is(Control).compactOnly">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <Style Selector="Border.bar">
+            <Setter Property="Background" Value="#16213E" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20,12" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#16213E" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="6" />
+        </Style>
+        <Style Selector="UniformGrid.businesses">
+            <Setter Property="Columns" Value="3" />
+            <Setter Property="Rows" Value="2" />
+        </Style>
+        <Style Selector="TextBlock.cash">
+            <Setter Property="FontSize" Value="36" />
+        </Style>
+        <Style Selector="TextBlock.icon">
+            <Setter Property="FontSize" Value="28" />
+        </Style>
+        <Style Selector="TextBlock.name">
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style Selector="TextBlock.small">
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style Selector="Button.action">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0,8" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.bulk">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="0,5" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="#1565C0" />
+        </Style>
+        <Style Selector="Button.tool">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+
+        <ContainerQuery Name="root" Query="max-width:760">
+            <Style Selector=":is(Control).wideOnly">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+            <Style Selector=":is(Control).compactOnly">
+                <Setter Property="IsVisible" Value="True" />
+            </Style>
+            <Style Selector="Border.bar">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="10,6" />
+            </Style>
+            <Style Selector="Border.card">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="6" />
+                <Setter Property="Margin" Value="3" />
+            </Style>
+            <Style Selector="UniformGrid.businesses">
+                <Setter Property="Columns" Value="2" />
+                <Setter Property="Rows" Value="3" />
+            </Style>
+            <Style Selector="TextBlock.cash">
+                <Setter Property="FontSize" Value="28" />
+            </Style>
+            <Style Selector="TextBlock.icon">
+                <Setter Property="FontSize" Value="20" />
+            </Style>
+            <Style Selector="TextBlock.name">
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+            <Style Selector="TextBlock.small">
+                <Setter Property="FontSize" Value="9" />
+            </Style>
+            <Style Selector="Button.action">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="0,6" />
+                <Setter Property="CornerRadius" Value="5" />
+            </Style>
+            <Style Selector="Button.bulk">
+                <Setter Property="FontSize" Value="9" />
+                <Setter Property="Padding" Value="0,4" />
+            </Style>
+            <Style Selector="Button.tool">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="10,4" />
+            </Style>
+        </ContainerQuery>
+    </UserControl.Styles>
+
+    <Panel Container.Name="root" Container.Sizing="Width">
+        <DockPanel Margin="8">
+            <Border DockPanel.Dock="Top" Classes="bar" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Viewbox Grid.Column="0" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="44"
+                             HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Classes="cash" Text="💰" VerticalAlignment="Center" />
+                            <TextBlock Classes="cash" Text="{Binding CashText}" FontWeight="Bold"
+                                       Foreground="#00E676" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Viewbox>
+
+                    <StackPanel Grid.Column="1" Classes="wideOnly" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center" Margin="20,0">
+                        <TextBlock Text="😇" FontSize="20" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="18" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="14" Foreground="#FFD740" Opacity="0.7" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Classes="tool" Command="{Binding PrestigeCommand}" Background="#AA00FF"
+                                HorizontalAlignment="Right"
+                                Opacity="{Binding CanPrestige, Converter={x:Static conv:GameConverters.BoolToOpacity}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="🔄" VerticalAlignment="Center" />
+                                <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
+                                <TextBlock Classes="wideOnly" Text="{Binding NextAngelText, StringFormat='+{0}'}"
+                                           Opacity="0.8" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Classes="small" Text="{Binding PrestigeExplanation}" Foreground="#AAAAAA"
+                                   HorizontalAlignment="Right" MaxWidth="260" TextWrapping="Wrap" TextAlignment="Right" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Top" Classes="compactOnly" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,6">
+                <Viewbox StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="20" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="😇" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="14" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="12" Foreground="#FFD740" Opacity="0.7" VerticalAlignment="Center" />
+                        <TextBlock Text="•" Foreground="#444" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding NextAngelText, StringFormat='Next: +{0}'}" FontSize="12"
+                                   Foreground="#CE93D8" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Viewbox>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom" Classes="bar" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <Button Classes="tool" Command="{Binding ExportCommand}" Background="#00897B" Content="📤 EXPORT" />
+                    <Button Classes="tool" Command="{Binding StartImportCommand}" Background="#5C6BC0" Content="📥 IMPORT" />
+                    <Button Classes="tool" Command="{Binding ToggleSoundCommand}" Background="#37474F">
+                        <Panel>
+                            <TextBlock Text="🔊 SOUND" IsVisible="{Binding SoundEnabled}" />
+                            <TextBlock Text="🔇 MUTED" IsVisible="{Binding !SoundEnabled}" />
+                        </Panel>
+                    </Button>
+                    <Button Classes="tool" Command="{Binding ToggleHapticsCommand}" Background="#37474F"
+                            IsVisible="{Binding HapticsSupported}">
+                        <Panel>
+                            <TextBlock Text="📳 HAPTICS" IsVisible="{Binding HapticsEnabled}" />
+                            <TextBlock Text="📴 HAPTICS" IsVisible="{Binding !HapticsEnabled}" />
+                        </Panel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Panel>
+                <ItemsControl ItemsSource="{Binding Businesses}" IsVisible="{Binding !IsTransferOpen}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Classes="businesses" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BusinessViewModel">
+                            <Border Classes="card"
+                                    Opacity="{Binding IsOwned, Converter={x:Static conv:GameConverters.BoolToOpacity}}">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+                                        <TextBlock Grid.Column="0" Classes="icon" Text="{Binding Icon}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Classes="name" Text="{Binding Name}" FontWeight="Bold"
+                                                   Foreground="White" VerticalAlignment="Center" Margin="6,0,0,0"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <Border Grid.Column="2" Background="#0D47A1" CornerRadius="10" Padding="8,2">
+                                            <TextBlock Classes="name" Text="{Binding Owned}" FontWeight="Bold"
+                                                       Foreground="White" HorizontalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" Margin="0,2,0,4">
+                                        <Border Background="#0A0A1A" CornerRadius="4" Height="6" />
+                                        <Border Background="{Binding Color, Converter={x:Static conv:GameConverters.HexToBrush}}"
+                                                CornerRadius="4" Height="6" HorizontalAlignment="Stretch" RenderTransformOrigin="0,0.5">
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="{Binding ProgressPercent, Converter={x:Static conv:GameConverters.PercentToFraction}, FallbackValue=0}" />
+                                            </Border.RenderTransform>
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,4">
+                                        <Viewbox Grid.Column="0" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="22" HorizontalAlignment="Left">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding RevenueText, StringFormat='💵 {0}'}" FontSize="12"
+                                                           Foreground="#00E676" TextWrapping="NoWrap" />
+                                                <TextBlock Classes="compactOnly" Text="{Binding RevenuePerSecondText}" FontSize="10"
+                                                           Foreground="#80CBC4" TextWrapping="NoWrap" />
+                                            </StackPanel>
+                                        </Viewbox>
+                                        <Viewbox Grid.Column="1" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="20" HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding CostText, StringFormat='🏷️ {0}'}" FontSize="12"
+                                                       Foreground="#FFAB40" TextWrapping="NoWrap" />
+                                        </Viewbox>
+                                    </Grid>
+
+                                    <Border Grid.Row="3" Classes="wideOnly" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="small" Text="{Binding CycleTimeText, StringFormat='⏱️ {0}'}" Foreground="#B0BEC5" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Classes="small" Text="{Binding RevenuePerSecondText, StringFormat='📈 {0}'}"
+                                                       Foreground="#80CBC4" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="small" Text="{Binding AffordableCountText, StringFormat='🛒 {0}'}"
+                                                       Foreground="#CE93D8" Margin="0,2,0,0" />
+                                            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Classes="small" Text="{Binding MilestoneMultiplierText, StringFormat='⭐ {0} revenue'}"
+                                                       Foreground="#FFD740" Margin="0,2,0,0" />
+                                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasNextMilestone}">
+                                                <TextBlock Classes="small" Text="{Binding NextMilestoneText, StringFormat='🎯 {0}'}" Foreground="#90CAF9" />
+                                                <TextBlock Classes="small" Text="{Binding NextMilestoneRewardText}" Foreground="#A5D6A7" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Classes="small" Text="{Binding SpeedMultiplierText, StringFormat='⚡ {0}'}"
+                                                       Foreground="#FF8A65" Margin="0,2,0,0" IsVisible="{Binding HasSpeedBonus}" />
+                                            <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Classes="small" Text="{Binding NextSpeedMilestoneText, StringFormat='🚀 {0}'}"
+                                                       Foreground="#FFCC80" Margin="0,2,0,0" IsVisible="{Binding HasNextSpeedMilestone}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Row="3" Classes="compactOnly" Orientation="Horizontal" Spacing="4" Margin="0,0,0,2">
+                                        <TextBlock Classes="small" Text="{Binding MilestoneMultiplierText}" Foreground="#FFD740" />
+                                        <TextBlock Classes="small" Text="{Binding SpeedMultiplierText}" Foreground="#FF8A65" IsVisible="{Binding HasSpeedBonus}" />
+                                        <TextBlock Classes="small" Text="{Binding AffordableCountText}" Foreground="#CE93D8" />
+                                    </StackPanel>
+
+                                    <Button Grid.Row="4" Classes="bulk" Command="{Binding BulkBuyCommand}" Margin="0,0,0,4"
+                                            Opacity="{Binding CanBulkBuy, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                            Content="{Binding BulkBuyText}" />
+
+                                    <Grid Grid.Row="5" ColumnDefinitions="*,4,*,4,*">
+                                        <Button Grid.Column="0" Classes="action" Command="{Binding BuyBusinessCommand}"
+                                                Background="{Binding Color, Converter={x:Static conv:GameConverters.HexToBrush}}"
+                                                Opacity="{Binding CanAfford, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                                Content="BUY" />
+                                        <Button Grid.Column="2" Classes="action" Command="{Binding ClickBusinessCommand}"
+                                                Background="#2196F3" Content="▶ RUN" />
+                                        <Button Grid.Column="4" Classes="action" Command="{Binding BuyManagerCommand}"
+                                                IsVisible="{Binding !HasManager}" Background="#FF6F00"
+                                                Opacity="{Binding CanAffordManager, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                                Content="MGR" />
+                                        <Border Grid.Column="4" IsVisible="{Binding HasManager}" Background="#2E7D32" CornerRadius="6"
+                                                VerticalAlignment="Stretch">
+                                            <TextBlock Text="✅" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Foreground="White" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border IsVisible="{Binding IsTransferOpen}" Classes="card">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" Margin="0,0,0,4" IsVisible="{Binding IsExportMode}"
+                                   Text="📤 Export Progress" />
+                        <TextBlock DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" Margin="0,0,0,4" IsVisible="{Binding !IsExportMode}"
+                                   Text="📥 Import Progress" />
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   Margin="0,0,0,8" IsVisible="{Binding IsExportMode}"
+                                   Text="Tap COPY to copy to clipboard, or select and copy manually." />
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   Margin="0,0,0,8" IsVisible="{Binding !IsExportMode}"
+                                   Text="Paste an export string below, then confirm." />
+
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8"
+                                    HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Classes="tool" Command="{Binding CopyExportCommand}" IsVisible="{Binding IsExportMode}"
+                                    Background="#00897B" Content="📋 COPY" />
+                            <Button Classes="tool" Command="{Binding ConfirmImportCommand}" IsVisible="{Binding !IsExportMode}"
+                                    Background="#4CAF50" Content="✅ CONFIRM" />
+                            <Button Classes="tool" Command="{Binding CloseTransferCommand}" Background="#616161" Content="CLOSE" />
+                        </StackPanel>
+
+                        <TextBox Text="{Binding TransferText, Mode=TwoWay}" IsReadOnly="{Binding IsExportMode}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas, Courier New, monospace"
+                                 FontSize="12" Background="#0D1B2A" Foreground="#E0E0E0" CornerRadius="8" Padding="10"
+                                 PlaceholderText="Paste your export string here..." />
+                    </DockPanel>
+                </Border>
+            </Panel>
+        </DockPanel>
+
+        <ItemsControl ItemsSource="{Binding Toasts.ActiveToasts}" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      Margin="0,0,0,24" IsHitTestVisible="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="svc:ToastItem">
+                    <Border Background="#333333" CornerRadius="8" Padding="14,8" MaxWidth="440" Opacity="0.95">
+                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="13"
+                                   TextWrapping="Wrap" TextAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Panel>
+</UserControl>
+```
+
+The XAML compiler stopped at these three errors, so there may be more errors further along that it never reached. If CI shows any, send me the log.
+
+48
+48
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -24,7 +24,7 @@
             <Setter Property="RenderTransform" Value="scale(0.93)" />
         </Style>
 
-        <Style Selector=".compactOnly">
+        <Style Selector=":is(Control).compactOnly">
             <Setter Property="IsVisible" Value="False" />
         </Style>
 
@@ -75,10 +75,10 @@
         </Style>
 
         <ContainerQuery Name="root" Query="max-width:760">
-            <Style Selector=".wideOnly">
+            <Style Selector=":is(Control).wideOnly">
                 <Setter Property="IsVisible" Value="False" />
             </Style>
-            <Style Selector=".compactOnly">
+            <Style Selector=":is(Control).compactOnly">
                 <Setter Property="IsVisible" Value="True" />
             </Style>
             <Style Selector="Border.bar">
