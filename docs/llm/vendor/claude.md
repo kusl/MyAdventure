@@ -20498,7 +20498,6 @@ The XAML compiler stopped at these three errors, so there may be more errors fur
 
 
 
-
 build-and-test
 Process completed with exit code 1.
 build-and-test
@@ -20513,3 +20512,20 @@ build-and-test
 Unable to optimize assemblies for performance: a valid runtime package was not found. Either set the PublishReadyToRun property to false, or use a supported runtime identifier when publishing. When targeting .NET 6 or higher, make sure to restore packages with the PublishReadyToRun property set to true.
 build-and-test
 Unable to optimize assemblies for performance: a valid runtime package was not found. Either set the PublishReadyToRun property to false, or use a supported runtime identifier when publishing. When targeting .NET 6 or higher, make sure to restore packages with the PublishReadyToRun property set to true.
+
+ok next problem 
+Run dotnet test --configuration Release --no-build
+  dotnet test --configuration Release --no-build
+  shell: /usr/bin/bash -e {0}
+  env:
+    DOTNET_NOLOGO: true
+    DOTNET_CLI_TELEMETRY_OPTOUT: true
+    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+    JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64
+    MAVEN_ARGS: -ntp
+    DOTNET_ROOT: /usr/share/dotnet
+  
+No devices are available for this project.
+Unable to run this project because multiple devices are available. Please specify which device to use by passing the --device argument with one of the following values:
+Error: Process completed with exit code 1.
