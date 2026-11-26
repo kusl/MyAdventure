@@ -1,0 +1,69 @@
+LogRecord.Timestamp:               2026-11-26T09:02:03.0476535Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:02:03.0476535Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env=production, verbose=True
+LogRecord.Body:                    Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Environment: production
+    Verbose: true
+    OriginalFormat (a.k.a Body): Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+Instrumentation scope (Logger):
+    Name: MyAdventure.Telemetry
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+ff5613e173b6f24914c85e429815051d2c4c7df2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+LogRecord.Timestamp:               2026-11-26T09:02:03.1118775Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:02:03.1118775Z
+LogRecord.CategoryName:            MyAdventure.Shared.App
+LogRecord.Severity:                Fatal
+LogRecord.SeverityText:            Critical
+LogRecord.FormattedMessage:        Unhandled exception (terminating: True)
+LogRecord.Body:                    Unhandled exception (terminating: {Terminating})
+LogRecord.Attributes (Key:Value):
+    Terminating: true
+    OriginalFormat (a.k.a Body): Unhandled exception (terminating: {Terminating})
+LogRecord.Exception:               Avalonia.Markup.Xaml.XamlLoadException: No precompiled XAML found for MyAdventure.Shared.Views.MainView, make sure to specify x:Class and include your XAML file as AvaloniaResource
+   at Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(Object obj)
+   at MyAdventure.Shared.Views.MainView.InitializeComponent(Boolean loadXaml) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/obj/Debug/net11.0/Avalonia.Generators/Avalonia.Generators.NameGenerator.AvaloniaNameIncrementalGenerator/MyAdventure.Shared.Views.MainView.g.cs:line 24
+   at MyAdventure.Shared.Views.MainView..ctor() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml.cs:line 19
+   at MyAdventure.Shared.App.CreateMainView(IServiceProvider provider) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/App.cs:line 64
+   at MyAdventure.Shared.App.OnFrameworkInitializationCompleted() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/App.cs:line 42
+   at Avalonia.AppBuilder.SetupUnsafe()
+   at Avalonia.AppBuilder.Setup()
+   at Avalonia.AppBuilder.SetupWithLifetime(IApplicationLifetime lifetime)
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder)
+   at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
+Instrumentation scope (Logger):
+    Name: MyAdventure.Shared.App
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+ff5613e173b6f24914c85e429815051d2c4c7df2
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+Unhandled exception. Avalonia.Markup.Xaml.XamlLoadException: No precompiled XAML found for MyAdventure.Shared.Views.MainView, make sure to specify x:Class and include your XAML file as AvaloniaResource
+   at Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(Object obj)
+   at MyAdventure.Shared.Views.MainView.InitializeComponent(Boolean loadXaml) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/obj/Debug/net11.0/Avalonia.Generators/Avalonia.Generators.NameGenerator.AvaloniaNameIncrementalGenerator/MyAdventure.Shared.Views.MainView.g.cs:line 24
+   at MyAdventure.Shared.Views.MainView..ctor() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml.cs:line 19
+   at MyAdventure.Shared.App.CreateMainView(IServiceProvider provider) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/App.cs:line 64
+   at MyAdventure.Shared.App.OnFrameworkInitializationCompleted() in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/App.cs:line 42
+   at Avalonia.AppBuilder.SetupUnsafe()
+   at Avalonia.AppBuilder.Setup()
+   at Avalonia.AppBuilder.SetupWithLifetime(IApplicationLifetime lifetime)
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder)
+   at MyAdventure.Desktop.Program.Main(String[] args) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/Program.cs:line 8
