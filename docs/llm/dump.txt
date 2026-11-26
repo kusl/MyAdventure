@@ -1,6 +1,6 @@
 ===============================================================================
 PROJECT EXPORT (GIT TRACKED ONLY)
-Generated: Thu Nov 26 02:32:53 AM EST 2026
+Generated: Thu Nov 26 02:37:05 AM EST 2026
 Project Path: /home/kushal/src/dotnet/MyAdventure
 ===============================================================================
 
@@ -777,12 +777,12 @@ SIZE: 3.84 KB
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
-    <AvaloniaVersion>12.1.4</AvaloniaVersion>
-    <MicrosoftExtensionsVersion>10.0.14</MicrosoftExtensionsVersion>
-    <EfCoreVersion>10.0.14</EfCoreVersion>
-    <OpenTelemetryVersion>1.20.1</OpenTelemetryVersion>
-    <OpenTelemetryInstrumentationRuntimeVersion>1.20.1</OpenTelemetryInstrumentationRuntimeVersion>
-    <OpenTelemetryInstrumentationHttpVersion>1.20.1</OpenTelemetryInstrumentationHttpVersion>
+    <AvaloniaVersion>12.2.0</AvaloniaVersion>
+    <MicrosoftExtensionsVersion>10.0.15</MicrosoftExtensionsVersion>
+    <EfCoreVersion>10.0.15</EfCoreVersion>
+    <OpenTelemetryVersion>1.21.0</OpenTelemetryVersion>
+    <OpenTelemetryInstrumentationRuntimeVersion>1.21.0</OpenTelemetryInstrumentationRuntimeVersion>
+    <OpenTelemetryInstrumentationHttpVersion>1.21.0</OpenTelemetryInstrumentationHttpVersion>
   </PropertyGroup>
 
   <ItemGroup Label="Avalonia - MIT License">
@@ -827,11 +827,11 @@ SIZE: 3.84 KB
   </ItemGroup>
 
   <ItemGroup Label="Testing - Apache/BSD/MIT Licenses">
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
+    <PackageVersion Include="coverlet.MTP" Version="10.1.1" />
   </ItemGroup>
 </Project>
 
