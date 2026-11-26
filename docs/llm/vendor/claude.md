@@ -19023,8 +19023,7 @@ Updating those three selectors to include `:is(Control)` (so it matches `Border`
 ```
 *(and likewise `:is(Control).wideOnly` and `:is(Control).compactOnly` inside `<ContainerQuery>`, or adding `x:SetterTargetType="Control"` on those `<Style>` tags).*
 ```
-
-
+I have also uploaded the latest copy of the dump.txt in the project files 
 
 
 
