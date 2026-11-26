@@ -20,6 +20,8 @@ Every push to `main` builds and releases all platforms: [latest release](https:/
 
 Android: point [Obtainium](https://github.com/ImranR98/Obtainium) at the releases. `versionCode` is the CI run number.
 
+If a platform fails or GitHub cancels its runner, the other platforms still ship as a **pre-release** listing what is missing; `latest` and Obtainium stay on the last complete release.
+
 ## The Game
 
 Start with $5, buy businesses, hire managers, prestige for angels.

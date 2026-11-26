@@ -21,6 +21,7 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -39,7 +40,13 @@ jobs:
           global-json-file: global.json
 
       - name: Install Android workload
-        run: dotnet workload install android
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet workload install android && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
 
       - name: Setup Keystore
         id: keystore
@@ -60,7 +67,13 @@ jobs:
           fi
 
       - name: Restore
-        run: dotnet restore -property:Configuration=Release
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet restore -property:Configuration=Release && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
 
       - name: Build
         run: |
@@ -82,27 +95,23 @@ jobs:
   build-desktop:
     needs: build-and-test
     if: github.event_name == 'push'
+    timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             rid: linux-x64
-            artifact: linux-x64
           - os: ubuntu-latest
             rid: linux-arm64
-            artifact: linux-arm64
           - os: windows-latest
             rid: win-x64
-            artifact: win-x64
           - os: windows-latest
             rid: win-arm64
-            artifact: win-arm64
           - os: macos-latest
             rid: osx-x64
-            artifact: osx-x64
           - os: macos-latest
             rid: osx-arm64
-            artifact: osx-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -116,35 +125,39 @@ jobs:
       - name: Publish
         shell: bash
         run: |
-          dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
-            --configuration Release \
-            -r ${{ matrix.rid }} \
-            --self-contained true \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true \
-            -p:Version=1.0.${{ github.run_number }} \
-            --output ./publish
+          for attempt in 1 2 3; do
+            dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
+              --configuration Release \
+              -r ${{ matrix.rid }} \
+              --self-contained true \
+              -p:PublishSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true \
+              -p:Version=1.0.${{ github.run_number }} \
+              --output ./publish && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
 
       - name: Create archive (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           cd ./publish
-          tar -czvf ../MyAdventure-${{ matrix.artifact }}.tar.gz .
+          tar -czvf ../MyAdventure-${{ matrix.rid }}.tar.gz .
 
       - name: Create archive (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-${{ matrix.artifact }}.zip
+          Compress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-${{ matrix.rid }}.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.rid }}
           path: |
-            ./MyAdventure-${{ matrix.artifact }}.tar.gz
-            ./MyAdventure-${{ matrix.artifact }}.zip
+            ./MyAdventure-${{ matrix.rid }}.tar.gz
+            ./MyAdventure-${{ matrix.rid }}.zip
           if-no-files-found: error
           retention-days: 7
 
@@ -152,6 +165,7 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -168,7 +182,13 @@ jobs:
           global-json-file: global.json
 
       - name: Install Android workload
-        run: dotnet workload install android
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet workload install android && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
 
       - name: Setup Keystore
         id: keystore
@@ -240,24 +260,67 @@ jobs:
           retention-days: 7
 
   create-release:
-    needs: [build-desktop, build-android]
-    if: github.event_name == 'push'
+    needs: [build-and-test, build-desktop, build-android]
+    if: ${{ !cancelled() && github.event_name == 'push' && needs.build-and-test.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v8
+        continue-on-error: true
         with:
           path: ./artifacts
 
-      - name: Prepare release files
+      - name: Prepare release
+        id: prepare
         shell: bash
         run: |
-          mkdir -p ./release
-          find ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.apk" \) -exec cp {} ./release/ \;
-          echo "=== Release files ==="
-          ls -la ./release/
+          N=${{ github.run_number }}
+          mkdir -p release
+          if [[ -d artifacts ]]; then
+            find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.apk' \) -exec cp {} release/ \;
+          fi
+
+          files=(win-x64.zip win-arm64.zip linux-x64.tar.gz linux-arm64.tar.gz osx-x64.tar.gz osx-arm64.tar.gz "android-$N.apk")
+          labels=("Windows x64" "Windows ARM64" "Linux x64" "Linux ARM64" "macOS x64 (Intel)" "macOS ARM64 (Apple Silicon)" "Android")
+          rows=""
+          missing=()
+          for i in "${!files[@]}"; do
+            file="MyAdventure-${files[$i]}"
+            if [[ -f "release/$file" ]]; then
+              rows+="| ${labels[$i]} | \`$file\` |"$'\n'
+            else
+              missing+=("${labels[$i]}")
+              echo "::warning::${labels[$i]} was not built; releasing without it"
+            fi
+          done
+
+          if [[ -z "$rows" ]]; then
+            echo "::error::No platform built successfully; nothing to release"
+            exit 1
+          fi
+
+          {
+            echo "## MyAdventure v1.0.$N"
+            echo
+            echo "| Platform | File |"
+            echo "|----------|------|"
+            printf '%s' "$rows"
+            if (( ${#missing[@]} > 0 )); then
+              echo
+              printf '**Partial release.** Not built this run: %s. Marked as pre-release so `latest` and Obtainium stay on the last complete release.\n' "$(printf '%s, ' "${missing[@]}" | sed 's/, $//')"
+            fi
+            echo
+            echo "### Android (Obtainium)"
+            echo
+            echo "Point Obtainium at this repository's releases. The APK version code is the CI run number."
+          } > release-notes.md
+
+          echo "prerelease=$([[ ${#missing[@]} -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          cat release-notes.md
+          ls -la release
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
@@ -265,27 +328,9 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.prepare.outputs.prerelease }}
           generate_release_notes: true
+          body_path: release-notes.md
           files: ./release/*
-          body: |
-            ## MyAdventure v1.0.${{ github.run_number }}
-
-            ### Downloads
-
-            | Platform | File |
-            |----------|------|
-            | Windows x64 | `MyAdventure-win-x64.zip` |
-            | Windows ARM64 | `MyAdventure-win-arm64.zip` |
-            | Linux x64 | `MyAdventure-linux-x64.tar.gz` |
-            | Linux ARM64 | `MyAdventure-linux-arm64.tar.gz` |
-            | macOS x64 (Intel) | `MyAdventure-osx-x64.tar.gz` |
-            | macOS ARM64 (Apple Silicon) | `MyAdventure-osx-arm64.tar.gz` |
-            | Android | `MyAdventure-android-${{ github.run_number }}.apk` |
-
-            ### Android Users (Obtainium)
-
-            Point Obtainium to this repository's releases for automatic updates.
-            The APK version code increments with each release.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
