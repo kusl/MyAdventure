@@ -18698,3 +18698,107 @@ not sure how
 
 
 
+Let me reconstruct the repo from the dump.
+
+Now Shared and the platform heads.
+
+Now the build configuration files.
+
+Now the telemetry options, defaults, loader, registration and lifecycle.
+
+Excellent — conda-forge has the .NET 11.0.100 SDK. Let me install it so I can at least compile what doesn't need NuGet.
+
+Now cross-check: new engine imports the old export, and old engine imports the new export.
+
+Now the README (terse), SUMMARY, and desktop.sh.
+
+I've rebuilt the project for .NET 11 and added sound, vibration and a button-press animation. The archive holds only the 96 new or changed files, with paths starting at the repo root. CI has to be the final check: NuGet was blocked here, so I couldn't restore packages or run a real build.
+
+**About rc3:** your `060.txt` log shows `dotnet-sdk-11.0` 11.0.100, the final release, is already installed from Fedora's repos. You got .NET 10 only because `global.json` pinned 10.0.100. The new `global.json` pins 11.0.100 and accepts newer versions in the 11.0 series. Your Android workload is installed for the .NET 10 SDK only, so run `dotnet workload install android` once.
+
+**What I could check without NuGet** (using the .NET 11.0.100 SDK from conda-forge):
+- **Core:** builds in Release with warnings as errors.
+- **Core tests:** all 320 pass, run with stand-in versions of xUnit and Shouldly that I wrote.
+- **Save format:** exports from the old engine and the new one are identical apart from the timestamp, and each imports the other's.
+- **Telemetry and Sentry tests:** all 53 pass the same way.
+- **Database upgrade SQL:** I ran it against a copy of the old database layout in sqlite3, and the data came through.
+- **UI tests:** all 77 pass, but against stand-ins I wrote for Avalonia, the MVVM toolkit and NSubstitute. That checks the C#, not the real library APIs.
+- **Not checked at all:** XAML compilation, the Android build, and EF Core at runtime.
+
+**Main changes**
+- **.NET 11:** C# 15 and Microsoft packages 11.0.0. Other packages were already latest. Seven unused packages are removed. Android now runs on CoreCLR, since Mono is gone in .NET 11. It requires Android 7.0 (API 24) and builds for arm, arm64 and x64; 32-bit Intel (x86) is no longer supported.
+- **One app, one screen:** the Desktop and Android projects each had their own copy of the app setup and the whole screen layout. Now there is one of each, in Shared. The layout switches between 3×2 and 2×3 based on available width, so a narrow desktop window gets the phone layout. Each platform project is now a few lines.
+- **Cleaner code:** the engine saves through a plain snapshot instead of database text columns. Export/import no longer uses reflection. Tests no longer reach into the engine with reflection. All code comments are gone.
+- **CI:** reads the SDK version from `global.json`, has read-only permissions by default, and cancels outdated PR runs. Dependabot now also updates the SDK.
+
+**Bugs I found and fixed**
+- **Sentry traces and all metrics were never sent.** Nothing in the app ever started the trace and metric pipelines; logs worked only because they start on their own. This explains the empty Sentry Traces panel.
+- **Every business card was drawn at 40% opacity.** A number was bound to an on/off fade, so it never counted as "owned".
+- **The desktop app could lose its last save on close.** Saving and the final telemetry send now happen when the app exits.
+
+**Feedback on every button**
+- **Sound:** short tones generated in code, so no audio files and no new packages. Windows uses its built-in sound API, macOS `afplay`, Linux the first of `pw-play`/`paplay`/`aplay`, and Android `SoundPool`.
+- **Vibration:** Android only; this adds the `VIBRATE` permission.
+- **Press animation:** buttons shrink slightly while pressed, on all platforms.
+
+There are six different cues: tap, purchase, manager, milestone, prestige and denied. Sound and vibration have on/off buttons in the bottom bar, saved in SQLite. Existing saves get the new settings table added automatically on first launch, without touching progress.
+
+**Two things I held back on**
+- **Fluent2 theme:** Avalonia 12.2 introduced it, but I couldn't confirm the package exists, so the app stays on the current Fluent theme.
+- **MVVM toolkit properties:** the toolkit's shorter `[ObservableProperty]` form may need a preview language setting on C# 15. I used the plain C# 14 `field` pattern instead, which compiles for certain.
+
+**Delete these 19 files before extracting:**
+```
+src/MyAdventure.Android/App.axaml
+src/MyAdventure.Android/App.axaml.cs
+src/MyAdventure.Android/Views/MainView.axaml
+src/MyAdventure.Android/Views/MainView.axaml.cs
+src/MyAdventure.Core/Entities/EntityBase.cs
+src/MyAdventure.Core/Entities/GameState.cs
+src/MyAdventure.Desktop/App.axaml
+src/MyAdventure.Desktop/App.axaml.cs
+src/MyAdventure.Desktop/Views/MainWindow.axaml
+src/MyAdventure.Desktop/Views/MainWindow.axaml.cs
+src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs
+src/MyAdventure.Infrastructure/DependencyInjection.cs
+src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs
+src/MyAdventure.Shared/Resources/i18n/en.json
+src/MyAdventure.Shared/Resources/i18n/es.json
+src/MyAdventure.Shared/Services/AppLifecycleManager.cs
+src/MyAdventure.Shared/Services/AppRoot.cs
+src/MyAdventure.Shared/ViewModels/ViewModelBase.cs
+tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+```
+
+Then extract `MyAdventure-net11.tar.gz` in the repo root, run `dotnet workload install android`, and push. `desktop.sh` is also updated: the commented-out lines were stopping `MYADVENTURE_VERBOSE=1` from reaching `dotnet run`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+git rm src/MyAdventure.Android/App.axaml src/MyAdventure.Android/App.axaml.cs src/MyAdventure.Android/Views/MainView.axaml src/MyAdventure.Android/Views/MainView.axaml.cs src/MyAdventure.Core/Entities/EntityBase.cs src/MyAdventure.Core/Entities/GameState.cs src/MyAdventure.Desktop/App.axaml src/MyAdventure.Desktop/App.axaml.cs src/MyAdventure.Desktop/Views/MainWindow.axaml src/MyAdventure.Desktop/Views/MainWindow.axaml.cs src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs src/MyAdventure.Infrastructure/DependencyInjection.cs src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs src/MyAdventure.Shared/Resources/i18n/en.json src/MyAdventure.Shared/Resources/i18n/es.json src/MyAdventure.Shared/Services/AppLifecycleManager.cs src/MyAdventure.Shared/Services/AppRoot.cs src/MyAdventure.Shared/ViewModels/ViewModelBase.cs tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+
+46
+48

@@ -500,4 +500,24 @@ Matched fields: name
 real	0m0.519s
 user	0m0.422s
 sys	0m0.148s
+kushal@fedora:~/src/dotnet/MyAdventure$ git rm src/MyAdventure.Android/App.axaml src/MyAdventure.Android/App.axaml.cs src/MyAdventure.Android/Views/MainView.axaml src/MyAdventure.Android/Views/MainView.axaml.cs src/MyAdventure.Core/Entities/EntityBase.cs src/MyAdventure.Core/Entities/GameState.cs src/MyAdventure.Desktop/App.axaml src/MyAdventure.Desktop/App.axaml.cs src/MyAdventure.Desktop/Views/MainWindow.axaml src/MyAdventure.Desktop/Views/MainWindow.axaml.cs src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs src/MyAdventure.Infrastructure/DependencyInjection.cs src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs src/MyAdventure.Shared/Resources/i18n/en.json src/MyAdventure.Shared/Resources/i18n/es.json src/MyAdventure.Shared/Services/AppLifecycleManager.cs src/MyAdventure.Shared/Services/AppRoot.cs src/MyAdventure.Shared/ViewModels/ViewModelBase.cs tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs
+rm 'src/MyAdventure.Android/App.axaml'
+rm 'src/MyAdventure.Android/App.axaml.cs'
+rm 'src/MyAdventure.Android/Views/MainView.axaml'
+rm 'src/MyAdventure.Android/Views/MainView.axaml.cs'
+rm 'src/MyAdventure.Core/Entities/EntityBase.cs'
+rm 'src/MyAdventure.Core/Entities/GameState.cs'
+rm 'src/MyAdventure.Desktop/App.axaml'
+rm 'src/MyAdventure.Desktop/App.axaml.cs'
+rm 'src/MyAdventure.Desktop/Views/MainWindow.axaml'
+rm 'src/MyAdventure.Desktop/Views/MainWindow.axaml.cs'
+rm 'src/MyAdventure.Infrastructure/Data/DesignTimeDbContextFactory.cs'
+rm 'src/MyAdventure.Infrastructure/DependencyInjection.cs'
+rm 'src/MyAdventure.Infrastructure/Telemetry/TelemetryStartupAnnouncement.cs'
+rm 'src/MyAdventure.Shared/Resources/i18n/en.json'
+rm 'src/MyAdventure.Shared/Resources/i18n/es.json'
+rm 'src/MyAdventure.Shared/Services/AppLifecycleManager.cs'
+rm 'src/MyAdventure.Shared/Services/AppRoot.cs'
+rm 'src/MyAdventure.Shared/ViewModels/ViewModelBase.cs'
+rm 'tests/MyAdventure.UI.Tests/AppLifecycleManagerTests.cs'
 kushal@fedora:~/src/dotnet/MyAdventure$ 
