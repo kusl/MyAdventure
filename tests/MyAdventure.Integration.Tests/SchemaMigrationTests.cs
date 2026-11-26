@@ -1,88 +1,83 @@
 using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using MyAdventure.Infrastructure;
+using MyAdventure.Core.Interfaces;
 using MyAdventure.Infrastructure.Data;
 using Shouldly;
 
 namespace MyAdventure.Integration.Tests;
 
-public class SchemaMigrationTests : IDisposable
+public sealed class SchemaMigrationTests : IDisposable
 {
-    private readonly string _dbPath;
+    private readonly SqliteTestDatabase _database = new();
 
-    public SchemaMigrationTests()
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Initialize_FreshDatabase_CreatesCurrentSchema()
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), $"myadventure-test-{Guid.NewGuid():N}.db");
+        await _database.InitializeAsync();
+
+        using var connection = _database.OpenConnection();
+        var columns = await SchemaUpgrader.GetColumnNamesAsync(connection, "GameStates", Ct);
+        columns.ShouldContain("CashText");
+        columns.ShouldContain("LifetimeEarningsText");
+        columns.ShouldContain("AngelInvestorsText");
+        columns.ShouldNotContain("Cash");
+        (await SchemaUpgrader.TableExistsAsync(connection, "PlayerSettings", Ct)).ShouldBeTrue();
     }
 
     [Fact]
-    public async Task InitializeDatabaseAsync_FreshDatabase_CreatesNewSchema()
+    public async Task Initialize_LegacyRealSchema_MigratesDataAndAddsSettings()
     {
-        var services = new ServiceCollection();
-        services.AddInfrastructure(_dbPath);
-        var provider = services.BuildServiceProvider();
+        await CreateLegacyDatabaseAsync(cash: 1234.5, lifetime: 9999.99, angels: 50.0);
 
-        await DependencyInjection.InitializeDatabaseAsync(provider);
+        await _database.InitializeAsync();
 
-        using var conn = new SqliteConnection($"Data Source={_dbPath}");
-        await conn.OpenAsync(TestContext.Current.CancellationToken);
-        var cols = await GetColumnsAsync(conn, "GameStates");
-        cols.ShouldContain("CashText");
-        cols.ShouldContain("LifetimeEarningsText");
-        cols.ShouldContain("AngelInvestorsText");
-        cols.ShouldNotContain("Cash");
-        cols.ShouldNotContain("LifetimeEarnings");
-        cols.ShouldNotContain("AngelInvestors");
+        using var connection = _database.OpenConnection();
+        var columns = await SchemaUpgrader.GetColumnNamesAsync(connection, "GameStates", Ct);
+        columns.ShouldContain("CashText");
+        columns.ShouldNotContain("Cash");
+        (await SchemaUpgrader.TableExistsAsync(connection, "PlayerSettings", Ct)).ShouldBeTrue();
+
+        var snapshot = await _database.Get<IGameStateRepository>().LoadAsync(Ct);
+        snapshot.ShouldNotBeNull();
+        snapshot.Cash.ToDouble().ShouldBe(1234.5, tolerance: 1e-9);
+        snapshot.LifetimeEarnings.ToDouble().ShouldBe(9999.99, tolerance: 1e-9);
+        snapshot.AngelInvestors.ToDouble().ShouldBe(50.0, tolerance: 1e-9);
     }
 
     [Fact]
-    public async Task InitializeDatabaseAsync_LegacySchema_MigratesData()
+    public async Task Initialize_TextSchemaWithoutSettings_AddsSettingsAndKeepsProgress()
     {
-        await CreateLegacyDatabaseAsync(_dbPath, cash: 1234.5, lifetime: 9999.99, angels: 50.0);
+        await CreatePreSettingsDatabaseAsync();
 
-        var services = new ServiceCollection();
-        services.AddInfrastructure(_dbPath);
-        var provider = services.BuildServiceProvider();
-        await DependencyInjection.InitializeDatabaseAsync(provider);
+        await _database.InitializeAsync();
 
-        using var conn = new SqliteConnection($"Data Source={_dbPath}");
-        await conn.OpenAsync(TestContext.Current.CancellationToken);
-        var cols = await GetColumnsAsync(conn, "GameStates");
-        cols.ShouldContain("CashText");
-        cols.ShouldNotContain("Cash");
+        var settings = await _database.Get<ISettingsRepository>().LoadAsync(Ct);
+        settings.SoundEnabled.ShouldBeTrue();
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT CashText, LifetimeEarningsText, AngelInvestorsText FROM GameStates LIMIT 1";
-        using var reader = await cmd.ExecuteReaderAsync(TestContext.Current.CancellationToken);
-        await reader.ReadAsync(TestContext.Current.CancellationToken);
-        reader.GetString(0).ShouldStartWith("1234.5");
-        reader.GetString(1).ShouldStartWith("9999.99");
-        reader.GetString(2).ShouldStartWith("50");
+        var snapshot = await _database.Get<IGameStateRepository>().LoadAsync(Ct);
+        snapshot.ShouldNotBeNull();
+        snapshot.Cash.ToCanonicalString().ShouldBe("4.2e100");
+        snapshot.Owned["lemonade"].ShouldBe(7);
     }
 
     [Fact]
-    public async Task InitializeDatabaseAsync_RunTwice_IsIdempotent()
+    public async Task Initialize_RunTwice_IsIdempotent()
     {
-        var services = new ServiceCollection();
-        services.AddInfrastructure(_dbPath);
-        var provider = services.BuildServiceProvider();
+        await _database.InitializeAsync();
+        await new DatabaseInitializer(
+                _database.Get<Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext>>(),
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<DatabaseInitializer>.Instance)
+            .InitializeAsync(Ct);
 
-        await DependencyInjection.InitializeDatabaseAsync(provider);
-        await DependencyInjection.InitializeDatabaseAsync(provider);
-
-        using var conn = new SqliteConnection($"Data Source={_dbPath}");
-        await conn.OpenAsync(TestContext.Current.CancellationToken);
-        var cols = await GetColumnsAsync(conn, "GameStates");
-        cols.ShouldContain("CashText");
+        using var connection = _database.OpenConnection();
+        (await SchemaUpgrader.GetColumnNamesAsync(connection, "GameStates", Ct)).ShouldContain("CashText");
     }
 
-    private static async Task CreateLegacyDatabaseAsync(string dbPath, double cash, double lifetime, double angels)
+    private async Task CreateLegacyDatabaseAsync(double cash, double lifetime, double angels)
     {
-        await using var conn = new SqliteConnection($"Data Source={dbPath}");
-        await conn.OpenAsync(TestContext.Current.CancellationToken);
-
-        await ExecAsync(conn, """
+        using var connection = _database.OpenConnection();
+        await ExecAsync(connection, """
             CREATE TABLE GameStates (
                 Id TEXT NOT NULL PRIMARY KEY,
                 CreatedAt TEXT NOT NULL,
@@ -97,46 +92,48 @@ public class SchemaMigrationTests : IDisposable
             )
             """);
 
-        await using var insert = conn.CreateCommand();
+        await using var insert = connection.CreateCommand();
         insert.CommandText = """
             INSERT INTO GameStates (Id, CreatedAt, UpdatedAt, Cash, LifetimeEarnings, AngelInvestors, PrestigeCount, BusinessDataJson, ManagerDataJson, LastPlayedAt)
             VALUES ($id, $now, $now, $cash, $lt, $angels, 0, '{}', '{}', $now)
             """;
         insert.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
-        insert.Parameters.AddWithValue("$now", DateTime.UtcNow.ToString("o"));
+        insert.Parameters.AddWithValue("$now", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
         insert.Parameters.AddWithValue("$cash", cash);
         insert.Parameters.AddWithValue("$lt", lifetime);
         insert.Parameters.AddWithValue("$angels", angels);
-        await insert.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        await insert.ExecuteNonQueryAsync(Ct);
     }
 
-    private static async Task ExecAsync(SqliteConnection conn, string sql)
+    private async Task CreatePreSettingsDatabaseAsync()
     {
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = sql;
-        await cmd.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        using var connection = _database.OpenConnection();
+        await ExecAsync(connection, """
+            CREATE TABLE "GameStates" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_GameStates" PRIMARY KEY,
+                "AngelInvestorsText" TEXT NOT NULL DEFAULT '0',
+                "BusinessDataJson" TEXT NOT NULL DEFAULT '{}',
+                "CashText" TEXT NOT NULL DEFAULT '0',
+                "CreatedAt" TEXT NOT NULL,
+                "LastPlayedAt" TEXT NOT NULL,
+                "LifetimeEarningsText" TEXT NOT NULL DEFAULT '0',
+                "ManagerDataJson" TEXT NOT NULL DEFAULT '{}',
+                "PrestigeCount" INTEGER NOT NULL DEFAULT 0,
+                "UpdatedAt" TEXT NOT NULL
+            )
+            """);
+        await ExecAsync(connection, $$"""
+            INSERT INTO GameStates (Id, AngelInvestorsText, BusinessDataJson, CashText, CreatedAt, LastPlayedAt, LifetimeEarningsText, ManagerDataJson, PrestigeCount, UpdatedAt)
+            VALUES ('{{Guid.NewGuid()}}', '0', '{"lemonade":7}', '4.2e100', '2026-01-01 00:00:00', '2026-01-01 00:00:00', '4.2e100', '{"lemonade":false}', 0, '2026-01-01 00:00:00')
+            """);
     }
 
-    private static async Task<HashSet<string>> GetColumnsAsync(SqliteConnection conn, string table)
+    private static async Task ExecAsync(SqliteConnection connection, string sql)
     {
-        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"PRAGMA table_info({table})";
-        await using var reader = await cmd.ExecuteReaderAsync(TestContext.Current.CancellationToken);
-        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
-            result.Add(reader.GetString(1));
-        return result;
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync(Ct);
     }
 
-    public void Dispose()
-    {
-        try
-        {
-            SqliteConnection.ClearAllPools();
-            if (File.Exists(_dbPath)) File.Delete(_dbPath);
-        }
-        catch (IOException)
-        {
-        }
-    }
+    public void Dispose() => _database.Dispose();
 }

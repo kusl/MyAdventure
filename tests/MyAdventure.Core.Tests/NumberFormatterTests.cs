@@ -29,10 +29,6 @@ public class NumberFormatterTests
     public void Format_LargePercentageValues_ShouldUseAbbreviations(double input, string expected) =>
         NumberFormatter.Format(input).ShouldBe(expected);
 
-    // -----------------------------------------------------------------
-    // Defect-1 coverage retained: non-finite values must never crash
-    // the UI or produce garbage.
-    // -----------------------------------------------------------------
     [Fact]
     public void Format_PositiveInfinity_ShouldReturnInfinityGlyph() =>
         NumberFormatter.Format(double.PositiveInfinity).ShouldBe("\u221E");
@@ -79,10 +75,6 @@ public class NumberFormatterTests
         result.ShouldNotContain("NaN");
     }
 
-    // -----------------------------------------------------------------
-    // BigDouble overload: handles magnitudes past 1e308 (the double cap),
-    // which is the whole point of the BigDouble migration.
-    // -----------------------------------------------------------------
     [Fact]
     public void Format_BigDoubleAt10To500_UsesScientificNotation()
     {
@@ -90,20 +82,16 @@ public class NumberFormatterTests
         var result = NumberFormatter.Format(bd);
         result.ShouldContain("\u00D7 10");
         result.ShouldContain("1.00");
-        // Should include "10⁵⁰⁰" = "10\u2075\u2070\u2070".
         result.ShouldContain("10\u2075\u2070\u2070");
     }
 
     [Fact]
     public void Format_BigDoubleAt10To5000_StillRenders()
     {
-        // A magnitude that the prior double-based formatter could never
-        // express. This is the post-BigDouble regression check.
         var bd = new BigDouble(2.5, 5000);
         var result = NumberFormatter.Format(bd);
         result.ShouldContain("2.50");
         result.ShouldContain("\u00D7 10");
-        // Length stays bounded — should be ~15 chars.
         result.Length.ShouldBeLessThan(20);
     }
 
@@ -134,15 +122,10 @@ public class NumberFormatterTests
     [Fact]
     public void Format_BigDoubleMatchesDoubleForSmallValues()
     {
-        // Cross-check: the BigDouble overload should produce the same
-        // string as the double overload for values within double's range.
         var bd = new BigDouble(12345.67);
         NumberFormatter.Format(bd).ShouldBe(NumberFormatter.Format(12345.67));
     }
 
-    // -----------------------------------------------------------------
-    // Superscript helper
-    // -----------------------------------------------------------------
     [Theory]
     [InlineData(0, "\u2070")]
     [InlineData(1, "\u00B9")]
@@ -164,8 +147,6 @@ public class NumberFormatterTests
     [Fact]
     public void ToSuperscript_LongExponent_RendersAllDigits()
     {
-        // BigDouble exponents are longs, not ints. 1000000 in superscript
-        // should produce all seven digit positions.
         var result = NumberFormatter.ToSuperscript(1_000_000L);
         result.Length.ShouldBe(7);
     }

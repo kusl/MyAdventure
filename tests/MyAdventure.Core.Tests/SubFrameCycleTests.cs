@@ -1,23 +1,14 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
-using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
-using NSubstitute;
 using Shouldly;
 
 namespace MyAdventure.Core.Tests;
 
 public class SubFrameCycleTests
 {
-    private static readonly IGameStateRepository Repo = MakeRepo();
-
-    private static IGameStateRepository MakeRepo()
-    {
-        var r = Substitute.For<IGameStateRepository>();
-        r.GetLatestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<GameState?>(null));
-        return r;
-    }
+    private static readonly InMemoryGameStateRepository Repo = new();
 
     [Fact]
     public async Task Tick_FastCycleTime_AwardsManyCyclesInOneFrame()
@@ -124,15 +115,7 @@ public class SubFrameCycleTests
         earned.ShouldBeInRange(105 * revenuePerCycle, 107 * revenuePerCycle);
     }
 
-    private static void SetCash(GameEngine engine, BigDouble amount)
-    {
-        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
-        prop.GetSetMethod(true)!.Invoke(engine, [amount]);
-    }
+    private static void SetCash(GameEngine engine, BigDouble amount) => engine.Cash = amount;
 
-    private static void SetBusinesses(GameEngine engine, IReadOnlyList<Business> businesses)
-    {
-        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Businesses))!;
-        prop.GetSetMethod(true)!.Invoke(engine, [businesses]);
-    }
+    private static void SetBusinesses(GameEngine engine, IReadOnlyList<Business> businesses) => engine.Businesses = businesses;
 }

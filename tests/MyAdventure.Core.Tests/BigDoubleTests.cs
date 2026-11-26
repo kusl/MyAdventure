@@ -3,18 +3,8 @@ using Shouldly;
 
 namespace MyAdventure.Core.Tests;
 
-/// <summary>
-/// Tests for <see cref="BigDouble"/>. Every behavior the GameEngine
-/// depends on is asserted here: normalization invariants, arithmetic
-/// edge cases (signs, zero, infinity, NaN), exponentiation past the
-/// double overflow point, and string round-tripping.
-/// </summary>
 public class BigDoubleTests
 {
-    // ---------------------------------------------------------------
-    // Construction & normalization
-    // ---------------------------------------------------------------
-
     [Theory]
     [InlineData(1.0, 1.0, 0)]
     [InlineData(10.0, 1.0, 1)]
@@ -67,7 +57,6 @@ public class BigDoubleTests
     [Fact]
     public void Construct_FromMantissaExponent_RenormalizesIfOutsideRange()
     {
-        // Mantissa 50 with exponent 5 represents 5e6, should normalize to (5.0, 6).
         var bd = new BigDouble(50.0, 5);
         bd.Mantissa.ShouldBe(5.0, tolerance: 1e-12);
         bd.Exponent.ShouldBe(6);
@@ -76,15 +65,10 @@ public class BigDoubleTests
     [Fact]
     public void Construct_FromZeroMantissa_NormalizesToCanonicalZero()
     {
-        // (0, 100) should become (0, 0).
         var bd = new BigDouble(0.0, 100);
         bd.IsZero.ShouldBeTrue();
         bd.Exponent.ShouldBe(0);
     }
-
-    // ---------------------------------------------------------------
-    // Addition / subtraction
-    // ---------------------------------------------------------------
 
     [Fact]
     public void Add_TwoSmallValues_IsExact()
@@ -96,7 +80,6 @@ public class BigDoubleTests
     [Fact]
     public void Add_LargeAndSmall_AbsorbsSmall()
     {
-        // 1e100 + 1 ≈ 1e100 (the 1 is below double precision)
         var big = new BigDouble(1.0, 100);
         var small = new BigDouble(1.0);
         var result = big + small;
@@ -138,10 +121,6 @@ public class BigDoubleTests
         (BigDouble.PositiveInfinity + BigDouble.NegativeInfinity).IsNaN.ShouldBeTrue();
     }
 
-    // ---------------------------------------------------------------
-    // Multiplication / division
-    // ---------------------------------------------------------------
-
     [Fact]
     public void Multiply_TwoNormalValues_IsExact()
     {
@@ -152,7 +131,6 @@ public class BigDoubleTests
     [Fact]
     public void Multiply_PastDoubleOverflow_StaysFinite()
     {
-        // 1e200 × 1e200 = 1e400 — overflows double, finite in BigDouble.
         var a = new BigDouble(1.0, 200);
         var b = new BigDouble(1.0, 200);
         var result = a * b;
@@ -201,10 +179,6 @@ public class BigDoubleTests
         (BigDouble.Zero / BigDouble.Zero).IsNaN.ShouldBeTrue();
     }
 
-    // ---------------------------------------------------------------
-    // Pow / Sqrt / Log10
-    // ---------------------------------------------------------------
-
     [Fact]
     public void Pow_ZeroExponent_IsOne()
     {
@@ -221,7 +195,6 @@ public class BigDoubleTests
     [Fact]
     public void Pow_PastDoubleOverflow_StaysFinite()
     {
-        // 1.11^10000 is Infinity in double; in BigDouble it's around 10^412.
         var result = new BigDouble(1.11).Pow(10_000);
         result.IsFinite.ShouldBeTrue();
         result.Exponent.ShouldBeGreaterThan(400);
@@ -231,7 +204,6 @@ public class BigDoubleTests
     [Fact]
     public void Pow_SmallBaseLargeExponent_ProducesTinyValue()
     {
-        // 0.1^100 = 1e-100
         var result = new BigDouble(0.1).Pow(100);
         result.Exponent.ShouldBe(-100);
         result.Mantissa.ShouldBe(1.0, tolerance: 1e-12);
@@ -240,14 +212,12 @@ public class BigDoubleTests
     [Fact]
     public void Pow_Integer_MatchesDoubleForSmallValues()
     {
-        // 2^10 = 1024
         new BigDouble(2.0).Pow(10).ToDouble().ShouldBe(1024.0, tolerance: 1e-9);
     }
 
     [Fact]
     public void Pow_OnePointZeroSeven_TenThousand_MatchesKnownMagnitude()
     {
-        // 1.07^10000 ≈ 10^(10000*log10(1.07)) ≈ 10^293.8
         var result = new BigDouble(1.07).Pow(10_000);
         result.IsFinite.ShouldBeTrue();
         result.Exponent.ShouldBe(293);
@@ -262,7 +232,6 @@ public class BigDoubleTests
     [Fact]
     public void Sqrt_OfHugeValue_StaysFinite()
     {
-        // sqrt(10^200) = 10^100
         var result = new BigDouble(1.0, 200).Sqrt();
         result.IsFinite.ShouldBeTrue();
         result.Exponent.ShouldBe(100);
@@ -292,10 +261,6 @@ public class BigDoubleTests
     {
         BigDouble.One.Log10().ShouldBe(0.0, tolerance: 1e-12);
     }
-
-    // ---------------------------------------------------------------
-    // Comparison
-    // ---------------------------------------------------------------
 
     [Fact]
     public void Compare_LargerExponentIsGreater()
@@ -327,10 +292,6 @@ public class BigDoubleTests
         (BigDouble.Zero == BigDouble.Zero).ShouldBeTrue();
     }
 
-    // ---------------------------------------------------------------
-    // Round-trip serialization
-    // ---------------------------------------------------------------
-
     [Theory]
     [InlineData(0.0)]
     [InlineData(1.0)]
@@ -349,7 +310,6 @@ public class BigDoubleTests
     [Fact]
     public void ToCanonical_OfTenToTheThousand_RoundTrips()
     {
-        // A value that's impossible to represent as a double.
         var huge = new BigDouble(1.5, 1000);
         var s = huge.ToCanonicalString();
         s.ShouldBe("1.5e1000");
@@ -373,7 +333,6 @@ public class BigDoubleTests
     [Fact]
     public void Parse_LegacyNativeDouble_Works()
     {
-        // A value that doesn't have an 'e' separator should still parse.
         BigDouble.Parse("1234.5").ToDouble().ShouldBe(1234.5);
     }
 
@@ -395,10 +354,6 @@ public class BigDoubleTests
         new BigDouble(1234.5).ToDouble().ShouldBe(1234.5);
     }
 
-    // ---------------------------------------------------------------
-    // Implicit conversions
-    // ---------------------------------------------------------------
-
     [Fact]
     public void ImplicitConversionFromInt_Works()
     {
@@ -413,10 +368,6 @@ public class BigDoubleTests
         bd.ToDouble().ShouldBe(3.14, tolerance: 1e-12);
     }
 
-    // ---------------------------------------------------------------
-    // Floor
-    // ---------------------------------------------------------------
-
     [Fact]
     public void Floor_OfFractional_TruncatesTowardZero()
     {
@@ -426,8 +377,6 @@ public class BigDoubleTests
     [Fact]
     public void Floor_OfLargeValue_IsIdentity()
     {
-        // Past exponent 16, every BigDouble already represents an integer
-        // because the mantissa's fractional part is below double precision.
         var bd = new BigDouble(1.5, 50);
         bd.Floor().ShouldBe(bd);
     }

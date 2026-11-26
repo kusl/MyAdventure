@@ -1,0 +1,347 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MyAdventure.Shared.ViewModels"
+             xmlns:conv="using:MyAdventure.Shared.Converters"
+             xmlns:svc="using:MyAdventure.Shared.Services"
+             x:Class="MyAdventure.Shared.Views.MainView"
+             x:DataType="vm:GameViewModel"
+             Background="#1A1A2E"
+             TopLevel.AutoSafeAreaPadding="False">
+
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.93)" />
+        </Style>
+
+        <Style Selector=".compactOnly">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <Style Selector="Border.bar">
+            <Setter Property="Background" Value="#16213E" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20,12" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#16213E" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="6" />
+        </Style>
+        <Style Selector="UniformGrid.businesses">
+            <Setter Property="Columns" Value="3" />
+            <Setter Property="Rows" Value="2" />
+        </Style>
+        <Style Selector="TextBlock.cash">
+            <Setter Property="FontSize" Value="36" />
+        </Style>
+        <Style Selector="TextBlock.icon">
+            <Setter Property="FontSize" Value="28" />
+        </Style>
+        <Style Selector="TextBlock.name">
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style Selector="TextBlock.small">
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style Selector="Button.action">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0,8" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.bulk">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="0,5" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="#1565C0" />
+        </Style>
+        <Style Selector="Button.tool">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+
+        <ContainerQuery Name="root" Query="max-width:760">
+            <Style Selector=".wideOnly">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+            <Style Selector=".compactOnly">
+                <Setter Property="IsVisible" Value="True" />
+            </Style>
+            <Style Selector="Border.bar">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="10,6" />
+            </Style>
+            <Style Selector="Border.card">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="6" />
+                <Setter Property="Margin" Value="3" />
+            </Style>
+            <Style Selector="UniformGrid.businesses">
+                <Setter Property="Columns" Value="2" />
+                <Setter Property="Rows" Value="3" />
+            </Style>
+            <Style Selector="TextBlock.cash">
+                <Setter Property="FontSize" Value="28" />
+            </Style>
+            <Style Selector="TextBlock.icon">
+                <Setter Property="FontSize" Value="20" />
+            </Style>
+            <Style Selector="TextBlock.name">
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+            <Style Selector="TextBlock.small">
+                <Setter Property="FontSize" Value="9" />
+            </Style>
+            <Style Selector="Button.action">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="0,6" />
+                <Setter Property="CornerRadius" Value="5" />
+            </Style>
+            <Style Selector="Button.bulk">
+                <Setter Property="FontSize" Value="9" />
+                <Setter Property="Padding" Value="0,4" />
+            </Style>
+            <Style Selector="Button.tool">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="10,4" />
+            </Style>
+        </ContainerQuery>
+    </UserControl.Styles>
+
+    <Panel Container.Name="root" Container.Sizing="Width">
+        <DockPanel Margin="8">
+            <Border DockPanel.Dock="Top" Classes="bar" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Viewbox Grid.Column="0" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="44"
+                             HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Classes="cash" Text="💰" VerticalAlignment="Center" />
+                            <TextBlock Classes="cash" Text="{Binding CashText}" FontWeight="Bold"
+                                       Foreground="#00E676" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Viewbox>
+
+                    <StackPanel Grid.Column="1" Classes="wideOnly" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center" Margin="20,0">
+                        <TextBlock Text="😇" FontSize="20" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="18" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="14" Foreground="#FFD740" Opacity="0.7" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Classes="tool" Command="{Binding PrestigeCommand}" Background="#AA00FF"
+                                HorizontalAlignment="Right"
+                                Opacity="{Binding CanPrestige, Converter={x:Static conv:GameConverters.BoolToOpacity}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="🔄" VerticalAlignment="Center" />
+                                <TextBlock Text="PRESTIGE" VerticalAlignment="Center" />
+                                <TextBlock Classes="wideOnly" Text="{Binding NextAngelText, StringFormat='+{0}'}"
+                                           Opacity="0.8" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Classes="small" Text="{Binding PrestigeExplanation}" Foreground="#AAAAAA"
+                                   HorizontalAlignment="Right" MaxWidth="260" TextWrapping="Wrap" TextAlignment="Right" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Top" Classes="compactOnly" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,6">
+                <Viewbox StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="20" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="😇" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelText}" FontSize="14" Foreground="#FFD740" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AngelBonusText}" FontSize="12" Foreground="#FFD740" Opacity="0.7" VerticalAlignment="Center" />
+                        <TextBlock Text="•" Foreground="#444" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding NextAngelText, StringFormat='Next: +{0}'}" FontSize="12"
+                                   Foreground="#CE93D8" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Viewbox>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom" Classes="bar" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <Button Classes="tool" Command="{Binding ExportCommand}" Background="#00897B" Content="📤 EXPORT" />
+                    <Button Classes="tool" Command="{Binding StartImportCommand}" Background="#5C6BC0" Content="📥 IMPORT" />
+                    <Button Classes="tool" Command="{Binding ToggleSoundCommand}" Background="#37474F">
+                        <Panel>
+                            <TextBlock Text="🔊 SOUND" IsVisible="{Binding SoundEnabled}" />
+                            <TextBlock Text="🔇 MUTED" IsVisible="{Binding !SoundEnabled}" />
+                        </Panel>
+                    </Button>
+                    <Button Classes="tool" Command="{Binding ToggleHapticsCommand}" Background="#37474F"
+                            IsVisible="{Binding HapticsSupported}">
+                        <Panel>
+                            <TextBlock Text="📳 HAPTICS" IsVisible="{Binding HapticsEnabled}" />
+                            <TextBlock Text="📴 HAPTICS" IsVisible="{Binding !HapticsEnabled}" />
+                        </Panel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Panel>
+                <ItemsControl ItemsSource="{Binding Businesses}" IsVisible="{Binding !IsTransferOpen}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Classes="businesses" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BusinessViewModel">
+                            <Border Classes="card"
+                                    Opacity="{Binding IsOwned, Converter={x:Static conv:GameConverters.BoolToOpacity}}">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+                                        <TextBlock Grid.Column="0" Classes="icon" Text="{Binding Icon}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Classes="name" Text="{Binding Name}" FontWeight="Bold"
+                                                   Foreground="White" VerticalAlignment="Center" Margin="6,0,0,0"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <Border Grid.Column="2" Background="#0D47A1" CornerRadius="10" Padding="8,2">
+                                            <TextBlock Classes="name" Text="{Binding Owned}" FontWeight="Bold"
+                                                       Foreground="White" HorizontalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" Margin="0,2,0,4">
+                                        <Border Background="#0A0A1A" CornerRadius="4" Height="6" />
+                                        <Border Background="{Binding Color, Converter={x:Static conv:GameConverters.HexToBrush}}"
+                                                CornerRadius="4" Height="6" HorizontalAlignment="Stretch" RenderTransformOrigin="0,0.5">
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="{Binding ProgressPercent, Converter={x:Static conv:GameConverters.PercentToFraction}, FallbackValue=0}" />
+                                            </Border.RenderTransform>
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,4">
+                                        <Viewbox Grid.Column="0" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="22" HorizontalAlignment="Left">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding RevenueText, StringFormat='💵 {0}'}" FontSize="12"
+                                                           Foreground="#00E676" TextWrapping="NoWrap" />
+                                                <TextBlock Classes="compactOnly" Text="{Binding RevenuePerSecondText}" FontSize="10"
+                                                           Foreground="#80CBC4" TextWrapping="NoWrap" />
+                                            </StackPanel>
+                                        </Viewbox>
+                                        <Viewbox Grid.Column="1" StretchDirection="DownOnly" Stretch="Uniform" MaxHeight="20" HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding CostText, StringFormat='🏷️ {0}'}" FontSize="12"
+                                                       Foreground="#FFAB40" TextWrapping="NoWrap" />
+                                        </Viewbox>
+                                    </Grid>
+
+                                    <Border Grid.Row="3" Classes="wideOnly" Background="#0D1B2A" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="small" Text="{Binding CycleTimeText, StringFormat='⏱️ {0}'}" Foreground="#B0BEC5" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Classes="small" Text="{Binding RevenuePerSecondText, StringFormat='📈 {0}'}"
+                                                       Foreground="#80CBC4" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="small" Text="{Binding AffordableCountText, StringFormat='🛒 {0}'}"
+                                                       Foreground="#CE93D8" Margin="0,2,0,0" />
+                                            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Classes="small" Text="{Binding MilestoneMultiplierText, StringFormat='⭐ {0} revenue'}"
+                                                       Foreground="#FFD740" Margin="0,2,0,0" />
+                                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
+                                                        IsVisible="{Binding HasNextMilestone}">
+                                                <TextBlock Classes="small" Text="{Binding NextMilestoneText, StringFormat='🎯 {0}'}" Foreground="#90CAF9" />
+                                                <TextBlock Classes="small" Text="{Binding NextMilestoneRewardText}" Foreground="#A5D6A7" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Classes="small" Text="{Binding SpeedMultiplierText, StringFormat='⚡ {0}'}"
+                                                       Foreground="#FF8A65" Margin="0,2,0,0" IsVisible="{Binding HasSpeedBonus}" />
+                                            <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Classes="small" Text="{Binding NextSpeedMilestoneText, StringFormat='🚀 {0}'}"
+                                                       Foreground="#FFCC80" Margin="0,2,0,0" IsVisible="{Binding HasNextSpeedMilestone}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Row="3" Classes="compactOnly" Orientation="Horizontal" Spacing="4" Margin="0,0,0,2">
+                                        <TextBlock Classes="small" Text="{Binding MilestoneMultiplierText}" Foreground="#FFD740" />
+                                        <TextBlock Classes="small" Text="{Binding SpeedMultiplierText}" Foreground="#FF8A65" IsVisible="{Binding HasSpeedBonus}" />
+                                        <TextBlock Classes="small" Text="{Binding AffordableCountText}" Foreground="#CE93D8" />
+                                    </StackPanel>
+
+                                    <Button Grid.Row="4" Classes="bulk" Command="{Binding BulkBuyCommand}" Margin="0,0,0,4"
+                                            Opacity="{Binding CanBulkBuy, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                            Content="{Binding BulkBuyText}" />
+
+                                    <Grid Grid.Row="5" ColumnDefinitions="*,4,*,4,*">
+                                        <Button Grid.Column="0" Classes="action" Command="{Binding BuyBusinessCommand}"
+                                                Background="{Binding Color, Converter={x:Static conv:GameConverters.HexToBrush}}"
+                                                Opacity="{Binding CanAfford, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                                Content="BUY" />
+                                        <Button Grid.Column="2" Classes="action" Command="{Binding ClickBusinessCommand}"
+                                                Background="#2196F3" Content="▶ RUN" />
+                                        <Button Grid.Column="4" Classes="action" Command="{Binding BuyManagerCommand}"
+                                                IsVisible="{Binding !HasManager}" Background="#FF6F00"
+                                                Opacity="{Binding CanAffordManager, Converter={x:Static conv:GameConverters.BoolToOpacity}}"
+                                                Content="MGR" />
+                                        <Border Grid.Column="4" IsVisible="{Binding HasManager}" Background="#2E7D32" CornerRadius="6"
+                                                VerticalAlignment="Stretch">
+                                            <TextBlock Text="✅" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Foreground="White" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border IsVisible="{Binding IsTransferOpen}" Classes="card">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" Margin="0,0,0,4" IsVisible="{Binding IsExportMode}"
+                                   Text="📤 Export Progress" />
+                        <TextBlock DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" Margin="0,0,0,4" IsVisible="{Binding !IsExportMode}"
+                                   Text="📥 Import Progress" />
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   Margin="0,0,0,8" IsVisible="{Binding IsExportMode}"
+                                   Text="Tap COPY to copy to clipboard, or select and copy manually." />
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Center"
+                                   Margin="0,0,0,8" IsVisible="{Binding !IsExportMode}"
+                                   Text="Paste an export string below, then confirm." />
+
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8"
+                                    HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Classes="tool" Command="{Binding CopyExportCommand}" IsVisible="{Binding IsExportMode}"
+                                    Background="#00897B" Content="📋 COPY" />
+                            <Button Classes="tool" Command="{Binding ConfirmImportCommand}" IsVisible="{Binding !IsExportMode}"
+                                    Background="#4CAF50" Content="✅ CONFIRM" />
+                            <Button Classes="tool" Command="{Binding CloseTransferCommand}" Background="#616161" Content="CLOSE" />
+                        </StackPanel>
+
+                        <TextBox Text="{Binding TransferText, Mode=TwoWay}" IsReadOnly="{Binding IsExportMode}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas, Courier New, monospace"
+                                 FontSize="12" Background="#0D1B2A" Foreground="#E0E0E0" CornerRadius="8" Padding="10"
+                                 PlaceholderText="Paste your export string here..." />
+                    </DockPanel>
+                </Border>
+            </Panel>
+        </DockPanel>
+
+        <ItemsControl ItemsSource="{Binding Toasts.ActiveToasts}" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      Margin="0,0,0,24" IsHitTestVisible="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="svc:ToastItem">
+                    <Border Background="#333333" CornerRadius="8" Padding="14,8" MaxWidth="440" Opacity="0.95">
+                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="13"
+                                   TextWrapping="Wrap" TextAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Panel>
+</UserControl>

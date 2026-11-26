@@ -1,9 +1,5 @@
 namespace MyAdventure.Core.Entities;
 
-/// <summary>
-/// Static definitions for all businesses in the game.
-/// Designed to fit 6 businesses on screen without scrolling.
-/// </summary>
 public static class BusinessDefinitions
 {
     public static IReadOnlyList<Business> CreateDefaults() =>

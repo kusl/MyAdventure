@@ -1,9 +1,8 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
-using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
+using MyAdventure.Core.Saves;
 using MyAdventure.Core.Services;
-using NSubstitute;
 using Shouldly;
 
 namespace MyAdventure.Core.Tests;
@@ -12,14 +11,11 @@ public class GameEngineTests
 {
     private static readonly double FiftyAngelBonus = 1.0 + GameBalance.AngelBonusPerAngel * 50;
 
-    private readonly IGameStateRepository _repo = Substitute.For<IGameStateRepository>();
+    private readonly InMemoryGameStateRepository _repo = new();
     private readonly GameEngine _engine;
 
     public GameEngineTests()
     {
-        _repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(null));
-
         _engine = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
     }
 
@@ -139,20 +135,15 @@ public class GameEngineTests
     public async Task OfflineEarnings_ShouldApplyAngelBonusOnce_NotTwice()
     {
         var pastTime = DateTime.UtcNow.AddSeconds(-60);
-        var savedState = new GameState
+        var savedState = new GameSnapshot
         {
-            CashText = "0",
-            LifetimeEarningsText = "0",
-            AngelInvestorsText = "50",
-            BusinessDataJson = """{"lemonade":1}""",
-            ManagerDataJson = """{"lemonade":true}""",
+            AngelInvestors = new BigDouble(50),
+            Owned = new Dictionary<string, long> { ["lemonade"] = 1 },
+            Managers = new Dictionary<string, bool> { ["lemonade"] = true },
             LastPlayedAt = pastTime,
-            UpdatedAt = pastTime
         };
 
-        var repo = Substitute.For<IGameStateRepository>();
-        repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(savedState));
+        var repo = new InMemoryGameStateRepository(savedState);
 
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync(TestContext.Current.CancellationToken);
@@ -247,20 +238,14 @@ public class GameEngineTests
     [Fact]
     public async Task ApplyOfflineEarnings_AndLiveTick_AreEquivalent()
     {
-        var repoOffline = Substitute.For<IGameStateRepository>();
-        repoOffline.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(null));
-        var offlineEngine = new GameEngine(repoOffline, NullLogger<GameEngine>.Instance);
+        var offlineEngine = new GameEngine(new InMemoryGameStateRepository(), NullLogger<GameEngine>.Instance);
         await offlineEngine.LoadAsync(TestContext.Current.CancellationToken);
         SetCashOn(offlineEngine, new BigDouble(1_000_000));
         offlineEngine.BuyBusiness("lemonade");
         offlineEngine.BuyManager("lemonade");
         offlineEngine.Businesses.First(b => b.Id == "lemonade").ProgressPercent = 0;
 
-        var repoLive = Substitute.For<IGameStateRepository>();
-        repoLive.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(null));
-        var liveEngine = new GameEngine(repoLive, NullLogger<GameEngine>.Instance);
+        var liveEngine = new GameEngine(new InMemoryGameStateRepository(), NullLogger<GameEngine>.Instance);
         await liveEngine.LoadAsync(TestContext.Current.CancellationToken);
         SetCashOn(liveEngine, new BigDouble(1_000_000));
         liveEngine.BuyBusiness("lemonade");
@@ -559,13 +544,8 @@ public class GameEngineTests
 
         await _engine.SaveAsync(TestContext.Current.CancellationToken);
 
-        var savedCalls = _repo.ReceivedCalls()
-            .Where(c => c.GetMethodInfo().Name == nameof(IGameStateRepository.SaveAsync))
-            .ToList();
-        savedCalls.Count.ShouldBeGreaterThan(0);
-        var savedState = (GameState)savedCalls[^1].GetArguments()[0]!;
-
-        var roundTripped = BigDouble.Parse(savedState.CashText);
+        _repo.Saved.Count.ShouldBeGreaterThan(0);
+        var roundTripped = BigDouble.Parse(_repo.Saved[^1].Cash.ToCanonicalString());
         roundTripped.Exponent.ShouldBe(200);
         roundTripped.Mantissa.ShouldBe(1.0, tolerance: 1e-12);
 
@@ -612,20 +592,17 @@ public class GameEngineTests
     public async Task LoadAsync_WithInfinityInSave_ShouldClampToZero()
     {
         var pastTime = DateTime.UtcNow.AddSeconds(-30);
-        var savedState = new GameState
+        var savedState = new GameSnapshot
         {
-            CashText = "Infinity",
-            LifetimeEarningsText = "Infinity",
-            AngelInvestorsText = "60000",
-            BusinessDataJson = """{"lemonade":1000}""",
-            ManagerDataJson = """{"lemonade":true}""",
+            Cash = BigDouble.PositiveInfinity,
+            LifetimeEarnings = BigDouble.PositiveInfinity,
+            AngelInvestors = new BigDouble(60000),
+            Owned = new Dictionary<string, long> { ["lemonade"] = 1000 },
+            Managers = new Dictionary<string, bool> { ["lemonade"] = true },
             LastPlayedAt = pastTime,
-            UpdatedAt = pastTime
         };
 
-        var repo = Substitute.For<IGameStateRepository>();
-        repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(savedState));
+        var repo = new InMemoryGameStateRepository(savedState);
 
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync(TestContext.Current.CancellationToken);
@@ -640,20 +617,25 @@ public class GameEngineTests
     public async Task LoadAsync_WithBigDoubleStringInSave_LoadsExactly()
     {
         var pastTime = DateTime.UtcNow.AddMilliseconds(-100);
-        var savedState = new GameState
+        var savedState = new GameSnapshot
         {
-            CashText = "1e200",
-            LifetimeEarningsText = "1e200",
-            AngelInvestorsText = "1e9",
-            BusinessDataJson = """{"lemonade":1100,"newspaper":1000,"carwash":1000,"pizza":1000,"donut":1000,"shrimp":2270}""",
-            ManagerDataJson = """{"lemonade":true,"newspaper":true,"carwash":true,"pizza":true,"donut":true,"shrimp":true}""",
+            Cash = BigDouble.Parse("1e200"),
+            LifetimeEarnings = BigDouble.Parse("1e200"),
+            AngelInvestors = BigDouble.Parse("1e9"),
+            Owned = new Dictionary<string, long>
+            {
+                ["lemonade"] = 1100, ["newspaper"] = 1000, ["carwash"] = 1000,
+                ["pizza"] = 1000, ["donut"] = 1000, ["shrimp"] = 2270,
+            },
+            Managers = new Dictionary<string, bool>
+            {
+                ["lemonade"] = true, ["newspaper"] = true, ["carwash"] = true,
+                ["pizza"] = true, ["donut"] = true, ["shrimp"] = true,
+            },
             LastPlayedAt = pastTime,
-            UpdatedAt = pastTime
         };
 
-        var repo = Substitute.For<IGameStateRepository>();
-        repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(savedState));
+        var repo = new InMemoryGameStateRepository(savedState);
 
         var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
         await engine.LoadAsync(TestContext.Current.CancellationToken);
@@ -899,10 +881,7 @@ public class GameEngineTests
     {
         async Task<GameEngine> MakeAsync()
         {
-            var repo = Substitute.For<IGameStateRepository>();
-            repo.GetLatestAsync(Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<GameState?>(null));
-            var eng = new GameEngine(repo, NullLogger<GameEngine>.Instance);
+            var eng = new GameEngine(new InMemoryGameStateRepository(), NullLogger<GameEngine>.Instance);
             await eng.LoadAsync(TestContext.Current.CancellationToken);
             SetCashOn(eng, new BigDouble(1_000_000));
             foreach (var biz in eng.Businesses)
@@ -1060,23 +1039,11 @@ public class GameEngineTests
         (t2 > t1).ShouldBeTrue();
     }
 
-    private void SetCash(BigDouble amount) => SetCashOn(_engine, amount);
+    private void SetCash(BigDouble amount) => _engine.Cash = amount;
 
-    private static void SetCashOn(GameEngine engine, BigDouble amount)
-    {
-        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
-        prop.GetSetMethod(true)!.Invoke(engine, [amount]);
-    }
+    private static void SetCashOn(GameEngine engine, BigDouble amount) => engine.Cash = amount;
 
-    private void SetAngels(BigDouble count)
-    {
-        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!;
-        prop.GetSetMethod(true)!.Invoke(_engine, [count]);
-    }
+    private void SetAngels(BigDouble count) => _engine.AngelInvestors = count;
 
-    private void SetLifetime(BigDouble amount)
-    {
-        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!;
-        prop.GetSetMethod(true)!.Invoke(_engine, [amount]);
-    }
+    private void SetLifetime(BigDouble amount) => _engine.LifetimeEarnings = amount;
 }

@@ -1,11 +1,8 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
-using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
 using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
-using NSubstitute;
 using Shouldly;
 
 namespace MyAdventure.UI.Tests;
@@ -25,19 +22,12 @@ public class GameViewModelLifecycleTests
     private static (GameViewModel vm, GameEngine engine, TestTimeProvider clock, ToastService toasts) MakeVm(double angels = 0)
     {
         var clock = new TestTimeProvider(new DateTime(2025, 1, 1, 12, 0, 0, DateTimeKind.Utc));
-        var repo = Substitute.For<IGameStateRepository>();
-        repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(null));
-
-        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance, clock);
+        var engine = Ui.CreateEngine(clock);
         var toasts = new ToastService();
-        var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts, clock);
+        var vm = Ui.CreateGame(engine, clock, toasts);
 
-        if (angels > 0)
-            typeof(GameEngine).GetProperty(nameof(GameEngine.AngelInvestors))!
-                .GetSetMethod(true)!.Invoke(engine, [new BigDouble(angels)]);
-        typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!
-            .GetSetMethod(true)!.Invoke(engine, [new BigDouble(1_000_000.0)]);
+        if (angels > 0) engine.AngelInvestors = new BigDouble(angels);
+        engine.Cash = new BigDouble(1_000_000.0);
 
         engine.BuyBusiness("lemonade");
         engine.BuyManager("lemonade");
@@ -117,12 +107,9 @@ public class GameViewModelLifecycleTests
     public void OnResumed_ShouldNotShowToast_WhenNoEarnings()
     {
         var clock = new TestTimeProvider(new DateTime(2025, 1, 1, 12, 0, 0, DateTimeKind.Utc));
-        var repo = Substitute.For<IGameStateRepository>();
-        repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(null));
-        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance, clock);
+        var engine = Ui.CreateEngine(clock);
         var toasts = new ToastService();
-        var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, toasts, clock);
+        var vm = Ui.CreateGame(engine, clock, toasts);
 
         vm.OnSuspended();
         clock.Advance(TimeSpan.FromMinutes(5));

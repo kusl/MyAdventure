@@ -3,30 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MyAdventure.Core.Interfaces;
 using MyAdventure.Infrastructure;
+using MyAdventure.Infrastructure.Data;
 using MyAdventure.Infrastructure.Telemetry;
 using Shouldly;
 
 namespace MyAdventure.Integration.Tests;
 
-/// <summary>
-/// Tests for the telemetry / Sentry-via-OTLP configuration plumbing. These
-/// live under Integration.Tests rather than Core.Tests because they
-/// exercise <see cref="DependencyInjection.AddInfrastructure(IServiceCollection,
-/// TelemetryOptions, string?)"/> end-to-end and verify that the IoC
-/// container actually builds with the new code paths — that's an
-/// integration concern, not a unit-test concern.
-///
-/// <para>
-/// Where these tests need to reason about both "compile-time fallback DSN
-/// present" and "compile-time fallback DSN empty", they call the
-/// <c>internal</c> overloads of
-/// <see cref="TelemetryConfigurationLoader.LoadFromEnvironment(string)"/>
-/// and
-/// <see cref="TelemetryConfigurationLoader.LoadFromConfiguration(IConfiguration, string)"/>.
-/// Those overloads are made visible via an <c>InternalsVisibleTo</c> entry
-/// in <c>MyAdventure.Infrastructure.csproj</c>.
-/// </para>
-/// </summary>
 public class TelemetryConfigurationTests : IDisposable
 {
     private readonly string _dbPath;
@@ -36,10 +18,6 @@ public class TelemetryConfigurationTests : IDisposable
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"myadventure-test-{Guid.NewGuid():N}.db");
 
-        // Tests below assume a clean env-var baseline. Earlier tests in the
-        // process may have set these (or the user's shell may have them
-        // exported, e.g. MYADVENTURE_VERBOSE=1 for local debugging) — make
-        // sure each test starts with all three telemetry vars cleared.
         SetEnv(TelemetryConfigurationLoader.SentryDsnEnvVar, null);
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, null);
         SetEnv(TelemetryConfigurationLoader.SentryEnvironmentEnvVar, null);
@@ -47,8 +25,6 @@ public class TelemetryConfigurationTests : IDisposable
 
     public void Dispose()
     {
-        // Restore env vars that any individual test set, so subsequent
-        // tests start from a clean baseline.
         foreach (var name in _envVarsToRestore)
         {
             Environment.SetEnvironmentVariable(name, null);
@@ -56,17 +32,17 @@ public class TelemetryConfigurationTests : IDisposable
 
         if (File.Exists(_dbPath))
         {
-            try { File.Delete(_dbPath); } catch { /* best-effort cleanup */ }
+            try { File.Delete(_dbPath); } catch { }
         }
     }
+
+    private static IConfiguration EmptyConfiguration => new ConfigurationBuilder().Build();
 
     private void SetEnv(string name, string? value)
     {
         if (!_envVarsToRestore.Contains(name)) _envVarsToRestore.Add(name);
         Environment.SetEnvironmentVariable(name, value);
     }
-
-    // --- SentryDsn parser ---------------------------------------------------
 
     [Fact]
     public void SentryDsn_TryParse_RealisticDsn_PopulatesAllFields()
@@ -110,16 +86,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public void SentryDsn_AuthHeader_MatchesSentryDocumentedFormat()
     {
-        // Per Sentry's documented OTLP setup (docs.sentry.io/concepts/otlp/direct/logs):
-        //
-        //   OTEL_EXPORTER_OTLP_LOGS_HEADERS="x-sentry-auth=sentry sentry_key=<PUBLIC_KEY>"
-        //
-        // The header value is the space-separated token list
-        // `sentry sentry_key=<public_key>`. No commas, no sentry_version.
-        // Earlier versions of this code emitted the legacy
-        // `sentry sentry_version=7, sentry_key=...` form by misreading
-        // the docs for the deprecated /store/ endpoint — see the next
-        // test for why the comma in that form silently broke everything.
         const string dsn =
             "https://abc123@o123.ingest.us.sentry.io/456";
 
@@ -131,19 +97,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public void SentryDsn_AuthHeader_ContainsNoComma_RegressionForOtlpHeaderSplit()
     {
-        // REGRESSION TEST. The OpenTelemetry .NET OTLP exporter's
-        // Headers property is a comma-separated list of header=value
-        // pairs (per the OpenTelemetry spec for OTEL_EXPORTER_OTLP_HEADERS).
-        // The exporter parses it by splitting on ',' and then on the
-        // first '='. So if our AuthHeaderValue contains a comma, the
-        // exporter mis-splits it: the project key ends up under a header
-        // named `sentry_key` while `x-sentry-auth` arrives without it,
-        // and Sentry silently drops every event we send. This is the
-        // exact failure mode that left the project's Sentry dashboard
-        // empty in May 2026.
-        //
-        // No comma in the value, ever. Including the legacy public:secret
-        // DSN form — we space-separate sentry_secret too.
         const string modernDsn =
             "https://abc123@o123.ingest.us.sentry.io/456";
         const string legacyDsn =
@@ -156,10 +109,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public void SentryDsn_AuthHeader_LegacySecretKeyIncluded()
     {
-        // The legacy public:secret DSN form survives parsing (we don't
-        // reject it — see the existing legacy-format test) and the
-        // secret key, when present, is appended space-separated rather
-        // than comma-separated.
         const string dsn = "https://pubkey:secret@example.com/9";
 
         var parsed = SentryDsn.Parse(dsn);
@@ -171,10 +120,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public void SentryDsn_TryParse_HandlesLegacyPublicSecretKeyFormat()
     {
-        // Old-style DSNs included a secret key after a colon. Sentry's
-        // OTLP only wants the public key — the parser must strip the
-        // secret portion silently rather than treating it as part of the
-        // key.
         const string dsn = "https://pubkey:potato@example.com/9";
         var parsed = SentryDsn.Parse(dsn);
         parsed.PublicKey.ShouldBe("pubkey");
@@ -185,9 +130,9 @@ public class TelemetryConfigurationTests : IDisposable
     [InlineData("   ")]
     [InlineData(null)]
     [InlineData("not-a-url")]
-    [InlineData("ftp://x@example.com/1")]            // wrong scheme
-    [InlineData("https://example.com/1")]            // no public key
-    [InlineData("https://potato@example.com")]          // no project id
+    [InlineData("ftp://x@example.com/1")]
+    [InlineData("https://example.com/1")]
+    [InlineData("https://potato@example.com")]
     public void SentryDsn_TryParse_RejectsInvalidInput(string? dsn)
     {
         var ok = SentryDsn.TryParse(dsn, out var parsed, out var err);
@@ -196,16 +141,10 @@ public class TelemetryConfigurationTests : IDisposable
         err.ShouldNotBeNullOrWhiteSpace();
     }
 
-    // --- TelemetryConfigurationLoader: no compile-time fallback -------------
-    //
-    // These tests pass an empty fallbackDsn so they can pin the
-    // "no DSN at all" behaviour deterministically — without depending on
-    // what TelemetryDefaults.DefaultDsn happens to be set to in source.
-
     [Fact]
     public void Loader_NoFallback_NoVarsSet_ReturnsSafeDefaults()
     {
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(EmptyConfiguration, fallbackDsn: "");
 
         options.VerboseLogging.ShouldBeFalse();
         options.Sentry.Dsn.ShouldBeNullOrEmpty();
@@ -218,7 +157,7 @@ public class TelemetryConfigurationTests : IDisposable
     {
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, "true");
 
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(EmptyConfiguration, fallbackDsn: "");
 
         options.VerboseLogging.ShouldBeTrue();
     }
@@ -236,7 +175,7 @@ public class TelemetryConfigurationTests : IDisposable
     public void Loader_VerboseFlag_ParsesCommonBooleanSpellings(string raw, bool expected)
     {
         SetEnv(TelemetryConfigurationLoader.VerboseLoggingEnvVar, raw);
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment(fallbackDsn: "");
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(EmptyConfiguration, fallbackDsn: "");
         options.VerboseLogging.ShouldBe(expected);
     }
 
@@ -279,19 +218,12 @@ public class TelemetryConfigurationTests : IDisposable
         options.VerboseLogging.ShouldBeTrue();
     }
 
-    // --- TelemetryConfigurationLoader: with compile-time fallback -----------
-    //
-    // These tests pin the "DSN baked into the binary" behaviour that ships
-    // during the testing phase. Higher-precedence sources still win, but
-    // the absence of every source should fall back to the constant in
-    // TelemetryDefaults rather than disabling Sentry entirely.
-
     private const string TestFallback = "https://potato@example.com/9";
 
     [Fact]
     public void Loader_WithFallback_NoVarsSet_UsesFallbackDsn()
     {
-        var options = TelemetryConfigurationLoader.LoadFromEnvironment(TestFallback);
+        var options = TelemetryConfigurationLoader.LoadFromConfiguration(EmptyConfiguration, TestFallback);
 
         options.Sentry.Dsn.ShouldBe(TestFallback);
     }
@@ -299,8 +231,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public void Loader_WithFallback_AppsettingsEmptyDsn_UsesFallback()
     {
-        // The shipped appsettings.json has Telemetry:Sentry:Dsn = "" — the
-        // fallback must still apply rather than disabling Sentry.
         var json = new Dictionary<string, string?>
         {
             ["Telemetry:Sentry:Dsn"] = "",
@@ -342,19 +272,11 @@ public class TelemetryConfigurationTests : IDisposable
         options.Sentry.Dsn.ShouldBe("https://potato@example.com/2");
     }
 
-    // --- Production compile-time fallback (TelemetryDefaults) ---------------
-
     [Fact]
     public void TelemetryDefaults_DefaultDsn_IsAValidParseableSentryDsn()
     {
-        // During the testing phase the project ships a hardcoded DSN.
-        // Whatever it is, it must parse — a typo here would silently
-        // disable Sentry for every shipped binary, which is the failure
-        // mode this test exists to prevent.
         if (string.IsNullOrWhiteSpace(TelemetryDefaults.DefaultDsn))
         {
-            // Fallback explicitly disabled — that's a legitimate
-            // post-testing-phase configuration; nothing to assert.
             return;
         }
 
@@ -367,20 +289,15 @@ public class TelemetryConfigurationTests : IDisposable
         parsed.Host.ShouldNotBeNullOrWhiteSpace();
     }
 
-    // --- AddInfrastructure --------------------------------------------------
-
     [Fact]
     public async Task AddInfrastructure_NoTelemetryOptions_BehavesLikeBeforeIntegration()
     {
-        // The legacy single-argument overload must keep working. This is
-        // the contract every existing test relies on.
         var services = new ServiceCollection();
         services.AddInfrastructure(_dbPath);
         var provider = services.BuildServiceProvider();
 
-        await DependencyInjection.InitializeDatabaseAsync(provider);
+        await provider.GetRequiredService<DatabaseInitializer>().InitializeAsync(TestContext.Current.CancellationToken);
 
-        // Both the repository and the logger factory must be resolvable.
         provider.GetService<IGameStateRepository>().ShouldNotBeNull();
         provider.GetService<ILoggerFactory>().ShouldNotBeNull();
     }
@@ -388,15 +305,12 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public async Task AddInfrastructure_TelemetryOff_NoOutboundExporterErrors()
     {
-        // With Sentry off, the service provider must build cleanly and
-        // the breadcrumb logger must not throw. This is the "fresh
-        // checkout, no Sentry account" smoke test.
         var services = new ServiceCollection();
         services.AddInfrastructure(new TelemetryOptions(), _dbPath);
         var provider = services.BuildServiceProvider();
 
-        DependencyInjection.EmitStartupBreadcrumb(provider);
-        await DependencyInjection.InitializeDatabaseAsync(provider);
+        TelemetryLifecycle.Start(provider);
+        await provider.GetRequiredService<DatabaseInitializer>().InitializeAsync(TestContext.Current.CancellationToken);
 
         provider.GetService<TelemetryOptions>().ShouldNotBeNull();
     }
@@ -404,12 +318,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public async Task AddInfrastructure_TelemetryOnWithValidDsn_ProviderStillBuilds()
     {
-        // We do not actually contact Sentry from a test — the OTLP
-        // exporter buffers spans/logs in-process and flushes them on
-        // a background timer. What this test verifies is that with a
-        // valid DSN the container builds without throwing (no missing
-        // services, no exporter-constructor crashes) and that the
-        // breadcrumb fires successfully.
         var telemetry = new TelemetryOptions
         {
             VerboseLogging = false,
@@ -425,8 +333,8 @@ public class TelemetryConfigurationTests : IDisposable
         services.AddInfrastructure(telemetry, _dbPath);
         var provider = services.BuildServiceProvider();
 
-        DependencyInjection.EmitStartupBreadcrumb(provider);
-        await DependencyInjection.InitializeDatabaseAsync(provider);
+        TelemetryLifecycle.Start(provider);
+        await provider.GetRequiredService<DatabaseInitializer>().InitializeAsync(TestContext.Current.CancellationToken);
 
         provider.GetService<IGameStateRepository>().ShouldNotBeNull();
     }
@@ -434,9 +342,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public async Task AddInfrastructure_TelemetryOnWithMalformedDsn_DoesNotCrash()
     {
-        // Garbage in must not take the app down. The breadcrumb logger
-        // is expected to emit a warning; we just assert no exception
-        // bubbles out and the container still serves the repository.
         var telemetry = new TelemetryOptions
         {
             Sentry = { Dsn = "definitely not a url" },
@@ -446,8 +351,8 @@ public class TelemetryConfigurationTests : IDisposable
         services.AddInfrastructure(telemetry, _dbPath);
         var provider = services.BuildServiceProvider();
 
-        Should.NotThrow(() => DependencyInjection.EmitStartupBreadcrumb(provider));
-        await DependencyInjection.InitializeDatabaseAsync(provider);
+        Should.NotThrow(() => TelemetryLifecycle.Start(provider));
+        await provider.GetRequiredService<DatabaseInitializer>().InitializeAsync(TestContext.Current.CancellationToken);
 
         provider.GetService<IGameStateRepository>().ShouldNotBeNull();
     }
@@ -455,10 +360,6 @@ public class TelemetryConfigurationTests : IDisposable
     [Fact]
     public void AddInfrastructure_VerboseFlagPropagatesToTelemetryOptionsSingleton()
     {
-        // The singleton TelemetryOptions registered into the container
-        // must match the values we passed in — that's the contract that
-        // downstream code (ViewModels, future toggle UI) relies on to
-        // know whether verbose mode is currently active.
         var telemetry = new TelemetryOptions { VerboseLogging = true };
 
         var services = new ServiceCollection();

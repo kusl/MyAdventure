@@ -1,74 +1,23 @@
-using System;
-using System.Collections.Generic;
+using System.Buffers;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace MyAdventure.Infrastructure.Telemetry;
 
-/// <summary>
-/// Builds the wire-format payload that
-/// <see cref="SentryEventLoggerProvider"/> posts to Sentry's classic
-/// envelope endpoint (<c>POST /api/{projectId}/envelope/</c>).
-///
-/// <para>
-/// <b>Why this exists.</b> Sentry's OTLP logs endpoint deposits logs
-/// into the "Logs" panel but does <i>not</i> generate Issues from
-/// error-severity log records. Sentry's OTLP traces endpoint also
-/// drops span exception events during ingestion. The only path that
-/// produces a real Sentry Issue from a .NET exception — without
-/// dragging in the vendor-specific Sentry .NET SDK — is to POST a
-/// classic Sentry envelope containing an <c>event</c> item whose
-/// payload uses the <c>exception</c> interface. That's exactly what
-/// this class produces.
-/// </para>
-///
-/// <para>
-/// The envelope grammar (newline-separated JSON lines) is defined in
-/// <c>develop.sentry.dev/sdk/data-model/envelopes</c>:
-/// <code>
-/// {envelope_header}\n
-/// {item_header}\n
-/// {item_payload}\n
-/// </code>
-/// We keep the output deterministic so the tests can pin the exact
-/// bytes that go over the wire.
-/// </para>
-///
-/// <para>
-/// Pure: no IO, no clocks injected from outside, only the data passed
-/// in. <see cref="SentryEventLoggerProvider"/> supplies the current
-/// time via <see cref="TimeProvider"/> so the envelope and event
-/// timestamps can be pinned in tests.
-/// </para>
-/// </summary>
 internal static class SentryEnvelope
 {
-    /// <summary>
-    /// The single content type used for both the envelope header and
-    /// every event item we emit. Sentry accepts <c>application/json</c>
-    /// for event payloads.
-    /// </summary>
     public const string EventContentType = "application/json";
 
-    /// <summary>
-    /// Build the raw bytes of a Sentry envelope carrying a single
-    /// <c>event</c> item that describes an exception. The bytes are
-    /// what gets POSTed to <see cref="SentryDsn.EnvelopeEndpoint"/>.
-    /// </summary>
-    /// <param name="payload">The exception + metadata captured from
-    /// the originating log record.</param>
-    /// <param name="dsn">Parsed DSN; only the raw string is embedded
-    /// in the envelope header (Sentry uses it as a self-authentication
-    /// hint).</param>
-    /// <param name="serviceName">Resource attribute — copied straight
-    /// from <see cref="OpenTelemetry.Resources.ResourceBuilder"/>.</param>
-    /// <param name="serviceVersion">Resource attribute.</param>
-    /// <param name="environment">Resource attribute — typically
-    /// "production", "staging", "development".</param>
-    /// <param name="now">The current UTC time; injected so tests can
-    /// pin the timestamps in the produced bytes.</param>
+    private const string SdkName = "myadventure.otlp-envelope";
+    private const byte Newline = (byte)'\n';
+
+    private static readonly JsonWriterOptions WriterOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
     public static byte[] BuildExceptionEvent(
         SentryEventPayload payload,
         SentryDsn dsn,
@@ -81,55 +30,42 @@ internal static class SentryEnvelope
         ArgumentNullException.ThrowIfNull(dsn);
 
         var eventId = Guid.NewGuid().ToString("N");
-        var sentAt = now.UtcDateTime.ToString("o", CultureInfo.InvariantCulture);
+        var eventJson = Write(writer => WriteEvent(writer, payload, eventId, serviceName, serviceVersion, environment, now));
 
-        var envelopeHeader = new Dictionary<string, object?>
+        var envelopeHeader = Write(writer =>
         {
-            ["event_id"] = eventId,
-            ["dsn"] = dsn.Raw,
-            ["sent_at"] = sentAt,
-            ["sdk"] = new Dictionary<string, object?>
-            {
-                // We are not the Sentry .NET SDK; identify ourselves
-                // honestly so Sentry doesn't apply SDK-specific
-                // processing rules meant for the real client.
-                ["name"] = "myadventure.otlp-envelope",
-                ["version"] = serviceVersion,
-            },
-        };
+            writer.WriteStartObject();
+            writer.WriteString("event_id", eventId);
+            writer.WriteString("dsn", dsn.Raw);
+            writer.WriteString("sent_at", now.UtcDateTime.ToString("o", CultureInfo.InvariantCulture));
+            WriteSdk(writer, serviceVersion);
+            writer.WriteEndObject();
+        });
 
-        var eventPayload = BuildEventPayload(
-            payload, eventId, serviceName, serviceVersion, environment, now);
-
-        // Serialise both halves to JSON with the same options so the
-        // wire bytes are deterministic across .NET runtimes.
-        var headerJson = JsonSerializer.SerializeToUtf8Bytes(envelopeHeader, JsonOpts);
-        var payloadJson = JsonSerializer.SerializeToUtf8Bytes(eventPayload, JsonOpts);
-
-        var itemHeader = new Dictionary<string, object?>
+        var itemHeader = Write(writer =>
         {
-            ["type"] = "event",
-            ["length"] = payloadJson.Length,
-            ["content_type"] = EventContentType,
-        };
-        var itemHeaderJson = JsonSerializer.SerializeToUtf8Bytes(itemHeader, JsonOpts);
+            writer.WriteStartObject();
+            writer.WriteString("type", "event");
+            writer.WriteNumber("length", eventJson.Length);
+            writer.WriteString("content_type", EventContentType);
+            writer.WriteEndObject();
+        });
 
-        // Stitch: header \n item_header \n item_payload \n
-        // The trailing newline is optional per the spec but Sentry's
-        // examples include it, and including it costs us nothing.
-        var newline = (byte)'\n';
-        using var buffer = new System.IO.MemoryStream(
-            headerJson.Length + itemHeaderJson.Length + payloadJson.Length + 3);
-        buffer.Write(headerJson, 0, headerJson.Length);
-        buffer.WriteByte(newline);
-        buffer.Write(itemHeaderJson, 0, itemHeaderJson.Length);
-        buffer.WriteByte(newline);
-        buffer.Write(payloadJson, 0, payloadJson.Length);
-        buffer.WriteByte(newline);
-        return buffer.ToArray();
+        return [.. envelopeHeader, Newline, .. itemHeader, Newline, .. eventJson, Newline];
     }
 
-    private static Dictionary<string, object?> BuildEventPayload(
+    private static byte[] Write(Action<Utf8JsonWriter> write)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer, WriterOptions))
+        {
+            write(writer);
+        }
+        return buffer.WrittenSpan.ToArray();
+    }
+
+    private static void WriteEvent(
+        Utf8JsonWriter writer,
         SentryEventPayload payload,
         string eventId,
         string serviceName,
@@ -137,153 +73,108 @@ internal static class SentryEnvelope
         string environment,
         DateTimeOffset now)
     {
-        // Sentry's event timestamp is "seconds since the Unix epoch as
-        // a floating-point number" — see Event Payloads docs. Strings
-        // in RFC 3339 are also accepted but the float form is what the
-        // Sentry .NET SDK emits and what the documented examples use.
-        var timestampSeconds = now.ToUnixTimeMilliseconds() / 1000.0;
+        writer.WriteStartObject();
+        writer.WriteString("event_id", eventId);
+        writer.WriteNumber("timestamp", now.ToUnixTimeMilliseconds() / 1000.0);
+        writer.WriteString("platform", "csharp");
+        writer.WriteString("level", payload.Level);
+        writer.WriteString("logger", payload.LoggerCategory);
+        writer.WriteString("server_name", Environment.MachineName);
+        writer.WriteString("environment", environment);
+        writer.WriteString("release", $"{serviceName}@{serviceVersion}");
 
-        var dict = new Dictionary<string, object?>
-        {
-            ["event_id"] = eventId,
-            ["timestamp"] = timestampSeconds,
-            ["platform"] = "csharp",
-            ["level"] = payload.Level,
-            ["logger"] = payload.LoggerCategory,
-            ["server_name"] = Environment.MachineName,
-            ["environment"] = environment,
-            ["release"] = $"{serviceName}@{serviceVersion}",
-            ["message"] = new Dictionary<string, object?>
-            {
-                ["formatted"] = payload.Message,
-            },
-            ["exception"] = new Dictionary<string, object?>
-            {
-                ["values"] = BuildExceptionValues(payload),
-            },
-            ["sdk"] = new Dictionary<string, object?>
-            {
-                ["name"] = "myadventure.otlp-envelope",
-                ["version"] = serviceVersion,
-            },
-        };
+        writer.WriteStartObject("message");
+        writer.WriteString("formatted", payload.Message);
+        writer.WriteEndObject();
 
-        if (payload.Tags is { Count: > 0 })
+        writer.WriteStartObject("exception");
+        writer.WriteStartArray("values");
+        foreach (var exception in ExceptionChain(payload.Exception))
         {
-            dict["tags"] = payload.Tags;
+            WriteException(writer, exception);
         }
+        writer.WriteEndArray();
+        writer.WriteEndObject();
 
-        return dict;
-    }
+        WriteSdk(writer, serviceVersion);
 
-    private static List<Dictionary<string, object?>> BuildExceptionValues(
-        SentryEventPayload payload)
-    {
-        // Walk the exception chain from outermost to innermost. Sentry's
-        // exception interface accepts the values list in *chronological*
-        // order — innermost first — so we reverse at the end. The grouping
-        // logic on Sentry's side uses the outermost frame in that order to
-        // produce the issue title.
-        var chain = new List<Exception>();
-        var current = payload.Exception;
-        while (current is not null)
+        if (payload.Tags is { Count: > 0 } tags)
         {
-            chain.Add(current);
-            current = current.InnerException;
-        }
-        chain.Reverse();
-
-        var values = new List<Dictionary<string, object?>>(chain.Count);
-        foreach (var ex in chain)
-        {
-            values.Add(new Dictionary<string, object?>
+            writer.WriteStartObject("tags");
+            foreach (var (key, value) in tags)
             {
-                ["type"] = ex.GetType().FullName ?? ex.GetType().Name,
-                ["value"] = ex.Message ?? string.Empty,
-                ["module"] = ex.GetType().Namespace ?? string.Empty,
-                ["stacktrace"] = BuildStacktrace(ex),
-            });
-        }
-        return values;
-    }
-
-    private static Dictionary<string, object?> BuildStacktrace(Exception ex)
-    {
-        var frames = new List<Dictionary<string, object?>>();
-        var stackTrace = new StackTrace(ex, fNeedFileInfo: true);
-        var stackFrames = stackTrace.GetFrames();
-
-        // Sentry's stack trace interface lists frames in *call order* —
-        // the outermost frame first, the throw site last. .NET's
-        // StackTrace.GetFrames() returns the opposite (throw site first),
-        // so we reverse.
-        for (var i = stackFrames.Length - 1; i >= 0; i--)
-        {
-            var frame = stackFrames[i];
-            var method = frame.GetMethod();
-            if (method is null) continue;
-
-            var declaringType = method.DeclaringType;
-            var moduleName = declaringType?.FullName ?? "<unknown>";
-            var functionName = method.Name;
-            var fileName = frame.GetFileName();
-            var lineNumber = frame.GetFileLineNumber();
-
-            var frameDict = new Dictionary<string, object?>
-            {
-                ["function"] = functionName,
-                ["module"] = moduleName,
-                ["in_app"] = IsInApp(moduleName),
-            };
-
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                frameDict["filename"] = fileName;
-                frameDict["abs_path"] = fileName;
+                writer.WriteString(key, value);
             }
-            if (lineNumber > 0)
-            {
-                frameDict["lineno"] = lineNumber;
-            }
-
-            frames.Add(frameDict);
+            writer.WriteEndObject();
         }
 
-        return new Dictionary<string, object?>
+        writer.WriteEndObject();
+    }
+
+    private static IEnumerable<Exception> ExceptionChain(Exception outermost)
+    {
+        var chain = new Stack<Exception>();
+        for (var current = outermost; current is not null; current = current.InnerException)
         {
-            ["frames"] = frames,
-        };
+            chain.Push(current);
+        }
+        return chain;
     }
 
-    /// <summary>
-    /// Mark frames belonging to our own assemblies as "in-app" so the
-    /// Sentry UI highlights them; frames from System.*, Microsoft.*,
-    /// OpenTelemetry.* etc. show up as library frames and are folded
-    /// away by default. The "in_app" flag is what drives that grouping.
-    /// </summary>
-    private static bool IsInApp(string moduleName)
+    private static void WriteException(Utf8JsonWriter writer, Exception exception)
     {
-        return moduleName.StartsWith("MyAdventure", StringComparison.Ordinal);
+        var type = exception.GetType();
+        writer.WriteStartObject();
+        writer.WriteString("type", type.FullName ?? type.Name);
+        writer.WriteString("value", exception.Message);
+        writer.WriteString("module", type.Namespace ?? string.Empty);
+
+        writer.WriteStartObject("stacktrace");
+        writer.WriteStartArray("frames");
+        var frames = new StackTrace(exception, fNeedFileInfo: true).GetFrames();
+        for (var i = frames.Length - 1; i >= 0; i--)
+        {
+            WriteFrame(writer, frames[i]);
+        }
+        writer.WriteEndArray();
+        writer.WriteEndObject();
+
+        writer.WriteEndObject();
     }
 
-    private static readonly JsonSerializerOptions JsonOpts = new()
+    private static void WriteFrame(Utf8JsonWriter writer, StackFrame frame)
     {
-        // Compact form (no indentation) keeps the over-the-wire envelope
-        // small and matches the format Sentry's own SDKs emit.
-        WriteIndented = false,
-        // The Sentry envelope spec mandates UTF-8 with valid JSON; do not
-        // emit \uXXXX escapes for non-ASCII characters that don't need
-        // escaping.
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-    };
+        if (frame.GetMethod() is not { } method) return;
+
+        var module = method.DeclaringType?.FullName ?? "<unknown>";
+        writer.WriteStartObject();
+        writer.WriteString("function", method.Name);
+        writer.WriteString("module", module);
+        writer.WriteBoolean("in_app", module.StartsWith("MyAdventure", StringComparison.Ordinal));
+
+        if (frame.GetFileName() is { Length: > 0 } fileName)
+        {
+            writer.WriteString("filename", fileName);
+            writer.WriteString("abs_path", fileName);
+        }
+
+        if (frame.GetFileLineNumber() is > 0 and var line)
+        {
+            writer.WriteNumber("lineno", line);
+        }
+
+        writer.WriteEndObject();
+    }
+
+    private static void WriteSdk(Utf8JsonWriter writer, string serviceVersion)
+    {
+        writer.WriteStartObject("sdk");
+        writer.WriteString("name", SdkName);
+        writer.WriteString("version", serviceVersion);
+        writer.WriteEndObject();
+    }
 }
 
-/// <summary>
-/// Bag of fields extracted from an <see cref="Microsoft.Extensions.Logging.ILogger"/>
-/// invocation that the envelope builder needs to serialise an exception
-/// event. Construction is deliberately cheap so we can build one per
-/// triggering log record without measurable overhead.
-/// </summary>
 internal sealed record SentryEventPayload(
     Exception Exception,
     string Message,

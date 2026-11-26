@@ -1,22 +1,18 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
-using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
-using NSubstitute;
 using Shouldly;
 
 namespace MyAdventure.Core.Tests;
 
 public class OverflowRegressionTests
 {
-    private readonly IGameStateRepository _repo = Substitute.For<IGameStateRepository>();
+    private readonly InMemoryGameStateRepository _repo = new();
     private readonly GameEngine _engine;
 
     public OverflowRegressionTests()
     {
-        _repo.GetLatestAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<GameState?>(null));
         _engine = new GameEngine(_repo, NullLogger<GameEngine>.Instance);
     }
 
@@ -197,9 +193,5 @@ public class OverflowRegressionTests
         (shrimp.NextCost >= new BigDouble(shrimp.BaseCost)).ShouldBeTrue();
     }
 
-    private void SetCash(BigDouble amount)
-    {
-        var prop = typeof(GameEngine).GetProperty(nameof(GameEngine.Cash))!;
-        prop.GetSetMethod(true)!.Invoke(_engine, [amount]);
-    }
+    private void SetCash(BigDouble amount) => _engine.Cash = amount;
 }

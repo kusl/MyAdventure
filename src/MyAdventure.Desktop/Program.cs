@@ -5,11 +5,10 @@ namespace MyAdventure.Desktop;
 internal static class Program
 {
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args) => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 
     public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder.Configure<App>()
+        AppBuilder.Configure<DesktopApp>()
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();

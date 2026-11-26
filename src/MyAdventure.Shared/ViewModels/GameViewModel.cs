@@ -1,247 +1,136 @@
 using System.Collections.ObjectModel;
-using Avalonia.Controls;
-using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
+using MyAdventure.Shared.Feedback;
 using MyAdventure.Shared.Services;
 
 namespace MyAdventure.Shared.ViewModels;
 
-public partial class GameViewModel : ViewModelBase
+public sealed partial class GameViewModel : ObservableObject, ILifecycleAware
 {
+    private const double MaxTickSeconds = 1.0;
+    private const int TicksPerAutosave = 300;
+
     private readonly GameEngine _engine;
+    private readonly ISettingsRepository _settings;
+    private readonly IFeedbackService _feedback;
     private readonly ILogger<GameViewModel> _logger;
-    private readonly ToastService _toasts;
     private readonly TimeProvider _time;
-    private DateTime _lastTick;
-    private int _saveCounter;
+    private Task? _initialization;
+    private DateTimeOffset _lastTick;
+    private DateTimeOffset? _suspendedAt;
+    private int _ticksSinceSave;
 
-    private DateTime? _suspendedAt;
-
-    [ObservableProperty] private string _cashText = "$0.00";
-    [ObservableProperty] private string _angelText = "0";
-    [ObservableProperty] private string _angelBonusText = "\u00D71";
-    [ObservableProperty] private int _prestigeCount;
-    [ObservableProperty] private bool _canPrestige;
-    [ObservableProperty] private string _nextAngelText = "0";
-    [ObservableProperty] private string _prestigeExplanation = "";
-
-    [ObservableProperty] private string _crossSpeedText = "\u00D71 Speed";
-
-    [ObservableProperty] private bool _hasCrossSpeedBonus;
-
-    [ObservableProperty] private string _nextCrossThresholdText = "";
-
-    [ObservableProperty] private string _minOwnedAcrossText = "0";
-
-    [ObservableProperty] private bool _isTransferOpen;
-    [ObservableProperty] private bool _isExportMode;
-    [ObservableProperty] private string _transferText = "";
-
-    public ObservableCollection<BusinessViewModel> Businesses { get; } = [];
-    public ToastService Toasts => _toasts;
-
-    public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts)
-        : this(engine, logger, toasts, TimeProvider.System)
-    {
-    }
-
-    public GameViewModel(GameEngine engine, ILogger<GameViewModel> logger, ToastService toasts, TimeProvider timeProvider)
+    public GameViewModel(
+        GameEngine engine,
+        ToastService toasts,
+        ISettingsRepository settings,
+        IFeedbackService feedback,
+        ILogger<GameViewModel> logger,
+        TimeProvider time)
     {
         _engine = engine;
+        _settings = settings;
+        _feedback = feedback;
         _logger = logger;
-        _toasts = toasts;
-        _time = timeProvider;
-        _lastTick = _time.GetUtcNow().UtcDateTime;
+        _time = time;
+        Toasts = toasts;
+        _lastTick = time.GetUtcNow();
     }
 
-    public async Task InitializeAsync()
+    public ObservableCollection<BusinessViewModel> Businesses { get; } = [];
+
+    public ToastService Toasts { get; }
+
+    public ITextClipboard? Clipboard { get; set; }
+
+    public string CashText { get; private set => SetProperty(ref field, value); } = "$0.00";
+    public string AngelText { get; private set => SetProperty(ref field, value); } = "0";
+    public string AngelBonusText { get; private set => SetProperty(ref field, value); } = "×1";
+    public int PrestigeCount { get; private set => SetProperty(ref field, value); }
+    public bool CanPrestige { get; private set => SetProperty(ref field, value); }
+    public string NextAngelText { get; private set => SetProperty(ref field, value); } = "0";
+    public string PrestigeExplanation { get; private set => SetProperty(ref field, value); } = "";
+    public string CrossSpeedText { get; private set => SetProperty(ref field, value); } = "×1 Speed";
+    public bool HasCrossSpeedBonus { get; private set => SetProperty(ref field, value); }
+    public string NextCrossThresholdText { get; private set => SetProperty(ref field, value); } = "";
+    public string MinOwnedAcrossText { get; private set => SetProperty(ref field, value); } = "0";
+    public bool IsTransferOpen { get; private set => SetProperty(ref field, value); }
+    public bool IsExportMode { get; private set => SetProperty(ref field, value); }
+    public string TransferText { get; set => SetProperty(ref field, value); } = "";
+
+    public bool SoundEnabled
     {
-        await _engine.LoadAsync();
-
-        Businesses.Clear();
-        foreach (var biz in _engine.Businesses)
-            Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
-
-        RefreshAll();
-        _logger.LogInformation("Game initialized with {Count} businesses", Businesses.Count);
+        get => _feedback.SoundEnabled;
+        private set
+        {
+            if (_feedback.SoundEnabled == value) return;
+            _feedback.SoundEnabled = value;
+            OnPropertyChanged();
+        }
     }
+
+    public bool HapticsEnabled
+    {
+        get => _feedback.HapticsEnabled;
+        private set
+        {
+            if (_feedback.HapticsEnabled == value) return;
+            _feedback.HapticsEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool HapticsSupported => _feedback.HapticsSupported;
+
+    public Task InitializeAsync() => _initialization ??= LoadAsync();
 
     public void OnTick()
     {
-        var now = _time.GetUtcNow().UtcDateTime;
-        var delta = (now - _lastTick).TotalSeconds;
+        var now = _time.GetUtcNow();
+        var delta = Math.Min((now - _lastTick).TotalSeconds, MaxTickSeconds);
         _lastTick = now;
-
-        delta = Math.Min(delta, 1.0);
 
         _engine.Tick(delta);
         RefreshAll();
+        Toasts.CleanupExpired();
 
-        _toasts.CleanupExpired();
-
-        _saveCounter++;
-        if (_saveCounter >= 300)
+        if (++_ticksSinceSave >= TicksPerAutosave)
         {
-            _saveCounter = 0;
+            _ticksSinceSave = 0;
             _ = SaveAsync();
         }
     }
 
     public void OnSuspended()
     {
-        _suspendedAt = _time.GetUtcNow().UtcDateTime;
+        _suspendedAt = _time.GetUtcNow();
         _logger.LogInformation("App suspended at {SuspendedAt:o}", _suspendedAt);
-
         _ = SaveAsync();
     }
 
     public void OnResumed()
     {
-        var suspended = _suspendedAt;
-        _suspendedAt = null;
-
-        if (suspended is null)
-        {
-            _lastTick = _time.GetUtcNow().UtcDateTime;
-            return;
-        }
-
-        var now = _time.GetUtcNow().UtcDateTime;
-        var elapsed = now - suspended.Value;
-
-        var earned = _engine.ApplyOfflineEarnings(elapsed);
-
+        var now = _time.GetUtcNow();
         _lastTick = now;
 
+        if (_suspendedAt is not { } suspended) return;
+        _suspendedAt = null;
+
+        var elapsed = now - suspended;
+        var earned = _engine.ApplyOfflineEarnings(elapsed);
         if (earned.Sign > 0)
         {
-            _logger.LogInformation("Applied resume earnings: {Earned} for {Seconds:F0}s suspended",
-                earned.ToCanonicalString(), elapsed.TotalSeconds);
-            _toasts.Show($"While you were away, you earned ${NumberFormatter.Format(earned)}!");
-        }
-        else
-        {
-            _logger.LogDebug("Resume gap was {Seconds:F2}s; no offline earnings applied",
-                elapsed.TotalSeconds);
+            _logger.LogInformation("Applied resume earnings: {Earned} for {Seconds:F0}s suspended", earned.ToCanonicalString(), elapsed.TotalSeconds);
+            Toasts.Show($"While you were away, you earned ${NumberFormatter.Format(earned)}!");
         }
 
         RefreshAll();
-    }
-
-    [RelayCommand]
-    private void Export()
-    {
-        try
-        {
-            TransferText = _engine.ExportToString();
-            IsExportMode = true;
-            IsTransferOpen = true;
-            _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to export game state");
-            _toasts.Show("Could not export — please report this as a bug.");
-        }
-    }
-
-    [RelayCommand]
-    private async Task CopyExportAsync()
-    {
-        try
-        {
-            var clipboard = GetClipboard();
-            if (clipboard is not null)
-            {
-                await clipboard.SetTextAsync(TransferText);
-                _toasts.Show("Copied to clipboard!");
-            }
-            else
-            {
-                _toasts.Show("Clipboard not available on this platform. Select all and copy manually.");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to copy to clipboard");
-            _toasts.Show("Could not copy — select the text and copy manually.");
-        }
-    }
-
-    [RelayCommand]
-    private void StartImport()
-    {
-        TransferText = "";
-        IsExportMode = false;
-        IsTransferOpen = true;
-    }
-
-    [RelayCommand]
-    private async Task ConfirmImportAsync()
-    {
-        if (string.IsNullOrWhiteSpace(TransferText))
-        {
-            _toasts.Show("Paste an export string first!");
-            return;
-        }
-
-        if (_engine.ImportFromString(TransferText))
-        {
-            Businesses.Clear();
-            foreach (var biz in _engine.Businesses)
-                Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
-
-            RefreshAll();
-            await SaveAsync();
-
-            IsTransferOpen = false;
-            TransferText = "";
-            _toasts.Show("Progress imported successfully!");
-            _logger.LogInformation("Game state imported and saved");
-        }
-        else
-        {
-            _toasts.Show("Invalid import string. Check and try again.");
-        }
-    }
-
-    [RelayCommand]
-    private void CloseTransfer()
-    {
-        IsTransferOpen = false;
-        TransferText = "";
-    }
-
-    [RelayCommand]
-    private async Task PrestigeAsync()
-    {
-        if (!CanPrestige)
-        {
-            _toasts.Show(
-                "Prestige resets all businesses and cash, but you gain Angel Investors " +
-                "that permanently boost all revenue by +2% each. " +
-                $"You need to earn more to unlock prestige (earn enough for at least 1 angel).");
-            return;
-        }
-
-        var (angels, success) = _engine.Prestige();
-        if (!success) return;
-
-        _logger.LogInformation("Prestige! Gained {Angels} angels", angels.ToCanonicalString());
-
-        Businesses.Clear();
-        foreach (var biz in _engine.Businesses)
-            Businesses.Add(new BusinessViewModel(biz, _engine, _toasts));
-
-        RefreshAll();
-        await SaveAsync();
-
-        _toasts.Show($"Prestige! Gained {NumberFormatter.Format(angels)} angels. All revenue boosted!");
     }
 
     public async Task SaveAsync()
@@ -256,67 +145,180 @@ public partial class GameViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private void Export()
+    {
+        TransferText = _engine.ExportToString();
+        IsExportMode = true;
+        IsTransferOpen = true;
+        _feedback.Play(FeedbackCue.Tap);
+        _logger.LogInformation("Exported game state ({Length} chars)", TransferText.Length);
+    }
+
+    [RelayCommand]
+    private async Task CopyExportAsync()
+    {
+        try
+        {
+            if (Clipboard is { } clipboard && await clipboard.TrySetTextAsync(TransferText))
+            {
+                _feedback.Play(FeedbackCue.Tap);
+                Toasts.Show("Copied to clipboard!");
+            }
+            else
+            {
+                Toasts.Show("Clipboard not available on this platform. Select all and copy manually.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to copy to clipboard");
+            Toasts.Show("Could not copy — select the text and copy manually.");
+        }
+    }
+
+    [RelayCommand]
+    private void StartImport()
+    {
+        TransferText = "";
+        IsExportMode = false;
+        IsTransferOpen = true;
+        _feedback.Play(FeedbackCue.Tap);
+    }
+
+    [RelayCommand]
+    private async Task ConfirmImportAsync()
+    {
+        if (string.IsNullOrWhiteSpace(TransferText))
+        {
+            Deny("Paste an export string first!");
+            return;
+        }
+
+        if (!_engine.ImportFromString(TransferText))
+        {
+            Deny("Invalid import string. Check and try again.");
+            return;
+        }
+
+        RebuildBusinesses();
+        await SaveAsync();
+        CloseTransfer();
+        _feedback.Play(FeedbackCue.Purchase);
+        Toasts.Show("Progress imported successfully!");
+    }
+
+    [RelayCommand]
+    private void CloseTransfer()
+    {
+        IsTransferOpen = false;
+        TransferText = "";
+    }
+
+    [RelayCommand]
+    private async Task PrestigeAsync()
+    {
+        if (!CanPrestige)
+        {
+            Deny("Prestige resets all businesses and cash, but you gain Angel Investors " +
+                 "that permanently boost all revenue by +2% each. " +
+                 "You need to earn more to unlock prestige (earn enough for at least 1 angel).");
+            return;
+        }
+
+        var (angels, success) = _engine.Prestige();
+        if (!success) return;
+
+        RebuildBusinesses();
+        await SaveAsync();
+        _feedback.Play(FeedbackCue.Prestige);
+        Toasts.Show($"Prestige! Gained {NumberFormatter.Format(angels)} angels. All revenue boosted!");
+    }
+
+    [RelayCommand]
+    private Task ToggleSoundAsync()
+    {
+        SoundEnabled = !SoundEnabled;
+        if (SoundEnabled) _feedback.Play(FeedbackCue.Tap);
+        return PersistSettingsAsync();
+    }
+
+    [RelayCommand]
+    private Task ToggleHapticsAsync()
+    {
+        HapticsEnabled = !HapticsEnabled;
+        if (HapticsEnabled) _feedback.Play(FeedbackCue.Tap);
+        return PersistSettingsAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var settings = await _settings.LoadAsync();
+        SoundEnabled = settings.SoundEnabled;
+        HapticsEnabled = settings.HapticsEnabled;
+
+        await _engine.LoadAsync();
+        _lastTick = _time.GetUtcNow();
+        RebuildBusinesses();
+        _logger.LogInformation("Game initialized with {Count} businesses", Businesses.Count);
+    }
+
+    private async Task PersistSettingsAsync()
+    {
+        try
+        {
+            await _settings.SaveAsync(new PlayerSettings(SoundEnabled, HapticsEnabled));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save settings");
+        }
+    }
+
+    private void RebuildBusinesses()
+    {
+        Businesses.Clear();
+        foreach (var business in _engine.Businesses)
+        {
+            Businesses.Add(new BusinessViewModel(business, _engine, Toasts, _feedback));
+        }
+        RefreshAll();
+    }
+
+    private void Deny(string message)
+    {
+        _feedback.Play(FeedbackCue.Denied);
+        Toasts.Show(message);
+    }
+
     private void RefreshAll()
     {
         CashText = $"${NumberFormatter.Format(_engine.Cash)}";
         AngelText = NumberFormatter.Format(_engine.AngelInvestors);
-
-        AngelBonusText = $"\u00D7{NumberFormatter.Format(_engine.AngelBonus)}";
-
+        AngelBonusText = $"×{NumberFormatter.Format(_engine.AngelBonus)}";
         PrestigeCount = _engine.PrestigeCount;
 
         var potentialAngels = _engine.PotentialAngels;
         CanPrestige = potentialAngels >= BigDouble.One;
-        NextAngelText = potentialAngels.Sign > 0
-            ? NumberFormatter.Format(potentialAngels)
-            : "0";
-
-        if (CanPrestige)
-        {
-            PrestigeExplanation = $"Reset all businesses. Gain {NextAngelText} angels: income \u00D7{NumberFormatter.Format(_engine.PrestigeIncomeMultiplier)}.";
-        }
-        else
-        {
-            PrestigeExplanation = "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
-        }
+        NextAngelText = potentialAngels.Sign > 0 ? NumberFormatter.Format(potentialAngels) : "0";
+        PrestigeExplanation = CanPrestige
+            ? $"Reset all businesses. Gain {NextAngelText} angels: income ×{NumberFormatter.Format(_engine.PrestigeIncomeMultiplier)}."
+            : "Keep earning! Need enough lifetime earnings to gain at least 1 angel.";
 
         var angelBonus = _engine.AngelBonus;
         var crossBonus = _engine.CrossBusinessSpeedMultiplier;
         var cash = _engine.Cash;
-        foreach (var bvm in Businesses)
-            bvm.Refresh(cash, angelBonus, crossBonus);
+        foreach (var business in Businesses)
+        {
+            business.Refresh(cash, angelBonus, crossBonus);
+        }
 
         var minOwned = _engine.MinOwnedAcrossBusinesses;
         MinOwnedAcrossText = minOwned.ToString();
-
         HasCrossSpeedBonus = crossBonus > BigDouble.One;
-
-        if (HasCrossSpeedBonus)
-        {
-            CrossSpeedText = $"\u00D7{NumberFormatter.Format(crossBonus)} Speed";
-        }
-        else
-        {
-            CrossSpeedText = "\u00D71 Speed";
-        }
-
-        var nextThreshold = CrossBusinessSpeedBonus.NextThreshold(minOwned);
-        NextCrossThresholdText = nextThreshold is { } next
-            ? $"{CrossBusinessSpeedBonus.UnitsToNext(minOwned)} more of every business \u2192 {next}"
+        CrossSpeedText = HasCrossSpeedBonus ? $"×{NumberFormatter.Format(crossBonus)} Speed" : "×1 Speed";
+        NextCrossThresholdText = CrossBusinessSpeedBonus.NextThreshold(minOwned) is { } nextThreshold
+            ? $"{CrossBusinessSpeedBonus.UnitsToNext(minOwned)} more of every business → {nextThreshold}"
             : "All cross-business bonuses earned";
-    }
-
-    private static IClipboard? GetClipboard()
-    {
-        try
-        {
-            var visual = AppRoot.CurrentVisual;
-            if (visual is null) return null;
-            return TopLevel.GetTopLevel(visual)?.Clipboard;
-        }
-        catch
-        {
-            return null;
-        }
     }
 }

@@ -1,10 +1,7 @@
-using System.Globalization;
-using System.Text;
-using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
-using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
+using MyAdventure.Core.Saves;
 using MyAdventure.Core.Services;
 
 namespace MyAdventure.Core.Tests.Balance;
@@ -31,17 +28,10 @@ public sealed class BalanceBot
     private readonly List<PrestigeEvent> _prestiges = [];
     private readonly List<(double, double)> _samples = [];
 
-    private sealed class NoSaveRepository : IGameStateRepository
-    {
-        public Task<GameState?> GetLatestAsync(CancellationToken ct = default) => Task.FromResult<GameState?>(null);
-        public Task SaveAsync(GameState state, CancellationToken ct = default) => Task.CompletedTask;
-        public Task DeleteAllAsync(CancellationToken ct = default) => Task.CompletedTask;
-    }
-
     public BalanceBot(double prestigeAtIncomeMultiplier = 2.0, double seedLifetimeLog10 = double.NaN)
     {
         _prestigeAtIncomeMultiplier = prestigeAtIncomeMultiplier;
-        _engine = new GameEngine(new NoSaveRepository(), NullLogger<GameEngine>.Instance);
+        _engine = new GameEngine(new InMemoryGameStateRepository(), NullLogger<GameEngine>.Instance);
         _engine.LoadAsync().GetAwaiter().GetResult();
         if (double.IsFinite(seedLifetimeLog10)) Seed(seedLifetimeLog10);
     }
@@ -50,16 +40,13 @@ public sealed class BalanceBot
     {
         var lifetime = new BigDouble(10.0).Pow(lifetimeLog10);
         var angels = GameEngine.CalculateAngels(lifetime);
-        var json = JsonSerializer.Serialize(new Dictionary<string, object>
+        _engine.Restore(new GameSnapshot
         {
-            ["v"] = 2,
-            ["cash"] = GameBalance.StartingCash.ToString(CultureInfo.InvariantCulture),
-            ["lifetime"] = lifetime.ToCanonicalString(),
-            ["angels"] = angels.ToCanonicalString(),
-            ["prestige"] = 1,
+            Cash = new BigDouble(GameBalance.StartingCash),
+            LifetimeEarnings = lifetime,
+            AngelInvestors = angels,
+            PrestigeCount = 1,
         });
-        if (!_engine.ImportFromString(Convert.ToBase64String(Encoding.UTF8.GetBytes(json))))
-            throw new InvalidOperationException("Seed import failed");
     }
 
     public GameEngine Engine => _engine;

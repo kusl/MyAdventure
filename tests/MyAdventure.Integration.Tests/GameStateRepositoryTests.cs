@@ -1,86 +1,111 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
-using MyAdventure.Core.Entities;
+using MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Numerics;
+using MyAdventure.Core.Saves;
 using MyAdventure.Infrastructure.Data;
-using MyAdventure.Infrastructure.Repositories;
 using Shouldly;
 
 namespace MyAdventure.Integration.Tests;
 
-public class GameStateRepositoryTests : IDisposable
+public sealed class GameStateRepositoryTests : IDisposable
 {
-    private readonly AppDbContext _db;
-    private readonly GameStateRepository _repo;
+    private readonly SqliteTestDatabase _database = new();
+    private readonly IGameStateRepository _repo;
 
-    public GameStateRepositoryTests()
+    public GameStateRepositoryTests() => _repo = _database.Get<IGameStateRepository>();
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Load_EmptyDatabase_ReturnsNull()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        _db = new AppDbContext(options);
-        _db.Database.EnsureCreated();
-        _repo = new GameStateRepository(_db, NullLogger<GameStateRepository>.Instance);
+        (await _repo.LoadAsync(Ct)).ShouldBeNull();
     }
 
     [Fact]
     public async Task SaveAndLoad_ShouldRoundTrip()
     {
-        var state = new GameState
+        var lastPlayed = new DateTime(2026, 11, 26, 12, 0, 0, DateTimeKind.Utc);
+        var snapshot = new GameSnapshot
         {
-            CashText = "1.23456e3",
-            LifetimeEarningsText = "9.99999e3",
-            BusinessDataJson = """{"lemonade":5}""",
-            ManagerDataJson = """{"lemonade":true}"""
+            Cash = BigDouble.Parse("1.23456e3"),
+            LifetimeEarnings = BigDouble.Parse("9.99999e3"),
+            AngelInvestors = new BigDouble(42),
+            PrestigeCount = 3,
+            Owned = new Dictionary<string, long> { ["lemonade"] = 5 },
+            Managers = new Dictionary<string, bool> { ["lemonade"] = true },
+            LastPlayedAt = lastPlayed,
         };
 
-        await _repo.SaveAsync(state, TestContext.Current.CancellationToken);
-        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
+        await _repo.SaveAsync(snapshot, Ct);
+        var loaded = await _repo.LoadAsync(Ct);
 
         loaded.ShouldNotBeNull();
-        loaded.CashText.ShouldBe("1.23456e3");
-        loaded.LifetimeEarningsText.ShouldBe("9.99999e3");
-        loaded.BusinessDataJson.ShouldContain("lemonade");
+        loaded.Cash.ShouldBe(snapshot.Cash);
+        loaded.LifetimeEarnings.ShouldBe(snapshot.LifetimeEarnings);
+        loaded.AngelInvestors.ShouldBe(snapshot.AngelInvestors);
+        loaded.PrestigeCount.ShouldBe(3);
+        loaded.Owned["lemonade"].ShouldBe(5);
+        loaded.Managers["lemonade"].ShouldBeTrue();
+        loaded.LastPlayedAt.ShouldBe(lastPlayed);
+        loaded.LastPlayedAt.Kind.ShouldBe(DateTimeKind.Utc);
     }
 
     [Fact]
-    public async Task Save_Twice_ShouldUpdate()
+    public async Task Save_Twice_ShouldUpdateSingleRow()
     {
-        await _repo.SaveAsync(new GameState { CashText = "100" }, TestContext.Current.CancellationToken);
-        await _repo.SaveAsync(new GameState { CashText = "200" }, TestContext.Current.CancellationToken);
+        await _repo.SaveAsync(new GameSnapshot { Cash = new BigDouble(100) }, Ct);
+        await _repo.SaveAsync(new GameSnapshot { Cash = new BigDouble(200) }, Ct);
 
-        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
-        loaded!.CashText.ShouldBe("200");
-        _db.GameStates.Count().ShouldBe(1);
+        (await _repo.LoadAsync(Ct))!.Cash.ShouldBe(new BigDouble(200));
+
+        await using var db = await _database.Get<Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext>>().CreateDbContextAsync(Ct);
+        db.GameStates.Count().ShouldBe(1);
     }
 
     [Fact]
     public async Task DeleteAll_ShouldClearState()
     {
-        await _repo.SaveAsync(new GameState { CashText = "100" }, TestContext.Current.CancellationToken);
-        await _repo.DeleteAllAsync(TestContext.Current.CancellationToken);
+        await _repo.SaveAsync(new GameSnapshot { Cash = new BigDouble(100) }, Ct);
+        await _repo.DeleteAllAsync(Ct);
 
-        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
-        loaded.ShouldBeNull();
+        (await _repo.LoadAsync(Ct)).ShouldBeNull();
     }
 
     [Fact]
-    public async Task SaveAndLoad_ExtremeBigDoubleString_RoundTripsExactly()
+    public async Task SaveAndLoad_ExtremeBigDouble_RoundTripsExactly()
     {
-        var state = new GameState
+        await _repo.SaveAsync(new GameSnapshot
         {
-            CashText = "1.5e500",
-            LifetimeEarningsText = "7.25e1000",
-            AngelInvestorsText = "2.5e15"
-        };
+            Cash = BigDouble.Parse("1.5e500"),
+            LifetimeEarnings = BigDouble.Parse("7.25e1000"),
+            AngelInvestors = BigDouble.Parse("2.5e15"),
+        }, Ct);
 
-        await _repo.SaveAsync(state, TestContext.Current.CancellationToken);
-        var loaded = await _repo.GetLatestAsync(TestContext.Current.CancellationToken);
+        var loaded = await _repo.LoadAsync(Ct);
 
         loaded.ShouldNotBeNull();
-        loaded.CashText.ShouldBe("1.5e500");
-        loaded.LifetimeEarningsText.ShouldBe("7.25e1000");
-        loaded.AngelInvestorsText.ShouldBe("2.5e15");
+        loaded.Cash.ToCanonicalString().ShouldBe("1.5e500");
+        loaded.LifetimeEarnings.ToCanonicalString().ShouldBe("7.25e1000");
+        loaded.AngelInvestors.ToCanonicalString().ShouldBe("2.5e15");
     }
 
-    public void Dispose() => _db.Dispose();
+    [Fact]
+    public async Task Load_CorruptColumns_FallsBackToSafeDefaults()
+    {
+        await _repo.SaveAsync(new GameSnapshot { Cash = new BigDouble(1) }, Ct);
+        using (var connection = _database.OpenConnection())
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "UPDATE GameStates SET CashText = 'garbage', BusinessDataJson = 'not json'";
+            await command.ExecuteNonQueryAsync(Ct);
+        }
+
+        var loaded = await _repo.LoadAsync(Ct);
+
+        loaded.ShouldNotBeNull();
+        loaded.Cash.IsZero.ShouldBeTrue();
+        loaded.Owned.ShouldBeEmpty();
+    }
+
+    public void Dispose() => _database.Dispose();
 }

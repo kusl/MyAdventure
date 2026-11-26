@@ -5,10 +5,12 @@ namespace MyAdventure.UI.Tests;
 
 public class ToastServiceTests
 {
+    private readonly ManualTimeProvider _clock = new();
+
     [Fact]
     public void Show_ShouldAddToast()
     {
-        var service = new ToastService();
+        var service = new ToastService(_clock);
         service.Show("Test message");
         service.ActiveToasts.Count.ShouldBe(1);
         service.ActiveToasts[0].Message.ShouldBe("Test message");
@@ -17,7 +19,7 @@ public class ToastServiceTests
     [Fact]
     public void Show_MultipleTimes_ShouldAddMultiple()
     {
-        var service = new ToastService();
+        var service = new ToastService(_clock);
         service.Show("One");
         service.Show("Two");
         service.Show("Three");
@@ -27,33 +29,37 @@ public class ToastServiceTests
     [Fact]
     public void CleanupExpired_ShouldRemoveExpiredToasts()
     {
-        var service = new ToastService();
+        var service = new ToastService(_clock);
         service.Show("Will expire", TimeSpan.Zero);
 
-        Thread.Sleep(10);
-
         service.CleanupExpired();
-        service.ActiveToasts.Count.ShouldBe(0);
+
+        service.ActiveToasts.ShouldBeEmpty();
     }
 
     [Fact]
-    public void CleanupExpired_ShouldKeepActiveToasts()
+    public void CleanupExpired_DefaultLifetime_ExpiresAfterThreeSeconds()
     {
-        var service = new ToastService();
-        service.Show("Still active", TimeSpan.FromMinutes(5));
+        var service = new ToastService(_clock);
+        service.Show("Default");
 
+        _clock.Advance(ToastService.DefaultLifetime - TimeSpan.FromMilliseconds(1));
         service.CleanupExpired();
         service.ActiveToasts.Count.ShouldBe(1);
+
+        _clock.Advance(TimeSpan.FromMilliseconds(1));
+        service.CleanupExpired();
+        service.ActiveToasts.ShouldBeEmpty();
     }
 
     [Fact]
     public void CleanupExpired_MixedToasts_ShouldOnlyRemoveExpired()
     {
-        var service = new ToastService();
+        var service = new ToastService(_clock);
         service.Show("Expired", TimeSpan.Zero);
         service.Show("Active", TimeSpan.FromMinutes(5));
 
-        Thread.Sleep(10);
+        _clock.Advance(TimeSpan.FromSeconds(1));
         service.CleanupExpired();
 
         service.ActiveToasts.Count.ShouldBe(1);

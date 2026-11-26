@@ -3,17 +3,20 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="MyAdventure.Testing" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common/*.cs" LinkBase="Common" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../src/MyAdventure.Core/MyAdventure.Core.csproj" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
 </Project>

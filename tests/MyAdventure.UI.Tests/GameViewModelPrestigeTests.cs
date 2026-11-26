@@ -1,11 +1,7 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using MyAdventure.Core.Entities;
-using MyAdventure.Core.Interfaces;
 using MyAdventure.Core.Numerics;
 using MyAdventure.Core.Services;
-using MyAdventure.Shared.Services;
 using MyAdventure.Shared.ViewModels;
-using NSubstitute;
 using Shouldly;
 
 namespace MyAdventure.UI.Tests;
@@ -14,16 +10,11 @@ public class GameViewModelPrestigeTests
 {
     private static (GameViewModel vm, GameEngine engine) MakeVm()
     {
-        var repo = Substitute.For<IGameStateRepository>();
-        repo.GetLatestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<GameState?>(null));
-        var engine = new GameEngine(repo, NullLogger<GameEngine>.Instance);
-        var vm = new GameViewModel(engine, NullLogger<GameViewModel>.Instance, new ToastService());
-        return (vm, engine);
+        var engine = Ui.CreateEngine();
+        return (Ui.CreateGame(engine), engine);
     }
 
-    private static void SetLifetime(GameEngine engine, BigDouble value) =>
-        typeof(GameEngine).GetProperty(nameof(GameEngine.LifetimeEarnings))!
-            .GetSetMethod(true)!.Invoke(engine, [value]);
+    private static void SetLifetime(GameEngine engine, BigDouble value) => engine.LifetimeEarnings = value;
 
     [Fact]
     public void PrestigeExplanation_ShowsTheIncomeMultiplierPrestigeWouldGrant()

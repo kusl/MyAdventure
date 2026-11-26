@@ -1,10 +1,10 @@
-namespace MyAdventure.Core.Interfaces;
+using MyAdventure.Core.Saves;
 
-using MyAdventure.Core.Entities;
+namespace MyAdventure.Core.Interfaces;
 
 public interface IGameStateRepository
 {
-    Task<GameState?> GetLatestAsync(CancellationToken ct = default);
-    Task SaveAsync(GameState state, CancellationToken ct = default);
+    Task<GameSnapshot?> LoadAsync(CancellationToken ct = default);
+    Task SaveAsync(GameSnapshot snapshot, CancellationToken ct = default);
     Task DeleteAllAsync(CancellationToken ct = default);
 }
