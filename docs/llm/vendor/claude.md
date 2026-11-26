@@ -18898,6 +18898,9 @@ git rm src/MyAdventure.Android/App.axaml src/MyAdventure.Android/App.axaml.cs sr
 
 
 
+46
+48
+
 build is broken, both locally and on github dot com
 local: 
   MyAdventure.Core net11.0 failed with 1 error(s) (0.0s)
@@ -18965,3 +18968,33 @@ Build FAILED.
     3 Error(s)
 
 Time Elapsed 00:00:09.37
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
