@@ -18802,3 +18802,166 @@ git rm src/MyAdventure.Android/App.axaml src/MyAdventure.Android/App.axaml.cs sr
 
 46
 48
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+build is broken, both locally and on github dot com
+local: 
+  MyAdventure.Core net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Integration.Tests net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Infrastructure net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Desktop net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Core.Tests net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.UI.Tests net11.0 failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Shared net11.0 failed with 1 error(s) (0.1s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/obj/project.assets.json' doesn't have a target for 'net11.0'. Ensure that restore has run and that you have included 'net11.0' in the TargetFrameworks for your project.
+  MyAdventure.Android net11.0-android failed with 1 error(s) (0.0s)
+    /usr/lib64/dotnet/sdk/11.0.100/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/obj/project.assets.json' doesn't have a target for 'net11.0-android'. Ensure that restore has run and that you have included 'net11.0-android' in the TargetFrameworks for your project.
+
+Build failed with 8 error(s) in 0.2s
+
+real	0m0.359s
+user	0m0.107s
+sys	0m0.038s
+Restore complete (4.6s)
+
+Build succeeded in 4.6s
+
+real	0m4.717s
+user	0m0.369s
+sys	0m0.048s
+Restore complete (0.1s)
+  MyAdventure.Core net11.0 succeeded (1.6s) → src/MyAdventure.Core/bin/Debug/net11.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net11.0 succeeded (0.5s) → src/MyAdventure.Infrastructure/bin/Debug/net11.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net11.0 succeeded (0.8s) → tests/MyAdventure.Core.Tests/bin/Debug/net11.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net11.0 succeeded (0.4s) → tests/MyAdventure.Integration.Tests/bin/Debug/net11.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net11.0 failed with 3 error(s) (1.3s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14.
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18.
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18.
+
+Build failed with 3 error(s) in 3.5s
+
+real	0m3.644s
+user	0m0.963s
+sys	0m0.153s
+
+Github actions: 
+https://github.com/kusl/MyAdventure/actions/runs/45786565930/job/139794695374
+Run SIGN_PASS="***"
+  MyAdventure.Core -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Core/bin/Release/net11.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure -> /home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Infrastructure/bin/Release/net11.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Core.Tests/bin/Release/net11.0/MyAdventure.Core.Tests.dll
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+  MyAdventure.Integration.Tests -> /home/runner/work/MyAdventure/MyAdventure/tests/MyAdventure.Integration.Tests/bin/Release/net11.0/MyAdventure.Integration.Tests.dll
+
+Build FAILED.
+
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18. [/home/runner/work/MyAdventure/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj]
+    0 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:09.37
