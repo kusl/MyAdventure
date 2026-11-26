@@ -20598,3 +20598,603 @@ not sure what else you can do when the platform itself sucks donkey balls and ca
 
 
 
+Three files change. Each platform now builds and releases independently, so a failed or cancelled runner no longer takes the rest down. I haven't run this workflow, so the next push is the real test. Your local run is fully green: everything builds, including Android, and all 466 tests pass.
+
+**Why one failure used to kill the whole release**
+- **Matrix cancellation:** the desktop matrix stops every other platform as soon as one fails, unless `fail-fast` is turned off. When GitHub cancelled one runner, that cancelled all six desktop builds.
+- **Release job skipped:** `create-release` only ran if every build succeeded, so a single failure meant no release at all.
+
+**What changed in the workflow**
+- **`fail-fast: false`** on the desktop matrix, so each platform finishes on its own.
+- **Release job:** now runs when the build-and-test job passed and the run wasn't cancelled by hand. It ships whatever platforms were built and adds a warning for each missing one. It fails only if no platform built at all.
+- **Partial releases are marked pre-release.** Their notes list only the files that exist plus which platforms are missing. Because they're pre-releases, the README's `releases/latest` link and Obtainium stay on the last complete release. Otherwise Obtainium would land on a release without an APK.
+- **Retries:** the Android workload install, `dotnet restore` and the desktop publish now retry 3 times with backoff.
+- **Timeouts per job:** 30–45 minutes for builds and 15 for the release, instead of GitHub's 6-hour default.
+- **Your `--test-modules` test step is kept as is.**
+
+**ReadyToRun warnings:** .NET 11 already tries to do ReadyToRun compilation on Android Release builds, but the restore step never saw that setting. So the compiler package it needs was never downloaded, and you got those 6 warnings. Setting `PublishReadyToRun` explicitly in the Android project should fix that. If a new ReadyToRun error shows up on the 32-bit `android-arm` target, delete that line rather than chase it: it only speeds up app startup.
+
+No files to delete.
+
+### `.github/workflows/build-and-release.yml`
+```yaml
+name: Build and Release
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install Android workload
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet workload install android && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: Setup Keystore
+        id: keystore
+        shell: bash
+        run: |
+          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/android.keystore"
+            echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            keytool -genkey -v -keystore "$GITHUB_WORKSPACE/android.keystore" \
+              -alias myalias -keyalg RSA -keysize 2048 -validity 1 \
+              -storepass dummypassword -keypass dummypassword \
+              -dname "CN=Dummy, OU=Dummy, O=Dummy, L=Dummy, ST=Dummy, C=US" \
+              2>/dev/null || true
+            echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet restore -property:Configuration=Release && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: Build
+        run: |
+          SIGN_PASS="${{ secrets.ANDROID_SIGNING_PASSWORD }}"
+          if [[ "${{ steps.keystore.outputs.available }}" != "true" ]]; then
+            SIGN_PASS="dummypassword"
+          fi
+          dotnet build --configuration Release --no-restore \
+            -p:BuildNumber=${{ github.run_number }} \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="${{ steps.keystore.outputs.path }}" \
+            -p:AndroidSigningStorePass="$SIGN_PASS" \
+            -p:AndroidSigningKeyPass="$SIGN_PASS" \
+            -p:AndroidSigningKeyAlias=myalias
+
+      - name: Test
+        run: dotnet test --test-modules "tests/*/bin/Release/net11.0/*.Tests.dll"
+
+  build-desktop:
+    needs: build-and-test
+    if: github.event_name == 'push'
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+          - os: windows-latest
+            rid: win-x64
+          - os: windows-latest
+            rid: win-arm64
+          - os: macos-latest
+            rid: osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet publish src/MyAdventure.Desktop/MyAdventure.Desktop.csproj \
+              --configuration Release \
+              -r ${{ matrix.rid }} \
+              --self-contained true \
+              -p:PublishSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true \
+              -p:Version=1.0.${{ github.run_number }} \
+              --output ./publish && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cd ./publish
+          tar -czvf ../MyAdventure-${{ matrix.rid }}.tar.gz .
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./publish/* -DestinationPath ./MyAdventure-${{ matrix.rid }}.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.rid }}
+          path: |
+            ./MyAdventure-${{ matrix.rid }}.tar.gz
+            ./MyAdventure-${{ matrix.rid }}.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  build-android:
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install Android workload
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            dotnet workload install android && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: Setup Keystore
+        id: keystore
+        shell: bash
+        run: |
+          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/android.keystore"
+            echo "path=$GITHUB_WORKSPACE/android.keystore" >> "$GITHUB_OUTPUT"
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Android APK (Signed)
+        if: steps.keystore.outputs.available == 'true'
+        shell: bash
+        run: |
+          dotnet publish src/MyAdventure.Android/MyAdventure.Android.csproj \
+            --configuration Release \
+            -p:ApplicationVersion=${{ github.run_number }} \
+            -p:ApplicationDisplayVersion=1.0.${{ github.run_number }} \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="${{ steps.keystore.outputs.path }}" \
+            -p:AndroidSigningStorePass="${{ secrets.ANDROID_SIGNING_PASSWORD }}" \
+            -p:AndroidSigningKeyPass="${{ secrets.ANDROID_SIGNING_PASSWORD }}" \
+            -p:AndroidSigningKeyAlias=myalias \
+            -p:AndroidUseAapt2Daemon=false \
+            --output ./publish/android
+
+      - name: Build Android APK (Debug key)
+        if: steps.keystore.outputs.available != 'true'
+        shell: bash
+        run: |
+          dotnet publish src/MyAdventure.Android/MyAdventure.Android.csproj \
+            --configuration Release \
+            -p:ApplicationVersion=${{ github.run_number }} \
+            -p:ApplicationDisplayVersion=1.0.${{ github.run_number }} \
+            -p:AndroidUseAapt2Daemon=false \
+            --output ./publish/android
+
+      - name: Select signed APK
+        shell: bash
+        run: |
+          mapfile -t APKS < <(find ./publish/android -type f -name '*-Signed.apk')
+          if [[ ${#APKS[@]} -ne 1 ]]; then
+            echo "ERROR: expected exactly one *-Signed.apk, found ${#APKS[@]}"
+            find ./publish -type f -name '*.apk'
+            exit 1
+          fi
+          cp "${APKS[0]}" "./MyAdventure-android-${{ github.run_number }}.apk"
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          APK="./MyAdventure-android-${{ github.run_number }}.apk"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          "${BT}apksigner" verify --verbose --print-certs "$APK"
+          BADGING=$("${BT}aapt2" dump badging "$APK" | grep '^package:')
+          echo "$BADGING"
+          grep -q "name='com.myadventure.app'" <<< "$BADGING"
+          grep -q "versionCode='${{ github.run_number }}'" <<< "$BADGING"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: ./MyAdventure-android-${{ github.run_number }}.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  create-release:
+    needs: [build-and-test, build-desktop, build-android]
+    if: ${{ !cancelled() && github.event_name == 'push' && needs.build-and-test.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          path: ./artifacts
+
+      - name: Prepare release
+        id: prepare
+        shell: bash
+        run: |
+          N=${{ github.run_number }}
+          mkdir -p release
+          if [[ -d artifacts ]]; then
+            find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.apk' \) -exec cp {} release/ \;
+          fi
+
+          files=(win-x64.zip win-arm64.zip linux-x64.tar.gz linux-arm64.tar.gz osx-x64.tar.gz osx-arm64.tar.gz "android-$N.apk")
+          labels=("Windows x64" "Windows ARM64" "Linux x64" "Linux ARM64" "macOS x64 (Intel)" "macOS ARM64 (Apple Silicon)" "Android")
+          rows=""
+          missing=()
+          for i in "${!files[@]}"; do
+            file="MyAdventure-${files[$i]}"
+            if [[ -f "release/$file" ]]; then
+              rows+="| ${labels[$i]} | \`$file\` |"$'\n'
+            else
+              missing+=("${labels[$i]}")
+              echo "::warning::${labels[$i]} was not built; releasing without it"
+            fi
+          done
+
+          if [[ -z "$rows" ]]; then
+            echo "::error::No platform built successfully; nothing to release"
+            exit 1
+          fi
+
+          {
+            echo "## MyAdventure v1.0.$N"
+            echo
+            echo "| Platform | File |"
+            echo "|----------|------|"
+            printf '%s' "$rows"
+            if (( ${#missing[@]} > 0 )); then
+              echo
+              printf '**Partial release.** Not built this run: %s. Marked as pre-release so `latest` and Obtainium stay on the last complete release.\n' "$(printf '%s, ' "${missing[@]}" | sed 's/, $//')"
+            fi
+            echo
+            echo "### Android (Obtainium)"
+            echo
+            echo "Point Obtainium at this repository's releases. The APK version code is the CI run number."
+          } > release-notes.md
+
+          echo "prerelease=$([[ ${#missing[@]} -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          cat release-notes.md
+          ls -la release
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          draft: false
+          prerelease: ${{ steps.prepare.outputs.prerelease }}
+          generate_release_notes: true
+          body_path: release-notes.md
+          files: ./release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### `src/MyAdventure.Android/MyAdventure.Android.csproj`
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>com.myadventure.app</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Release'">true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdventure.Shared\MyAdventure.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+  </ItemGroup>
+</Project>
+```
+
+### `README.md`
+````markdown
+# MyAdventure
+
+[![Build](https://github.com/kusl/MyAdventure/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/kusl/MyAdventure/actions/workflows/build-and-release.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+> **AI Disclosure:** This repository was developed with significant assistance from large language models (LLMs), including Anthropic Claude (Opus and Sonnet models) and Google Gemini. Substantial portions of the code, documentation, architecture decisions, and test suites were generated, reviewed, and iterated on with LLM help. **AI was a tool, not an author** — the human developer directed all decisions, verified all output, and takes responsibility for the result. If you operate a web scraper, crawler, or AI training pipeline and wish to exclude LLM-assisted content, this notice is for you.
+
+Idle/clicker game inspired by Adventure Capitalist. **Avalonia 12.2**, **.NET 11**, **C# 15**. Desktop (Windows, Linux, macOS) and Android from one codebase, one view, one solution. No ads, no payments, no tracking. Free forever.
+
+## Downloads
+
+Every push to `main` builds and releases all platforms: [latest release](https://github.com/kusl/MyAdventure/releases/latest).
+
+| Platform | Architectures |
+|----------|---------------|
+| Windows | x64, ARM64 |
+| Linux | x64, ARM64 |
+| macOS | x64, ARM64 |
+| Android 7.0+ (API 24) | arm64, arm, x64 |
+
+Android: point [Obtainium](https://github.com/ImranR98/Obtainium) at the releases. `versionCode` is the CI run number.
+
+If a platform fails or GitHub cancels its runner, the other platforms still ship as a **pre-release** listing what is missing; `latest` and Obtainium stay on the last complete release.
+
+## The Game
+
+Start with $5, buy businesses, hire managers, prestige for angels.
+
+| Business | Base Cost | Base Revenue | Cycle | Cost Multiplier |
+|----------|-----------|--------------|-------|-----------------|
+| 🍋 Lemonade Stand | $4 | $1 | 0.6s | 1.07 |
+| 📰 Newspaper Route | $60 | $60 | 3s | 1.15 |
+| 🚗 Car Wash | $720 | $540 | 6s | 1.14 |
+| 🍕 Pizza Delivery | $8,640 | $4,320 | 12s | 1.13 |
+| 🍩 Donut Shop | $103,680 | $51,840 | 24s | 1.12 |
+| 🦐 Shrimp Boat | $1,244,160 | $622,080 | 96s | 1.11 |
+
+| Quantity | Formula |
+|----------|---------|
+| Next unit cost | `baseCost × r^owned` |
+| Manager cost | `1000 × baseCost` |
+| Revenue per cycle | `baseRevenue × owned × milestones(owned) × efficiency(owned)` |
+| Cycle time | `baseTime / speedMilestones(owned)` |
+| Efficiency | `max(1, r^(0.49·owned) / Q^(min(owned,1000)/1000))` |
+| Cross-business bonus | ×1.5 each time every business reaches 25, 50, 100, 200, 300, 400 |
+| Angels | `floor(150 × √(lifetime / 10¹⁴))`, lifetime ≥ 10¹² |
+| Angel bonus | `1 + 0.02 × angels` |
+| Earnings | `revenue × angelBonus × crossBonus`, identical live and offline |
+
+Revenue milestones: ×2 at 25–400, ×4 at 500–900, ×5 at 1000. Speed milestones: ×2 at 25–400. Tuning lives in `GameBalance.cs`; `tests/MyAdventure.Core.Tests/Balance` plays the real engine with a bot and pins pacing.
+
+### Feedback
+
+Every button gives feedback:
+
+- **Sound:** short tones synthesized in code (`ToneSynthesizer`, no audio assets, no audio packages). Desktop plays them with `winmm` on Windows, `afplay` on macOS, and the first of `pw-play`/`paplay`/`aplay` on Linux. Android uses `SoundPool`.
+- **Haptics:** Android `Vibrator` (API 26+). Desktop has none.
+- **Visual:** buttons scale down while pressed.
+
+Cues: tap, purchase, manager, milestone (purchase that crosses a revenue or speed milestone), prestige, denied. 🔊/📳 toggles in the bottom bar persist in SQLite.
+
+### Saves
+
+SQLite at `{LocalApplicationData}/MyAdventure/myadventure.db`. Older databases are upgraded in place on first start: legacy REAL columns move to BigDouble TEXT, and the `PlayerSettings` table is added. Progress is never dropped.
+
+📤 Export / 📥 Import uses Base64 JSON (`v`, `cash`, `lifetime`, `angels`, `prestige`, `businesses`, `managers`, `timestamp`). v1 and v2 strings import. Business keys: `lemonade`, `newspaper`, `carwash`, `pizza`, `donut`, `shrimp`.
+
+## Build
+
+Prerequisites: .NET 11 SDK (`global.json` pins `11.0.100`, rolls forward to newer feature bands), JDK 21 and `dotnet workload install android` for Android.
+
+```bash
+dotnet build
+dotnet test
+dotnet run --project src/MyAdventure.Desktop
+dotnet publish src/MyAdventure.Android -c Release -o publish/android
+```
+
+Install `com.myadventure.app-Signed.apk`. Signing: [docs/KEYSTORE.md](docs/KEYSTORE.md).
+
+## Architecture
+
+```
+src/
+  MyAdventure.Core            engine, BigDouble, balance, save codec (no UI, no IO)
+  MyAdventure.Infrastructure  EF Core SQLite, schema upgrades, OpenTelemetry, Sentry
+  MyAdventure.Shared          App, MainView, view models, feedback, lifecycle
+  MyAdventure.Desktop         Program, DesktopApp, desktop sound player
+  MyAdventure.Android         AndroidApp, MainActivity, SoundPool and Vibrator players
+tests/
+  Common                      shared fakes (time, repositories), linked into every test project
+  MyAdventure.Core.Tests
+  MyAdventure.Integration.Tests
+  MyAdventure.UI.Tests
+```
+
+- **One app, one view.** `App` and `MainView` live in Shared. The layout adapts with an Avalonia container query (3×2 grid wide, 2×3 below 760 px). Heads only register platform services by overriding `App.ConfigurePlatformServices`.
+- **No silos.** One `.slnx`, one workflow, one build. Android compiles on every PR.
+- **No scrollbars.** Everything fits on screen.
+- **Persistence behind interfaces.** Core defines `IGameStateRepository` (snapshots) and `ISettingsRepository`. Infrastructure maps snapshots to the unchanged `GameStates` table through `IDbContextFactory`. `DatabaseInitializer` runs once, lazily.
+- **Lifecycle.** `LifecycleRouter` turns `IActivatableLifetime` background events into `OnSuspended`/`OnResumed`; resume applies offline earnings. Desktop saves and flushes telemetry on `Exit`.
+- **Modern .NET.** Central package management, `TreatWarningsAsErrors` in Release, C# 14 extension blocks for DI, `field`-backed observable properties, C# 15 collection expression arguments, generic-math `BigDouble`, `System.Text.Json` source generation, `[LoggerMessage]`, `LibraryImport`, `System.Threading.Lock`, `TimeProvider` everywhere.
+
+## Tests
+
+`dotnet test` runs everything headless on Microsoft Testing Platform (xUnit v3). Time is injected (`ManualTimeProvider`), integration tests use real SQLite files, and cross-path invariants pin live versus offline earnings.
+
+## Telemetry
+
+OpenTelemetry logs, traces and metrics go to the console. When a Sentry DSN is set, logs and traces also go to Sentry over OTLP/HTTP and exceptions become Sentry Issues through the envelope endpoint. There is no Sentry SDK. Metrics stay local.
+
+| Source (highest first) | |
+|---|---|
+| `SENTRY_DSN` | env var, all platforms |
+| `Telemetry:Sentry:Dsn` | `appsettings.json` / `appsettings.local.json` (gitignored) |
+| `TelemetryDefaults.DefaultDsn` | compile-time fallback; set to `""` to make Sentry opt-in |
+
+`MYADVENTURE_VERBOSE=1` lowers logging to Debug and EF Core to Information. `MYADVENTURE_SENTRY_ENVIRONMENT` overrides `deployment.environment`. A malformed DSN logs one warning and never blocks startup.
+
+## Dependencies
+
+All MIT, Apache-2.0 or BSD. No package whose use depends on payment of any kind, including "free for non-commercial".
+
+| | |
+|---|---|
+| UI | Avalonia 12.2.0 |
+| MVVM | CommunityToolkit.Mvvm 8.4.2 |
+| Data | EF Core SQLite 11.0.0 |
+| Telemetry | OpenTelemetry 1.21.0 |
+| Tests | xunit.v3 4.0.3, Shouldly 4.3.0, NSubstitute 6.2.0, coverlet.MTP 10.1.1 |
+
+## License
+
+AGPL-3.0-or-later. Copyright (C) 2026 MyAdventure Contributors. See [LICENSE](LICENSE).
+````
+
+To recover a partial release, open the failed run and use "Re-run failed jobs". Re-running creates a new run number, so you get a new, complete release rather than a patched one.
+
+61
+51
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
