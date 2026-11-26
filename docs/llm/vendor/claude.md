@@ -20498,6 +20498,10 @@ The XAML compiler stopped at these three errors, so there may be more errors fur
 
 
 
+48
+48
+
+
 build-and-test
 Process completed with exit code 1.
 build-and-test
@@ -20529,3 +20533,68 @@ Run dotnet test --configuration Release --no-build
 No devices are available for this project.
 Unable to run this project because multiple devices are available. Please specify which device to use by passing the --device argument with one of the following values:
 Error: Process completed with exit code 1.
+
+I ran into a couple of issues above that I mitigated somewhat but now I ran into a new problem 
+Github dot com has a capacity problem. 
+So basically if any of the builds for any of the platform fails
+we should still release for the rest of the platforms 
+not sure what else you can do when the platform itself sucks donkey balls and cancels the task
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
