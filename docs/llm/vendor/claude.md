@@ -18598,6 +18598,8 @@ Claude finished the response
 
 
 
+00
+39
 
 Now that dotnet 11 is out, 
 lets reimagine this whole project for dotnet 11 
@@ -18630,3 +18632,69 @@ Delivery
     this will improve soon when dotnet 11 stable lands on fedora default repos 
 also when pressing buttons we need some kind of audible and tactile feedback 
 not sure how 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
