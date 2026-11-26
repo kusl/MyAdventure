@@ -1,0 +1,702 @@
+kushal@fedora:~/src/dotnet/MyAdventure$ cd /home/kushal/src/dotnet/MyAdventure; time dotnet workload restore; time dotnet clean; time dotnet restore; time dotnet build; time dotnet test; time dotnet list package; time dotnet list package --outdated; time dotnet list package --outdated --framework net10.0 --highest-minor; time dotnet format; time sh export.sh; time dotnet --info; time dnf info dotnet-sdk-11.0.x86_64; time dnf search dotnet-sdk;
+
+Skipping NuGet package signature verification.
+Updated advertising manifest microsoft.net.workloads.
+No workload update found.
+Pack Microsoft.Android.Sdk.Linux version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Sdk.Linux version 37.2.31...
+Pack Microsoft.Android.Sdk.Linux version 36.1.118 is already installed.
+Writing workload pack installation record for Microsoft.Android.Sdk.Linux version 36.1.118...
+Pack Microsoft.Android.Ref.37 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Ref.37 version 37.2.31...
+Pack Microsoft.Android.Runtime.37.android version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.37.android version 37.2.31...
+Pack Microsoft.Android.Runtime.Mono.37.android-arm version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.Mono.37.android-arm version 37.2.31...
+Pack Microsoft.Android.Runtime.Mono.37.android-arm64 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.Mono.37.android-arm64 version 37.2.31...
+Pack Microsoft.Android.Runtime.Mono.37.android-x86 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.Mono.37.android-x86 version 37.2.31...
+Pack Microsoft.Android.Runtime.Mono.37.android-x64 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.Mono.37.android-x64 version 37.2.31...
+Pack Microsoft.Android.Runtime.CoreCLR.37.android-arm version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.CoreCLR.37.android-arm version 37.2.31...
+Pack Microsoft.Android.Runtime.CoreCLR.37.android-arm64 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.CoreCLR.37.android-arm64 version 37.2.31...
+Pack Microsoft.Android.Runtime.CoreCLR.37.android-x64 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.CoreCLR.37.android-x64 version 37.2.31...
+Pack Microsoft.Android.Runtime.NativeAOT.37.android-arm version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.NativeAOT.37.android-arm version 37.2.31...
+Pack Microsoft.Android.Runtime.NativeAOT.37.android-arm64 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.NativeAOT.37.android-arm64 version 37.2.31...
+Pack Microsoft.Android.Runtime.NativeAOT.37.android-x64 version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Runtime.NativeAOT.37.android-x64 version 37.2.31...
+Pack Microsoft.Android.Templates version 37.2.31 is already installed.
+Writing workload pack installation record for Microsoft.Android.Templates version 37.2.31...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-arm version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-x64 version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x64 version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-x86 version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x86 version 10.0.15...
+Pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.15...
+Pack Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 10.0.15 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 10.0.15...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-arm version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-arm64 version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-x64 version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x64 version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.Mono.android-x86 version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.android-x86 version 11.0.0...
+Pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 11.0.0...
+Pack Microsoft.NET.Runtime.MonoTargets.Sdk version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x64 version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm version 11.0.0...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 11.0.0 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-arm64 version 11.0.0...
+Garbage collecting for SDK feature band(s) 10.0.100 11.0.100...
+
+Successfully updated workload(s): android.
+
+Build started 11/26/2026 4:03:43 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.18
+Build started 11/26/2026 4:03:43 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.02
+Build started 11/26/2026 4:03:43 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.07
+Build started 11/26/2026 4:03:44 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.06
+Build started 11/26/2026 4:03:44 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.07
+Build started 11/26/2026 4:03:44 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.05
+Build started 11/26/2026 4:03:44 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.08
+Build started 11/26/2026 4:03:44 AM.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.09
+Installing workloads: 
+
+
+real	0m1.799s
+user	0m1.388s
+sys	0m0.306s
+
+Build succeeded in 0.1s
+
+real	0m0.253s
+user	0m0.097s
+sys	0m0.032s
+Restore complete (0.1s)
+
+Build succeeded in 0.1s
+
+real	0m0.254s
+user	0m0.101s
+sys	0m0.037s
+Restore complete (0.1s)
+  MyAdventure.Core net11.0 succeeded (0.2s) → src/MyAdventure.Core/bin/Debug/net11.0/MyAdventure.Core.dll
+  MyAdventure.Infrastructure net11.0 succeeded (0.2s) → src/MyAdventure.Infrastructure/bin/Debug/net11.0/MyAdventure.Infrastructure.dll
+  MyAdventure.Core.Tests net11.0 succeeded (0.3s) → tests/MyAdventure.Core.Tests/bin/Debug/net11.0/MyAdventure.Core.Tests.dll
+  MyAdventure.Integration.Tests net11.0 succeeded (0.2s) → tests/MyAdventure.Integration.Tests/bin/Debug/net11.0/MyAdventure.Integration.Tests.dll
+  MyAdventure.Shared net11.0 failed with 3 error(s) (0.7s)
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(28,14,28,14): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 28, position 14.
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(79,18,79,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 79, position 18.
+    /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/Views/MainView.axaml(82,18,82,18): Avalonia error AVLN2200: Can not find parent Style Selector or ControlTemplate TargetType. If setter is not part of the style, you can set x:SetterTargetType directive on its parent. Line 82, position 18.
+
+Build failed with 3 error(s) in 1.2s
+
+real	0m1.293s
+user	0m0.198s
+sys	0m0.047s
+Running tests from tests/MyAdventure.Integration.Tests/bin/Debug/net11.0/MyAdventure.Integration.Tests.dll (net11.0|x64)
+Running tests from tests/MyAdventure.UI.Tests/bin/Debug/net11.0/MyAdventure.UI.Tests.dll (net11.0|x64)
+Running tests from tests/MyAdventure.Core.Tests/bin/Debug/net11.0/MyAdventure.Core.Tests.dll (net11.0|x64)
+LogRecord.Timestamp:               2026-11-26T09:03:48.9246021Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:03:48.9246021Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        Telemetry: Sentry DSN was provided but could not be parsed (DSN is not a valid absolute URI. (Parameter 'dsn')); console-only.
+LogRecord.Body:                    Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+LogRecord.Attributes (Key:Value):
+    Error: DSN is not a valid absolute URI. (Parameter 'dsn')
+    OriginalFormat (a.k.a Body): Telemetry: Sentry DSN was provided but could not be parsed ({Error}); console-only.
+Instrumentation scope (Logger):
+    Name: MyAdventure.Telemetry
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+d1246f071e68a3d779def5bba663021ba3d4354e
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+tests/MyAdventure.UI.Tests/bin/Debug/net11.0/MyAdventure.UI.Tests.dll (net11.0|x64) passed [✓77/x0/↓0] (704ms)
+LogRecord.Timestamp:               2026-11-26T09:03:49.3637468Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:03:49.3637468Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env=test, verbose=False
+LogRecord.Body:                    Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Environment: test
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry enabled (OTLP logs/traces + envelope issues), env={Environment}, verbose={Verbose}
+Instrumentation scope (Logger):
+    Name: MyAdventure.Telemetry
+
+Resource associated with LogRecord:
+deployment.environment: test
+service.name: MyAdventure
+service.version: 1.0.1+d1246f071e68a3d779def5bba663021ba3d4354e
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+LogRecord.Timestamp:               2026-11-26T09:03:49.3765008Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:03:49.3765008Z
+LogRecord.CategoryName:            MyAdventure.Telemetry
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Telemetry: Sentry disabled (no DSN), verbose=False
+LogRecord.Body:                    Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+LogRecord.Attributes (Key:Value):
+    Verbose: false
+    OriginalFormat (a.k.a Body): Telemetry: Sentry disabled (no DSN), verbose={Verbose}
+Instrumentation scope (Logger):
+    Name: MyAdventure.Telemetry
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+d1246f071e68a3d779def5bba663021ba3d4354e
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+LogRecord.Timestamp:               2026-11-26T09:03:49.4860806Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:03:49.4860806Z
+LogRecord.CategoryName:            MyAdventure.Infrastructure.Data.DatabaseInitializer
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Body:                    Migrating GameStates table to BigDouble TEXT schema
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): Migrating GameStates table to BigDouble TEXT schema
+Instrumentation scope (Logger):
+    Name: MyAdventure.Infrastructure.Data.DatabaseInitializer
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+d1246f071e68a3d779def5bba663021ba3d4354e
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+tests/MyAdventure.Core.Tests/bin/Debug/net11.0/MyAdventure.Core.Tests.dll (net11.0|x64) passed [✓320/x0/↓0] (1s 070ms)
+LogRecord.Timestamp:               2026-11-26T09:03:49.5930136Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:03:49.5930136Z
+LogRecord.CategoryName:            MyAdventure.Infrastructure.Repositories.GameStateRepository
+LogRecord.Severity:                Warn
+LogRecord.SeverityText:            Warning
+LogRecord.FormattedMessage:        Failed to parse saved Int64 map
+LogRecord.Body:                    Failed to parse saved {Type} map
+LogRecord.Attributes (Key:Value):
+    Type: Int64
+    OriginalFormat (a.k.a Body): Failed to parse saved {Type} map
+LogRecord.Exception:               System.Text.Json.JsonException: 'not json' is an invalid JSON literal. Expected the literal 'null'. Path: $ | LineNumber: 0 | BytePositionInLine: 1.
+ ---> System.Text.Json.JsonReaderException: 'not json' is an invalid JSON literal. Expected the literal 'null'. LineNumber: 0 | BytePositionInLine: 1.
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader& json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ThrowInvalidLiteral(ReadOnlySpan`1 span)
+   at System.Text.Json.Utf8JsonReader.CheckLiteral(ReadOnlySpan`1 span, ReadOnlySpan`1 literal)
+   at System.Text.Json.Utf8JsonReader.ConsumeLiteral(ReadOnlySpan`1 literal, JsonTokenType tokenType)
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+   --- End of inner exception stack trace ---
+   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+   at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 json, JsonTypeInfo`1 jsonTypeInfo)
+   at MyAdventure.Infrastructure.Repositories.GameStateRepository.ParseMap[T](String json, JsonTypeInfo`1 typeInfo) in /home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs:line 82
+Instrumentation scope (Logger):
+    Name: MyAdventure.Infrastructure.Repositories.GameStateRepository
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+d1246f071e68a3d779def5bba663021ba3d4354e
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+LogRecord.Timestamp:               2026-11-26T09:03:49.6184293Z
+LogRecord.ObservedTimestamp:       2026-11-26T09:03:49.6184293Z
+LogRecord.CategoryName:            MyAdventure.Infrastructure.Repositories.GameStateRepository
+LogRecord.Severity:                Info
+LogRecord.SeverityText:            Information
+LogRecord.FormattedMessage:        All game states deleted
+LogRecord.Body:                    All game states deleted
+LogRecord.Attributes (Key:Value):
+    OriginalFormat (a.k.a Body): All game states deleted
+Instrumentation scope (Logger):
+    Name: MyAdventure.Infrastructure.Repositories.GameStateRepository
+
+Resource associated with LogRecord:
+deployment.environment: production
+service.name: MyAdventure
+service.version: 1.0.1+d1246f071e68a3d779def5bba663021ba3d4354e
+service.instance.id: fedora
+telemetry.sdk.name: opentelemetry
+telemetry.sdk.language: dotnet
+telemetry.sdk.version: 1.21.0
+Schema URL: https://opentelemetry.io/schemas/1.45.0
+
+tests/MyAdventure.Integration.Tests/bin/Debug/net11.0/MyAdventure.Integration.Tests.dll (net11.0|x64) passed [✓69/x0/↓0] (1s 378ms)
+
+Test run summary: Passed!
+  tests/MyAdventure.Core.Tests/bin/Debug/net11.0/MyAdventure.Core.Tests.dll (net11.0|x64) passed [✓320/x0/↓0] (1s 070ms)
+  tests/MyAdventure.Integration.Tests/bin/Debug/net11.0/MyAdventure.Integration.Tests.dll (net11.0|x64) passed [✓69/x0/↓0] (1s 378ms)
+  tests/MyAdventure.UI.Tests/bin/Debug/net11.0/MyAdventure.UI.Tests.dll (net11.0|x64) passed [✓77/x0/↓0] (704ms)
+
+  total: 466
+  failed: 0
+  succeeded: 466
+  skipped: 0
+  duration: 1s 552ms
+
+real	0m3.492s
+user	0m7.126s
+sys	0m0.834s
+Restore complete (0.1s)
+
+Build succeeded in 0.1s
+Project 'MyAdventure.Android' has the following package references
+   [net11.0-android]: 
+   Top-level Package                    Requested    Resolved
+   > Avalonia.Android                   12.2.0       12.2.0  
+   > Avalonia.Fonts.Inter               12.2.0       12.2.0  
+   > Microsoft.NET.ILLink.Tasks   (A)   [11.0.0, )   11.0.0  
+
+Project 'MyAdventure.Core' has the following package references
+   [net11.0]: 
+   Top-level Package                   Requested   Resolved
+   > Microsoft.Extensions.Logging      11.0.0      11.0.0  
+
+Project 'MyAdventure.Desktop' has the following package references
+   [net11.0]: 
+   Top-level Package           Requested   Resolved
+   > Avalonia.Desktop          12.2.0      12.2.0  
+   > Avalonia.Fonts.Inter      12.2.0      12.2.0  
+
+Project 'MyAdventure.Infrastructure' has the following package references
+   [net11.0]: 
+   Top-level Package                                              Requested   Resolved
+   > Microsoft.EntityFrameworkCore.Sqlite                         11.0.0      11.0.0  
+   > Microsoft.Extensions.Configuration                           11.0.0      11.0.0  
+   > Microsoft.Extensions.Configuration.Binder                    11.0.0      11.0.0  
+   > Microsoft.Extensions.Configuration.EnvironmentVariables      11.0.0      11.0.0  
+   > Microsoft.Extensions.Configuration.Json                      11.0.0      11.0.0  
+   > Microsoft.Extensions.DependencyInjection                     11.0.0      11.0.0  
+   > Microsoft.Extensions.Logging                                 11.0.0      11.0.0  
+   > OpenTelemetry                                                1.21.0      1.21.0  
+   > OpenTelemetry.Exporter.Console                               1.21.0      1.21.0  
+   > OpenTelemetry.Exporter.OpenTelemetryProtocol                 1.21.0      1.21.0  
+   > OpenTelemetry.Extensions.Hosting                             1.21.0      1.21.0  
+   > OpenTelemetry.Instrumentation.Runtime                        1.21.0      1.21.0  
+
+Project 'MyAdventure.Shared' has the following package references
+   [net11.0]: 
+   Top-level Package                               Requested   Resolved
+   > Avalonia                                      12.2.0      12.2.0  
+   > Avalonia.Themes.Fluent                        12.2.0      12.2.0  
+   > CommunityToolkit.Mvvm                         8.4.2       8.4.2   
+   > Microsoft.Extensions.DependencyInjection      11.0.0      11.0.0  
+   > Microsoft.Extensions.Logging                  11.0.0      11.0.0  
+
+Project 'MyAdventure.Core.Tests' has the following package references
+   [net11.0]: 
+   Top-level Package      Requested   Resolved
+   > coverlet.MTP         10.1.1      10.1.1  
+   > NSubstitute          6.2.0       6.2.0   
+   > Shouldly             4.3.0       4.3.0   
+   > xunit.v3             4.0.3       4.0.3   
+
+Project 'MyAdventure.Integration.Tests' has the following package references
+   [net11.0]: 
+   Top-level Package      Requested   Resolved
+   > coverlet.MTP         10.1.1      10.1.1  
+   > NSubstitute          6.2.0       6.2.0   
+   > Shouldly             4.3.0       4.3.0   
+   > xunit.v3             4.0.3       4.0.3   
+
+Project 'MyAdventure.UI.Tests' has the following package references
+   [net11.0]: 
+   Top-level Package      Requested   Resolved
+   > coverlet.MTP         10.1.1      10.1.1  
+   > NSubstitute          6.2.0       6.2.0   
+   > Shouldly             4.3.0       4.3.0   
+   > xunit.v3             4.0.3       4.0.3   
+
+(A) : Auto-referenced package.
+
+real	0m1.551s
+user	0m1.362s
+sys	0m0.378s
+Restore complete (0.1s)
+
+Build succeeded in 0.2s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `MyAdventure.Android` has no updates given the current sources.
+The given project `MyAdventure.Core` has no updates given the current sources.
+The given project `MyAdventure.Desktop` has no updates given the current sources.
+The given project `MyAdventure.Infrastructure` has no updates given the current sources.
+The given project `MyAdventure.Shared` has no updates given the current sources.
+The given project `MyAdventure.Core.Tests` has no updates given the current sources.
+The given project `MyAdventure.Integration.Tests` has no updates given the current sources.
+The given project `MyAdventure.UI.Tests` has no updates given the current sources.
+
+real	0m1.913s
+user	0m1.699s
+sys	0m0.373s
+Restore complete (0.1s)
+
+Build succeeded in 0.1s
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Android/MyAdventure.Android.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Core/MyAdventure.Core.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Desktop/MyAdventure.Desktop.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/src/MyAdventure.Shared/MyAdventure.Shared.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj'.
+
+The specified TargetFramework 'net10.0' is not found in the project '/home/kushal/src/dotnet/MyAdventure/tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj'.
+
+
+real	0m1.037s
+user	0m0.833s
+sys	0m0.246s
+
+real	0m6.799s
+user	0m13.544s
+sys	0m0.907s
+==============================================
+  Generating Clean Project Export
+==============================================
+Generating directory structure...
+Collecting and cleaning file contents...
+Processed: .gitattributes
+Processed: .github/dependabot.yml
+Processed: .github/workflows/build-and-release.yml
+Processed: .gitignore
+Processed: Directory.Build.props
+Processed: Directory.Packages.props
+Processed: LICENSE
+Processed: MyAdventure.slnx
+Processed: README.md
+Processed: SUMMARY.md
+Processed: desktop.sh
+Processed: docs/KEYSTORE.md
+Processed: global.json
+Processed: src/MyAdventure.Android/AndroidApp.cs
+Processed: src/MyAdventure.Android/AndroidGameApp.cs
+Processed: src/MyAdventure.Android/AndroidHapticPlayer.cs
+Processed: src/MyAdventure.Android/AndroidManifest.xml
+Processed: src/MyAdventure.Android/AndroidSoundPlayer.cs
+Processed: src/MyAdventure.Android/MainActivity.cs
+Processed: src/MyAdventure.Android/MyAdventure.Android.csproj
+Processed: src/MyAdventure.Android/Resources/drawable/icon.xml
+Processed: src/MyAdventure.Android/Resources/values/strings.xml
+Processed: src/MyAdventure.Android/Resources/values/styles.xml
+Processed: src/MyAdventure.Core/Entities/Business.cs
+Processed: src/MyAdventure.Core/Entities/BusinessDefinitions.cs
+Processed: src/MyAdventure.Core/Entities/CrossBusinessSpeedBonus.cs
+Processed: src/MyAdventure.Core/Entities/GameBalance.cs
+Processed: src/MyAdventure.Core/Entities/Milestone.cs
+Processed: src/MyAdventure.Core/Entities/PlayerSettings.cs
+Processed: src/MyAdventure.Core/Interfaces/IGameStateRepository.cs
+Processed: src/MyAdventure.Core/Interfaces/ISettingsRepository.cs
+Processed: src/MyAdventure.Core/MyAdventure.Core.csproj
+Processed: src/MyAdventure.Core/Numerics/BigDouble.cs
+Processed: src/MyAdventure.Core/Numerics/BigDoubleJsonConverter.cs
+Processed: src/MyAdventure.Core/Saves/GameSnapshot.cs
+Processed: src/MyAdventure.Core/Saves/SaveCodec.cs
+Processed: src/MyAdventure.Core/Services/GameEngine.cs
+Processed: src/MyAdventure.Core/Services/NumberFormatter.cs
+Processed: src/MyAdventure.Desktop/DesktopApp.cs
+Processed: src/MyAdventure.Desktop/DesktopSoundPlayer.cs
+Processed: src/MyAdventure.Desktop/MyAdventure.Desktop.csproj
+Processed: src/MyAdventure.Desktop/Program.cs
+Processed: src/MyAdventure.Desktop/app.manifest
+Processed: src/MyAdventure.Desktop/appsettings.json
+Processed: src/MyAdventure.Infrastructure/Data/AppDbContext.cs
+Processed: src/MyAdventure.Infrastructure/Data/DatabaseInitializer.cs
+Processed: src/MyAdventure.Infrastructure/Data/GameStateRecord.cs
+Processed: src/MyAdventure.Infrastructure/Data/PlayerSettingsRecord.cs
+Processed: src/MyAdventure.Infrastructure/Data/SchemaUpgrader.cs
+Processed: src/MyAdventure.Infrastructure/InfrastructureServiceCollectionExtensions.cs
+Processed: src/MyAdventure.Infrastructure/MyAdventure.Infrastructure.csproj
+Processed: src/MyAdventure.Infrastructure/Repositories/GameStateRepository.cs
+Processed: src/MyAdventure.Infrastructure/Repositories/OwnershipJsonContext.cs
+Processed: src/MyAdventure.Infrastructure/Repositories/SettingsRepository.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/SentryDsn.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/SentryEnvelope.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/SentryEventLoggerProvider.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryConfigurationLoader.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryDefaults.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryLifecycle.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryOptions.cs
+Processed: src/MyAdventure.Infrastructure/Telemetry/TelemetryRegistration.cs
+Processed: src/MyAdventure.Shared/App.cs
+Processed: src/MyAdventure.Shared/Converters/GameConverters.cs
+Processed: src/MyAdventure.Shared/Feedback/FeedbackCue.cs
+Processed: src/MyAdventure.Shared/Feedback/FeedbackService.cs
+Processed: src/MyAdventure.Shared/Feedback/IFeedbackService.cs
+Processed: src/MyAdventure.Shared/Feedback/IHapticPlayer.cs
+Processed: src/MyAdventure.Shared/Feedback/ISoundPlayer.cs
+Processed: src/MyAdventure.Shared/Feedback/ToneSynthesizer.cs
+Processed: src/MyAdventure.Shared/GameServiceCollectionExtensions.cs
+Processed: src/MyAdventure.Shared/MyAdventure.Shared.csproj
+Processed: src/MyAdventure.Shared/Services/ITextClipboard.cs
+Processed: src/MyAdventure.Shared/Services/LifecycleRouter.cs
+Processed: src/MyAdventure.Shared/Services/ToastService.cs
+Processed: src/MyAdventure.Shared/ViewModels/BusinessViewModel.cs
+Processed: src/MyAdventure.Shared/ViewModels/GameViewModel.cs
+Processed: src/MyAdventure.Shared/Views/MainView.axaml
+Processed: src/MyAdventure.Shared/Views/MainView.axaml.cs
+Processed: src/MyAdventure.Shared/Views/MainWindow.cs
+Processed: tests/Common/TestDoubles.cs
+Processed: tests/Directory.Build.props
+Processed: tests/MyAdventure.Core.Tests/Balance/BalanceBot.cs
+Processed: tests/MyAdventure.Core.Tests/Balance/FreshStartBalanceTests.cs
+Processed: tests/MyAdventure.Core.Tests/Balance/LateGameBalanceTests.cs
+Processed: tests/MyAdventure.Core.Tests/Balance/NeverPrestigeBalanceTests.cs
+Processed: tests/MyAdventure.Core.Tests/BigDoubleInterfaceTests.cs
+Processed: tests/MyAdventure.Core.Tests/BigDoubleTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessAffordableTests.cs
+Processed: tests/MyAdventure.Core.Tests/BusinessTests.cs
+Processed: tests/MyAdventure.Core.Tests/CrossBusinessSpeedBonusTests.cs
+Processed: tests/MyAdventure.Core.Tests/GameEngineTests.cs
+Processed: tests/MyAdventure.Core.Tests/MilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/MyAdventure.Core.Tests.csproj
+Processed: tests/MyAdventure.Core.Tests/NumberFormatterTests.cs
+Processed: tests/MyAdventure.Core.Tests/OverflowRegressionTests.cs
+Processed: tests/MyAdventure.Core.Tests/SaveCodecTests.cs
+Processed: tests/MyAdventure.Core.Tests/SpeedMilestoneTests.cs
+Processed: tests/MyAdventure.Core.Tests/SubFrameCycleTests.cs
+Processed: tests/MyAdventure.Integration.Tests/GameStateRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/MyAdventure.Integration.Tests.csproj
+Processed: tests/MyAdventure.Integration.Tests/SchemaMigrationTests.cs
+Processed: tests/MyAdventure.Integration.Tests/SentryEnvelopeTests.cs
+Processed: tests/MyAdventure.Integration.Tests/SettingsRepositoryTests.cs
+Processed: tests/MyAdventure.Integration.Tests/SqliteTestDatabase.cs
+Processed: tests/MyAdventure.Integration.Tests/TelemetryConfigurationTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelFeedbackTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelSpeedTests.cs
+Processed: tests/MyAdventure.UI.Tests/BusinessViewModelTests.cs
+Processed: tests/MyAdventure.UI.Tests/FeedbackServiceTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelLifecycleTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelPrestigeTests.cs
+Processed: tests/MyAdventure.UI.Tests/GameViewModelSettingsTests.cs
+Processed: tests/MyAdventure.UI.Tests/LifecycleRouterTests.cs
+Processed: tests/MyAdventure.UI.Tests/MyAdventure.UI.Tests.csproj
+Processed: tests/MyAdventure.UI.Tests/ToastServiceTests.cs
+Processed: tests/MyAdventure.UI.Tests/ToneSynthesizerTests.cs
+Processed: tests/MyAdventure.UI.Tests/Ui.cs
+
+Export Complete: docs/llm/dump.txt
+
+real	0m1.314s
+user	0m0.718s
+sys	0m0.833s
+.NET SDK:
+ Version:           11.0.100
+ Commit:            297acf930f
+ Workload version:  11.0.100.1
+ MSBuild version:   18.12.2-1.26529.118+297acf930
+
+Runtime Environment:
+ OS Name:     fedora
+ OS Version:  45
+ OS Platform: Linux
+ RID:         fedora.45-x64
+ Base Path:   /usr/lib64/dotnet/sdk/11.0.100
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 11.0.100
+   Manifest Version:    37.2.31/11.0.100
+   Manifest Path:       /home/kushal/.dotnet/sdk-manifests/11.0.100/microsoft.net.sdk.android/37.2.31/WorkloadManifest.json
+   Install Type:        FileBased
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      11.0.0
+  Architecture: x64
+  Commit:       297acf930f
+
+.NET SDKs installed:
+  10.0.115 [/usr/lib64/dotnet/sdk]
+  11.0.100 [/usr/lib64/dotnet/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 10.0.15 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.AspNetCore.App 11.0.0 [/usr/lib64/dotnet/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 10.0.15 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+  Microsoft.NETCore.App 11.0.0 [/usr/lib64/dotnet/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  Not set
+
+global.json file:
+  /home/kushal/src/dotnet/MyAdventure/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+real	0m0.032s
+user	0m0.012s
+sys	0m0.010s
+Updating and loading repositories:
+Last metadata expiration check: 1:26:56 ago on 2026-11-26 07:37:07.
+Repositories loaded.
+Installed packages
+Name            : dotnet-sdk-11.0
+Epoch           : 0
+Version         : 11.0.100
+Release         : 1.fc45
+Architecture    : x86_64
+Installed size  : 262.6 MiB
+Source          : dotnet11.0-11.0.100-1.fc45.src.rpm
+From repository : updates
+Summary         : .NET 11.0 Software Development Kit
+URL             : https://github.com/dotnet/
+License         : 0BSD AND Apache-2.0 AND (Apache-2.0 WITH LLVM-exception) AND APSL-2.0 AND BSD-2-Clause AND BSD-3-Clause AND BSD-4-Clause AND BSL-1.0 AND bzip2-1.0.6 AND CC0-1.0 AND CC-BY-3.0 AND CC-BY-4.0 AND C
+                : C-PDDC AND CNRI-Python AND EPL-1.0 AND GPL-2.0-only AND (GPL-2.0-only WITH GCC-exception-2.0) AND GPL-2.0-or-later AND GPL-3.0-only AND ICU AND ISC AND LGPL-2.1-only AND LGPL-2.1-or-later AND Li
+                : censeRef-Fedora-Public-Domain AND LicenseRef-ISO-8879 AND MIT AND MIT-Wu AND MS-PL AND MS-RL AND NCSA AND OFL-1.1 AND OpenSSL AND Unicode-DFS-2015 AND Unicode-DFS-2016 AND W3C-19980720 AND X11 A
+                : ND Zlib
+Description     : The .NET SDK is a collection of command line applications to
+                : create, build, publish and run .NET applications.
+                : 
+                : .NET is a fast, lightweight and modular platform for creating
+                : cross platform applications that work on Linux, Mac and Windows.
+                : 
+                : It particularly focuses on creating console applications, web
+                : applications and micro-services.
+Vendor          : Fedora Project
+
+real	0m0.844s
+user	0m0.437s
+sys	0m0.222s
+Updating and loading repositories:
+Last metadata expiration check: 1:26:56 ago on 2026-11-26 07:37:07.
+Repositories loaded.
+Matched fields: name
+ dotnet-sdk-10.0.x86_64	.NET 10.0 Software Development Kit
+ dotnet-sdk-10.0-source-built-artifacts.x86_64	Internal package for building .NET 10.0 Software Development Kit
+ dotnet-sdk-11.0.x86_64	.NET 11.0 Software Development Kit
+ dotnet-sdk-11.0-source-built-artifacts.x86_64	Internal package for building .NET 11.0 Software Development Kit
+ dotnet-sdk-aot-10.0.x86_64	Ahead-of-Time (AOT) support for the .NET 10.0 Software Development Kit
+ dotnet-sdk-aot-11.0.x86_64	Ahead-of-Time (AOT) support for the .NET 11.0 Software Development Kit
+ dotnet-sdk-dbg-10.0.x86_64	Managed debug symbols for the .NET 10.0 Software Development Kit
+ dotnet-sdk-dbg-11.0.x86_64	Managed debug symbols for the .NET 11.0 Software Development Kit
+
+real	0m0.534s
+user	0m0.430s
+sys	0m0.152s
+kushal@fedora:~/src/dotnet/MyAdventure$ 
