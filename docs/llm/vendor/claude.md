@@ -18969,6 +18969,107 @@ Build FAILED.
 
 Time Elapsed 00:00:09.37
 
+here are some hints from Gemini 4 Hydrogen 
+as usual use your own best judgment, these are only helpful hints: 
+
+```markdown
+Yes — **Avalonia 12.2.0** officially ships the new **Fluent 2** theme as a separate NuGet package:
+
+### Fluent 2 in Avalonia 12.2.0
+* **NuGet package:** `Avalonia.Themes.Fluent2` (`12.2.0`)
+* **Theme class / XAML tag:** `Fluent2Theme` (`<Fluent2Theme />` in XAML, or `new Fluent2Theme()` in C# from `Avalonia.Themes.Fluent2`)
+* **Release context:** Introduced in Avalonia 12.2 (PR #21771, released Nov 23–24, 2026) and now the default theme in Avalonia's new-project templates. Avalonia's release notes also highlight ~1.8× faster theme resource lookups in Fluent2.
+
+### How to switch your repo to Fluent 2
+Because your app initializes its styles in C# (`src/MyAdventure.Shared/App.cs`) rather than `App.axaml`, three files need changes:
+
+1. **`Directory.Packages.props`** — replace `Avalonia.Themes.Fluent` with `Avalonia.Themes.Fluent2`:
+   ```xml
+   <PackageVersion Include="Avalonia.Themes.Fluent2" Version="$(AvaloniaVersion)" />
+   ```
+2. **`src/MyAdventure.Shared/MyAdventure.Shared.csproj`** — update the package reference:
+   ```xml
+   <PackageReference Include="Avalonia.Themes.Fluent2" />
+   ```
+3. **`src/MyAdventure.Shared/App.cs`** — swap `FluentTheme` for `Fluent2Theme`:
+   ```csharp
+   using Avalonia.Themes.Fluent2;
+   ...
+   public override void Initialize()
+   {
+       RequestedThemeVariant = ThemeVariant.Dark;
+       Styles.Add(new Fluent2Theme());
+   }
+   ```
+
+### Compatibility notes for your project
+* **Known 12.2.0 issues found in GitHub:**
+  * `Fluent2` omits some legacy `SystemControl*` brush aliases from Fluent v1 (Issue #22567).
+  * `TabItem` with `TabStripPlacement="Left"` / `"Right"` / `"Bottom"` currently draws its selection pill horizontally underneath instead of matching placement (Issue #22939).
+* **Impact on `MyAdventure`:** `MainView.axaml` doesn't use `TabControl` and sets explicit hex colors (`#1A1A2E`, `#16213E`, `#0D1B2A`, etc.) rather than `SystemControl*` brushes, so switching to `Fluent2Theme` should be safe and will mainly modernize built-in `Button`/`TextBox` styling and focus/hover states.
+
+---
+
+### Bonus: Exact cause of the `AVLN2200` errors in `MainView.axaml`
+From the `src/MyAdventure.Shared/Views/MainView.axaml` in your dump, lines **28, 79, and 82** fail because `.compactOnly` and `.wideOnly` are bare class selectors with no control type:
+* Line 27–29: `<Style Selector=".compactOnly"><Setter Property="IsVisible" Value="False" /></Style>`
+* Lines 78–83 (inside `<ContainerQuery>`): `<Style Selector=".wideOnly">` and `<Style Selector=".compactOnly">` setting `IsVisible`
+
+Updating those three selectors to include `:is(Control)` (so it matches `Border`, `StackPanel`, and `TextBlock`) fixes the build:
+```xml
+<Style Selector=":is(Control).compactOnly">
+    <Setter Property="IsVisible" Value="False" />
+</Style>
+```
+*(and likewise `:is(Control).wideOnly` and `:is(Control).compactOnly` inside `<ContainerQuery>`, or adding `x:SetterTargetType="Control"` on those `<Style>` tags).*
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
